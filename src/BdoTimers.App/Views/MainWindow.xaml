@@ -19,6 +19,9 @@
             <TabItem Header="Upcoming">
                 <views:UpcomingView DataContext="{Binding Upcoming}" />
             </TabItem>
+            <TabItem Header="Timers">
+                <views:TimersView DataContext="{Binding Timers}" />
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

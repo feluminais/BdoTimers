@@ -12,11 +12,13 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private string _pausedText = "";
 
     public UpcomingViewModel Upcoming { get; }
+    public TimersViewModel Timers { get; }
 
     public MainViewModel(AppServices services)
     {
         _services = services;
         Upcoming = new UpcomingViewModel(services);
+        Timers = new TimersViewModel(services);
         services.UiClock.Tick += RefreshPaused;
         RefreshPaused(DateTimeOffset.UtcNow);
     }

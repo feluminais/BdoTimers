@@ -1,0 +1,43 @@
+<UserControl x:Class="BdoTimers.App.Views.TimersView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <DockPanel>
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,4,0,8">
+            <Button Content="Add scheduled timer" Command="{Binding AddScheduledCommand}" Padding="8,3" />
+            <Button Content="Add countdown" Command="{Binding AddCountdownCommand}" Margin="6,0,0,0" Padding="8,3" />
+        </StackPanel>
+        <ListView ItemsSource="{Binding Rows}" HorizontalContentAlignment="Stretch" BorderThickness="0">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="2,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox IsChecked="{Binding Enabled}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                  ToolTip="Enabled" />
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Summary}" Foreground="Gray" FontSize="11" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal"
+                                        Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding Remaining}" FontFamily="Consolas" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                <Button Content="{Binding StartPauseLabel}" Command="{Binding StartPauseCommand}" Padding="8,1" />
+                                <Button Content="Reset" Command="{Binding ResetCommand}" Margin="4,0,0,0" Padding="8,1" />
+                            </StackPanel>
+                            <Button Content="Edit" Margin="8,0,0,0" Padding="8,1"
+                                    Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                    CommandParameter="{Binding}" />
+                            <Button Content="Delete" Margin="4,0,0,0" Padding="8,1"
+                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=ListView}}"
+                                    CommandParameter="{Binding}" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </DockPanel>
+</UserControl>
