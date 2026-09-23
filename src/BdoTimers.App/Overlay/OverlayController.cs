@@ -32,19 +32,27 @@ public sealed class OverlayController(AppServices services)
 
     public void TogglePositioning()
     {
+        if (IsPositioning) FinishPositioning();
+        else StartPositioning();
+    }
+
+    void StartPositioning()
+    {
         var window = EnsureWindow();
-        if (!IsPositioning)
-        {
-            IsPositioning = true;
-            window.SetRows([new OverlayRow("Drag me into place", "05:00")]);
-            window.SetClickThrough(false);
-            window.Show();
-            return;
-        }
-        window.SetClickThrough(true);
-        services.Settings.Update(s => s with { OverlayLeft = window.Left, OverlayTop = window.Top });
+        IsPositioning = true;
+        window.SetRows([new OverlayRow("Drag me into place", "05:00")]);
+        window.SetClickThrough(false);
+        window.Show();
+    }
+
+    /// <summary>Saves the dragged position and restores click-through. Safe to call when not positioning.</summary>
+    public void FinishPositioning()
+    {
+        if (!IsPositioning || _window is null) return;
         IsPositioning = false;
-        window.Hide();
+        _window.SetClickThrough(true);
+        _window.Hide();
+        services.Settings.Update(s => s with { OverlayLeft = _window.Left, OverlayTop = _window.Top });
     }
 
     OverlayWindow EnsureWindow()

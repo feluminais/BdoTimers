@@ -32,7 +32,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         _ttsVoice = s.TtsVoice ?? Voices.FirstOrDefault();
         _ttsRate = s.TtsRate;
         _defaultLeadTimesText = Parsing.FormatLeadTimes(s.DefaultLeadTimesMinutes);
+        _isPositioningOverlay = services.Overlay.IsPositioning;
     }
+
+    /// <summary>Closing the window any way (Save, Cancel, X) ends overlay positioning, which otherwise leaves it stuck on screen and not click-through.</summary>
+    public void OnWindowClosed() => _services.Overlay.FinishPositioning();
 
     [RelayCommand]
     void Save()

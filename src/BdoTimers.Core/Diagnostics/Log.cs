@@ -12,7 +12,10 @@ public static class Log
         _dir = directory;
         var cutoff = DateTime.UtcNow.AddDays(-keepDays);
         foreach (var file in Directory.GetFiles(directory, "*.log").Where(f => File.GetLastWriteTimeUtc(f) < cutoff))
-            File.Delete(file);
+        {
+            try { File.Delete(file); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+        }
     }
 
     public static void Info(string message) => Write("INF", message, null);
@@ -26,7 +29,7 @@ public static class Log
         lock (Gate)
         {
             try { File.AppendAllText(Path.Combine(_dir, $"{DateTime.Now:yyyy-MM-dd}.log"), line); }
-            catch (IOException) { }
+            catch (Exception) { }
         }
     }
 }

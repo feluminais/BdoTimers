@@ -1,3 +1,4 @@
+using System.Globalization;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
@@ -71,6 +72,24 @@ public class TextTests
     {
         Assert.True(Parsing.TryParseTime(text, out var t));
         Assert.Equal(new TimeOnly(h, m), t);
+    }
+
+    [Fact]
+    public void Formatted_time_parses_back_in_any_culture()
+    {
+        var saved = CultureInfo.CurrentCulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("fi-FI");
+            var text = Parsing.FormatTime(new TimeOnly(21, 15));
+            Assert.Equal("21:15", text);
+            Assert.True(Parsing.TryParseTime(text, out var back));
+            Assert.Equal(new TimeOnly(21, 15), back);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = saved;
+        }
     }
 
     [Theory]

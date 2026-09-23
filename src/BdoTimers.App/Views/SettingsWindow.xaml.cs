@@ -10,5 +10,6 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         viewModel.Closed += () => DialogResult = true;
+        Closed += (_, _) => viewModel.OnWindowClosed();
     }
 }

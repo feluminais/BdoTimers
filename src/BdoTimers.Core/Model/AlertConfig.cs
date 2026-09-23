@@ -27,8 +27,10 @@ public sealed record OverlayAlert
 
 public sealed record AlertConfig
 {
+    public static readonly IReadOnlyList<int> StandardLeadTimesMinutes = [15, 5, 1, 0];
+
     /// <summary>Minutes before the event; 0 means at the event.</summary>
-    public IReadOnlyList<int> LeadTimesMinutes { get; init; } = [15, 5, 1, 0];
+    public IReadOnlyList<int> LeadTimesMinutes { get; init; } = StandardLeadTimesMinutes;
     public SoundAlert Sound { get; init; } = new();
     public ToastAlert Toast { get; init; } = new();
     public TtsAlert Tts { get; init; } = new();

@@ -72,9 +72,7 @@ public sealed class AppServices : IDisposable
                 withNotificationSettingsButton: true);
             Settings.Update(s => s with { PriorityHintShown = true });
         }
-#if !DEBUG
         Autostart.Apply(Settings.Current.Autostart);
-#endif
         if (showWindow) ShowMainWindow();
     }
 
@@ -86,12 +84,10 @@ public sealed class AppServices : IDisposable
         _main.Activate();
     }
 
-    public void PauseAlerts(TimeSpan? duration) => Settings.Update(s => s with
-    {
-        AlertsPausedUntilUtc = duration is { } d ? DateTimeOffset.UtcNow + d : DateTimeOffset.MaxValue,
-    });
+    public void PauseAlerts(TimeSpan? duration) =>
+        Settings.Update(s => AlertPause.Pause(s, DateTimeOffset.UtcNow, duration));
 
-    public void ResumeAlerts() => Settings.Update(s => s with { AlertsPausedUntilUtc = null });
+    public void ResumeAlerts() => Settings.Update(AlertPause.Resume);
 
     public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
         new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }, DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));

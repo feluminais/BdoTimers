@@ -54,7 +54,7 @@ public sealed partial class TimerEditorViewModel : ObservableObject
         _name = timer.Name;
         _timeZoneId = ToWindowsId(timer.Scheduled?.TimeZoneId ?? TimeZoneInfo.Local.Id);
         foreach (var slot in timer.Scheduled?.Slots ?? [])
-            Slots.Add(new SlotRow { Day = slot.Day, TimeText = slot.Time.ToString("HH:mm") });
+            Slots.Add(new SlotRow { Day = slot.Day, TimeText = Parsing.FormatTime(slot.Time) });
         _durationMinutesText = ((int)(timer.Countdown?.Duration.TotalMinutes ?? 60)).ToString();
         _autoRepeat = timer.Countdown?.AutoRepeat ?? false;
         var a = timer.Alerts;

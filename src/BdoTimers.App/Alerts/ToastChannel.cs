@@ -8,6 +8,7 @@ namespace BdoTimers.App.Alerts;
 public sealed class ToastChannel : IDisposable
 {
     const string ActionKey = "action";
+    const string Dismiss = "dismiss";
     const string OpenNotificationSettings = "openNotificationSettings";
 
     public event Action? Activated;
@@ -18,7 +19,7 @@ public sealed class ToastChannel : IDisposable
         {
             args.Arguments.TryGetValue(ActionKey, out var action);
             if (action == OpenNotificationSettings) OpenWindowsNotificationSettings();
-            else if (action != "dismiss") Activated?.Invoke();
+            else if (action != Dismiss) Activated?.Invoke();
         };
         AppNotificationManager.Default.Register();
     }
@@ -30,7 +31,7 @@ public sealed class ToastChannel : IDisposable
             .AddText(message.Title)
             .AddText(message.Body)
             .MuteAudio()
-            .AddButton(new AppNotificationButton("Dismiss").AddArgument(ActionKey, "dismiss"))
+            .AddButton(new AppNotificationButton("Dismiss").AddArgument(ActionKey, Dismiss))
             .SetScenario(AppNotificationBuilder.IsUrgentScenarioSupported()
                 ? AppNotificationScenario.Urgent
                 : AppNotificationScenario.Alarm);

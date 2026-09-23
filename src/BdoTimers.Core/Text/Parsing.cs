@@ -32,6 +32,9 @@ public static class Parsing
 
     public static string FormatLeadTimes(IEnumerable<int> leads) => string.Join(", ", leads.OrderDescending());
 
+    /// <summary>Invariant "HH:mm"; the current culture may use another separator that <see cref="TryParseTime"/> rejects.</summary>
+    public static string FormatTime(TimeOnly time) => time.ToString("HH:mm", CultureInfo.InvariantCulture);
+
     public static bool TryParseTime(string text, out TimeOnly time) =>
         TimeOnly.TryParseExact(text.Trim(), ["H:mm", "HH:mm"], CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
 

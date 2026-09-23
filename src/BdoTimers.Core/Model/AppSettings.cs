@@ -6,7 +6,7 @@ public sealed record AppSettings
     public float Volume { get; init; } = 0.8f;
     public string? TtsVoice { get; init; }
     public int TtsRate { get; init; }
-    public IReadOnlyList<int> DefaultLeadTimesMinutes { get; init; } = [15, 5, 1, 0];
+    public IReadOnlyList<int> DefaultLeadTimesMinutes { get; init; } = AlertConfig.StandardLeadTimesMinutes;
     public double? OverlayLeft { get; init; }
     public double? OverlayTop { get; init; }
     /// <summary>DateTimeOffset.MaxValue means paused until resumed.</summary>

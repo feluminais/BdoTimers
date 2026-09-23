@@ -1,5 +1,6 @@
 using System.Windows;
 using BdoTimers.App.Views;
+using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -27,11 +28,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     void RefreshPaused(DateTimeOffset now)
     {
-        var until = _services.Settings.Current.AlertsPausedUntilUtc;
-        IsPaused = until is { } u && now < u;
-        PausedText = until == DateTimeOffset.MaxValue
-            ? "Alerts paused"
-            : IsPaused ? $"Alerts paused, {DurationFormat.Countdown(until!.Value - now)} left" : "";
+        var s = _services.Settings.Current;
+        IsPaused = AlertPause.IsPaused(s, now);
+        PausedText = !IsPaused ? ""
+            : AlertPause.Remaining(s, now) is { } left ? $"Alerts paused, {DurationFormat.Countdown(left)} left"
+            : "Alerts paused";
     }
 
     [RelayCommand]
