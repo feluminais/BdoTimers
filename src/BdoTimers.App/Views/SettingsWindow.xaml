@@ -1,0 +1,42 @@
+<Window x:Class="BdoTimers.App.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Settings" Width="440" SizeToContent="Height" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <StackPanel Margin="14">
+        <CheckBox Content="Start with Windows (minimized to tray)" IsChecked="{Binding Autostart}" Margin="0,0,0,10" />
+
+        <TextBlock Text="Alert volume" />
+        <Slider Minimum="0" Maximum="1" Value="{Binding Volume}" Margin="0,2,0,10" />
+
+        <TextBlock Text="Voice" />
+        <ComboBox ItemsSource="{Binding Voices}" SelectedItem="{Binding TtsVoice}" Margin="0,2,0,6" />
+        <TextBlock Text="Speech speed" />
+        <Slider Minimum="-5" Maximum="5" Value="{Binding TtsRate}" IsSnapToTickEnabled="True" TickFrequency="1" Margin="0,2,0,10" />
+
+        <TextBlock Text="Default alert times for new timers (minutes before)" />
+        <TextBox Text="{Binding DefaultLeadTimesText, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,10" />
+
+        <WrapPanel Margin="0,0,0,10">
+            <Button Content="Send test alert" Command="{Binding TestAlertCommand}" Padding="8,3" Margin="0,0,6,6" />
+            <Button Content="Position overlay" Command="{Binding ToggleOverlayPositioningCommand}" Padding="8,3" Margin="0,0,6,6" />
+            <Button Content="Reset boss timetable" Command="{Binding ResetBossesCommand}" Padding="8,3" Margin="0,0,6,6" />
+        </WrapPanel>
+
+        <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11" Margin="0,0,0,4">
+            Windows hides normal notifications while you play fullscreen. BDO Timers sends urgent alerts,
+            which get through. To be sure, add BDO Timers to your priority notifications.
+        </TextBlock>
+        <Button Content="Open Windows notification settings" Command="{Binding OpenNotificationSettingsCommand}"
+                HorizontalAlignment="Left" Padding="8,3" Margin="0,0,0,10" />
+        <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11" Margin="0,0,0,10">
+            The overlay only shows over the game in borderless window mode. Sound and speech always work.
+        </TextBlock>
+
+        <TextBlock Text="{Binding Error}" Foreground="Firebrick" TextWrapping="Wrap" Margin="0,0,0,8" />
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Save" IsDefault="True" Command="{Binding SaveCommand}" Padding="14,3" />
+            <Button Content="Cancel" IsCancel="True" Margin="6,0,0,0" Padding="14,3" />
+        </StackPanel>
+    </StackPanel>
+</Window>

@@ -6,6 +6,7 @@
         WindowStartupLocation="CenterScreen">
     <DockPanel Margin="12">
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8" LastChildFill="False">
+            <Button DockPanel.Dock="Right" Content="Settings" Command="{Binding OpenSettingsCommand}" Padding="10,3" />
             <Border DockPanel.Dock="Left" Background="#FFF4E5" BorderBrush="#E0A040" BorderThickness="1"
                     Padding="8,4" CornerRadius="4"
                     Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibility}}">

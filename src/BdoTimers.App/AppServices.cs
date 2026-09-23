@@ -92,6 +92,8 @@ public sealed class AppServices : IDisposable
     public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
         new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }, DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
 
+    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, DefaultAlerts()));
+
     public void Quit()
     {
         IsQuitting = true;

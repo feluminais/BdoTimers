@@ -1,3 +1,5 @@
+using System.Windows;
+using BdoTimers.App.Views;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -34,4 +36,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     void Resume() => _services.ResumeAlerts();
+
+    [RelayCommand]
+    void OpenSettings() =>
+        new SettingsWindow(new SettingsViewModel(_services))
+        {
+            Owner = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault(),
+        }.ShowDialog();
 }
