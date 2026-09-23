@@ -68,7 +68,10 @@ public sealed partial class SettingsViewModel : ObservableObject
             _services.ResetBossTimetable();
     }
 
-    // Task 18 wires actual overlay-positioning behavior; stub keeps SettingsWindow's binding compiling.
     [RelayCommand]
-    void ToggleOverlayPositioning() { }
+    void ToggleOverlayPositioning()
+    {
+        _services.Overlay.TogglePositioning();
+        IsPositioningOverlay = _services.Overlay.IsPositioning;
+    }
 }

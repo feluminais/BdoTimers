@@ -19,7 +19,8 @@
 
         <WrapPanel Margin="0,0,0,10">
             <Button Content="Send test alert" Command="{Binding TestAlertCommand}" Padding="8,3" Margin="0,0,6,6" />
-            <Button Content="Position overlay" Command="{Binding ToggleOverlayPositioningCommand}" Padding="8,3" Margin="0,0,6,6" />
+            <ToggleButton Content="Position overlay (click again to save)" IsChecked="{Binding IsPositioningOverlay, Mode=OneWay}"
+                          Command="{Binding ToggleOverlayPositioningCommand}" Padding="8,3" Margin="0,0,6,6" />
             <Button Content="Reset boss timetable" Command="{Binding ResetBossesCommand}" Padding="8,3" Margin="0,0,6,6" />
         </WrapPanel>
 

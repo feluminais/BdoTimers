@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using BdoTimers.App.Alerts;
+using BdoTimers.App.Overlay;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.Views;
 using BdoTimers.Core.Model;
@@ -25,6 +26,7 @@ public sealed class AppServices : IDisposable
     public UiClock UiClock { get; } = new();
     public IAlertSink Alerts { get; }
     public TtsChannel Tts { get; }
+    public OverlayController Overlay { get; }
     public bool IsQuitting { get; private set; }
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -49,6 +51,7 @@ public sealed class AppServices : IDisposable
         _engine = new SchedulerEngine(Timers, Settings, Alerts, new SystemClock());
         _loop = new SchedulerLoop(_engine);
         _tray = new TrayIcon(this);
+        Overlay = new OverlayController(this);
     }
 
     public AlertConfig DefaultAlerts() => new() { LeadTimesMinutes = Settings.Current.DefaultLeadTimesMinutes };
@@ -58,6 +61,7 @@ public sealed class AppServices : IDisposable
         _engine.ReconcileStartup();
         _loop.Start();
         UiClock.Start();
+        Overlay.Start();
         foreach (var path in RecoveredFiles)
             _toast.ShowInfo("A data file was damaged",
                 $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
