@@ -1,9 +1,8 @@
-﻿<Application x:Class="BdoTimers.App.App"
+<Application x:Class="BdoTimers.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:BdoTimers.App"
-             StartupUri="MainWindow.xaml">
+             ShutdownMode="OnExplicitShutdown">
     <Application.Resources>
-         
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
     </Application.Resources>
 </Application>
