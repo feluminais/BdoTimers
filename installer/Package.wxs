@@ -1,0 +1,57 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+
+  <!-- Per-user so no admin prompt is needed; autostart is per-user (HKCU) anyway. A folder that
+       needs admin rights (e.g. Program Files) therefore fails with "access denied". -->
+  <Package Name="BDO Timers" Manufacturer="feluminais" Version="$(var.Version)" Scope="perUser"
+           UpgradeCode="4d02b9b6-670a-4922-b199-abc2d24057de">
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="A newer version of BDO Timers is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="LocalAppDataFolder">
+      <Directory Id="UserProgramsFolder" Name="Programs">
+        <Directory Id="INSTALLFOLDER" Name="BdoTimers" />
+      </Directory>
+    </StandardDirectory>
+
+    <!-- Upgrades and repairs reuse the folder chosen at first install instead of the default. -->
+    <Property Id="INSTALLFOLDER">
+      <RegistrySearch Id="PreviousInstallFolder" Root="HKCU" Key="Software\BdoTimers" Name="InstallDir" Type="raw" />
+    </Property>
+
+    <Feature Id="Main">
+      <Files Directory="INSTALLFOLDER" Include="$(var.AppDir)\**" />
+      <ComponentRef Id="Shell" />
+    </Feature>
+
+    <!-- Registry value as key path because per-user components must not key on files. -->
+    <Component Id="Shell" Directory="INSTALLFOLDER">
+      <RegistryValue Root="HKCU" Key="Software\BdoTimers" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+      <!-- Same value the app writes on start; authoring it here makes uninstall remove it. -->
+      <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="BdoTimers"
+                     Type="string" Value="&quot;[INSTALLFOLDER]BdoTimers.exe&quot; --minimized" />
+      <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="BDO Timers"
+                Target="[INSTALLFOLDER]BdoTimers.exe" WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
+    </Component>
+
+    <!-- A running copy locks its files; upgrades and uninstall would otherwise need a reboot. -->
+    <util:CloseApplication Id="CloseRunningApp" Target="BdoTimers.exe" RebootPrompt="no" TerminateProcess="1" />
+
+    <!-- Welcome -> choose folder -> install -> finish, skipping WixUI_InstallDir's license page. -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <UI>
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" />
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />
+      <Publish Dialog="ExitDialog" Control="Finish" Event="DoAction" Value="LaunchApp"
+               Condition="WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 AND NOT Installed" />
+    </UI>
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch BDO Timers" />
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOX" Value="1" />
+
+    <CustomAction Id="LaunchApp" Directory="INSTALLFOLDER" ExeCommand="&quot;[INSTALLFOLDER]BdoTimers.exe&quot;"
+                  Return="asyncNoWait" />
+  </Package>
+</Wix>
