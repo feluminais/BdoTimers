@@ -1,0 +1,66 @@
+using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
+
+namespace BdoTimers.Core.Storage;
+
+public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : PersistentState<AppData>(file, initial)
+{
+    public void Upsert(TimerDef timer) => Update(d => d with
+    {
+        Timers = d.Timers.Any(t => t.Id == timer.Id)
+            ? d.Timers.Select(t => t.Id == timer.Id ? timer : t).ToList()
+            : [.. d.Timers, timer],
+    });
+
+    public void Delete(Guid id) => Update(d => d with
+    {
+        Timers = d.Timers.Where(t => t.Id != id).ToList(),
+        Muted = d.Muted.Where(m => m.TimerId != id).ToList(),
+    });
+
+    public void SetEnabled(Guid id, bool enabled) => Modify(id, t => t with { Enabled = enabled });
+
+    public void ToggleMute(Guid id, DateTimeOffset occurrenceUtc) => Update(d =>
+    {
+        var mute = new MutedOccurrence(id, occurrenceUtc);
+        return d with { Muted = d.Muted.Contains(mute) ? d.Muted.Where(m => m != mute).ToList() : [.. d.Muted, mute] };
+    });
+
+    public void StartCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Start(c, now));
+    public void PauseCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Pause(c, now));
+    public void ResumeCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Resume(c, now));
+    public void ResetCountdown(Guid id) => ModifyCountdown(id, CountdownOps.Reset);
+
+    /// <summary>Completes running countdowns that ended at or before <paramref name="endedBefore"/>; returns them as they were before completion.</summary>
+    public IReadOnlyList<TimerDef> CompleteCountdowns(DateTimeOffset now, DateTimeOffset endedBefore)
+    {
+        List<TimerDef> completed = [];
+        Update(d =>
+        {
+            var due = d.Timers
+                .Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end <= endedBefore)
+                .ToList();
+            if (due.Count == 0) return d;
+            completed.AddRange(due);
+            var ids = due.Select(t => t.Id).ToHashSet();
+            return d with
+            {
+                Timers = d.Timers
+                    .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Complete(t.Countdown!, now) } : t)
+                    .ToList(),
+            };
+        });
+        return completed;
+    }
+
+    public void PruneMuted(DateTimeOffset before) => Update(d =>
+        d.Muted.Any(m => m.OccurrenceUtc < before)
+            ? d with { Muted = d.Muted.Where(m => m.OccurrenceUtc >= before).ToList() }
+            : d);
+
+    void Modify(Guid id, Func<TimerDef, TimerDef> change) =>
+        Update(d => d with { Timers = d.Timers.Select(t => t.Id == id ? change(t) : t).ToList() });
+
+    void ModifyCountdown(Guid id, Func<CountdownSpec, CountdownSpec> change) =>
+        Modify(id, t => t.Countdown is null ? t : t with { Countdown = change(t.Countdown) });
+}
