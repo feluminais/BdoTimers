@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using BdoTimers.App.Alerts;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.Views;
 using BdoTimers.Core.Model;
@@ -15,6 +16,7 @@ public sealed class AppServices : IDisposable
     readonly SchedulerEngine _engine;
     readonly SchedulerLoop _loop;
     readonly TrayIcon _tray;
+    readonly ToastChannel _toast;
     MainWindow? _main;
 
     public TimerStore Timers { get; }
@@ -22,6 +24,7 @@ public sealed class AppServices : IDisposable
     public BossSeed Seed { get; }
     public UiClock UiClock { get; } = new();
     public IAlertSink Alerts { get; }
+    public TtsChannel Tts { get; }
     public bool IsQuitting { get; private set; }
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -39,7 +42,10 @@ public sealed class AppServices : IDisposable
         Seed = SeedService.LoadEmbedded();
         Timers.Update(d => SeedService.ApplyIfNeeded(d, Seed, DefaultAlerts()));
 
-        Alerts = new NullAlertSink();
+        _toast = new ToastChannel();
+        _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
+        Tts = new TtsChannel();
+        Alerts = new AlertDispatcher(_toast, new SoundChannel(), Tts, Settings);
         _engine = new SchedulerEngine(Timers, Settings, Alerts, new SystemClock());
         _loop = new SchedulerLoop(_engine);
         _tray = new TrayIcon(this);
@@ -52,6 +58,16 @@ public sealed class AppServices : IDisposable
         _engine.ReconcileStartup();
         _loop.Start();
         UiClock.Start();
+        foreach (var path in RecoveredFiles)
+            _toast.ShowInfo("A data file was damaged",
+                $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
+        if (!Settings.Current.PriorityHintShown)
+        {
+            _toast.ShowInfo("Let alerts through while gaming",
+                "Add BDO Timers to Settings → Notifications → Set priority notifications.",
+                withNotificationSettingsButton: true);
+            Settings.Update(s => s with { PriorityHintShown = true });
+        }
 #if !DEBUG
         Autostart.Apply(Settings.Current.Autostart);
 #endif
@@ -73,6 +89,9 @@ public sealed class AppServices : IDisposable
 
     public void ResumeAlerts() => Settings.Update(s => s with { AlertsPausedUntilUtc = null });
 
+    public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
+        new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }, DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
+
     public void Quit()
     {
         IsQuitting = true;
@@ -83,12 +102,8 @@ public sealed class AppServices : IDisposable
     {
         UiClock.Stop();
         _loop.Dispose();
+        _toast.Dispose();
+        Tts.Dispose();
         _tray.Dispose();
-    }
-
-    sealed class NullAlertSink : IAlertSink
-    {
-        public void Dispatch(AlertEvent alert) { }
-        public void NotifyEndedWhileAway(TimerDef timer) { }
     }
 }
