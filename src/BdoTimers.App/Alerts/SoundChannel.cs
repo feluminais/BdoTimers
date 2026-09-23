@@ -1,4 +1,5 @@
 using System.IO;
+using BdoTimers.Core.Diagnostics;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
@@ -6,34 +7,42 @@ namespace BdoTimers.App.Alerts;
 
 public sealed class SoundChannel
 {
-    /// <summary>Plays a file, or the built-in two-tone chime when <paramref name="filePath"/> is null or missing. Completes when playback ends.</summary>
+    /// <summary>Plays a file, or the built-in two-tone chime when <paramref name="filePath"/> is null, missing or unreadable. Completes when playback ends.</summary>
     public Task PlayAsync(string? filePath, float volume)
     {
-        ISampleProvider source;
-        IDisposable? reader = null;
-        if (filePath is not null && File.Exists(filePath))
-        {
-            var file = new AudioFileReader(filePath);
-            reader = file;
-            source = file;
-        }
-        else
-        {
-            source = Chime();
-        }
-
+        var file = OpenFile(filePath);
         var output = new WaveOut();
-        output.Init(new VolumeSampleProvider(source) { Volume = Math.Clamp(volume, 0f, 1f) });
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         output.PlaybackStopped += (_, e) =>
         {
             output.Dispose();
-            reader?.Dispose();
+            file?.Dispose();
             if (e.Exception is not null) done.TrySetException(e.Exception);
             else done.TrySetResult();
         };
-        output.Play();
+        try
+        {
+            output.Init(new VolumeSampleProvider(file ?? Chime()) { Volume = Math.Clamp(volume, 0f, 1f) });
+            output.Play();
+        }
+        catch
+        {
+            output.Dispose();
+            file?.Dispose();
+            throw;
+        }
         return done.Task;
+    }
+
+    static AudioFileReader? OpenFile(string? filePath)
+    {
+        if (filePath is null || !File.Exists(filePath)) return null;
+        try { return new AudioFileReader(filePath); }
+        catch (Exception ex)
+        {
+            Log.Error($"Sound file unreadable, playing chime: {filePath}", ex);
+            return null;
+        }
     }
 
     static ISampleProvider Chime()

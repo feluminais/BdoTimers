@@ -24,12 +24,10 @@ public sealed class SchedulerEngine(
         var data = timers.Current;
         var alerts = _planner.Tick(data.Timers, data.Muted.ToHashSet(), now);
         // The planner runs even while paused so that resuming doesn't replay the paused period.
-        if (!IsPaused(now))
+        if (!AlertPause.IsPaused(settings.Current, now))
             foreach (var alert in alerts) sink.Dispatch(alert);
 
         timers.CompleteCountdowns(now, now);
         timers.PruneMuted(now - MuteRetention);
     }
-
-    bool IsPaused(DateTimeOffset now) => settings.Current.AlertsPausedUntilUtc is { } until && now < until;
 }

@@ -115,6 +115,21 @@ public class TimerStoreTests
     }
 
     [Fact]
+    public void Failed_save_leaves_state_unchanged_and_throws()
+    {
+        using var dir = new TempDir();
+        var (store, _) = NewStore(dir);
+        var raised = 0;
+        store.Changed += () => raised++;
+        Directory.CreateDirectory(dir.File("timers.json"));
+
+        Assert.Throws<StateSaveException>(() => store.Upsert(Countdown()));
+
+        Assert.Empty(store.Current.Timers);
+        Assert.Equal(0, raised);
+    }
+
+    [Fact]
     public void PruneMuted_drops_past_entries()
     {
         using var dir = new TempDir();

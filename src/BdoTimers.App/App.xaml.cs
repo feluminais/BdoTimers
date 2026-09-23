@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using BdoTimers.Core.Diagnostics;
+using BdoTimers.Core.Storage;
 
 namespace BdoTimers.App;
 
@@ -33,6 +34,9 @@ public partial class App : Application
         {
             Log.Error("Unhandled UI exception", args.Exception);
             args.Handled = true;
+            if (args.Exception is StateSaveException save)
+                MessageBox.Show($"{save.Message}\n\nThe change was not applied.", "BDO Timers",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
         };
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
             Log.Error("Unhandled exception", args.ExceptionObject as Exception);

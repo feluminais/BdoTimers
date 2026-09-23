@@ -67,4 +67,18 @@ public class ScheduleMathTests
     {
         Assert.Empty(ScheduleMath.Next(Berlin(), Utc(2026, 9, 22, 10, 0), 5));
     }
+
+    [Fact]
+    public void Weekly_slot_yields_more_than_a_year_of_occurrences()
+    {
+        var next = ScheduleMath.Next(Berlin(At(DayOfWeek.Monday, 14, 0)), Utc(2026, 9, 22, 10, 0), 70);
+        Assert.Equal(70, next.Count);
+        Assert.True(next.Zip(next.Skip(1)).All(p => p.First < p.Second));
+    }
+
+    [Fact]
+    public void Out_of_range_day_returns_empty_instead_of_looping()
+    {
+        Assert.Empty(ScheduleMath.Next(Berlin(At((DayOfWeek)9, 14, 0)), Utc(2026, 9, 22, 10, 0), 1));
+    }
 }

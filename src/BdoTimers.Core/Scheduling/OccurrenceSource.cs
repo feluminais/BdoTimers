@@ -8,7 +8,7 @@ public static class OccurrenceSource
     public static IEnumerable<DateTimeOffset> Between(TimerDef timer, DateTimeOffset fromUtc, DateTimeOffset toUtc)
     {
         if (timer.Kind == TimerKind.Scheduled && timer.Scheduled is { } spec)
-            return ScheduleMath.Next(spec, fromUtc, 64).TakeWhile(o => o <= toUtc);
+            return ScheduleMath.From(spec, fromUtc).TakeWhile(o => o <= toUtc);
 
         if (timer.Kind == TimerKind.Countdown
             && timer.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end }
