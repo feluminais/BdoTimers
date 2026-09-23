@@ -46,8 +46,21 @@ public partial class App : Application
             args.SetObserved();
         };
 
-        _services = new AppServices(this, dataDir);
-        _services.Start(showWindow: !e.Args.Contains("--minimized"));
+        // A half-started app has no window or tray icon yet still holds the single-instance mutex,
+        // so every later launch would silently hand off to it. Fail visibly and exit instead.
+        try
+        {
+            _services = new AppServices(this, dataDir);
+            _services.Start(showWindow: !e.Args.Contains("--minimized"));
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Startup failed", ex);
+            MessageBox.Show($"BDO Timers couldn't start: {ex.Message}\n\nDetails are in {Path.Combine(dataDir, "logs")}.",
+                "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Error);
+            Shutdown(1);
+            return;
+        }
         Log.Info("Started");
     }
 
