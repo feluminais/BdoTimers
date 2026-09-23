@@ -1,0 +1,20 @@
+{
+  "source": "Pearl Abyss NA/EU wiki 'World Bosses' EU schedule (image dated 2025-12-24, page edited 2026-04-15), cross-checked slot-by-slot against bdocodex.com EU boss timer",
+  "verifiedOn": "2026-09-23",
+  "timeZoneId": "Europe/Berlin",
+  "bosses": [
+    { "name": "Kzarka", "slots": [ { "day": "Monday", "time": "22:15" }, { "day": "Tuesday", "time": "19:00" }, { "day": "Wednesday", "time": "00:15" }, { "day": "Thursday", "time": "02:00" }, { "day": "Friday", "time": "16:00" }, { "day": "Saturday", "time": "00:15" }, { "day": "Sunday", "time": "12:00" } ] },
+    { "name": "Nouver", "slots": [ { "day": "Monday", "time": "12:00" }, { "day": "Monday", "time": "19:00" }, { "day": "Tuesday", "time": "16:00" }, { "day": "Wednesday", "time": "22:15" }, { "day": "Thursday", "time": "00:15" }, { "day": "Friday", "time": "02:00" }, { "day": "Saturday", "time": "12:00" }, { "day": "Sunday", "time": "00:15" } ] },
+    { "name": "Karanda", "slots": [ { "day": "Monday", "time": "02:00" }, { "day": "Tuesday", "time": "00:15" }, { "day": "Wednesday", "time": "12:00" }, { "day": "Thursday", "time": "16:00" }, { "day": "Friday", "time": "00:15" }, { "day": "Saturday", "time": "19:00" }, { "day": "Sunday", "time": "22:15" } ] },
+    { "name": "Kutum", "slots": [ { "day": "Monday", "time": "00:15" }, { "day": "Monday", "time": "16:00" }, { "day": "Tuesday", "time": "12:00" }, { "day": "Thursday", "time": "19:00" }, { "day": "Friday", "time": "12:00" }, { "day": "Friday", "time": "22:15" }, { "day": "Sunday", "time": "02:00" } ] },
+    { "name": "Offin", "slots": [ { "day": "Wednesday", "time": "16:00" }, { "day": "Friday", "time": "19:00" }, { "day": "Saturday", "time": "02:00" } ] },
+    { "name": "Garmoth", "slots": [ { "day": "Monday", "time": "14:00" }, { "day": "Monday", "time": "23:15" }, { "day": "Tuesday", "time": "14:00" }, { "day": "Tuesday", "time": "23:15" }, { "day": "Wednesday", "time": "14:00" }, { "day": "Wednesday", "time": "23:15" }, { "day": "Thursday", "time": "14:00" }, { "day": "Thursday", "time": "23:15" }, { "day": "Friday", "time": "14:00" }, { "day": "Friday", "time": "23:15" }, { "day": "Saturday", "time": "14:00" }, { "day": "Sunday", "time": "14:00" }, { "day": "Sunday", "time": "19:15" }, { "day": "Sunday", "time": "23:15" } ] },
+    { "name": "Vell", "slots": [ { "day": "Wednesday", "time": "19:00" }, { "day": "Sunday", "time": "16:00" } ] },
+    { "name": "Quint", "slots": [ { "day": "Tuesday", "time": "22:15" }, { "day": "Thursday", "time": "22:15" } ] },
+    { "name": "Muraka", "slots": [ { "day": "Tuesday", "time": "22:15" }, { "day": "Thursday", "time": "22:15" } ] },
+    { "name": "Golden Pig King", "slots": [ { "day": "Monday", "time": "19:00" }, { "day": "Tuesday", "time": "16:00" }, { "day": "Wednesday", "time": "00:15" }, { "day": "Thursday", "time": "02:00" }, { "day": "Friday", "time": "00:15" }, { "day": "Friday", "time": "22:15" }, { "day": "Saturday", "time": "12:00" }, { "day": "Sunday", "time": "02:00" } ] },
+    { "name": "Sangoon", "slots": [ { "day": "Monday", "time": "02:00" }, { "day": "Monday", "time": "12:00" }, { "day": "Tuesday", "time": "00:15" }, { "day": "Wednesday", "time": "12:00" }, { "day": "Thursday", "time": "16:00" }, { "day": "Friday", "time": "19:00" }, { "day": "Saturday", "time": "19:00" }, { "day": "Sunday", "time": "22:15" } ] },
+    { "name": "Bulgasal", "slots": [ { "day": "Monday", "time": "22:15" }, { "day": "Tuesday", "time": "12:00" }, { "day": "Wednesday", "time": "16:00" }, { "day": "Thursday", "time": "19:00" }, { "day": "Friday", "time": "02:00" }, { "day": "Friday", "time": "16:00" }, { "day": "Saturday", "time": "00:15" }, { "day": "Sunday", "time": "00:15" } ] },
+    { "name": "Uturi", "slots": [ { "day": "Monday", "time": "00:15" }, { "day": "Monday", "time": "16:00" }, { "day": "Tuesday", "time": "19:00" }, { "day": "Wednesday", "time": "22:15" }, { "day": "Thursday", "time": "00:15" }, { "day": "Friday", "time": "12:00" }, { "day": "Saturday", "time": "02:00" }, { "day": "Sunday", "time": "12:00" } ] }
+  ]
+}
