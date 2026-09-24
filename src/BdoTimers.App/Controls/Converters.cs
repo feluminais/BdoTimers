@@ -23,3 +23,13 @@ public sealed class NullToCollapsedConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// <summary>How many columns of at least <c>parameter</c> pixels fit in a width; never fewer than two.</summary>
+public sealed class WidthToColumnsConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        Math.Max(2, (int)((value is double width ? width : 0) / double.Parse((string)parameter, CultureInfo.InvariantCulture)));
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
