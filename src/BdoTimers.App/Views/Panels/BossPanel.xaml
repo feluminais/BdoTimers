@@ -6,8 +6,9 @@
              Width="440">
     <DockPanel>
         <Grid DockPanel.Dock="Top" Height="88">
-            <controls:ArtImage Sources="{Binding Images}" Width="200" HorizontalAlignment="Left" />
-            <StackPanel Margin="186,0,40,0" VerticalAlignment="Center">
+            <controls:ArtImage Sources="{Binding Images}" Width="230" HorizontalAlignment="Left" />
+            <!-- Right-aligned in the black, clear of the close button; long names are trimmed before the picture -->
+            <StackPanel Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right">
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding NextText}" Style="{StaticResource LabelText}" />
                 <TextBlock Text="{Binding AppliesText}" Style="{StaticResource LabelText}" TextTrimming="CharacterEllipsis" />

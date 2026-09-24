@@ -45,8 +45,8 @@
                         <ColumnDefinition Width="40" />
                     </Grid.ColumnDefinitions>
                     <controls:ArtImage Sources="{Binding Images}" />
-                    <!-- The text sits in the black the picture fades into, never over the picture -->
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,8,0">
+                    <!-- Text hugs the right edge, in the black the picture fades into -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,8,0" TextBlock.TextAlignment="Right">
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
                                 <Style.Triggers>
