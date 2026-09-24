@@ -58,7 +58,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             ? d with { Muted = d.Muted.Where(m => m.OccurrenceUtc >= before).ToList() }
             : d);
 
-    void Modify(Guid id, Func<TimerDef, TimerDef> change) =>
+    public void Modify(Guid id, Func<TimerDef, TimerDef> change) =>
         Update(d => d with { Timers = d.Timers.Select(t => t.Id == id ? change(t) : t).ToList() });
 
     void ModifyCountdown(Guid id, Func<CountdownSpec, CountdownSpec> change) =>
