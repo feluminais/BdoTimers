@@ -1,0 +1,23 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!-- Per-user like the MSI it chains, so setup never asks for admin rights. -->
+  <Bundle Name="BDO Timers" Manufacturer="feluminais" Version="$(var.Version)"
+          UpgradeCode="58fc3ca9-2669-43e7-8807-335ec282a4b7"
+          IconSourceFile="$(sys.SOURCEFILEDIR)..\..\src\BdoTimers.App\Assets\app.ico">
+    <BootstrapperApplication SourceFile="$(var.SetupUiDir)\SetupUi.exe">
+      <Payload SourceFile="$(var.SetupUiDir)\SetupUi.exe.config" />
+      <Payload SourceFile="$(var.SetupUiDir)\WixToolset.BootstrapperApplicationApi.dll" />
+      <Payload SourceFile="$(var.SetupUiDir)\mbanative.dll" />
+    </BootstrapperApplication>
+
+    <!-- The folder that gets a BdoTimers folder inside it, set by the setup window (which also reads
+         InstallRoot=... from its command line). Empty lets the MSI reuse the remembered folder. -->
+    <Variable Name="InstallRoot" />
+
+    <Chain>
+      <MsiPackage Id="BdoTimersMsi" SourceFile="$(var.MsiPath)">
+        <MsiProperty Name="INSTALLROOT" Value="[InstallRoot]" />
+      </MsiPackage>
+    </Chain>
+  </Bundle>
+</Wix>

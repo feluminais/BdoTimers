@@ -1,10 +1,11 @@
 <Project Sdk="WixToolset.Sdk/5.0.2">
 
+  <!-- The app package. Users run the bundle (../Bundle), which chains this MSI behind the styled setup window. -->
   <PropertyGroup>
-    <OutputName>BdoTimers-Setup-$(Version)</OutputName>
+    <OutputName>BdoTimers-$(Version)</OutputName>
     <InstallerPlatform>x64</InstallerPlatform>
     <!-- publish.ps1 passes the staged app folder; this default matches its staging path. -->
-    <AppDir Condition="'$(AppDir)' == ''">$(MSBuildThisFileDirectory)..\obj\publish\app</AppDir>
+    <AppDir Condition="'$(AppDir)' == ''">$(MSBuildThisFileDirectory)..\..\obj\publish\app</AppDir>
     <DefineConstants>Version=$(Version);AppDir=$(AppDir)</DefineConstants>
     <!-- ICE38/ICE64/ICE91 assume per-machine layouts, and this is a per-user install into the profile.
          ICE61 flags AllowSameVersionUpgrades, which is deliberate so a rebuilt 1.0.0 can be reinstalled. -->
@@ -12,7 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WixToolset.UI.wixext" Version="5.0.2" />
     <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
   </ItemGroup>
 

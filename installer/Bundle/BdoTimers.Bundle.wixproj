@@ -1,0 +1,14 @@
+<Project Sdk="WixToolset.Sdk/5.0.2">
+
+  <!-- The setup users run: a Burn bundle that shows the styled setup window (../SetupUi) and installs the MSI. -->
+  <PropertyGroup>
+    <OutputType>Bundle</OutputType>
+    <OutputName>BdoTimers-Setup-$(Version)</OutputName>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <!-- publish.ps1 passes the built MSI and setup window; these defaults match a local Release build. -->
+    <MsiPath Condition="'$(MsiPath)' == ''">$(MSBuildThisFileDirectory)..\Msi\bin\Release\BdoTimers-$(Version).msi</MsiPath>
+    <SetupUiDir Condition="'$(SetupUiDir)' == ''">$(MSBuildThisFileDirectory)..\SetupUi\bin\Release\net48\win-x64</SetupUiDir>
+    <DefineConstants>Version=$(Version);MsiPath=$(MsiPath);SetupUiDir=$(SetupUiDir)</DefineConstants>
+  </PropertyGroup>
+
+</Project>

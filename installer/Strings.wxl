@@ -1,5 +1,0 @@
-<WixLocalization Culture="en-US" xmlns="http://wixtoolset.org/schemas/v4/wxl">
-  <!-- The folder page picks the parent folder; say so, since the app adds its own BdoTimers folder inside it. -->
-  <String Id="InstallDirDlgDescription" Value="BDO Timers creates its own BdoTimers folder inside the folder you choose." />
-  <String Id="InstallDirDlgFolderLabel" Value="Create the BdoTimers folder in:" />
-</WixLocalization>
