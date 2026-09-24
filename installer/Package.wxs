@@ -10,6 +10,9 @@
                   DowngradeErrorMessage="A newer version of BDO Timers is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
+    <Icon Id="AppIcon.ico" SourceFile="$(sys.SOURCEFILEDIR)..\src\BdoTimers.App\Assets\app.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+
     <!-- The wizard edits INSTALLROOT; the app always goes into its own BdoTimers folder inside it, so picking
          an existing folder never spills the app's files into it. -->
     <StandardDirectory Id="LocalAppDataFolder">
@@ -34,7 +37,7 @@
       <!-- Same value the app writes on start; authoring it here makes uninstall remove it. -->
       <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="BdoTimers"
                      Type="string" Value="&quot;[INSTALLFOLDER]BdoTimers.exe&quot; --minimized" />
-      <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="BDO Timers"
+      <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="BDO Timers" Icon="AppIcon.ico"
                 Target="[INSTALLFOLDER]BdoTimers.exe" WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />
     </Component>
