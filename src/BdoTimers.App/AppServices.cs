@@ -102,7 +102,8 @@ public sealed class AppServices : IDisposable
 
     public async void PreviewSound()
     {
-        try { await _sound.PlayAsync(null, Settings.Current.Volume); }
+        var s = Settings.Current;
+        try { await _sound.PlayAsync(null, s.AlertSound, s.Volume); }
         catch (Exception ex) { Log.Error("Sound preview failed", ex); }
     }
 

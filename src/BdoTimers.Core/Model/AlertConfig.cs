@@ -3,7 +3,7 @@ namespace BdoTimers.Core.Model;
 public sealed record SoundAlert
 {
     public bool Enabled { get; init; } = true;
-    /// <summary>Null plays the built-in chime.</summary>
+    /// <summary>Null plays the app-wide alert sound from settings.</summary>
     public string? FilePath { get; init; }
 }
 

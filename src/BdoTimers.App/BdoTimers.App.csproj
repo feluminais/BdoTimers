@@ -20,6 +20,7 @@
          instead of the embedded resource. -->
     <Content Remove="Assets\Bosses\*.jpg" />
     <Resource Include="Assets\Bosses\*.jpg" />
+    <Resource Include="Assets\Sounds\*.wav" />
     <Resource Include="Theme\Fonts\*.ttf" />
     <!-- The SIL Open Font License asks for the licence to travel with the font. -->
     <None Include="Theme\Fonts\OFL.txt" Link="licenses\Cinzel-OFL.txt" CopyToOutputDirectory="PreserveNewest" />

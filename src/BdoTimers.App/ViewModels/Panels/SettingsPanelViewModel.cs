@@ -1,5 +1,6 @@
 using System.Reflection;
 using BdoTimers.App.Alerts;
+using BdoTimers.Core.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -9,7 +10,16 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 {
     readonly AppServices _services;
 
+    static readonly IReadOnlyDictionary<string, string> SoundLabels = new Dictionary<string, string>
+    {
+        [BuiltInSounds.Gong] = "Gong",
+        [BuiltInSounds.Horn] = "War horn",
+        [BuiltInSounds.Bell] = "Low bell",
+        [BuiltInSounds.Chime] = "Soft chime",
+    };
+
     [ObservableProperty] private Choice _autostart;
+    [ObservableProperty] private Choice _alertSound;
     [ObservableProperty] private double _volume;
     [ObservableProperty] private Choice? _voice;
     [ObservableProperty] private double _speechRate;
@@ -18,6 +28,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
+    public IReadOnlyList<Choice> Sounds { get; } = BuiltInSounds.All.Select(k => new Choice(SoundLabels[k], k)).ToList();
     public LeadChipsViewModel DefaultLeads { get; }
     public string Version { get; } = AppVersion();
 
@@ -27,6 +38,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         var s = services.Settings.Current;
         _autostart = Choice.For(s.Autostart);
         _volume = s.Volume;
+        _alertSound = Sounds.First(c => (string)c.Value! == BuiltInSounds.Resolve(s.AlertSound));
         Voices = services.Tts.InstalledVoices().Select(v => new Choice(v, v)).ToList();
         _voice = Voices.FirstOrDefault(v => (string)v.Value! == s.TtsVoice) ?? Voices.FirstOrDefault();
         _speechRate = s.TtsRate;
@@ -39,6 +51,13 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     {
         _services.Settings.Update(s => s with { Autostart = value.IsOn });
         BdoTimers.App.Autostart.Apply(value.IsOn);
+    }
+
+    /// <summary>Saves and plays the sound, so cycling through the list auditions each one.</summary>
+    partial void OnAlertSoundChanged(Choice value)
+    {
+        _services.Settings.Update(s => s with { AlertSound = (string)value.Value! });
+        _services.PreviewSound();
     }
 
     partial void OnVolumeChanged(double value) => _services.Settings.Update(s => s with { Volume = (float)value });

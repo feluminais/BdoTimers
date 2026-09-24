@@ -32,7 +32,7 @@ public sealed class AlertDispatcher(
         {
             var s = settings.Current;
             if (configs.FirstOrDefault(c => c.Sound.Enabled) is { } withSound)
-                await TryAsync("sound", () => sound.PlayAsync(withSound.Sound.FilePath, s.Volume));
+                await TryAsync("sound", () => sound.PlayAsync(withSound.Sound.FilePath, s.AlertSound, s.Volume));
             if (configs.Any(c => c.Tts.Enabled))
                 await TryAsync("tts", () => tts.SpeakAsync(message.Speech, s.TtsVoice, s.TtsRate, s.Volume));
         }

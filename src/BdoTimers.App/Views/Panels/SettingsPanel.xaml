@@ -27,8 +27,17 @@
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
+                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Sounds}" SelectedItem="{Binding AlertSound}" ValueWidth="110" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Alert sound" Style="{StaticResource RowLabel}" />
+                            <TextBlock Text="Used by every timer set to Default" Style="{StaticResource LabelText}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
                         <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
-                                ToolTip="Play the chime" Command="{Binding PreviewSoundCommand}" />
+                                ToolTip="Play the alert sound" Command="{Binding PreviewSoundCommand}" />
                         <Slider DockPanel.Dock="Right" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center" Margin="0,0,8,0"
                                 Value="{Binding Volume, Delay=250}" />
                         <TextBlock Text="Volume" Style="{StaticResource RowLabel}" />
