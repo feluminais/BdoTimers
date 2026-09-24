@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using BdoTimers.App.Controls;
 
 namespace BdoTimers.SetupUi;
 
@@ -18,11 +19,12 @@ internal partial class MainWindow : Window
         DataContext = _viewModel = viewModel;
     }
 
-    public IReadOnlyList<ImageSource> WelcomeArt { get; } = [Art("garmoth.jpg")];
-    public IReadOnlyList<ImageSource> DoneArt { get; } = [Art("vell.jpg")];
+    // Focus points on each boss's head, as in the app's ArtLibrary.
+    public IReadOnlyList<ArtPicture> WelcomeArt { get; } = [Art("garmoth.jpg", new Point(0.70, 0.30))];
+    public IReadOnlyList<ArtPicture> DoneArt { get; } = [Art("vell.jpg", new Point(0.62, 0.22))];
 
-    static ImageSource Art(string file) =>
-        new BitmapImage(new Uri($"pack://application:,,,/SetupUi;component/Assets/{file}"));
+    static ArtPicture Art(string file, Point head) =>
+        new(new BitmapImage(new Uri($"pack://application:,,,/SetupUi;component/Assets/{file}")), head);
 
     /// <summary>The engine parents any prompts of its own to this window.</summary>
     protected override void OnSourceInitialized(EventArgs e)

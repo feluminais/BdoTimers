@@ -1,5 +1,5 @@
 using System.Globalization;
-using System.Windows.Media;
+using BdoTimers.App.Controls;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,10 +15,10 @@ public sealed partial class BossTileViewModel : ObservableObject
 
     public Guid Id { get; }
     public string Name { get; }
-    public IReadOnlyList<ImageSource> Images { get; }
+    public IReadOnlyList<ArtPicture> Images { get; }
     public IRelayCommand OpenCommand { get; }
 
-    public BossTileViewModel(TimerDef boss, ImageSource image, Action<Guid> open, DateTimeOffset now)
+    public BossTileViewModel(TimerDef boss, ArtPicture image, Action<Guid> open, DateTimeOffset now)
     {
         Id = boss.Id;
         Name = boss.Name;

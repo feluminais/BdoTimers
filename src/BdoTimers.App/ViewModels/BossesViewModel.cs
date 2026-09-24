@@ -1,8 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows;
-using System.Windows.Media;
 using BdoTimers.App.Art;
+using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -126,7 +126,7 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
     [ObservableProperty] private bool _hasSpawn;
     [ObservableProperty] private string _label = "";
     [ObservableProperty] private IReadOnlyList<BossLink> _names = [];
-    [ObservableProperty] private IReadOnlyList<ImageSource> _images = [];
+    [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
     [ObservableProperty] private string _clock = "";
     [ObservableProperty] private bool _skipped;
 

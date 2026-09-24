@@ -44,7 +44,7 @@
     <DockPanel>
         <Grid DockPanel.Dock="Top" Height="88">
             <!-- Clicking the picture offers to change or remove it -->
-            <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="250" HorizontalAlignment="Left"
+            <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="200" HorizontalAlignment="Left"
                     AutomationProperties.Name="Change picture" Click="PictureButton_Click">
                 <Button.ContextMenu>
                     <ContextMenu>
@@ -54,7 +54,7 @@
                 </Button.ContextMenu>
                 <controls:ArtImage Sources="{Binding Images}" />
             </Button>
-            <StackPanel Margin="150,0,40,0" VerticalAlignment="Center" IsHitTestVisible="False">
+            <StackPanel Margin="186,0,40,0" VerticalAlignment="Center" IsHitTestVisible="False">
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding KindText}" Style="{StaticResource LabelText}" />
             </StackPanel>

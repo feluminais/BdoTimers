@@ -26,6 +26,7 @@
     <Page Include="..\..\src\BdoTimers.App\Theme\Theme.xaml" Link="Theme\Theme.xaml" />
     <Page Include="..\..\src\BdoTimers.App\Controls\ArtImage.xaml" Link="Controls\ArtImage.xaml" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\ArtImage.xaml.cs" Link="Controls\ArtImage.xaml.cs" />
+    <Compile Include="..\..\src\BdoTimers.App\Controls\FocusImage.cs" Link="Controls\FocusImage.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\Ui.cs" Link="Controls\Ui.cs" />
     <Resource Include="..\..\src\BdoTimers.App\Theme\Fonts\Cinzel-Regular.ttf" Link="Theme\Fonts\Cinzel-Regular.ttf" />
     <Resource Include="..\..\src\BdoTimers.App\Assets\app.ico" Link="Assets\app.ico" />

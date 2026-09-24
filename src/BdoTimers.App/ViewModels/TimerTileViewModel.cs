@@ -1,5 +1,5 @@
 using System.Globalization;
-using System.Windows.Media;
+using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -20,7 +20,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     DateTimeOffset? _nextOccurrence;
 
     [ObservableProperty] private string _name = "";
-    [ObservableProperty] private IReadOnlyList<ImageSource> _images = [];
+    [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
     [ObservableProperty] private string _digits = "";
     [ObservableProperty] private string _detail = "";
     [ObservableProperty] private bool _isDimmed;
