@@ -15,6 +15,11 @@
     <PackageReference Include="System.Speech" Version="10.0.12" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Resource Include="Assets\Bosses\*.jpg" />
+    <Resource Include="Theme\Fonts\*.ttf" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
