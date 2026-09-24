@@ -21,6 +21,7 @@
     <Content Remove="Assets\Bosses\*.jpg" />
     <Resource Include="Assets\Bosses\*.jpg" />
     <Resource Include="Assets\Sounds\*.wav" />
+    <Resource Include="Assets\app.ico" />
     <Resource Include="Theme\Fonts\*.ttf" />
     <!-- The SIL Open Font License asks for the licence to travel with the font. -->
     <None Include="Theme\Fonts\OFL.txt" Link="licenses\Cinzel-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
@@ -36,6 +37,7 @@
     <WindowsPackageType>None</WindowsPackageType>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <AssemblyName>BdoTimers</AssemblyName>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <RootNamespace>BdoTimers.App</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>

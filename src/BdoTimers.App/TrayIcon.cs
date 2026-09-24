@@ -1,5 +1,5 @@
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using H.NotifyIcon;
 
 namespace BdoTimers.App;
@@ -14,12 +14,7 @@ public sealed class TrayIcon : IDisposable
         {
             ToolTipText = "BDO Timers",
             NoLeftClickDelay = true,
-            IconSource = new GeneratedIconSource
-            {
-                Text = "B",
-                Foreground = new SolidColorBrush(Color.FromRgb(0xE8, 0xC9, 0x8A)),
-                Background = new SolidColorBrush(Color.FromRgb(0x0B, 0x0B, 0x0C)),
-            },
+            IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/app.ico")),
             ContextMenu = BuildMenu(services),
         };
         _icon.TrayLeftMouseUp += (_, _) => services.ShowMainWindow();
