@@ -10,15 +10,17 @@
                   DowngradeErrorMessage="A newer version of BDO Timers is already installed." />
     <MediaTemplate EmbedCab="yes" />
 
+    <!-- The wizard edits INSTALLROOT; the app always goes into its own BdoTimers folder inside it, so picking
+         an existing folder never spills the app's files into it. -->
     <StandardDirectory Id="LocalAppDataFolder">
-      <Directory Id="UserProgramsFolder" Name="Programs">
+      <Directory Id="INSTALLROOT" Name="Programs">
         <Directory Id="INSTALLFOLDER" Name="BdoTimers" />
       </Directory>
     </StandardDirectory>
 
     <!-- Upgrades and repairs reuse the folder chosen at first install instead of the default. -->
-    <Property Id="INSTALLFOLDER">
-      <RegistrySearch Id="PreviousInstallFolder" Root="HKCU" Key="Software\BdoTimers" Name="InstallDir" Type="raw" />
+    <Property Id="INSTALLROOT">
+      <RegistrySearch Id="PreviousInstallRoot" Root="HKCU" Key="Software\BdoTimers" Name="InstallRoot" Type="raw" />
     </Property>
 
     <Feature Id="Main">
@@ -28,7 +30,7 @@
 
     <!-- Registry value as key path because per-user components must not key on files. -->
     <Component Id="Shell" Directory="INSTALLFOLDER">
-      <RegistryValue Root="HKCU" Key="Software\BdoTimers" Name="InstallDir" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\BdoTimers" Name="InstallRoot" Type="string" Value="[INSTALLROOT]" KeyPath="yes" />
       <!-- Same value the app writes on start; authoring it here makes uninstall remove it. -->
       <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="BdoTimers"
                      Type="string" Value="&quot;[INSTALLFOLDER]BdoTimers.exe&quot; --minimized" />
@@ -41,7 +43,7 @@
     <util:CloseApplication Id="CloseRunningApp" Target="BdoTimers.exe" RebootPrompt="no" TerminateProcess="1" />
 
     <!-- Welcome -> choose folder -> install -> finish, skipping WixUI_InstallDir's license page. -->
-    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLROOT" />
     <UI>
       <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2" />
       <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2" />

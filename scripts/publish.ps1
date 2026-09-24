@@ -11,5 +11,5 @@ dotnet build installer/BdoTimers.Installer.wixproj -c Release "-p:AppDir=$(Resol
 if ($LASTEXITCODE -ne 0) { throw 'Installer build failed' }
 
 New-Item -ItemType Directory publish | Out-Null
-Copy-Item installer/bin/Release/*.msi publish/
+Get-ChildItem installer/bin/Release -Recurse -Filter *.msi | Copy-Item -Destination publish/
 Write-Host "Installer: $(Resolve-Path publish/*.msi)"
