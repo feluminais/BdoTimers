@@ -6,6 +6,8 @@ public sealed record AppSettings
 {
     public bool Autostart { get; init; } = true;
     public float Volume { get; init; } = 0.8f;
+    /// <summary>Built-in sound for timers whose sound is "Default"; see <see cref="BuiltInSounds"/>.</summary>
+    public string AlertSound { get; init; } = BuiltInSounds.Default;
     public string? TtsVoice { get; init; }
     public int TtsRate { get; init; }
     public IReadOnlyList<int> DefaultLeadTimesMinutes { get; init; } = AlertConfig.StandardLeadTimesMinutes;

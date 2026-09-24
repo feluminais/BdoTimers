@@ -1,5 +1,7 @@
 using System.IO;
+using System.Windows;
 using BdoTimers.Core.Diagnostics;
+using BdoTimers.Core.Model;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
@@ -7,28 +9,34 @@ namespace BdoTimers.App.Alerts;
 
 public sealed class SoundChannel
 {
-    /// <summary>Plays a file, or the built-in two-tone chime when <paramref name="filePath"/> is null, missing or unreadable. Completes when playback ends.</summary>
-    public Task PlayAsync(string? filePath, float volume)
+    readonly Dictionary<string, byte[]> _builtIns = [];
+
+    /// <summary>
+    /// Plays <paramref name="filePath"/>, or the built-in <paramref name="builtIn"/> sound when the path is null,
+    /// missing or unreadable. Completes when playback ends.
+    /// </summary>
+    public Task PlayAsync(string? filePath, string builtIn, float volume)
     {
         var file = OpenFile(filePath);
+        WaveStream source = (WaveStream?)file ?? new WaveFileReader(new MemoryStream(BuiltIn(builtIn)));
         var output = new WaveOut();
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         output.PlaybackStopped += (_, e) =>
         {
             output.Dispose();
-            file?.Dispose();
+            source.Dispose();
             if (e.Exception is not null) done.TrySetException(e.Exception);
             else done.TrySetResult();
         };
         try
         {
-            output.Init(new VolumeSampleProvider(file ?? Chime()) { Volume = Math.Clamp(volume, 0f, 1f) });
+            output.Init(new VolumeSampleProvider(source.ToSampleProvider()) { Volume = Math.Clamp(volume, 0f, 1f) });
             output.Play();
         }
         catch
         {
             output.Dispose();
-            file?.Dispose();
+            source.Dispose();
             throw;
         }
         return done.Task;
@@ -40,16 +48,22 @@ public sealed class SoundChannel
         try { return new AudioFileReader(filePath); }
         catch (Exception ex)
         {
-            Log.Error($"Sound file unreadable, playing chime: {filePath}", ex);
+            Log.Error($"Sound file unreadable, playing the alert sound instead: {filePath}", ex);
             return null;
         }
     }
 
-    static ISampleProvider Chime()
+    /// <summary>The bundled WAV bytes, read once per key; alerts can play from several threads.</summary>
+    byte[] BuiltIn(string key)
     {
-        static ISampleProvider Tone(double hz, int ms) =>
-            new SignalGenerator(44100, 1) { Frequency = hz, Type = SignalGeneratorType.Sin, Gain = 0.35 }
-                .Take(TimeSpan.FromMilliseconds(ms));
-        return new ConcatenatingSampleProvider([Tone(880, 160), Tone(1320, 240), Tone(880, 160), Tone(1320, 240)]);
+        key = BuiltInSounds.Resolve(key);
+        lock (_builtIns)
+        {
+            if (_builtIns.TryGetValue(key, out var cached)) return cached;
+            using var stream = Application.GetResourceStream(new Uri($"pack://application:,,,/Assets/Sounds/{key}.wav"))!.Stream;
+            using var copy = new MemoryStream();
+            stream.CopyTo(copy);
+            return _builtIns[key] = copy.ToArray();
+        }
     }
 }

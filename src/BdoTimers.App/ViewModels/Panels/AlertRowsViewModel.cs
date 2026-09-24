@@ -10,7 +10,7 @@ namespace BdoTimers.App.ViewModels.Panels;
 /// <summary>The alert rows shared by the boss and custom panels. Every change is saved immediately.</summary>
 public sealed partial class AlertRowsViewModel : ObservableObject
 {
-    static readonly Choice Chime = new("Chime", "chime");
+    static readonly Choice DefaultSound = new("Default", "default");
     static readonly Choice YourFile = new("Your file…", "file");
     static readonly Choice SoundOff = new("Off", "off");
     static readonly int[] OverlayMinutes = [1, 2, 3, 5, 10, 15, 30];
@@ -26,7 +26,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     [ObservableProperty] private bool _voicePhraseInvalid;
     [ObservableProperty] private Choice _overlay;
 
-    public IReadOnlyList<Choice> SoundChoices { get; } = [Chime, YourFile, SoundOff];
+    public IReadOnlyList<Choice> SoundChoices { get; } = [DefaultSound, YourFile, SoundOff];
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> OverlayChoices { get; }
     public LeadChipsViewModel Leads { get; }
@@ -36,7 +36,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         _store = store;
         _id = timer.Id;
         var a = timer.Alerts;
-        _sound = !a.Sound.Enabled ? SoundOff : a.Sound.FilePath is null ? Chime : YourFile;
+        _sound = !a.Sound.Enabled ? SoundOff : a.Sound.FilePath is null ? DefaultSound : YourFile;
         _soundFileName = a.Sound.FilePath is { } path ? Path.GetFileName(path) : null;
         _toast = Choice.For(a.Toast.Enabled);
         _voice = Choice.For(a.Tts.Enabled);
@@ -55,17 +55,17 @@ public sealed partial class AlertRowsViewModel : ObservableObject
             if (dialog.ShowDialog() != true)
             {
                 // Revert after the selector's own update has finished, so it re-reads the old value.
-                Application.Current.Dispatcher.BeginInvoke(() => Sound = oldValue ?? Chime);
+                Application.Current.Dispatcher.BeginInvoke(() => Sound = oldValue ?? DefaultSound);
                 return;
             }
             SoundFileName = Path.GetFileName(dialog.FileName);
             Modify(a => a with { Sound = a.Sound with { Enabled = true, FilePath = dialog.FileName } });
             return;
         }
-        if (newValue == Chime) SoundFileName = null;
+        if (newValue == DefaultSound) SoundFileName = null;
         Modify(a => a with
         {
-            Sound = a.Sound with { Enabled = newValue != SoundOff, FilePath = newValue == Chime ? null : a.Sound.FilePath },
+            Sound = a.Sound with { Enabled = newValue != SoundOff, FilePath = newValue == DefaultSound ? null : a.Sound.FilePath },
         });
     }
 
