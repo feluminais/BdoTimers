@@ -19,6 +19,8 @@ public sealed record CountdownSpec
     public CountdownStatus Status { get; init; } = CountdownStatus.Idle;
     public DateTimeOffset? EndsAtUtc { get; init; }
     public TimeSpan? Remaining { get; init; }
+    /// <summary>When the current run was started; kept through pause and resume.</summary>
+    public DateTimeOffset? StartedAtUtc { get; init; }
 }
 
 public sealed record TimerDef
@@ -31,4 +33,6 @@ public sealed record TimerDef
     public ScheduledSpec? Scheduled { get; init; }
     public CountdownSpec? Countdown { get; init; }
     public AlertConfig Alerts { get; init; } = new();
+    /// <summary>Custom picture's file name inside the app's images folder; built-in bosses use bundled art.</summary>
+    public string? ImageFile { get; init; }
 }

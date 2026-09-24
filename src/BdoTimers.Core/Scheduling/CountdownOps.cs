@@ -5,7 +5,7 @@ namespace BdoTimers.Core.Scheduling;
 public static class CountdownOps
 {
     public static CountdownSpec Start(CountdownSpec c, DateTimeOffset now) =>
-        c with { Status = CountdownStatus.Running, EndsAtUtc = now + c.Duration, Remaining = null };
+        c with { Status = CountdownStatus.Running, EndsAtUtc = now + c.Duration, Remaining = null, StartedAtUtc = now };
 
     public static CountdownSpec Pause(CountdownSpec c, DateTimeOffset now) =>
         c is { Status: CountdownStatus.Running, EndsAtUtc: { } end }
@@ -23,7 +23,7 @@ public static class CountdownOps
             : c;
 
     public static CountdownSpec Reset(CountdownSpec c) =>
-        c with { Status = CountdownStatus.Idle, EndsAtUtc = null, Remaining = null };
+        c with { Status = CountdownStatus.Idle, EndsAtUtc = null, Remaining = null, StartedAtUtc = null };
 
     public static CountdownSpec Complete(CountdownSpec c, DateTimeOffset now) =>
         c.AutoRepeat ? Start(c, now) : Reset(c);
