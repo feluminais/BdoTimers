@@ -27,7 +27,8 @@ public partial class OverlayWindow : Window
     public void SetClickThrough(bool enabled)
     {
         _clickThrough = enabled;
-        Frame.BorderBrush = enabled ? Brushes.Transparent : Brushes.Gold;
+        Frame.BorderBrush = (Brush)FindResource(enabled ? "AccentSoftBrush" : "AccentTextBrush");
+        Frame.BorderThickness = new Thickness(enabled ? 1 : 2);
         ApplyStyles();
     }
 
