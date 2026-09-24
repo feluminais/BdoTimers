@@ -23,15 +23,18 @@ public sealed class AlertDispatcher(
     async Task RunAsync(AlertEvent alert)
     {
         var message = AlertMessage.Build(alert);
-        var config = alert.Timer.Alerts;
-        if (config.Toast.Enabled) Try("toast", () => toast.ShowUrgent(message));
+        // A shared spawn uses a channel if any of its timers wants it; the sound is the first enabled one's.
+        var configs = alert.Timers.Select(t => t.Alerts).ToList();
+        if (configs.Any(c => c.Toast.Enabled)) Try("toast", () => toast.ShowUrgent(message));
 
         await _audio.WaitAsync();
         try
         {
             var s = settings.Current;
-            if (config.Sound.Enabled) await TryAsync("sound", () => sound.PlayAsync(config.Sound.FilePath, s.Volume));
-            if (config.Tts.Enabled) await TryAsync("tts", () => tts.SpeakAsync(message.Speech, s.TtsVoice, s.TtsRate, s.Volume));
+            if (configs.FirstOrDefault(c => c.Sound.Enabled) is { } withSound)
+                await TryAsync("sound", () => sound.PlayAsync(withSound.Sound.FilePath, s.Volume));
+            if (configs.Any(c => c.Tts.Enabled))
+                await TryAsync("tts", () => tts.SpeakAsync(message.Speech, s.TtsVoice, s.TtsRate, s.Volume));
         }
         finally
         {

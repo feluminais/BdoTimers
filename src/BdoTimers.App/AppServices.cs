@@ -98,7 +98,7 @@ public sealed class AppServices : IDisposable
     public void ResumeAlerts() => Settings.Update(AlertPause.Resume);
 
     public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
-        new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }, DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
+        [new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
 
     public async void PreviewSound()
     {

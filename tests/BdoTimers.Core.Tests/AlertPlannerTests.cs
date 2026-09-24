@@ -82,7 +82,7 @@ public class AlertPlannerTests
         var timer = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 0);
         var alert = new AlertPlanner().Tick([timer], NoMutes, T).Single();
         Assert.Equal(T, alert.OccurrenceUtc);
-        Assert.Equal("Kzarka", alert.Timer.Name);
+        Assert.Equal("Kzarka", alert.Timers.Single().Name);
     }
 
     [Fact]

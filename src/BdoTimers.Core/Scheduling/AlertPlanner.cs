@@ -31,7 +31,7 @@ public sealed class AlertPlanner
                     if (_fired.Add((timer.Id, occurrence, lead)) && toFire is null) toFire = lead;
                 }
                 if (toFire is { } fired)
-                    events.Add(new AlertEvent(timer, occurrence, fired, MinutesLeft(occurrence, now)));
+                    events.Add(new AlertEvent([timer], occurrence, fired, MinutesLeft(occurrence, now)));
             }
         }
         _fired.RemoveWhere(k => k.Occurrence < now - Grace - Grace);
