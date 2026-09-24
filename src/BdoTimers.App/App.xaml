@@ -11,6 +11,7 @@
             <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
             <controls:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <controls:NullToCollapsedConverter x:Key="NullToCollapsed" />
+            <controls:WidthToColumnsConverter x:Key="WidthToColumns" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

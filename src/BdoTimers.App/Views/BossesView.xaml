@@ -88,6 +88,61 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <!-- Boss tile under the table: the whole tile opens the boss panel; the corner gear says so -->
+        <Style x:Key="BossTileButton" TargetType="Button">
+            <Setter Property="Height" Value="52" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="ToolTip" Value="Alerts, sound and spawn times" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{StaticResource BgBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1"
+                                ClipToBounds="True">
+                            <Grid>
+                                <ContentPresenter />
+                                <TextBlock x:Name="Gear" Style="{StaticResource IconText}" Text="&#xE713;" FontSize="11" Opacity="0.55"
+                                           Foreground="{StaticResource SubtleBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,7,0" />
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+                                <Setter TargetName="Gear" Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                                <Setter TargetName="Gear" Property="Opacity" Value="1" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="BossTile" DataType="{x:Type vm:BossTileViewModel}">
+            <Button Style="{StaticResource BossTileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}">
+                <Grid>
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsOff}" Value="True">
+                                    <Setter Property="Opacity" Value="0.45" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <controls:ArtImage Sources="{Binding Images}" Width="110" HorizontalAlignment="Left" />
+                    <StackPanel Margin="72,0,22,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+        </DataTemplate>
     </UserControl.Resources>
 
     <DockPanel>
@@ -104,50 +159,46 @@
             <ContentControl Grid.Column="4" Content="{Binding FollowedBy}" ContentTemplate="{StaticResource StripTile}" Focusable="False" />
         </Grid>
 
-        <!-- Week grid -->
-        <Grid Margin="0,22,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <DockPanel Margin="0,0,0,6">
-                <FrameworkElement Width="56" DockPanel.Dock="Left" />
-                <ItemsControl ItemsSource="{Binding Days}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type vm:DayHeaderViewModel}">
-                            <Border Margin="6,0" BorderThickness="0,0,0,1" Padding="0,0,0,4">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="BorderBrush" Value="Transparent" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
-                                <TextBlock Text="{Binding Label}" HorizontalAlignment="Center" FontSize="12">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
-                                            <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
+        <!-- The week table and the Bosses section scroll together under the pinned strip -->
+        <ScrollViewer Margin="0,22,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel>
+                <DockPanel Margin="0,0,0,6">
+                    <FrameworkElement Width="56" DockPanel.Dock="Left" />
+                    <ItemsControl ItemsSource="{Binding Days}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:DayHeaderViewModel}">
+                                <Border Margin="6,0" BorderThickness="0,0,0,1" Padding="0,0,0,4">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="BorderBrush" Value="Transparent" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                    <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </DockPanel>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding Label}" HorizontalAlignment="Center" FontSize="12">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
+                                                <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsToday}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Focusable="False">
                 <ItemsControl ItemsSource="{Binding Rows}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:GridRowViewModel}">
@@ -209,7 +260,18 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-            </ScrollViewer>
-        </Grid>
+                <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0" />
+
+                <TextBlock Text="Bosses" Style="{StaticResource SectionText}" Margin="0,26,0,10" />
+                <!-- As many columns of 215 px or more as fit; the negative margin absorbs the last tile's gap -->
+                <ItemsControl ItemsSource="{Binding Tiles}" ItemTemplate="{StaticResource BossTile}" Margin="0,0,-8,0" Focusable="False">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource WidthToColumns}, ConverterParameter=215}" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
     </DockPanel>
 </UserControl>

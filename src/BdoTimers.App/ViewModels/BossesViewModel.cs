@@ -12,12 +12,14 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>Bosses screen: the previous / next / followed-by strip and this week's spawn grid.</summary>
+/// <summary>Bosses screen: the previous / next / followed-by strip, this week's spawn grid and a tile per boss.</summary>
 public sealed partial class BossesViewModel : ObservableObject
 {
     readonly AppServices _services;
     readonly IPanelHost _host;
     object? _gridKey;
+    /// <summary>The data the tiles last showed; cleared each minute so their next-spawn times move on.</summary>
+    AppData? _tilesData;
     int _tooltipMinute = -1;
 
     public StripTileViewModel Previous { get; } = new("Previous", elapsed: true);
@@ -25,6 +27,7 @@ public sealed partial class BossesViewModel : ObservableObject
     public StripTileViewModel FollowedBy { get; } = new("Followed by", elapsed: false);
     public ObservableCollection<DayHeaderViewModel> Days { get; } = [];
     public ObservableCollection<GridRowViewModel> Rows { get; } = [];
+    public ObservableCollection<BossTileViewModel> Tiles { get; } = [];
 
     public BossesViewModel(AppServices services, IPanelHost host)
     {
@@ -55,7 +58,29 @@ public sealed partial class BossesViewModel : ObservableObject
         {
             _tooltipMinute = now.Minute;
             foreach (var entry in Rows.SelectMany(r => r.Cells).SelectMany(c => c.Entries)) entry.RefreshTooltip(now);
+            _tilesData = null;
         }
+        if (!ReferenceEquals(data, _tilesData))
+        {
+            _tilesData = data;
+            SyncTiles(data, now);
+        }
+    }
+
+    static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
+        data.Timers.Where(t => t.IsBuiltIn).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Updates the tiles in place; rebuilds them only when the set of bosses changed (a timetable reset).</summary>
+    void SyncTiles(AppData data, DateTimeOffset now)
+    {
+        var bosses = BuiltInBosses(data).ToList();
+        if (bosses.Select(b => b.Id).SequenceEqual(Tiles.Select(t => t.Id)))
+        {
+            foreach (var (tile, boss) in Tiles.Zip(bosses)) tile.Show(boss, now);
+            return;
+        }
+        Tiles.Clear();
+        foreach (var boss in bosses) Tiles.Add(new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now));
     }
 
     void RebuildGrid(AppData data, DateTimeOffset now)
