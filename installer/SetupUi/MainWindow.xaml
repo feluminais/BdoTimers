@@ -1,0 +1,154 @@
+<Window x:Class="BdoTimers.SetupUi.MainWindow" x:ClassModifier="internal"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:BdoTimers.SetupUi"
+        xmlns:controls="clr-namespace:BdoTimers.App.Controls"
+        Title="BDO Timers setup" Width="640" Height="400" ResizeMode="NoResize" WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/SetupUi;component/Assets/app.ico" UseLayoutRounding="True"
+        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI" FontSize="13">
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="36" ResizeBorderThickness="0" GlassFrameThickness="0,0,0,1" CornerRadius="0" UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+    <Window.Resources>
+        <local:PageVisibilityConverter x:Key="PageVisible" />
+        <local:NotConverter x:Key="Not" />
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+        <!-- Square gold check box in the theme's style -->
+        <Style x:Key="GoldCheckBox" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <StackPanel Orientation="Horizontal" Background="Transparent">
+                            <Border x:Name="Box" Width="13" Height="13" BorderThickness="1" BorderBrush="{StaticResource AccentBrush}" Margin="0,0,8,0" VerticalAlignment="Center">
+                                <Border x:Name="Fill" Margin="2" Background="{StaticResource AccentBrush}" Visibility="Collapsed" />
+                            </Border>
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Fill" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="GoldProgress" TargetType="ProgressBar">
+            <Setter Property="Height" Value="3" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border x:Name="PART_Track" Height="1" VerticalAlignment="Center" Background="{StaticResource HairlineStrongBrush}" />
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" Background="{StaticResource AccentBrush}" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="{StaticResource AccentSoftBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="36" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="16,0,0,0">
+                <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}" Height="36" Content="&#xE8BB;" ToolTip="Close"
+                        Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
+                <Image Source="pack://application:,,,/SetupUi;component/Assets/app.ico" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <TextBlock Text="BDO Timers setup" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}" VerticalAlignment="Center" />
+            </DockPanel>
+            <Border Height="1" VerticalAlignment="Bottom" Background="{StaticResource HairlineBrush}" />
+
+            <Grid Grid.Row="1">
+                <!-- Welcome: picture fading into black, name, Install and Options -->
+                <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Welcome}">
+                    <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
+                        <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
+                        <TextBlock Text="World-boss and custom timers with alerts that reach you in game." TextWrapping="Wrap"
+                                   Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,4" />
+                        <TextBlock Text="{Binding Version}" Style="{StaticResource LabelText}" Margin="0,0,0,22" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource OutlineButton}" Content="Install" IsDefault="True" Command="{Binding InstallCommand}" />
+                            <Button Style="{StaticResource GhostButton}" Content="Options" Margin="10,0,0,0" Command="{Binding OptionsCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Options: where the BdoTimers folder goes -->
+                <Grid Margin="32,26,32,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Options}">
+                    <StackPanel>
+                        <TextBlock Text="Install location" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Browse…" Margin="12,0,0,0" Command="{Binding BrowseCommand}" />
+                            <TextBox Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"
+                                     controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding InstallFolderText}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="BDO Timers always gets its own BdoTimers folder inside the folder you choose. No admin rights are needed, so folders that require them (like Program Files) won't work."
+                                   Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" Margin="0,16,0,0" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                        <Button Style="{StaticResource GhostButton}" Content="Back" Command="{Binding BackCommand}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Install" IsDefault="True" Margin="10,0,0,0" Command="{Binding InstallCommand}" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Progress -->
+                <Grid Margin="48,0,48,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Progress}">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ProgressTitle}" Style="{StaticResource DisplayText}" FontSize="18" Margin="0,0,0,14" />
+                        <ProgressBar Style="{StaticResource GoldProgress}" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
+                        <TextBlock Style="{StaticResource LabelText}" FontSize="12" Margin="0,8,0,0">
+                            <Run Text="{Binding Progress, Mode=OneWay}" /><Run Text="%" />
+                        </TextBlock>
+                    </StackPanel>
+                    <Button Style="{StaticResource GhostButton}" Content="Cancel" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding CancelCommand}" />
+                </Grid>
+
+                <!-- Done -->
+                <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Done}">
+                    <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding DoneArt, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
+                        <TextBlock Text="{Binding DoneTitle}" Style="{StaticResource DisplayText}" FontSize="24" />
+                        <TextBlock Text="{Binding DoneText}" TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,20" />
+                        <CheckBox Style="{StaticResource GoldCheckBox}" Content="Launch BDO Timers" IsChecked="{Binding LaunchApp}" Margin="0,0,0,20"
+                                  Visibility="{Binding CanLaunch, Converter={StaticResource BoolToVisibility}}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Finish" IsDefault="True" HorizontalAlignment="Left" Command="{Binding FinishCommand}" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Error -->
+                <Grid Margin="48,0,48,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Error}">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Setup couldn't finish" Style="{StaticResource DisplayText}" FontSize="18" Margin="0,0,0,10" />
+                        <TextBlock Text="{Binding ErrorText}" TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" />
+                        <Button Style="{StaticResource LinkButton}" Content="Open log" HorizontalAlignment="Left" Margin="0,12,0,0" Command="{Binding OpenLogCommand}" />
+                    </StackPanel>
+                    <Button Style="{StaticResource OutlineButton}" Content="Close" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding CloseCommand}" />
+                </Grid>
+
+                <!-- Maintenance: already installed (run again, or Uninstall from Settings > Apps) -->
+                <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Maintenance}">
+                    <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
+                        <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
+                        <TextBlock Text="Already installed. Repair it, or remove it; your timers and settings are kept either way."
+                                   TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,22" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource GhostButton}" Content="Repair" Command="{Binding RepairCommand}" />
+                            <Button Style="{StaticResource OutlineButton}" Content="Uninstall" Margin="10,0,0,0" Command="{Binding UninstallCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

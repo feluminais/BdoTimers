@@ -8,15 +8,14 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 - Starts with Windows, minimized to the tray
 
 ## Install
-`pwsh scripts/publish.ps1` builds `publish/BdoTimers-Setup-<version>.msi`. Run it; no admin rights needed.
+`pwsh scripts/publish.ps1` builds `publish/BdoTimers-Setup-<version>.exe`. Run it; no admin rights needed.
 
-- Installs for the current user into a `BdoTimers` folder inside the folder you pick (default
-  `%LocalAppData%\Programs`). Pick a folder you can write to without admin rights: Program Files won't work.
-  Upgrades reuse the chosen folder.
-- Adds a Start Menu shortcut and, if the box on the last page is ticked, starts the app.
-- Starts with Windows (toggle in Settings). Uninstall from Settings → Apps; that also removes the autostart entry.
-- Installing a newer build over an older one upgrades in place and closes the running app first.
-- Data lives in `%AppData%\BdoTimers` and is kept on uninstall.
+- Install puts BDO Timers in `%LocalAppData%\Programs\BdoTimers`. Options lets you pick another folder; the app always
+  gets its own `BdoTimers` folder inside it. Folders that need admin rights (Program Files) won't work.
+- Adds a Start Menu shortcut, starts with Windows (toggle in Settings), and can launch the app when setup finishes.
+- Run the setup again (or Uninstall in Settings → Apps) to repair or remove it. Data in `%AppData%\BdoTimers` is kept.
+- Newer builds upgrade in place, reuse the chosen folder, and close the running app first.
+- Silent: `BdoTimers-Setup-<version>.exe /quiet InstallRoot=D:\Games` and `/quiet /uninstall`.
 
 Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 
