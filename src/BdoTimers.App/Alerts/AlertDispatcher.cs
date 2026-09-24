@@ -1,6 +1,7 @@
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Sounds;
 using BdoTimers.Core.Storage;
 using BdoTimers.Core.Text;
 
@@ -11,7 +12,8 @@ namespace BdoTimers.App.Alerts;
 /// (sound then speech) is serialized so simultaneous alerts don't talk over each other.
 /// </summary>
 public sealed class AlertDispatcher(
-    ToastChannel toast, SoundChannel sound, TtsChannel tts, PersistentState<AppSettings> settings) : IAlertSink
+    ToastChannel toast, SoundChannel sound, TtsChannel tts, PersistentState<AppSettings> settings, UserSounds userSounds)
+    : IAlertSink
 {
     readonly SemaphoreSlim _audio = new(1, 1);
 
@@ -32,7 +34,8 @@ public sealed class AlertDispatcher(
         {
             var s = settings.Current;
             if (configs.FirstOrDefault(c => c.Sound.Enabled) is { } withSound)
-                await TryAsync("sound", () => sound.PlayAsync(withSound.Sound.FilePath, s.AlertSound, s.Volume));
+                await TryAsync("sound", () => sound.PlayAsync(
+                    SoundKeys.Playable(withSound.Sound.Key, s.AlertSound, userSounds.Exists), s.Volume));
             if (configs.Any(c => c.Tts.Enabled))
                 await TryAsync("tts", () => tts.SpeakAsync(message.Speech, s.TtsVoice, s.TtsRate, s.Volume));
         }

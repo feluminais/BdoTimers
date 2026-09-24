@@ -11,25 +11,32 @@
             </StackPanel>
         </Border>
         <Border Style="{StaticResource Row}">
-            <DockPanel>
-                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding SoundChoices}" SelectedItem="{Binding Sound}" ValueWidth="110" />
-                <StackPanel VerticalAlignment="Center">
+            <StackPanel DataContext="{Binding Sound}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
+                            ToolTip="Test this sound" Command="{Binding TestCommand}" />
+                    <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected}" ValueWidth="110"
+                                            AutomationProperties.Name="Sound" />
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="11" Margin="0,0,4,0"
+                            ToolTip="Add your own sound (WAV or MP3)" Command="{Binding AddCommand}" />
                     <TextBlock Text="Sound" Style="{StaticResource RowLabel}" />
-                    <TextBlock Text="{Binding SoundFileName}" Style="{StaticResource LabelText}" TextTrimming="CharacterEllipsis"
-                               Visibility="{Binding SoundFileName, Converter={StaticResource NullToCollapsed}}" />
-                </StackPanel>
-            </DockPanel>
+                </DockPanel>
+                <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}"
+                           Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
+            </StackPanel>
         </Border>
         <Border Style="{StaticResource Row}">
             <DockPanel>
-                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Toast}" ValueWidth="110" />
+                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Toast}" ValueWidth="110"
+                                        AutomationProperties.Name="Windows notification" />
                 <TextBlock Text="Windows notification" Style="{StaticResource RowLabel}" />
             </DockPanel>
         </Border>
         <Border Style="{StaticResource Row}">
             <StackPanel>
                 <DockPanel>
-                    <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Voice}" ValueWidth="110" />
+                    <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Voice}" ValueWidth="110"
+                                            AutomationProperties.Name="Voice" />
                     <TextBlock Text="Voice" Style="{StaticResource RowLabel}" />
                 </DockPanel>
                 <TextBox Text="{Binding VoicePhrase, UpdateSourceTrigger=PropertyChanged, Delay=400}" Margin="0,6,0,0" FontSize="12"
@@ -39,7 +46,8 @@
         </Border>
         <Border Style="{StaticResource Row}">
             <DockPanel>
-                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OverlayChoices}" SelectedItem="{Binding Overlay}" ValueWidth="110" />
+                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OverlayChoices}" SelectedItem="{Binding Overlay}" ValueWidth="110"
+                                        AutomationProperties.Name="Overlay over the game" />
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="Overlay over the game" Style="{StaticResource RowLabel}" />
                     <TextBlock Text="Borderless window mode only" Style="{StaticResource LabelText}" />

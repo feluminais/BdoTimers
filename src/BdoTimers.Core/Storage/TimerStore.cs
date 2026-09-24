@@ -26,6 +26,14 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         return d with { Muted = d.Muted.Contains(mute) ? d.Muted.Where(m => m != mute).ToList() : [.. d.Muted, mute] };
     });
 
+    /// <summary>Timers that played <paramref name="key"/> go back to the app-wide sound.</summary>
+    public void ForgetSound(string key) => Update(d => d with
+    {
+        Timers = d.Timers
+            .Select(t => t.Alerts.Sound.Key == key ? t with { Alerts = t.Alerts with { Sound = t.Alerts.Sound with { Key = null } } } : t)
+            .ToList(),
+    });
+
     public void StartCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Start(c, now));
     public void PauseCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Pause(c, now));
     public void ResumeCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Resume(c, now));

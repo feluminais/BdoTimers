@@ -28,6 +28,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject
 
     public bool IsCountdown { get; }
     public bool IsWeekly => !IsCountdown;
+    public string KindText => IsCountdown ? "Countdown" : "Weekly timer";
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
@@ -56,7 +57,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject
             Slots = new SlotListViewModel(spec.Slots,
                 slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
         }
-        Alerts = new AlertRowsViewModel(services.Timers, timer);
+        Alerts = new AlertRowsViewModel(services, timer);
     }
 
     partial void OnNameChanged(string value)
