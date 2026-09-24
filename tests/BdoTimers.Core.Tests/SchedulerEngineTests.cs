@@ -88,6 +88,19 @@ public class SchedulerEngineTests : IDisposable
     }
 
     [Fact]
+    public void Bosses_spawning_together_raise_one_alert()
+    {
+        var kzarka = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 0);
+        var uturi = TestTimers.Scheduled("Uturi", DayOfWeek.Tuesday, 14, 0, 0);
+        _timers.Upsert(kzarka);
+        _timers.Upsert(uturi);
+
+        TickAt(T0);
+
+        Assert.Equal(new[] { "Kzarka", "Uturi" }, _sink.Alerts.Single().Timers.Select(t => t.Name));
+    }
+
+    [Fact]
     public void Startup_reports_countdowns_that_ended_while_closed()
     {
         var timer = AddCountdown();
