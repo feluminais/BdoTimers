@@ -45,6 +45,36 @@ public class TextTests
     public void Formats_countdowns(int seconds, string expected) =>
         Assert.Equal(expected, DurationFormat.Countdown(TimeSpan.FromSeconds(seconds)));
 
+    [Theory]
+    [InlineData(-5, "00:00:00")]
+    [InlineData(14195, "03:56:35")]
+    [InlineData(93600, "1d 02:00:00")]
+    public void Formats_clock(int seconds, string expected) =>
+        Assert.Equal(expected, DurationFormat.Clock(TimeSpan.FromSeconds(seconds)));
+
+    [Theory]
+    [InlineData("1:30", 90)]
+    [InlineData("0:05", 5)]
+    [InlineData(" 90 ", 90)]
+    [InlineData("24:00", 1440)]
+    public void Parses_durations(string text, int minutes)
+    {
+        Assert.True(Parsing.TryParseDuration(text, out var d));
+        Assert.Equal(TimeSpan.FromMinutes(minutes), d);
+    }
+
+    [Theory]
+    [InlineData("0")]
+    [InlineData("0:00")]
+    [InlineData("24:01")]
+    [InlineData("1:60")]
+    [InlineData("abc")]
+    [InlineData("")]
+    public void Rejects_bad_durations(string text) => Assert.False(Parsing.TryParseDuration(text, out _));
+
+    [Fact]
+    public void Formats_durations() => Assert.Equal("1:30", Parsing.FormatDuration(TimeSpan.FromMinutes(90)));
+
     [Fact]
     public void Parses_lead_times()
     {
