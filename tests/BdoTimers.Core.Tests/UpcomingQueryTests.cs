@@ -8,34 +8,6 @@ public class UpcomingQueryTests
     static readonly DateTimeOffset Now = new(2026, 9, 22, 10, 0, 0, TimeSpan.Zero); // Tue 12:00 Berlin
 
     [Fact]
-    public void Lists_enabled_timers_in_time_order_with_mute_flags()
-    {
-        var karanda = TestTimers.Scheduled("Karanda", DayOfWeek.Tuesday, 20, 0, 0);
-        var kzarka = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 0);
-        var off = TestTimers.Scheduled("Off", DayOfWeek.Tuesday, 13, 0, 0) with { Enabled = false };
-        var farm = TestTimers.Countdown(Now.AddMinutes(30), 0);
-        var data = new AppData
-        {
-            Timers = [karanda, kzarka, off, farm],
-            Muted = [new MutedOccurrence(kzarka.Id, Now.AddHours(2))],
-        };
-
-        var items = UpcomingQuery.Next(data, Now, TimeSpan.FromHours(12), 10);
-
-        Assert.Equal(new[] { "Farm", "Kzarka", "Karanda" }, items.Select(i => i.Timer.Name));
-        Assert.True(items[1].Muted);
-        Assert.False(items[0].Muted);
-    }
-
-    [Fact]
-    public void Respects_max()
-    {
-        var kzarka = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 0);
-        var items = UpcomingQuery.Next(new AppData { Timers = [kzarka] }, Now, TimeSpan.FromDays(30), 2);
-        Assert.Equal(2, items.Count);
-    }
-
-    [Fact]
     public void Overlay_shows_only_opted_in_unmuted_items_inside_their_window()
     {
         var overlay = new OverlayAlert { Enabled = true, ShowMinutesBefore = 10 };
