@@ -45,7 +45,8 @@
                         <ColumnDefinition Width="40" />
                     </Grid.ColumnDefinitions>
                     <controls:ArtImage Sources="{Binding Images}" />
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <!-- The text sits in the black the picture fades into, never over the picture -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="4,0,8,0">
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
                                 <Style.Triggers>
@@ -56,9 +57,9 @@
                             </Style>
                         </StackPanel.Style>
                         <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}"
-                                   HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" HorizontalAlignment="Center" />
-                        <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" HorizontalAlignment="Center" />
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
+                        <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
                     </StackPanel>
                     <!-- Countdown controls appear only while the tile is hovered -->
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">

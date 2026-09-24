@@ -1,5 +1,5 @@
 using System.IO;
-using System.Windows.Media;
+using BdoTimers.App.Controls;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Text;
@@ -17,7 +17,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject
 
     [ObservableProperty] private string _name;
     [ObservableProperty] private bool _nameInvalid;
-    [ObservableProperty] private IReadOnlyList<ImageSource> _images;
+    [ObservableProperty] private IReadOnlyList<ArtPicture> _images;
     [ObservableProperty] private bool _hasPicture;
     [ObservableProperty] private string _durationText = "";
     [ObservableProperty] private bool _durationInvalid;

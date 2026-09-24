@@ -1,6 +1,7 @@
 <UserControl x:Class="BdoTimers.App.Controls.ArtImage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              x:Name="Root" ClipToBounds="True" IsHitTestVisible="False">
     <ItemsControl ItemsSource="{Binding Sources, ElementName=Root}">
         <ItemsControl.ItemsPanel>
@@ -10,9 +11,7 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <Border ClipToBounds="True">
-                    <Image Source="{Binding}" Stretch="UniformToFill" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
+                <controls:FocusImage Picture="{Binding}" />
             </DataTemplate>
         </ItemsControl.ItemTemplate>
         <!-- The picture melts into the black to its right instead of ending at a hard edge. -->

@@ -1,5 +1,5 @@
 using System.Globalization;
-using System.Windows.Media;
+using BdoTimers.App.Controls;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
@@ -19,7 +19,7 @@ public sealed partial class BossPanelViewModel : ObservableObject
     public string Name { get; }
     public string NextText { get; }
     public string AppliesText { get; }
-    public IReadOnlyList<ImageSource> Images { get; }
+    public IReadOnlyList<ArtPicture> Images { get; }
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public AlertRowsViewModel Alerts { get; }
     public SlotListViewModel Slots { get; }

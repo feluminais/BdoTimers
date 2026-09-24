@@ -1,20 +1,19 @@
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace BdoTimers.App.Controls;
 
-/// <summary>One or more pictures stacked vertically, fading to transparent toward the right.</summary>
+/// <summary>One or more pictures stacked vertically, each cropped around its focus, fading to transparent toward the right.</summary>
 public partial class ArtImage : UserControl
 {
     public static readonly DependencyProperty SourcesProperty =
-        DependencyProperty.Register(nameof(Sources), typeof(IReadOnlyList<ImageSource>), typeof(ArtImage));
+        DependencyProperty.Register(nameof(Sources), typeof(IReadOnlyList<ArtPicture>), typeof(ArtImage));
 
     public ArtImage() => InitializeComponent();
 
-    public IReadOnlyList<ImageSource>? Sources
+    public IReadOnlyList<ArtPicture>? Sources
     {
-        get => (IReadOnlyList<ImageSource>?)GetValue(SourcesProperty);
+        get => (IReadOnlyList<ArtPicture>?)GetValue(SourcesProperty);
         set => SetValue(SourcesProperty, value);
     }
 }
