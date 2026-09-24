@@ -10,7 +10,9 @@ using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
+using BdoTimers.Core.Sounds;
 using BdoTimers.Core.Storage;
+using Microsoft.Win32;
 
 namespace BdoTimers.App;
 
@@ -21,9 +23,10 @@ public sealed class AppServices : IDisposable
     readonly SchedulerLoop _loop;
     readonly TrayIcon _tray;
     readonly ToastChannel _toast;
-    readonly SoundChannel _sound = new();
+    readonly SoundChannel _sound;
     readonly string _dataDir;
     MainWindow? _main;
+    CancellationTokenSource? _preview;
 
     public TimerStore Timers { get; }
     public PersistentState<AppSettings> Settings { get; }
@@ -33,6 +36,7 @@ public sealed class AppServices : IDisposable
     public TtsChannel Tts { get; }
     public OverlayController Overlay { get; }
     public ArtLibrary Art { get; }
+    public UserSounds Sounds { get; }
     public bool IsQuitting { get; private set; }
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -41,6 +45,8 @@ public sealed class AppServices : IDisposable
         _app = app;
         _dataDir = dataDir;
         Art = new ArtLibrary(Path.Combine(dataDir, "images"));
+        Sounds = new UserSounds(Path.Combine(dataDir, "sounds"));
+        _sound = new SoundChannel(Sounds);
         var settingsFile = new JsonFileStore<AppSettings>(Path.Combine(dataDir, "settings.json"), () => new AppSettings());
         var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => new AppData());
         var settings = settingsFile.Load();
@@ -55,7 +61,7 @@ public sealed class AppServices : IDisposable
         _toast = new ToastChannel();
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
         Tts = new TtsChannel();
-        Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings);
+        Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
         _engine = new SchedulerEngine(Timers, Settings, Alerts, new SystemClock());
         _loop = new SchedulerLoop(_engine);
         _tray = new TrayIcon(this);
@@ -100,11 +106,53 @@ public sealed class AppServices : IDisposable
     public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
         [new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
 
-    public async void PreviewSound()
+    /// <summary>The key that plays for a timer sound key; null means the app-wide alert sound.</summary>
+    public string PlayableSound(string? key) => SoundKeys.Playable(key, Settings.Current.AlertSound, Sounds.Exists);
+
+    /// <summary>
+    /// Plays a sound once at the current volume for the ▶ buttons. A new preview stops the previous one, so repeated
+    /// presses don't pile up. UI thread only.
+    /// </summary>
+    public async void PlaySound(string? key)
     {
-        var s = Settings.Current;
-        try { await _sound.PlayAsync(null, s.AlertSound, s.Volume); }
+        _preview?.Cancel();
+        var preview = _preview = new CancellationTokenSource();
+        try { await _sound.PlayAsync(PlayableSound(key), Settings.Current.Volume, preview.Token); }
         catch (Exception ex) { Log.Error("Sound preview failed", ex); }
+        finally
+        {
+            if (_preview == preview) _preview = null;
+            preview.Dispose();
+        }
+    }
+
+    /// <summary>Asks for a WAV or MP3 and copies it into the user's sounds. Key is null when cancelled or refused.</summary>
+    public (string? Key, string? Error) AddSound()
+    {
+        var dialog = new OpenFileDialog { Filter = "Sounds (WAV, MP3)|*.wav;*.mp3", Title = "Add a sound" };
+        if (dialog.ShowDialog() != true) return (null, null);
+        if (!SoundChannel.CanDecode(dialog.FileName)) return (null, $"Couldn't play {Path.GetFileName(dialog.FileName)}.");
+        try { return (Sounds.Import(dialog.FileName), null); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            Log.Error($"Couldn't add sound {dialog.FileName}", ex);
+            return (null, $"Couldn't add {Path.GetFileName(dialog.FileName)}.");
+        }
+    }
+
+    /// <summary>Deletes a user sound; timers and the app-wide sound that used it go back to their defaults.</summary>
+    public bool RemoveSound(string key)
+    {
+        try { Sounds.Delete(key); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Most likely still playing; the file is released when playback ends.
+            Log.Error($"Couldn't remove sound {key}", ex);
+            return false;
+        }
+        Timers.ForgetSound(key);
+        Settings.Update(s => s.AlertSound == key ? s with { AlertSound = BuiltInSounds.Default } : s);
+        return true;
     }
 
     public void OpenDataFolder()

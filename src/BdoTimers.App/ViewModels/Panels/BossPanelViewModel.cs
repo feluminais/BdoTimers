@@ -13,11 +13,12 @@ public sealed partial class BossPanelViewModel : ObservableObject
     readonly AppServices _services;
     readonly Guid _id;
 
-    [ObservableProperty] private Choice _follow;
+    [ObservableProperty] private Choice _alertsOn;
     [ObservableProperty] private bool _showTimes;
 
     public string Name { get; }
     public string NextText { get; }
+    public string AppliesText { get; }
     public IReadOnlyList<ImageSource> Images { get; }
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public AlertRowsViewModel Alerts { get; }
@@ -28,18 +29,19 @@ public sealed partial class BossPanelViewModel : ObservableObject
     {
         _services = services;
         _id = boss.Id;
-        _follow = Choice.For(boss.Enabled);
+        _alertsOn = Choice.For(boss.Enabled);
         Name = boss.Name;
         Images = [services.Art.For(boss)];
         NextText = NextSpawnText(boss, DateTimeOffset.UtcNow);
-        Alerts = new AlertRowsViewModel(services.Timers, boss);
+        AppliesText = $"Applies to every {boss.Name} spawn";
+        Alerts = new AlertRowsViewModel(services, boss);
         var spec = boss.Scheduled ?? new ScheduledSpec();
         Slots = new SlotListViewModel(spec.Slots,
             slots => services.Timers.Modify(_id, t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
         TimeZoneNote = $"Times are in {TimeZones.Find(spec.TimeZoneId).StandardName} (server time).";
     }
 
-    partial void OnFollowChanged(Choice value) => _services.Timers.Modify(_id, t => t with { Enabled = value.IsOn });
+    partial void OnAlertsOnChanged(Choice value) => _services.Timers.SetEnabled(_id, value.IsOn);
 
     [RelayCommand]
     void ToggleTimes() => ShowTimes = !ShowTimes;

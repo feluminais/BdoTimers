@@ -31,7 +31,12 @@ public class JsonRoundTripTests
                 Status = CountdownStatus.Running,
                 EndsAtUtc = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero),
             },
-            Alerts = new AlertConfig { LeadTimesMinutes = [5, 0], Overlay = new OverlayAlert { Enabled = true } },
+            Alerts = new AlertConfig
+            {
+                LeadTimesMinutes = [5, 0],
+                Overlay = new OverlayAlert { Enabled = true },
+                Sound = new SoundAlert { Key = "horn.mp3" },
+            },
         };
         var data = new AppData
         {
@@ -50,6 +55,8 @@ public class JsonRoundTripTests
         Assert.Equal(countdown.Countdown, back.Timers[1].Countdown);
         Assert.Equal(new[] { 5, 0 }, back.Timers[1].Alerts.LeadTimesMinutes);
         Assert.True(back.Timers[1].Alerts.Overlay.Enabled);
+        Assert.Equal("horn.mp3", back.Timers[1].Alerts.Sound.Key);
+        Assert.Null(back.Timers[0].Alerts.Sound.Key);
         Assert.Equal(data.Muted.Single(), back.Muted.Single());
         Assert.Contains("\"Monday\"", json);
     }

@@ -5,7 +5,9 @@
     <StackPanel Orientation="Horizontal">
         <Button Style="{StaticResource IconButton}" Content="&#xE76B;" FontSize="9" Width="22" Height="22"
                 Click="Previous_Click" ToolTip="Previous" />
-        <TextBlock Text="{Binding SelectedItem, ElementName=Root}" MinWidth="{Binding ValueWidth, ElementName=Root}"
+        <!-- Fixed width so the arrows stay put; long values are trimmed and shown whole in the tooltip -->
+        <TextBlock Text="{Binding SelectedItem, ElementName=Root}" Width="{Binding ValueWidth, ElementName=Root}"
+                   ToolTip="{Binding SelectedItem, ElementName=Root}" TextTrimming="CharacterEllipsis"
                    TextAlignment="Center" VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource TextBrush}" />
         <Button Style="{StaticResource IconButton}" Content="&#xE76C;" FontSize="9" Width="22" Height="22"
                 Click="Next_Click" ToolTip="Next" />

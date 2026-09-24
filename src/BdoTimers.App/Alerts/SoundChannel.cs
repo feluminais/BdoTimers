@@ -2,27 +2,29 @@ using System.IO;
 using System.Windows;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Sounds;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 
 namespace BdoTimers.App.Alerts;
 
-public sealed class SoundChannel
+public sealed class SoundChannel(UserSounds userSounds)
 {
     readonly Dictionary<string, byte[]> _builtIns = [];
 
     /// <summary>
-    /// Plays <paramref name="filePath"/>, or the built-in <paramref name="builtIn"/> sound when the path is null,
-    /// missing or unreadable. Completes when playback ends.
+    /// Plays a sound key: the bundled WAV for a built-in key, the file for a user sound. A user sound that fails to
+    /// open plays the built-in default instead. Completes when playback ends or is cancelled.
     /// </summary>
-    public Task PlayAsync(string? filePath, string builtIn, float volume)
+    public Task PlayAsync(string key, float volume, CancellationToken cancel = default)
     {
-        var file = OpenFile(filePath);
-        WaveStream source = (WaveStream?)file ?? new WaveFileReader(new MemoryStream(BuiltIn(builtIn)));
+        var source = Open(key);
         var output = new WaveOut();
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var stop = cancel.Register(output.Stop);
         output.PlaybackStopped += (_, e) =>
         {
+            stop.Dispose();
             output.Dispose();
             source.Dispose();
             if (e.Exception is not null) done.TrySetException(e.Exception);
@@ -35,6 +37,7 @@ public sealed class SoundChannel
         }
         catch
         {
+            stop.Dispose();
             output.Dispose();
             source.Dispose();
             throw;
@@ -42,28 +45,47 @@ public sealed class SoundChannel
         return done.Task;
     }
 
-    static AudioFileReader? OpenFile(string? filePath)
+    /// <summary>True when the file decodes as audio; checked before a file is added to the user's sounds.</summary>
+    public static bool CanDecode(string path)
     {
-        if (filePath is null || !File.Exists(filePath)) return null;
-        try { return new AudioFileReader(filePath); }
-        catch (Exception ex)
+        try
         {
-            Log.Error($"Sound file unreadable, playing the alert sound instead: {filePath}", ex);
-            return null;
+            using var reader = new AudioFileReader(path);
+            return reader.TotalTime > TimeSpan.Zero;
+        }
+        // Decoders fail with many exception types (COM, format, IO); any of them means the file is unusable.
+        catch (Exception)
+        {
+            return false;
         }
     }
 
-    /// <summary>The bundled WAV bytes, read once per key; alerts can play from several threads.</summary>
-    byte[] BuiltIn(string key)
+    WaveStream Open(string key)
     {
-        key = BuiltInSounds.Resolve(key);
+        if (SoundKeys.IsBuiltIn(key)) return BuiltIn(key);
+        var path = userSounds.PathFor(key);
+        try { return new AudioFileReader(path); }
+        catch (Exception ex)
+        {
+            Log.Error($"Sound file unreadable, playing the built-in default instead: {path}", ex);
+            return BuiltIn(BuiltInSounds.Default);
+        }
+    }
+
+    /// <summary>The bundled WAV, read once per key; alerts can play from several threads.</summary>
+    WaveStream BuiltIn(string key)
+    {
+        byte[] bytes;
         lock (_builtIns)
         {
-            if (_builtIns.TryGetValue(key, out var cached)) return cached;
-            using var stream = Application.GetResourceStream(new Uri($"pack://application:,,,/Assets/Sounds/{key}.wav"))!.Stream;
-            using var copy = new MemoryStream();
-            stream.CopyTo(copy);
-            return _builtIns[key] = copy.ToArray();
+            if (!_builtIns.TryGetValue(key, out bytes!))
+            {
+                using var stream = Application.GetResourceStream(new Uri($"pack://application:,,,/Assets/Sounds/{key}.wav"))!.Stream;
+                using var copy = new MemoryStream();
+                stream.CopyTo(copy);
+                _builtIns[key] = bytes = copy.ToArray();
+            }
         }
+        return new WaveFileReader(new MemoryStream(bytes));
     }
 }

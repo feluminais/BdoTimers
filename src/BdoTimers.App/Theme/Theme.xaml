@@ -35,6 +35,12 @@
         <Setter Property="FontSize" Value="11" />
         <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
     </Style>
+    <Style x:Key="ErrorText" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="#C4604F" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,3,0,0" />
+    </Style>
     <Style x:Key="SectionText" TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
@@ -183,8 +189,9 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Plain clickable text used for boss names in the strip and the week grid -->
-    <!-- Not based on BareButton so the colour is inherited from the surrounding text -->
+    <!-- Plain clickable content: boss names in the strip and the week grid, pictures, tiles. Not based on BareButton
+         so the colour is inherited from the surrounding text. The transparent background keeps the whole area
+         clickable over content that ignores the mouse, such as ArtImage. -->
     <Style x:Key="NameButton" TargetType="Button">
         <!-- Without this the default button theme would still force black text. -->
         <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -193,7 +200,9 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <ContentPresenter Margin="{TemplateBinding Padding}" />
+                    <Border Background="Transparent">
+                        <ContentPresenter Margin="{TemplateBinding Padding}" />
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

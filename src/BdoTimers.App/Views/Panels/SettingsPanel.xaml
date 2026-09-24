@@ -27,7 +27,10 @@
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Sounds}" SelectedItem="{Binding AlertSound}" ValueWidth="110" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
+                                ToolTip="Test the alert sound" Command="{Binding PreviewSoundCommand}" />
+                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" ValueWidth="110"
+                                                AutomationProperties.Name="Alert sound" />
                         <StackPanel VerticalAlignment="Center">
                             <TextBlock Text="Alert sound" Style="{StaticResource RowLabel}" />
                             <TextBlock Text="Used by every timer set to Default" Style="{StaticResource LabelText}" />
@@ -35,9 +38,40 @@
                     </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Row}">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="+ Add sound…" VerticalAlignment="Center"
+                                    Command="{Binding AddSoundCommand}" />
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="Your sounds" Style="{StaticResource RowLabel}" />
+                                <TextBlock Text="WAV or MP3, copied into the app's data folder" Style="{StaticResource LabelText}" />
+                            </StackPanel>
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding UserSounds}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="12,0,0,0">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="9"
+                                                Width="26" Height="26" ToolTip="Remove" Command="{Binding RemoveCommand}" />
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;"
+                                                Foreground="{StaticResource AccentBrush}" Width="26" Height="26" ToolTip="Play"
+                                                Command="{Binding PlayCommand}" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Name}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="None yet" Style="{StaticResource LabelText}" Margin="12,2,0,0"
+                                   Visibility="{Binding HasNoUserSounds, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding SoundError}" Style="{StaticResource ErrorText}"
+                                   Visibility="{Binding SoundError, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
-                                ToolTip="Play the alert sound" Command="{Binding PreviewSoundCommand}" />
+                                ToolTip="Test the volume" Command="{Binding PreviewSoundCommand}" />
                         <Slider DockPanel.Dock="Right" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center" Margin="0,0,8,0"
                                 Value="{Binding Volume, Delay=250}" />
                         <TextBlock Text="Volume" Style="{StaticResource RowLabel}" />
@@ -56,6 +90,16 @@
                         <TextBlock Text="Speech speed" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Send" Command="{Binding TestAlertCommand}"
+                                AutomationProperties.Name="Send test alert" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Test alert" Style="{StaticResource RowLabel}" />
+                            <TextBlock Text="Sound, notification and voice, as for a real boss" Style="{StaticResource LabelText}" />
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
 
                 <TextBlock Text="New timers" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
@@ -71,7 +115,6 @@
                         <TextBlock Text="Windows hides normal notifications while you play fullscreen. BDO Timers sends urgent ones, which get through. To be sure, add it to your priority notifications."
                                    Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8" />
                         <WrapPanel>
-                            <Button Style="{StaticResource GhostButton}" Content="Send test alert" Margin="0,0,8,6" Command="{Binding TestAlertCommand}" />
                             <Button Style="{StaticResource GhostButton}" Content="Priority notifications" Margin="0,0,8,6" Command="{Binding OpenNotificationSettingsCommand}" />
                             <Button Command="{Binding ToggleOverlayPositioningCommand}" Margin="0,0,8,6">
                                 <Button.Style>

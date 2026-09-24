@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Reflection;
 using BdoTimers.App.Alerts;
 using BdoTimers.Core.Model;
@@ -9,17 +10,12 @@ namespace BdoTimers.App.ViewModels.Panels;
 public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 {
     readonly AppServices _services;
-
-    static readonly IReadOnlyDictionary<string, string> SoundLabels = new Dictionary<string, string>
-    {
-        [BuiltInSounds.Gong] = "Gong",
-        [BuiltInSounds.Horn] = "War horn",
-        [BuiltInSounds.Bell] = "Low bell",
-        [BuiltInSounds.Chime] = "Soft chime",
-    };
+    bool _syncingSound;
 
     [ObservableProperty] private Choice _autostart;
-    [ObservableProperty] private Choice _alertSound;
+    [ObservableProperty] private IReadOnlyList<Choice> _alertSounds = [];
+    [ObservableProperty] private Choice? _alertSound;
+    [ObservableProperty] private string? _soundError;
     [ObservableProperty] private double _volume;
     [ObservableProperty] private Choice? _voice;
     [ObservableProperty] private double _speechRate;
@@ -28,7 +24,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
-    public IReadOnlyList<Choice> Sounds { get; } = BuiltInSounds.All.Select(k => new Choice(SoundLabels[k], k)).ToList();
+    public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
+    public bool HasNoUserSounds => UserSounds.Count == 0;
     public LeadChipsViewModel DefaultLeads { get; }
     public string Version { get; } = AppVersion();
 
@@ -38,7 +35,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         var s = services.Settings.Current;
         _autostart = Choice.For(s.Autostart);
         _volume = s.Volume;
-        _alertSound = Sounds.First(c => (string)c.Value! == BuiltInSounds.Resolve(s.AlertSound));
+        ReloadSounds();
         Voices = services.Tts.InstalledVoices().Select(v => new Choice(v, v)).ToList();
         _voice = Voices.FirstOrDefault(v => (string)v.Value! == s.TtsVoice) ?? Voices.FirstOrDefault();
         _speechRate = s.TtsRate;
@@ -53,11 +50,37 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         BdoTimers.App.Autostart.Apply(value.IsOn);
     }
 
-    /// <summary>Saves and plays the sound, so cycling through the list auditions each one.</summary>
-    partial void OnAlertSoundChanged(Choice value)
+    partial void OnAlertSoundChanged(Choice? value)
     {
-        _services.Settings.Update(s => s with { AlertSound = (string)value.Value! });
-        _services.PreviewSound();
+        if (!_syncingSound && value?.Value is string key) _services.Settings.Update(s => s with { AlertSound = key });
+    }
+
+    /// <summary>Rebuilds the sound list and the "Your sounds" rows; shows the saved app-wide sound.</summary>
+    void ReloadSounds()
+    {
+        _syncingSound = true;
+        AlertSounds = SoundChoices.ForApp(_services.Sounds);
+        var saved = _services.PlayableSound(null);
+        AlertSound = AlertSounds.FirstOrDefault(c => (string)c.Value! == saved) ?? AlertSounds[0];
+        _syncingSound = false;
+        UserSounds.Clear();
+        foreach (var key in _services.Sounds.Keys())
+            UserSounds.Add(new UserSoundRow(SoundChoices.Label(key), key, _services.PlaySound, RemoveSound));
+        OnPropertyChanged(nameof(HasNoUserSounds));
+    }
+
+    [RelayCommand]
+    void AddSound()
+    {
+        var (key, error) = _services.AddSound();
+        SoundError = error;
+        if (key is not null) ReloadSounds();
+    }
+
+    void RemoveSound(string key)
+    {
+        SoundError = _services.RemoveSound(key) ? null : $"Couldn't remove {SoundChoices.Label(key)}. Try again in a moment.";
+        ReloadSounds();
     }
 
     partial void OnVolumeChanged(double value) => _services.Settings.Update(s => s with { Volume = (float)value });
@@ -68,7 +91,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         _services.Settings.Update(s => s with { TtsRate = (int)Math.Round(value) });
 
     [RelayCommand]
-    void PreviewSound() => _services.PreviewSound();
+    void PreviewSound() => _services.PlaySound(null);
 
     [RelayCommand]
     void TestAlert() => _services.SendTestAlert();
@@ -106,4 +129,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         var info = typeof(SettingsPanelViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         return info?.Split('+')[0] ?? "";
     }
+}
+
+/// <summary>A line in Settings' "Your sounds": the sound's name with play and remove buttons.</summary>
+public sealed class UserSoundRow(string name, string key, Action<string> play, Action<string> remove)
+{
+    public string Name => name;
+    public IRelayCommand PlayCommand { get; } = new RelayCommand(() => play(key));
+    public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => remove(key));
 }

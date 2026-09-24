@@ -3,8 +3,8 @@ namespace BdoTimers.Core.Model;
 public sealed record SoundAlert
 {
     public bool Enabled { get; init; } = true;
-    /// <summary>Null plays the app-wide alert sound from settings.</summary>
-    public string? FilePath { get; init; }
+    /// <summary>A sound key (see <see cref="Sounds.SoundKeys"/>); null plays the app-wide alert sound from settings.</summary>
+    public string? Key { get; init; }
 }
 
 public sealed record ToastAlert
