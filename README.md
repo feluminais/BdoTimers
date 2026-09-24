@@ -2,8 +2,8 @@
 
 Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 
-- Built-in EU boss timetable (editable; Settings → Reset boss timetable restores it)
-- Scheduled timers (weekly times) and countdowns (farm sessions, buffs), optional auto-repeat
+- Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
+- Custom screen: picture tiles for your own countdowns (buffs, farm sessions) and weekly timers
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert, optional on-screen overlay
 - Starts with Windows, minimized to the tray
 
@@ -20,21 +20,25 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 
 ## Tips
-- Add BDO Timers to Windows priority notifications (Settings → Open Windows notification settings).
+- Add BDO Timers to Windows priority notifications (Settings → Priority notifications).
 - The overlay only appears over the game in borderless window mode.
 
 ## Develop
 See CLAUDE.md for commands.
 
 ## Manual test checklist
-1. First launch: main window opens, Upcoming lists bosses, a "priority notifications" toast appears once.
-2. Settings → Send test alert: chime, spoken "Test boss in 5 minutes", urgent toast.
-3. Add a 2-minute countdown with alerts "1, 0": Start → alert at 1:00 and at 0:00, then it resets (or restarts if auto-repeat).
+1. First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
+2. Settings (gear) → Send test alert: chime, spoken "Test boss in 5 minutes", urgent toast.
+3. Custom → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; hover the tile, press play → alert at 1:00
+   and at 0:00, then it shows Ready again (or restarts if "Restart when it ends" is on).
 4. Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
-5. Enable overlay on a countdown (show 2 min before), BDO in borderless: overlay appears, clicks pass through to the game.
-6. Settings → Position overlay: drag, click again; restart app; overlay reappears at the saved spot.
-7. Skip an occurrence on Upcoming: no alert for it.
-8. Tray → Pause alerts for 1 hour: banner shows; no alerts; Resume clears it.
-9. Close window → stays in tray; launch exe again → existing window comes to front.
-10. Reboot → app starts minimized in the tray.
-11. Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
+5. Set the countdown's Overlay to 2 min before, BDO in borderless: overlay appears, clicks pass through to the game.
+6. Settings → Position overlay: drag, click "Save overlay position"; restart app; overlay reappears at the saved spot.
+   Closing Settings while positioning also saves and restores click-through.
+7. Right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip restores it.
+8. Click a boss name → panel: set Follow to Off → the boss dims in the grid and leaves the strip.
+9. Tray → Pause alerts for 1 hour: "Alerts paused" shows in the top bar; no alerts; Resume clears it.
+10. Close window → stays in tray; launch the exe again → existing window comes to front at the same size and position.
+11. Reboot → app starts minimized in the tray.
+12. Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
+13. Custom panel → click the picture → Choose picture…: the tile shows it, fading into black.

@@ -17,8 +17,8 @@ public sealed class TrayIcon : IDisposable
             IconSource = new GeneratedIconSource
             {
                 Text = "B",
-                Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.FromRgb(0xB8, 0x86, 0x0B)),
+                Foreground = new SolidColorBrush(Color.FromRgb(0xE8, 0xC9, 0x8A)),
+                Background = new SolidColorBrush(Color.FromRgb(0x0B, 0x0B, 0x0C)),
             },
             ContextMenu = BuildMenu(services),
         };
