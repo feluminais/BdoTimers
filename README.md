@@ -28,7 +28,7 @@ See CLAUDE.md for commands.
 
 ## Manual test checklist
 1. First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
-2. Settings (gear) → Send test alert: chime, spoken "Test boss in 5 minutes", urgent toast.
+2. Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
 3. Custom → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; hover the tile, press play → alert at 1:00
    and at 0:00, then it shows Ready again (or restarts if "Restart when it ends" is on).
 4. Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
@@ -36,9 +36,13 @@ See CLAUDE.md for commands.
 6. Settings → Position overlay: drag, click "Save overlay position"; restart app; overlay reappears at the saved spot.
    Closing Settings while positioning also saves and restores click-through.
 7. Right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip restores it.
-8. Click a boss name → panel: set Follow to Off → the boss dims in the grid and leaves the strip.
+8. Bosses, under the table → click a boss tile → panel: set Alerts to Off → the tile says "Alerts off", the boss dims
+   in the grid and leaves the strip.
 9. Tray → Pause alerts for 1 hour: "Alerts paused" shows in the top bar; no alerts; Resume clears it.
 10. Close window → stays in tray; launch the exe again → existing window comes to front at the same size and position.
 11. Reboot → app starts minimized in the tray.
 12. Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
-13. Custom panel → click the picture → Choose picture…: the tile shows it, fading into black.
+13. Custom panel → click the picture (badge "Change picture") → Choose picture…: the tile shows it, fading into black.
+14. Boss panel → Sound: stepping plays nothing; ▶ plays the choice. + → pick a WAV or MP3: it's selected and listed in
+    Settings → Your sounds. A file that isn't audio shows "Couldn't play …".
+15. Settings → Your sounds → ✕: the sound is gone; timers that used it show Default.
