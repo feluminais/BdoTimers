@@ -53,4 +53,31 @@ public class JsonRoundTripTests
         Assert.Equal(data.Muted.Single(), back.Muted.Single());
         Assert.Contains("\"Monday\"", json);
     }
+
+    [Fact]
+    public void Files_without_new_fields_load()
+    {
+        const string timers = """
+            { "timers": [ { "name": "Farm", "kind": "Countdown",
+                            "countdown": { "duration": "01:00:00", "status": "Running",
+                                           "endsAtUtc": "2026-09-22T12:00:00+00:00" } } ] }
+            """;
+        const string settings = """{ "volume": 0.5 }""";
+
+        var data = JsonSerializer.Deserialize<AppData>(timers, JsonDefaults.Options)!;
+        var s = JsonSerializer.Deserialize<AppSettings>(settings, JsonDefaults.Options)!;
+
+        Assert.Null(data.Timers.Single().Countdown!.StartedAtUtc);
+        Assert.Null(data.Timers.Single().ImageFile);
+        Assert.Null(s.Window);
+        Assert.Equal(0.5f, s.Volume);
+    }
+
+    [Fact]
+    public void Window_placement_round_trips()
+    {
+        var s = new AppSettings { Window = new WindowPlacement(10, 20, 960, 720) };
+        var back = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(s, JsonDefaults.Options), JsonDefaults.Options)!;
+        Assert.Equal(s.Window, back.Window);
+    }
 }

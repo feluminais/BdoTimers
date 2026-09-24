@@ -1,5 +1,7 @@
 namespace BdoTimers.Core.Model;
 
+public sealed record WindowPlacement(double Left, double Top, double Width, double Height);
+
 public sealed record AppSettings
 {
     public bool Autostart { get; init; } = true;
@@ -12,4 +14,5 @@ public sealed record AppSettings
     /// <summary>DateTimeOffset.MaxValue means paused until resumed.</summary>
     public DateTimeOffset? AlertsPausedUntilUtc { get; init; }
     public bool PriorityHintShown { get; init; }
+    public WindowPlacement? Window { get; init; }
 }
