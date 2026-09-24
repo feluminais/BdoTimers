@@ -49,6 +49,18 @@
         <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
     </Style>
 
+    <!-- Settings-style row: label left, value right, hairline above -->
+    <Style x:Key="Row" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="0,7" />
+        <Setter Property="MinHeight" Value="38" />
+    </Style>
+    <Style x:Key="RowLabel" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+
     <!-- Buttons -->
     <Style x:Key="BareButton" TargetType="ButtonBase">
         <Setter Property="Background" Value="Transparent" />
@@ -116,6 +128,8 @@
     </Style>
 
     <Style x:Key="IconButton" TargetType="ButtonBase" BasedOn="{StaticResource BareButton}">
+        <!-- Icon glyphs mean nothing to screen readers; the tooltip text names the button. -->
+        <Setter Property="AutomationProperties.Name" Value="{Binding ToolTip, RelativeSource={RelativeSource Self}}" />
         <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Width" Value="32" />
@@ -172,6 +186,8 @@
     <!-- Plain clickable text used for boss names in the strip and the week grid -->
     <!-- Not based on BareButton so the colour is inherited from the surrounding text -->
     <Style x:Key="NameButton" TargetType="Button">
+        <!-- Without this the default button theme would still force black text. -->
+        <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Template">
