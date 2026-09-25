@@ -40,7 +40,7 @@ Kokoro-82M v1.0 voice model, int8 ONNX export by sherpa-onnx (Voice\kokoro: mode
 APP
 ===
 
-.NET runtime, WPF, System.Speech
+.NET runtime, WPF
   MIT License; Copyright (c) .NET Foundation and Contributors
   Source: https://github.com/dotnet
 

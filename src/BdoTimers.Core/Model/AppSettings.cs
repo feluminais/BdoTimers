@@ -9,7 +9,7 @@ public sealed record AppSettings
     public float Volume { get; init; } = 0.8f;
     /// <summary>Sound key played for timers whose sound is "Default"; see <see cref="Sounds.SoundKeys"/>.</summary>
     public string AlertSound { get; init; } = BuiltInSounds.Default;
-    /// <summary>A voice id from the speech channel (a Kokoro voice or a Windows voice name); null means the default.</summary>
+    /// <summary>A Kokoro voice id from the speech channel; null, or a voice that no longer exists, means the default.</summary>
     public string? TtsVoice { get; init; }
     public int TtsRate { get; init; }
     public IReadOnlyList<int> DefaultLeadTimesMinutes { get; init; } = AlertConfig.StandardLeadTimesMinutes;

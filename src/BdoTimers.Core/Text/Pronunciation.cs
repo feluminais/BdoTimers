@@ -17,7 +17,7 @@ public static class Pronunciation
     /// </summary>
     public static IReadOnlyList<Respelling> BossNames { get; } =
     [
-        new("Kzarka", "Kazaarka"),     // ka-ZAR-kuh, not KAY-zar-ka
+        new("Kzarka", "Kozaarka"),     // k'-ZAR-kuh with the first vowel barely there; espeak-ng spells a bare "Kz" as KAY-zar-ka
         new("Uturi", "Oo-too-ree"),    // oo-TOO-ree, not YOO-cher-ee
         new("Bulgasal", "Bulgahsal"),  // BUL-gah-sal, not BUL-gay-zal
         new("Muraka", "Moo-raka"),     // moo-RAH-kuh, not myoo-RAH-kuh
