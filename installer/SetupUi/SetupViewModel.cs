@@ -199,6 +199,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         {
             var folder = Path.Combine(_moveTo, "BdoTimers");
             _flow.RepointAutostart(Path.Combine(folder, "BdoTimers.exe"));
+            _flow.ForgetExe(Path.Combine(InstalledFolder, "BdoTimers.exe"));
             _flow.RemoveIfEmpty(InstalledFolder);
             (DoneTitle, DoneText) = ("Moved", folder);
             Page = SetupPage.Done;

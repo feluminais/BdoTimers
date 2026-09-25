@@ -50,5 +50,16 @@ public sealed class ToastChannel : IDisposable
     public static void OpenWindowsNotificationSettings() =>
         Process.Start(new ProcessStartInfo("ms-settings:notifications") { UseShellExecute = true });
 
-    public void Dispose() => AppNotificationManager.Default.Unregister();
+    /// <summary>
+    /// Debug builds also remove their registration: Windows identifies unpackaged apps by exe path, so every dev build
+    /// would otherwise stay listed as another "BdoTimers" in Windows' notification settings.
+    /// </summary>
+    public void Dispose()
+    {
+#if DEBUG
+        AppNotificationManager.Default.UnregisterAll();
+#else
+        AppNotificationManager.Default.Unregister();
+#endif
+    }
 }
