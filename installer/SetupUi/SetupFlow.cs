@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -18,6 +20,7 @@ internal sealed class SetupFlow
     readonly IBootstrapperCommand _command;
     volatile bool _cancel;
     LaunchAction _action;
+    RequestState? _packageState;
     string? _lastError;
 
     public SetupFlow(BootstrapperApplication ba, IEngine engine, IBootstrapperCommand command)
@@ -26,6 +29,7 @@ internal sealed class SetupFlow
         _command = command;
         ba.DetectBegin += (_, e) => IsInstalled = e.RegistrationType == RegistrationType.Full;
         ba.DetectComplete += (_, e) => Detected?.Invoke(e.Status);
+        ba.PlanPackageBegin += (_, e) => { if (_packageState is { } state) e.State = state; };
         ba.PlanComplete += (_, e) =>
         {
             if (e.Status < 0 || _cancel)
@@ -67,28 +71,33 @@ internal sealed class SetupFlow
 
     public static bool IsCancelled(int status) => status == ErrorCancelled;
 
-    /// <summary>InstallRoot from the command line if given, else the folder chosen last time, else the default.</summary>
+    /// <summary>InstallRoot from the command line if given, else the installed one, else %LocalAppData%\Programs.</summary>
     public string InitialInstallRoot =>
         _command.ParseCommandLine().Variables
             .FirstOrDefault(v => string.Equals(v.Key, "InstallRoot", StringComparison.OrdinalIgnoreCase)).Value
         is { Length: > 0 } fromCommandLine
             ? fromCommandLine
-            : DefaultInstallRoot();
+            : InstalledRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs");
 
-    /// <summary>The folder chosen at the last install, else %LocalAppData%\Programs.</summary>
-    static string DefaultInstallRoot()
+    /// <summary>The folder holding the BdoTimers folder, as the package recorded it; null when not installed.</summary>
+    public static string? InstalledRoot
     {
-        using var key = Registry.CurrentUser.OpenSubKey(@"Software\BdoTimers");
-        return key?.GetValue("InstallRoot") as string is { Length: > 0 } saved
-            ? saved
-            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs");
+        get
+        {
+            using var key = Registry.CurrentUser.OpenSubKey(@"Software\BdoTimers");
+            return key?.GetValue("InstallRoot") as string is { Length: > 0 } saved ? saved : null;
+        }
     }
 
     public void Detect() => _engine.Detect();
 
-    public void Start(LaunchAction action, string? installRoot = null)
+    /// <summary>Plans and applies <paramref name="action"/>. <paramref name="packageState"/> overrides what happens to
+    /// the app package, e.g. Modify with Absent removes the app while the bundle stays registered.</summary>
+    public void Start(LaunchAction action, string? installRoot = null, RequestState? packageState = null)
     {
+        CloseInstalledApp();
         _action = action;
+        _packageState = packageState;
         _cancel = false;
         _lastError = null;
         if (installRoot is not null)
@@ -133,6 +142,63 @@ internal sealed class SetupFlow
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             _engine.Log(LogLevel.Error, $"Couldn't remove the Start with Windows entry: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Ends a copy of the app running from the installed folder and waits until it has exited. The package's own
+    /// CloseApplication ends it too, but carries on before Windows lets go of its files, so a locked file would be left
+    /// for deletion at the next restart. Copies running from anywhere else are left alone.
+    /// </summary>
+    void CloseInstalledApp()
+    {
+        if (InstalledRoot is not { } root) return;
+        var folder = Path.Combine(root, "BdoTimers") + "\\";
+        foreach (var process in Process.GetProcessesByName("BdoTimers"))
+        {
+            using (process)
+            {
+                try
+                {
+                    if (!process.MainModule.FileName.StartsWith(folder, StringComparison.OrdinalIgnoreCase)) continue;
+                    process.Kill();
+                    process.WaitForExit(10000);
+                }
+                catch (Exception ex) when (ex is Win32Exception or InvalidOperationException)
+                {
+                    _engine.Log(LogLevel.Standard, $"Couldn't close BDO Timers before applying: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// After a move: removes the old BdoTimers folder when nothing is left in it. The package removes it too, but not
+    /// while the app it just closed still holds the folder open.
+    /// </summary>
+    public void RemoveIfEmpty(string folder)
+    {
+        try
+        {
+            if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _engine.Log(LogLevel.Standard, $"Left the old folder {folder}: {ex.Message}");
+        }
+    }
+
+    /// <summary>After a move: points an existing Start with Windows entry at the moved exe (same format the app writes).</summary>
+    public void RepointAutostart(string exePath)
+    {
+        try
+        {
+            using var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+            if (run?.GetValue("BdoTimers") is not null) run.SetValue("BdoTimers", $"\"{exePath}\" --minimized");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            _engine.Log(LogLevel.Error, $"Couldn't update the Start with Windows entry: {ex.Message}");
         }
     }
 

@@ -84,7 +84,7 @@
                 <!-- Options: where the BdoTimers folder goes -->
                 <Grid Margin="32,26,32,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Options}">
                     <StackPanel>
-                        <TextBlock Text="Install location" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
+                        <TextBlock Text="{Binding OptionsTitle}" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Browse…" Margin="12,0,0,0" Command="{Binding BrowseCommand}" />
                             <TextBox Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"
@@ -96,7 +96,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                         <Button Style="{StaticResource GhostButton}" Content="Back" Command="{Binding BackCommand}" />
-                        <Button Style="{StaticResource OutlineButton}" Content="Install" IsDefault="True" Margin="10,0,0,0" Command="{Binding InstallCommand}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="{Binding ConfirmText}" IsDefault="True" Margin="10,0,0,0" Command="{Binding InstallCommand}" />
                     </StackPanel>
                 </Grid>
 
@@ -139,8 +139,16 @@
                     <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
-                        <TextBlock Text="Already installed. Repair it, or remove it; your timers and settings are kept either way."
-                                   TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,22" />
+                        <TextBlock Text="Already installed. Repair, move or remove it; your timers and settings are kept either way."
+                                   TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,10" />
+                        <StackPanel Margin="0,0,0,22" Visibility="{Binding HasInstalledFolder, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding InstalledFolder}" Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <Button Style="{StaticResource LinkButton}" Content="Open folder" Command="{Binding OpenFolderCommand}" />
+                                <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                                <Button Style="{StaticResource LinkButton}" Content="Move to another folder…" Command="{Binding MoveCommand}" />
+                            </StackPanel>
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Style="{StaticResource GhostButton}" Content="Repair" Command="{Binding RepairCommand}" />
                             <Button Style="{StaticResource OutlineButton}" Content="Uninstall" Margin="10,0,0,0" Command="{Binding UninstallCommand}" />

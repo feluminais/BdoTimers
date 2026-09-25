@@ -14,7 +14,8 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
   gets its own `BdoTimers` folder inside it. Folders that need admin rights (Program Files) won't work.
 - Adds a Start Menu shortcut and can launch the app when setup finishes. Start with Windows stays off until you turn
   it on in Settings; uninstall removes it.
-- Run the setup again (or Uninstall in Settings → Apps) to repair or remove it. Data in `%AppData%\BdoTimers` is kept.
+- Run the setup again (or Uninstall in Settings → Apps) to see where it's installed and to repair, move or remove it.
+  Data in `%AppData%\BdoTimers` is kept.
 - Newer builds upgrade in place, reuse the chosen folder, and close the running app first.
 - Silent: `BdoTimers-Setup-<version>.exe /quiet InstallRoot=D:\Games` and `/quiet /uninstall`.
 
