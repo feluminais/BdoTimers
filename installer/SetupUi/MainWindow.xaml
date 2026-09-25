@@ -67,7 +67,7 @@
             <Border Height="1" VerticalAlignment="Bottom" Background="{StaticResource HairlineBrush}" />
 
             <Grid Grid.Row="1">
-                <!-- Welcome: picture fading into black, name, Install and Options -->
+                <!-- Welcome: picture fading into black, name, Next to the install location -->
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Welcome}">
                     <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
@@ -75,13 +75,12 @@
                         <TextBlock Text="World-boss and custom timers with alerts that reach you in game." TextWrapping="Wrap"
                                    Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,24" />
                         <StackPanel Orientation="Horizontal">
-                            <Button Style="{StaticResource OutlineButton}" Content="Install" IsDefault="True" Command="{Binding InstallCommand}" />
-                            <Button Style="{StaticResource GhostButton}" Content="Options" Margin="10,0,0,0" Command="{Binding OptionsCommand}" />
+                            <Button Style="{StaticResource OutlineButton}" Content="Next" IsDefault="True" Command="{Binding NextCommand}" />
                         </StackPanel>
                     </StackPanel>
                 </Grid>
 
-                <!-- Options: where the BdoTimers folder goes -->
+                <!-- Install location (also the Move page): where the BdoTimers folder goes -->
                 <Grid Margin="32,26,32,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Options}">
                     <StackPanel>
                         <TextBlock Text="{Binding OptionsTitle}" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
@@ -91,8 +90,6 @@
                                      controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
                         </DockPanel>
                         <TextBlock Text="{Binding InstallFolderText}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="Folders that need admin rights, like Program Files, won't work."
-                                   Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" Margin="0,16,0,0" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                         <Button Style="{StaticResource GhostButton}" Content="Back" Command="{Binding BackCommand}" />
