@@ -163,8 +163,15 @@
                         <TextBlock FontSize="12">
                             <Run Text="BDO Timers" /> <Run Text="{Binding Version, Mode=OneWay}" Foreground="{StaticResource SubtleBrush}" />
                         </TextBlock>
-                        <TextBlock Text="Not affiliated with Pearl Abyss. Boss artwork © Pearl Abyss." Style="{StaticResource LabelText}" Margin="0,2,0,6" />
-                        <Button Style="{StaticResource LinkButton}" Content="Open data folder" HorizontalAlignment="Left" Command="{Binding OpenDataFolderCommand}" />
+                        <TextBlock Text="© 2026 feluminais · Free software under GPL-3.0, with no warranty." Style="{StaticResource LabelText}" Margin="0,2,0,0" />
+                        <TextBlock Text="Not affiliated with Pearl Abyss. Game artwork © Pearl Abyss." Style="{StaticResource LabelText}" Margin="0,2,0,6" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource LinkButton}" Content="Source code" Command="{Binding OpenSourceCommand}" />
+                            <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                            <Button Style="{StaticResource LinkButton}" Content="Licenses" Command="{Binding OpenLicensesCommand}" />
+                            <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                            <Button Style="{StaticResource LinkButton}" Content="Open data folder" Command="{Binding OpenDataFolderCommand}" />
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </StackPanel>

@@ -7,12 +7,15 @@ namespace BdoTimers.App;
 
 public partial class App : Application
 {
-    /// <summary>Names the data folder and the single-instance handles. Debug builds get their own, so a dev copy
-    /// runs next to the installed app without touching its timers and settings.</summary>
+    /// <summary>Names the data folder, the single-instance handles and the notification app id. Debug builds get their
+    /// own, so a dev copy runs next to the installed app without touching its timers, settings or notifications.</summary>
 #if DEBUG
-    const string InstanceName = "BdoTimers-Dev";
+    internal const string InstanceName = "BdoTimers-Dev";
+    internal const string DisplayName = "BDO Timers (dev)";
 #else
-    const string InstanceName = "BdoTimers";
+    /// <remarks>The setup window removes the notification registration by this name (<see cref="Alerts.NotificationRegistration.InstalledAppId"/>).</remarks>
+    internal const string InstanceName = "BdoTimers";
+    internal const string DisplayName = "BDO Timers";
 #endif
 
     Mutex? _singleInstance;
