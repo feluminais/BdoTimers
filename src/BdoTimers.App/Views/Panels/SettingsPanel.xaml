@@ -122,16 +122,34 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Text="Boss timetable" Style="{StaticResource SectionText}" />
+                <TextBlock Text="Bosses" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
-                        <Button Style="{StaticResource LinkButton}" Content="Reset to the built-in EU timetable" HorizontalAlignment="Left"
+                        <Button Style="{StaticResource LinkButton}" Content="Reset all boss alert settings" HorizontalAlignment="Left"
+                                Command="{Binding AskAlertResetCommand}"
+                                Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <StackPanel Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="Every boss goes back to the defaults, with alerts on. Spawn times are kept."
+                                       Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmAlertResetCommand}"
+                                        AutomationProperties.Name="Reset alert settings" />
+                                <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelAlertResetCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <StackPanel>
+                        <Button Style="{StaticResource LinkButton}" Content="Reset spawn times to the EU timetable" HorizontalAlignment="Left"
                                 Command="{Binding AskResetCommand}"
                                 Visibility="{Binding ConfirmingReset, Converter={StaticResource InverseBoolToVisibility}}" />
                         <StackPanel Visibility="{Binding ConfirmingReset, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="Reset all boss spawn times? Alert settings are kept." Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmResetCommand}" />
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmResetCommand}"
+                                        AutomationProperties.Name="Reset spawn times" />
                                 <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
                                 <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelResetCommand}" />
                             </StackPanel>
