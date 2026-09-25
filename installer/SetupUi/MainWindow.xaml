@@ -71,12 +71,9 @@
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Welcome}">
                     <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
-                        <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
-                        <TextBlock Text="World-boss and custom timers with alerts that reach you in game." TextWrapping="Wrap"
-                                   Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,24" />
-                        <StackPanel Orientation="Horizontal">
-                            <Button Style="{StaticResource OutlineButton}" Content="Next" IsDefault="True" Command="{Binding NextCommand}" />
-                        </StackPanel>
+                        <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" Margin="0,0,0,24" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Next" IsDefault="True" HorizontalAlignment="Left"
+                                Command="{Binding NextCommand}" />
                     </StackPanel>
                 </Grid>
 
@@ -89,7 +86,7 @@
                             <TextBox Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"
                                      controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
                         </DockPanel>
-                        <TextBlock Text="{Binding InstallFolderText}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding LocationProblem}" Style="{StaticResource ErrorText}" FontSize="12" Margin="0,8,0,0" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                         <Button Style="{StaticResource GhostButton}" Content="Back" Command="{Binding BackCommand}" />
@@ -102,9 +99,6 @@
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding ProgressTitle}" Style="{StaticResource DisplayText}" FontSize="18" Margin="0,0,0,14" />
                         <ProgressBar Style="{StaticResource GoldProgress}" Maximum="100" Value="{Binding Progress, Mode=OneWay}" />
-                        <TextBlock Style="{StaticResource LabelText}" FontSize="12" Margin="0,8,0,0">
-                            <Run Text="{Binding Progress, Mode=OneWay}" /><Run Text="%" />
-                        </TextBlock>
                     </StackPanel>
                     <Button Style="{StaticResource GhostButton}" Content="Cancel" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding CancelCommand}" />
                 </Grid>
@@ -136,9 +130,7 @@
                     <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
-                        <TextBlock Text="Already installed."
-                                   TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,10" />
-                        <StackPanel Margin="0,0,0,22" Visibility="{Binding HasInstalledFolder, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Margin="0,8,0,22" Visibility="{Binding HasInstalledFolder, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding InstalledFolder}" Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" />
                             <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                                 <Button Style="{StaticResource LinkButton}" Content="Open folder" Command="{Binding OpenFolderCommand}" />

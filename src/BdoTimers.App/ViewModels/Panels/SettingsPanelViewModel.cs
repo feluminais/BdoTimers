@@ -26,7 +26,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
     public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
-    public bool HasNoUserSounds => UserSounds.Count == 0;
     public LeadChipsViewModel DefaultLeads { get; }
     public string Version { get; } = AppVersion();
 
@@ -67,7 +66,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         UserSounds.Clear();
         foreach (var key in _services.Sounds.Keys())
             UserSounds.Add(new UserSoundRow(SoundChoices.Label(key), key, _services.PlaySound, RemoveSound));
-        OnPropertyChanged(nameof(HasNoUserSounds));
     }
 
     [RelayCommand]

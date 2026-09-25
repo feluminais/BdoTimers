@@ -96,7 +96,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
             if (!Set(ref _installRoot, value)) return;
             _access = CheckAccess(value);
             OnPropertyChanged(nameof(IsInstallRootValid));
-            OnPropertyChanged(nameof(InstallFolderText));
+            OnPropertyChanged(nameof(LocationProblem));
             CommandManager.InvalidateRequerySuggested();
         }
     }
@@ -113,13 +113,13 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>The app always gets its own BdoTimers folder inside the chosen one.</summary>
-    public string InstallFolderText =>
-        !IsInstallRootValid ? @"Enter a full folder path, like D:\Games"
+    /// <summary>Why the folder can't be used; empty when it can.</summary>
+    public string LocationProblem =>
+        !IsInstallRootValid ? "Not a full folder path"
         : _access == FolderAccess.Missing ? "That drive isn't available"
-        : _access == FolderAccess.NeedsAdmin ? "Needs admin rights; pick a folder of your own"
-        : IsMoving && IsSameFolder(InstallRoot, _installedRoot) ? "That's where it is now; pick another folder"
-        : (IsMoving ? "Moves to " : "Installs to ") + Path.Combine(InstallRoot.Trim(), "BdoTimers");
+        : _access == FolderAccess.NeedsAdmin ? "Needs admin rights"
+        : IsMoving && IsSameFolder(InstallRoot, _installedRoot) ? "It's already there"
+        : "";
 
     /// <summary>The Options page doubles as the Move page when the app is already installed.</summary>
     public bool IsMoving
@@ -130,7 +130,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
             if (!Set(ref _isMoving, value)) return;
             OnPropertyChanged(nameof(OptionsTitle));
             OnPropertyChanged(nameof(ConfirmText));
-            OnPropertyChanged(nameof(InstallFolderText));
+            OnPropertyChanged(nameof(LocationProblem));
             CommandManager.InvalidateRequerySuggested();
         }
     }
@@ -218,7 +218,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         {
             LaunchAction.Uninstall => ("Removed", "Your timers and settings are kept."),
             LaunchAction.Repair => ("Repaired", ""),
-            _ => ("Ready", "BDO Timers is in your Start menu."),
+            _ => ("Ready", ""),
         };
         Page = SetupPage.Done;
     }

@@ -279,9 +279,8 @@
                 </ItemsControl>
                 <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0" />
 
-                <TextBlock Text="Bosses" Style="{StaticResource SectionText}" Margin="0,26,0,10" />
                 <!-- As many columns of 215 px or more as fit; the negative margin absorbs the last tile's gap -->
-                <ItemsControl ItemsSource="{Binding Tiles}" ItemTemplate="{StaticResource BossTile}" Margin="0,0,-8,0" Focusable="False">
+                <ItemsControl ItemsSource="{Binding Tiles}" ItemTemplate="{StaticResource BossTile}" Margin="0,22,-8,0" Focusable="False">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Columns="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource WidthToColumns}, ConverterParameter=215}" />
