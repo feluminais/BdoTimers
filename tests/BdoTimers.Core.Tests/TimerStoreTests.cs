@@ -130,6 +130,31 @@ public class TimerStoreTests
     }
 
     [Fact]
+    public void ResetBossAlerts_returns_bosses_to_the_defaults_and_leaves_the_rest()
+    {
+        using var dir = new TempDir();
+        var (store, _) = NewStore(dir);
+        var tuned = new AlertConfig
+        {
+            LeadTimesMinutes = [30],
+            Sound = new SoundAlert { Key = "harp" },
+            Tts = new TtsAlert { Template = "{name} soon" },
+            Overlay = new OverlayAlert { Enabled = true },
+        };
+        var slots = new ScheduledSpec { Slots = [new Slot(DayOfWeek.Monday, new TimeOnly(22, 15))] };
+        store.Upsert(new TimerDef { Name = "Kzarka", IsBuiltIn = true, Enabled = false, Alerts = tuned, Scheduled = slots });
+        store.Upsert(Countdown() with { Alerts = tuned });
+
+        store.ResetBossAlerts();
+
+        var boss = store.Current.Timers.Single(t => t.IsBuiltIn);
+        Assert.True(boss.Enabled);
+        Assert.Equal(new AlertConfig(), boss.Alerts);
+        Assert.Same(slots, boss.Scheduled);
+        Assert.Equal(tuned, store.Current.Timers.Single(t => !t.IsBuiltIn).Alerts);
+    }
+
+    [Fact]
     public void PruneMuted_drops_past_entries()
     {
         using var dir = new TempDir();

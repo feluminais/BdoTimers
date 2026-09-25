@@ -66,6 +66,12 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             ? d with { Muted = d.Muted.Where(m => m.OccurrenceUtc >= before).ToList() }
             : d);
 
+    /// <summary>Every built-in boss back to alerts on with the default alert settings; spawn times and custom timers stay.</summary>
+    public void ResetBossAlerts() => Update(d => d with
+    {
+        Timers = d.Timers.Select(t => t.IsBuiltIn ? t with { Enabled = true, Alerts = new AlertConfig() } : t).ToList(),
+    });
+
     public void Modify(Guid id, Func<TimerDef, TimerDef> change) =>
         Update(d => d with { Timers = d.Timers.Select(t => t.Id == id ? change(t) : t).ToList() });
 

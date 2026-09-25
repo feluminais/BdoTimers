@@ -53,3 +53,5 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 17. Settings → Default alert times: change them → bosses without their own times follow. In a boss panel, change a chip
     → "Use default" appears and the boss gets a pencil in the table; Use default → it follows again.
 18. Boss panel → Spawn times opens the list below it; the same header closes it.
+19. Settings → Bosses → Reset all boss alert settings → Reset: every pencil is gone, bosses with alerts off are on
+    again, spawn times unchanged.

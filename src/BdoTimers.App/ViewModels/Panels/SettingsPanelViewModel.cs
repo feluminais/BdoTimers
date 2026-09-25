@@ -21,6 +21,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private double _speechRate;
     [ObservableProperty] private bool _isPositioningOverlay;
     [ObservableProperty] private bool _confirmingReset;
+    [ObservableProperty] private bool _confirmingAlertReset;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
@@ -117,6 +118,19 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     {
         _services.ResetBossTimetable();
         ConfirmingReset = false;
+    }
+
+    [RelayCommand]
+    void AskAlertReset() => ConfirmingAlertReset = true;
+
+    [RelayCommand]
+    void CancelAlertReset() => ConfirmingAlertReset = false;
+
+    [RelayCommand]
+    void ConfirmAlertReset()
+    {
+        _services.Timers.ResetBossAlerts();
+        ConfirmingAlertReset = false;
     }
 
     [RelayCommand]
