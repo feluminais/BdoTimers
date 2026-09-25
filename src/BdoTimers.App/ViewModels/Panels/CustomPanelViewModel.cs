@@ -2,6 +2,7 @@ using System.IO;
 using BdoTimers.App.Controls;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,11 +10,14 @@ using Microsoft.Win32;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-public sealed partial class CustomPanelViewModel : ObservableObject
+public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
 {
+    static readonly TimeSpan MaxElapsed = TimeSpan.FromDays(7);
+
     readonly AppServices _services;
     readonly IPanelHost _host;
     readonly Guid _id;
+    bool _showingClock;
 
     [ObservableProperty] private string _name;
     [ObservableProperty] private bool _nameInvalid;
@@ -25,15 +29,26 @@ public sealed partial class CustomPanelViewModel : ObservableObject
     [ObservableProperty] private string? _timeZoneId;
     [ObservableProperty] private Choice _active;
     [ObservableProperty] private bool _confirmingDelete;
+    [ObservableProperty] private string _clockText = "";
+    [ObservableProperty] private bool _clockInvalid;
+    [ObservableProperty] private bool _showsClock;
 
     public bool IsCountdown { get; }
-    public bool IsWeekly => !IsCountdown;
+    public bool IsStopwatch { get; }
+    public bool IsWeekly => !IsCountdown && !IsStopwatch;
+    /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
+    public bool HasAlerts => !IsStopwatch;
+    public bool CanDelete { get; }
+    public string ClockLabel => IsStopwatch ? "Elapsed" : "Time left";
+    /// <summary>Set by the view while the time box has focus, so the running time doesn't overwrite what is typed.</summary>
+    public bool EditingClock { get; set; }
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
     public SlotListViewModel? Slots { get; }
 
     TimerDef Timer => _services.Timers.Current.Timers.First(t => t.Id == _id);
+    TimerDef? TimerIfAny => _services.Timers.Current.Timers.FirstOrDefault(t => t.Id == _id);
 
     public CustomPanelViewModel(AppServices services, IPanelHost host, TimerDef timer)
     {
@@ -45,6 +60,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject
         _hasPicture = timer.ImageFile is not null;
         _active = Choice.For(timer.Enabled);
         IsCountdown = timer.Kind == TimerKind.Countdown;
+        IsStopwatch = timer.Kind == TimerKind.Stopwatch;
+        CanDelete = timer.Preset is null;
         if (timer.Countdown is { } c)
         {
             _durationText = Parsing.FormatDuration(c.Duration);
@@ -57,6 +74,52 @@ public sealed partial class CustomPanelViewModel : ObservableObject
                 slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
         }
         Alerts = new AlertRowsViewModel(services, timer);
+        ShowClock(DateTimeOffset.UtcNow);
+        services.UiClock.Tick += ShowClock;
+    }
+
+    public void OnClosed() => _services.UiClock.Tick -= ShowClock;
+
+    /// <summary>Time left of a started countdown, rounded up like alerts count it, or a stopwatch's elapsed time.</summary>
+    void ShowClock(DateTimeOffset now)
+    {
+        TimeSpan? value = TimerIfAny switch
+        {
+            { Stopwatch: { } s } => StopwatchOps.Elapsed(s, now),
+            { Countdown: { Status: CountdownStatus.Running, EndsAtUtc: { } end } } =>
+                TimeSpan.FromMinutes(Math.Max(0, Math.Ceiling((end - now).TotalMinutes))),
+            { Countdown: { Status: CountdownStatus.Paused, Remaining: { } left } } => TimeSpan.FromMinutes(Math.Ceiling(left.TotalMinutes)),
+            _ => null,
+        };
+        ShowsClock = value is not null;
+        if (value is not { } span)
+        {
+            ClockInvalid = false;
+            return;
+        }
+        // A rejected entry stays, marked, until it is corrected.
+        if (EditingClock || ClockInvalid) return;
+        _showingClock = true;
+        ClockText = Parsing.FormatDuration(span);
+        ClockInvalid = false;
+        _showingClock = false;
+    }
+
+    /// <summary>The view commits the time box on Enter or when it loses focus, so half-typed values never start alerts.</summary>
+    partial void OnClockTextChanged(string value)
+    {
+        if (_showingClock) return;
+        var now = DateTimeOffset.UtcNow;
+        if (IsStopwatch)
+        {
+            ClockInvalid = !Parsing.TryParseHoursMinutes(value, TimeSpan.Zero, MaxElapsed, out var elapsed);
+            if (!ClockInvalid) _services.Timers.SetElapsed(_id, now, elapsed);
+        }
+        else
+        {
+            ClockInvalid = !Parsing.TryParseDuration(value, out var left);
+            if (!ClockInvalid) _services.Timers.SetTimeLeft(_id, now, left);
+        }
     }
 
     partial void OnNameChanged(string value)

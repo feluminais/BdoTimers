@@ -67,7 +67,8 @@
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
             <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
                     Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
+                        Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}">
                 <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding AskDeleteCommand}"
                         Visibility="{Binding ConfirmingDelete, Converter={StaticResource InverseBoolToVisibility}}" />
                 <StackPanel Orientation="Horizontal" Visibility="{Binding ConfirmingDelete, Converter={StaticResource BoolToVisibility}}">
@@ -86,6 +87,18 @@
                         <TextBlock Text="Name" Style="{StaticResource RowLabel}" Width="120" />
                         <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
                                  controls:Ui.HasError="{Binding NameInvalid}" />
+                    </DockPanel>
+                </Border>
+
+                <!-- Corrects a timer started late; saved on Enter or when the box loses focus -->
+                <Border Style="{StaticResource Row}" Visibility="{Binding ShowsClock, Converter={StaticResource BoolToVisibility}}">
+                    <DockPanel>
+                        <TextBox x:Name="ClockBox" DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
+                                 Text="{Binding ClockText, UpdateSourceTrigger=LostFocus}" controls:Ui.HasError="{Binding ClockInvalid}"
+                                 ToolTip="Hours:minutes" AutomationProperties.Name="{Binding ClockLabel}"
+                                 GotFocus="ClockBox_GotFocus" LostFocus="ClockBox_LostFocus" PreviewKeyDown="ClockBox_PreviewKeyDown"
+                                 Unloaded="ClockBox_Unloaded" />
+                        <TextBlock Text="{Binding ClockLabel}" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
 
@@ -118,13 +131,15 @@
                     </Border>
                 </StackPanel>
 
-                <Border Style="{StaticResource Row}">
-                    <DockPanel>
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Active}" ValueWidth="110" />
-                        <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
-                <panels:AlertRows DataContext="{Binding Alerts}" />
+                <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Active}" ValueWidth="110" />
+                            <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
+                    </Border>
+                    <panels:AlertRows DataContext="{Binding Alerts}" />
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>

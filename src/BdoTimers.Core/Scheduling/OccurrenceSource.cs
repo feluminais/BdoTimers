@@ -4,7 +4,7 @@ namespace BdoTimers.Core.Scheduling;
 
 public static class OccurrenceSource
 {
-    /// <summary>Occurrences of <paramref name="timer"/> within [fromUtc, toUtc], ascending.</summary>
+    /// <summary>Occurrences of <paramref name="timer"/> within [fromUtc, toUtc], ascending; stopwatches have none.</summary>
     public static IEnumerable<DateTimeOffset> Between(TimerDef timer, DateTimeOffset fromUtc, DateTimeOffset toUtc)
     {
         if (timer.Kind == TimerKind.Scheduled && timer.Scheduled is { } spec)

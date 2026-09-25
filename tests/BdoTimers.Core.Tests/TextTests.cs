@@ -98,6 +98,16 @@ public class TextTests
     public void Rejects_bad_durations(string text) => Assert.False(Parsing.TryParseDuration(text, out _));
 
     [Fact]
+    public void Parses_hours_and_minutes_within_a_range()
+    {
+        Assert.True(Parsing.TryParseHoursMinutes("0:00", TimeSpan.Zero, TimeSpan.FromHours(99), out var zero));
+        Assert.Equal(TimeSpan.Zero, zero);
+        Assert.True(Parsing.TryParseHoursMinutes("30:15", TimeSpan.Zero, TimeSpan.FromHours(99), out var span));
+        Assert.Equal(new TimeSpan(30, 15, 0), span);
+        Assert.False(Parsing.TryParseHoursMinutes("100:00", TimeSpan.Zero, TimeSpan.FromHours(99), out _));
+    }
+
+    [Fact]
     public void Formats_durations() => Assert.Equal("1:30", Parsing.FormatDuration(TimeSpan.FromMinutes(90)));
 
     [Fact]

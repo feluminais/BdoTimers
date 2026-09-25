@@ -5,11 +5,12 @@ using System.Windows.Media.Imaging;
 using BdoTimers.App.Controls;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.App.Art;
 
 /// <summary>
-/// Pictures for tiles: bundled art for built-in bosses (Assets/Bosses/&lt;slug&gt;.jpg) and user pictures copied
+/// Pictures for tiles: bundled art for built-in bosses (Assets/Bosses/&lt;slug&gt;.jpg) and preset timers, and user pictures copied
 /// into <see cref="ImagesDir"/>. Anything missing or undecodable shows the placeholder art. UI thread only.
 /// </summary>
 public sealed class ArtLibrary(string imagesDir)
@@ -32,17 +33,27 @@ public sealed class ArtLibrary(string imagesDir)
         ["vell"] = new(0.62, 0.22),
     };
 
+    /// <summary>The same for preset timers' bundled pictures (Assets/Timers/&lt;preset&gt;.jpg); none means the centre.</summary>
+    static readonly IReadOnlyDictionary<string, Point> PresetFocus = new Dictionary<string, Point>
+    {
+        [Presets.Fishing] = new(0.48, 0.42),
+    };
+
     readonly Dictionary<string, ImageSource> _cache = new(StringComparer.OrdinalIgnoreCase);
 
     public string ImagesDir { get; } = imagesDir;
 
     ImageSource Placeholder => (ImageSource)Application.Current.FindResource("PlaceholderArt");
 
-    /// <summary>A boss's picture framed on its head; a custom timer's picture, or the placeholder, cropped around the centre.</summary>
+    /// <summary>A boss's picture framed on its head; the user's picture for a timer, else a preset's bundled one, else
+    /// the placeholder.</summary>
     public ArtPicture For(TimerDef timer)
     {
-        if (!timer.IsBuiltIn)
-            return new ArtPicture(timer.ImageFile is { } file ? Load(Path.Combine(ImagesDir, file)) : Placeholder);
+        if (timer.ImageFile is { } file) return new ArtPicture(Load(Path.Combine(ImagesDir, file)));
+        if (timer.Preset is { } preset)
+            return new ArtPicture(Load($"pack://application:,,,/Assets/Timers/{preset}.jpg"),
+                PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
+        if (!timer.IsBuiltIn) return new ArtPicture(Placeholder);
         var slug = Slug(timer.Name);
         return new ArtPicture(Load($"pack://application:,,,/Assets/Bosses/{slug}.jpg"),
             BossHeads.TryGetValue(slug, out var head) ? head : null);

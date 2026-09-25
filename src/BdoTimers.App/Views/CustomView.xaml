@@ -61,7 +61,7 @@
                         <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
                         <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
                     </StackPanel>
-                    <!-- Countdown controls appear only while the tile is hovered -->
+                    <!-- Countdown and stopwatch controls appear only while the tile is hovered -->
                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
                         <StackPanel.Style>
                             <Style TargetType="StackPanel">
@@ -69,7 +69,7 @@
                                 <Style.Triggers>
                                     <MultiDataTrigger>
                                         <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding IsCountdown}" Value="True" />
+                                            <Condition Binding="{Binding HasControls}" Value="True" />
                                             <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True" />
                                         </MultiDataTrigger.Conditions>
                                         <Setter Property="Visibility" Value="Visible" />
