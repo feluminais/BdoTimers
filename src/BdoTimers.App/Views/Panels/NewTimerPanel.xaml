@@ -12,14 +12,12 @@
                 AutomationProperties.Name="Countdown">
             <StackPanel>
                 <TextBlock Text="Countdown" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
-                <TextBlock Text="A buff, a farm session" FontFamily="Segoe UI" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
         </Button>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding WeeklyCommand}"
                 AutomationProperties.Name="Weekly">
             <StackPanel>
                 <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
-                <TextBlock Text="A reset, a guild event" FontFamily="Segoe UI" FontSize="12" Margin="0,3,0,0" />
             </StackPanel>
         </Button>
     </StackPanel>

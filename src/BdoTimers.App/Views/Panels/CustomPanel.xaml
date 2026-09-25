@@ -58,7 +58,6 @@
             <StackPanel Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
                         IsHitTestVisible="False">
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
-                <TextBlock Text="{Binding KindText}" Style="{StaticResource LabelText}" />
             </StackPanel>
             <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
                     HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0"

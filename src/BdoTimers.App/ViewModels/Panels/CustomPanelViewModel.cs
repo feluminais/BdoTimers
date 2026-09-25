@@ -28,7 +28,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject
 
     public bool IsCountdown { get; }
     public bool IsWeekly => !IsCountdown;
-    public string KindText => IsCountdown ? "Countdown" : "Weekly timer";
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
