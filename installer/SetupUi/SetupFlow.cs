@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using BdoTimers.App.Alerts;
 using Microsoft.Win32;
 using WixToolset.BootstrapperApplicationApi;
 
@@ -51,7 +52,7 @@ internal sealed class SetupFlow
             if (e.Status >= 0 && _action == LaunchAction.Uninstall)
             {
                 RemoveAutostart();
-                if (_installedExe is not null) ForgetExe(_installedExe);
+                RemoveNotifications(_installedExe);
             }
             Finished?.Invoke(e.Status, _lastError);
         };
@@ -152,13 +153,24 @@ internal sealed class SetupFlow
         }
     }
 
-    /// <summary>Removes Windows' notification registration for a copy that is gone (uninstalled, or moved away).</summary>
-    public void ForgetExe(string exePath)
+    /// <summary>Removes the registration earlier versions made for a copy that has moved away; Windows tied it to the
+    /// exe path. The current one is by app id, so it carries over to the new folder.</summary>
+    public void ForgetExe(string exePath) =>
+        TryNotificationCleanup(() => NotificationRegistration.RemoveLegacy(exePath));
+
+    /// <summary>After uninstall: the app's notification registration and settings, and any earlier version's.</summary>
+    void RemoveNotifications(string? exePath) => TryNotificationCleanup(() =>
     {
-        try { NotificationRegistration.Remove(exePath); }
+        NotificationRegistration.Remove(NotificationRegistration.InstalledAppId);
+        if (exePath is not null) NotificationRegistration.RemoveLegacy(exePath);
+    });
+
+    void TryNotificationCleanup(Action cleanup)
+    {
+        try { cleanup(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
-            _engine.Log(LogLevel.Error, $"Couldn't remove the notification registration of {exePath}: {ex.Message}");
+            _engine.Log(LogLevel.Error, $"Couldn't remove the notification registration: {ex.Message}");
         }
     }
 

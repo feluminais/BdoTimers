@@ -3,7 +3,8 @@
   <!--
     The bundle's own setup window (WiX v5 out-of-process bootstrapper application). .NET Framework 4.8 ships with
     Windows 10 and 11, so the setup needs no runtime of its own. The app's theme, art control, font, icon and two
-    boss pictures are linked in so both windows share one look.
+    boss pictures are linked in so both windows share one look, and its notification registration so uninstall can
+    remove it.
   -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -28,6 +29,7 @@
     <Compile Include="..\..\src\BdoTimers.App\Controls\ArtImage.xaml.cs" Link="Controls\ArtImage.xaml.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\FocusImage.cs" Link="Controls\FocusImage.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\Ui.cs" Link="Controls\Ui.cs" />
+    <Compile Include="..\..\src\BdoTimers.App\Alerts\NotificationRegistration.cs" Link="Alerts\NotificationRegistration.cs" />
     <Resource Include="..\..\src\BdoTimers.App\Theme\Fonts\Cinzel-Regular.ttf" Link="Theme\Fonts\Cinzel-Regular.ttf" />
     <Resource Include="..\..\src\BdoTimers.App\Assets\app.ico" Link="Assets\app.ico" />
     <Resource Include="..\..\src\BdoTimers.App\Assets\Bosses\garmoth.jpg" Link="Assets\garmoth.jpg" />

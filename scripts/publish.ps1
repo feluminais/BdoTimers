@@ -2,6 +2,8 @@ $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 dotnet test tests/BdoTimers.Core.Tests -c Release
 if ($LASTEXITCODE -ne 0) { throw 'Tests failed' }
+# The voice model isn't in git; the setup ships it, so fetch it first if this checkout lacks it.
+& "$PSScriptRoot/get-voice.ps1"
 
 $stage = 'obj/publish/app'
 foreach ($dir in 'obj/publish', 'installer/Msi/bin', 'installer/Bundle/bin') {

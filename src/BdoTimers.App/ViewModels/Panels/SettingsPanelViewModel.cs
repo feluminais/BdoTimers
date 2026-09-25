@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using BdoTimers.App.Alerts;
 using BdoTimers.Core.Model;
@@ -140,6 +142,15 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     [RelayCommand]
     void OpenDataFolder() => _services.OpenDataFolder();
+
+    /// <summary>The GPL asks that the source be offered to everyone who gets the app.</summary>
+    [RelayCommand]
+    void OpenSource() => Open("https://github.com/feluminais/BdoTimers");
+
+    [RelayCommand]
+    void OpenLicenses() => Open(Path.Combine(AppContext.BaseDirectory, "licenses"));
+
+    static void Open(string target) => Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
 
     public void OnClosed() => _services.Overlay.FinishPositioning();
 

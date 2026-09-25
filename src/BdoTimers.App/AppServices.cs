@@ -58,7 +58,7 @@ public sealed class AppServices : IDisposable
         Seed = SeedService.LoadEmbedded();
         Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig())));
 
-        _toast = new ToastChannel();
+        _toast = new ToastChannel(App.InstanceName, App.DisplayName);
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")));
         Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
@@ -77,12 +77,12 @@ public sealed class AppServices : IDisposable
         foreach (var path in RecoveredFiles)
             _toast.ShowInfo("A data file was damaged",
                 $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
-        if (!Settings.Current.PriorityHintShown)
+        if (!Settings.Current.NotificationHintShown)
         {
             _toast.ShowInfo("Let alerts through while gaming",
                 "Add BDO Timers to Settings → Notifications → Set priority notifications.",
                 withNotificationSettingsButton: true);
-            Settings.Update(s => s with { PriorityHintShown = true });
+            Settings.Update(s => s with { NotificationHintShown = true });
         }
         Autostart.Apply(Settings.Current.Autostart);
         if (showWindow) ShowMainWindow();
@@ -182,7 +182,6 @@ public sealed class AppServices : IDisposable
     {
         UiClock.Stop();
         _loop.Dispose();
-        _toast.Dispose();
         Tts.Dispose();
         _tray.Dispose();
     }
