@@ -5,7 +5,7 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
 - Timers screen: Farm (22-hour crop countdown) and Fishing (stopwatch) on top, then your own countdowns and weekly timers
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
-  voice (Kokoro) or a Windows voice, optional on-screen overlay
+  voice (Kokoro), optional on-screen overlay
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
 
 ## Install
