@@ -37,11 +37,33 @@
                 <DockPanel>
                     <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Voice}" ValueWidth="110"
                                             AutomationProperties.Name="Voice" />
-                    <TextBlock Text="Voice" Style="{StaticResource RowLabel}" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="Voice" Style="{StaticResource RowLabel}" />
+                        <TextBlock Text="{Binding VoiceSample}" Style="{StaticResource LabelText}" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
                 </DockPanel>
-                <TextBox Text="{Binding VoicePhrase, UpdateSourceTrigger=PropertyChanged, Delay=400}" Margin="0,6,0,0" FontSize="12"
-                         controls:Ui.HasError="{Binding VoicePhraseInvalid}" ToolTip="{}{name} and {duration} are filled in" />
-                <TextBlock Text="{}{name} and {duration} are filled in, e.g. &quot;Kzarka in 5 minutes&quot;." Style="{StaticResource LabelText}" Margin="0,3,0,0" />
+                <Button Style="{StaticResource LinkButton}" Content="Custom voice line…" HorizontalAlignment="Left" Margin="0,4,0,0"
+                        Command="{Binding EditVoiceLineCommand}" Click="CustomVoiceLine_Click"
+                        Visibility="{Binding EditingVoiceLine, Converter={StaticResource InverseBoolToVisibility}}" />
+                <StackPanel Margin="0,8,0,0" Visibility="{Binding EditingVoiceLine, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="What the voice says. [name] and [time] are filled in when the alert plays."
+                               Style="{StaticResource LabelText}" TextWrapping="Wrap" />
+                    <TextBox x:Name="VoiceLineBox" Text="{Binding VoiceLine, UpdateSourceTrigger=PropertyChanged, Delay=400}" Margin="0,6,0,0"
+                             controls:Ui.HasError="{Binding VoiceLineInvalid}" AutomationProperties.Name="Voice line" />
+                    <DockPanel Margin="0,8,0,0">
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Done" VerticalAlignment="Center"
+                                Command="{Binding EditVoiceLineCommand}" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Reset" Margin="0,0,14,0" VerticalAlignment="Center"
+                                Command="{Binding ResetVoiceLineCommand}" />
+                        <StackPanel Orientation="Horizontal">
+                            <Button Style="{StaticResource GhostButton}" Content="+ Name" Padding="10,3" FontSize="12" Focusable="False" Click="InsertName_Click" />
+                            <Button Style="{StaticResource GhostButton}" Content="+ Time left" Padding="10,3" FontSize="12" Margin="6,0,0,0"
+                                    Focusable="False" Click="InsertTime_Click" />
+                            <Button Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}" Margin="4,0,0,0"
+                                    ToolTip="Hear it" Command="{Binding HearVoiceLineCommand}" />
+                        </StackPanel>
+                    </DockPanel>
+                </StackPanel>
             </StackPanel>
         </Border>
         <Border Style="{StaticResource Row}">

@@ -48,3 +48,5 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 14. Boss panel → Sound: stepping plays nothing; ▶ plays the choice. + → pick a WAV or MP3: it's selected and listed in
     Settings → Your sounds. A file that isn't audio shows "Couldn't play …".
 15. Settings → Your sounds → ✕: the sound is gone; timers that used it show Default.
+16. Boss panel → Voice shows what it says; Custom voice line… → + Name / + Time left insert at the caret, ▶ speaks the
+    line, Reset restores "Kzarka in 5 minutes".
