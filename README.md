@@ -3,7 +3,7 @@
 Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
-- Custom screen: picture tiles for your own countdowns (buffs, farm sessions) and weekly timers
+- Timers screen: Farm (22-hour crop countdown) and Fishing (stopwatch) on top, then your own countdowns and weekly timers
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert, optional on-screen overlay
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
 
@@ -31,7 +31,7 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 ## Manual test checklist
 1. First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
 2. Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
-3. Custom → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; hover the tile, press play → alert at 1:00
+3. Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; hover the tile, press play → alert at 1:00
    and at 0:00, then it shows Ready again (or restarts if "Restart when it ends" is on).
 4. Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
 5. Set the countdown's Overlay to 2 min before, BDO in borderless: overlay appears, clicks pass through to the game.
@@ -44,7 +44,7 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 10. Close window → stays in tray; launch the exe again → existing window comes to front at the same size and position.
 11. Settings → Start with Windows On, reboot → app starts minimized in the tray. Off → it no longer starts.
 12. Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
-13. Custom panel → click the picture (badge "Change picture") → Choose picture…: the tile shows it, fading into black.
+13. Timer panel → click the picture (badge "Change picture") → Choose picture…: the tile shows it, fading into black.
 14. Boss panel → Sound: stepping plays nothing; ▶ plays the choice. + → pick a WAV or MP3: it's selected and listed in
     Settings → Your sounds. A file that isn't audio shows "Couldn't play …".
 15. Settings → Your sounds → ✕: the sound is gone; timers that used it show Default.
@@ -55,3 +55,5 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 18. Boss panel → Spawn times opens the list below it; the same header closes it.
 19. Settings → Bosses → Reset all boss alert settings → Reset: every pencil is gone, bosses with alerts off are on
     again, spawn times unchanged.
+20. Timers: Farm and Fishing come first and have no Delete. Hover Farm → play, open it → Time left 19:30 → Enter: the
+    tile shows 19:29:xx, started 2.5 h ago. Fishing → Elapsed 1:20 → Enter: it runs on from 01:20:00.

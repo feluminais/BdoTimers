@@ -29,8 +29,9 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _skipLabel = "Skip next";
 
     public Guid Id => _timer.Id;
-    public bool IsCountdown => _timer.Kind == TimerKind.Countdown;
-    public bool IsWeekly => !IsCountdown;
+    /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
+    public bool HasControls => _timer.Kind is TimerKind.Countdown or TimerKind.Stopwatch;
+    public bool IsWeekly => _timer.Kind == TimerKind.Scheduled;
 
     public TimerTileViewModel(TimerDef timer, AppServices services, IPanelHost host, DateTimeOffset now)
     {
@@ -57,15 +58,26 @@ public sealed partial class TimerTileViewModel : ObservableObject
         {
             (Digits, Detail, IsDimmed) = c.Status switch
             {
-                CountdownStatus.Running when c.EndsAtUtc is { } end => (DurationFormat.Clock(end - now), StartedText(c), false),
+                CountdownStatus.Running when c.EndsAtUtc is { } end => (DurationFormat.Clock(end - now), StartedText(c.StartedAtUtc), false),
                 CountdownStatus.Paused when c.Remaining is { } left => (DurationFormat.Clock(left), "Paused", true),
                 _ => (DurationFormat.Clock(c.Duration), "Ready", true),
             };
             Detail = off + Detail;
             IsDimmed |= !_timer.Enabled;
-            var running = c.Status == CountdownStatus.Running;
-            PlayPauseGlyph = running ? PauseGlyph : PlayGlyph;
-            PlayPauseTip = running ? "Pause" : c.Status == CountdownStatus.Paused ? "Resume" : "Start";
+            ShowStatus(c.Status);
+            return;
+        }
+
+        if (_timer.Stopwatch is { } s)
+        {
+            Digits = DurationFormat.Clock(StopwatchOps.Elapsed(s, now));
+            (Detail, IsDimmed) = s.Status switch
+            {
+                CountdownStatus.Running => (StartedText(s.StartedAtUtc), false),
+                CountdownStatus.Paused => ("Paused", true),
+                _ => ("Ready", true),
+            };
+            ShowStatus(s.Status);
             return;
         }
 
@@ -84,8 +96,15 @@ public sealed partial class TimerTileViewModel : ObservableObject
         SkipLabel = skipped ? "Unskip next" : "Skip next";
     }
 
-    static string StartedText(CountdownSpec c) =>
-        c.StartedAtUtc is { } started
+    void ShowStatus(CountdownStatus status)
+    {
+        var running = status == CountdownStatus.Running;
+        PlayPauseGlyph = running ? PauseGlyph : PlayGlyph;
+        PlayPauseTip = running ? "Pause" : status == CountdownStatus.Paused ? "Resume" : "Start";
+    }
+
+    static string StartedText(DateTimeOffset? startedAtUtc) =>
+        startedAtUtc is { } started
             ? $"Started {started.ToLocalTime().ToString("HH:mm:ss · MMM d", CultureInfo.InvariantCulture)}"
             : "Running";
 
@@ -96,16 +115,31 @@ public sealed partial class TimerTileViewModel : ObservableObject
     void StartPause()
     {
         var now = DateTimeOffset.UtcNow;
+        var timers = _services.Timers;
+        if (_timer.Stopwatch is { } s)
+        {
+            switch (s.Status)
+            {
+                case CountdownStatus.Running: timers.PauseStopwatch(_timer.Id, now); break;
+                case CountdownStatus.Paused: timers.ResumeStopwatch(_timer.Id, now); break;
+                case CountdownStatus.Idle: timers.StartStopwatch(_timer.Id, now); break;
+            }
+            return;
+        }
         switch (_timer.Countdown?.Status)
         {
-            case CountdownStatus.Running: _services.Timers.PauseCountdown(_timer.Id, now); break;
-            case CountdownStatus.Paused: _services.Timers.ResumeCountdown(_timer.Id, now); break;
-            case CountdownStatus.Idle: _services.Timers.StartCountdown(_timer.Id, now); break;
+            case CountdownStatus.Running: timers.PauseCountdown(_timer.Id, now); break;
+            case CountdownStatus.Paused: timers.ResumeCountdown(_timer.Id, now); break;
+            case CountdownStatus.Idle: timers.StartCountdown(_timer.Id, now); break;
         }
     }
 
     [RelayCommand]
-    void Reset() => _services.Timers.ResetCountdown(_timer.Id);
+    void Reset()
+    {
+        if (_timer.Stopwatch is not null) _services.Timers.ResetStopwatch(_timer.Id);
+        else _services.Timers.ResetCountdown(_timer.Id);
+    }
 
     [RelayCommand]
     void ToggleSkipNext()

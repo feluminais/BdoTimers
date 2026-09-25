@@ -38,9 +38,16 @@ public class JsonRoundTripTests
                 Sound = new SoundAlert { Key = "horn.mp3" },
             },
         };
+        var stopwatch = new TimerDef
+        {
+            Name = "Fishing",
+            Kind = TimerKind.Stopwatch,
+            Preset = "fishing",
+            Stopwatch = new StopwatchSpec { Status = CountdownStatus.Paused, Elapsed = TimeSpan.FromMinutes(75) },
+        };
         var data = new AppData
         {
-            Timers = [scheduled, countdown],
+            Timers = [scheduled, countdown, stopwatch],
             Muted = [new MutedOccurrence(scheduled.Id, new DateTimeOffset(2026, 9, 28, 22, 15, 0, TimeSpan.Zero))],
             SeedApplied = true,
         };
@@ -49,7 +56,9 @@ public class JsonRoundTripTests
         var back = JsonSerializer.Deserialize<AppData>(json, JsonDefaults.Options)!;
 
         Assert.True(back.SeedApplied);
-        Assert.Equal(2, back.Timers.Count);
+        Assert.Equal(3, back.Timers.Count);
+        // Alert lists compare by reference, so the alerts are checked apart from the rest.
+        Assert.Equal(stopwatch, back.Timers[2] with { Alerts = stopwatch.Alerts });
         Assert.Equal(scheduled.Id, back.Timers[0].Id);
         Assert.Equal(new Slot(DayOfWeek.Monday, new TimeOnly(0, 15)), back.Timers[0].Scheduled!.Slots.Single());
         Assert.Equal(countdown.Countdown, back.Timers[1].Countdown);

@@ -56,7 +56,7 @@ public sealed class AppServices : IDisposable
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
         Timers = new TimerStore(timersFile, timers.Value);
         Seed = SeedService.LoadEmbedded();
-        Timers.Update(d => SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig()));
+        Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig())));
 
         _toast = new ToastChannel();
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);

@@ -1,11 +1,12 @@
 using System.Collections.ObjectModel;
 using System.Windows;
 using BdoTimers.App.ViewModels.Panels;
+using BdoTimers.Core.Seed;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>Custom screen: one tile per custom timer in creation order, then the "+ New timer" tile.</summary>
+/// <summary>Timers screen: Farm and Fishing, then the user's own timers in creation order, then the "+ New timer" tile.</summary>
 public sealed partial class CustomViewModel
 {
     readonly AppServices _services;
@@ -30,7 +31,7 @@ public sealed partial class CustomViewModel
     /// <summary>Updates tiles in place when the set of timers is unchanged, so hover state and visuals survive.</summary>
     void Sync()
     {
-        var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn).ToList();
+        var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn).OrderBy(t => Presets.Rank(t.Preset)).ToList();
         var tiles = Items.OfType<TimerTileViewModel>().ToList();
         var now = DateTimeOffset.UtcNow;
         if (tiles.Select(t => t.Id).SequenceEqual(timers.Select(t => t.Id)))

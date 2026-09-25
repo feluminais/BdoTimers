@@ -31,6 +31,22 @@ public class CountdownOpsTests
     }
 
     [Fact]
+    public void SetRemaining_moves_the_end_and_the_start_of_a_running_countdown()
+    {
+        var c = CountdownOps.SetRemaining(CountdownOps.Start(Hour, T0), T0.AddMinutes(1), TimeSpan.FromMinutes(20));
+        Assert.Equal(T0.AddMinutes(21), c.EndsAtUtc);
+        Assert.Equal(T0.AddMinutes(-39), c.StartedAtUtc);
+    }
+
+    [Fact]
+    public void SetRemaining_changes_what_a_paused_countdown_resumes_with_and_leaves_idle_ones()
+    {
+        var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(10));
+        Assert.Equal(TimeSpan.FromMinutes(5), CountdownOps.SetRemaining(paused, T0.AddMinutes(11), TimeSpan.FromMinutes(5)).Remaining);
+        Assert.Equal(Hour, CountdownOps.SetRemaining(Hour, T0, TimeSpan.FromMinutes(5)));
+    }
+
+    [Fact]
     public void Pause_and_resume_ignore_wrong_states()
     {
         Assert.Equal(Hour, CountdownOps.Pause(Hour, T0));

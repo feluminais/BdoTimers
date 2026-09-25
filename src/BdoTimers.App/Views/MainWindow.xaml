@@ -35,7 +35,7 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <RadioButton Style="{StaticResource TabButton}" Content="Bosses" IsChecked="{Binding IsBossesSection}"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <RadioButton Style="{StaticResource TabButton}" Content="Custom" IsChecked="{Binding IsCustomSection}"
+                    <RadioButton Style="{StaticResource TabButton}" Content="Timers" IsChecked="{Binding IsCustomSection}"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

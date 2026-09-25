@@ -22,6 +22,19 @@ public static class CountdownOps
             ? c with { Status = CountdownStatus.Running, EndsAtUtc = now + left, Remaining = null }
             : c;
 
+    /// <summary>Corrects the time left of a started countdown, such as one started late; the start time moves to match.
+    /// An idle countdown is unchanged.</summary>
+    public static CountdownSpec SetRemaining(CountdownSpec c, DateTimeOffset now, TimeSpan left) => c.Status switch
+    {
+        CountdownStatus.Running => c with
+        {
+            EndsAtUtc = now + left,
+            StartedAtUtc = left < c.Duration ? now - (c.Duration - left) : now,
+        },
+        CountdownStatus.Paused => c with { Remaining = left },
+        _ => c,
+    };
+
     public static CountdownSpec Reset(CountdownSpec c) =>
         c with { Status = CountdownStatus.Idle, EndsAtUtc = null, Remaining = null, StartedAtUtc = null };
 
