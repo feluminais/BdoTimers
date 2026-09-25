@@ -23,7 +23,7 @@ internal static class FolderPicker
         {
             dialog.GetOptions(out var options);
             dialog.SetOptions(options | FosPickFolders | FosForceFileSystem);
-            dialog.SetTitle("Choose where the BdoTimers folder goes");
+            dialog.SetTitle("Choose folder");
             if (SHCreateItemFromParsingName(initialFolder, IntPtr.Zero, typeof(IShellItem).GUID, out var start) == 0)
                 dialog.SetFolder(start);
             var hwnd = owner is null ? IntPtr.Zero : new WindowInteropHelper(owner).Handle;
