@@ -21,6 +21,8 @@ internal sealed class SetupFlow
     volatile bool _cancel;
     LaunchAction _action;
     RequestState? _packageState;
+    /// <summary>The installed exe when the current action started; uninstall removes the record of where it was.</summary>
+    string? _installedExe;
     string? _lastError;
 
     public SetupFlow(BootstrapperApplication ba, IEngine engine, IBootstrapperCommand command)
@@ -46,7 +48,11 @@ internal sealed class SetupFlow
         ba.Error += (_, e) => _lastError = e.ErrorMessage;
         ba.ApplyComplete += (_, e) =>
         {
-            if (e.Status >= 0 && _action == LaunchAction.Uninstall) RemoveAutostart();
+            if (e.Status >= 0 && _action == LaunchAction.Uninstall)
+            {
+                RemoveAutostart();
+                if (_installedExe is not null) ForgetExe(_installedExe);
+            }
             Finished?.Invoke(e.Status, _lastError);
         };
     }
@@ -96,6 +102,7 @@ internal sealed class SetupFlow
     public void Start(LaunchAction action, string? installRoot = null, RequestState? packageState = null)
     {
         CloseInstalledApp();
+        _installedExe = InstalledRoot is { } root ? Path.Combine(root, "BdoTimers", "BdoTimers.exe") : null;
         _action = action;
         _packageState = packageState;
         _cancel = false;
@@ -142,6 +149,16 @@ internal sealed class SetupFlow
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             _engine.Log(LogLevel.Error, $"Couldn't remove the Start with Windows entry: {ex.Message}");
+        }
+    }
+
+    /// <summary>Removes Windows' notification registration for a copy that is gone (uninstalled, or moved away).</summary>
+    public void ForgetExe(string exePath)
+    {
+        try { NotificationRegistration.Remove(exePath); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            _engine.Log(LogLevel.Error, $"Couldn't remove the notification registration of {exePath}: {ex.Message}");
         }
     }
 
