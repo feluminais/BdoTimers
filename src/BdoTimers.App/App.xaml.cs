@@ -7,6 +7,14 @@ namespace BdoTimers.App;
 
 public partial class App : Application
 {
+    /// <summary>Names the data folder and the single-instance handles. Debug builds get their own, so a dev copy
+    /// runs next to the installed app without touching its timers and settings.</summary>
+#if DEBUG
+    const string InstanceName = "BdoTimers-Dev";
+#else
+    const string InstanceName = "BdoTimers";
+#endif
+
     Mutex? _singleInstance;
     EventWaitHandle? _activateSignal;
     AppServices? _services;
@@ -17,8 +25,8 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        _singleInstance = new Mutex(true, @"Local\BdoTimers.SingleInstance", out var isFirst);
-        _activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, @"Local\BdoTimers.Activate");
+        _singleInstance = new Mutex(true, $@"Local\{InstanceName}.SingleInstance", out var isFirst);
+        _activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{InstanceName}.Activate");
         if (!isFirst)
         {
             _activateSignal.Set();
@@ -28,7 +36,7 @@ public partial class App : Application
         ThreadPool.RegisterWaitForSingleObject(_activateSignal,
             (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
 
-        var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "BdoTimers");
+        var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), InstanceName);
         Log.Init(Path.Combine(dataDir, "logs"));
         DispatcherUnhandledException += (_, args) =>
         {
