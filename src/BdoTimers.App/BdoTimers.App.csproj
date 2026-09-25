@@ -25,6 +25,7 @@
     <Resource Include="Theme\Fonts\*.ttf" />
     <!-- The SIL Open Font License asks for the licence to travel with the font. -->
     <None Include="Theme\Fonts\OFL.txt" Link="licenses\Cinzel-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Assets\Sounds\SOURCES.txt" Link="licenses\Sounds.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <PropertyGroup>
