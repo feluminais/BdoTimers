@@ -10,6 +10,9 @@ namespace BdoTimers.SetupUi;
 
 public enum SetupPage { Loading, Welcome, Options, Progress, Done, Error, Maintenance }
 
+/// <summary>Whether the user can create the app's folder in a place; the install is per-user, so it never elevates.</summary>
+public enum FolderAccess { Writable, NeedsAdmin, Missing }
+
 internal sealed class SetupViewModel : INotifyPropertyChanged
 {
     readonly SetupFlow _flow;
@@ -20,6 +23,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     bool _moveInstalling;
     SetupPage _page = SetupPage.Loading;
     string _installRoot;
+    FolderAccess _access;
     int _progress;
     string _progressTitle = "";
     string _doneTitle = "";
@@ -31,6 +35,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     {
         _flow = flow;
         _installRoot = flow.InitialInstallRoot.Trim().Trim('"');
+        _access = CheckAccess(_installRoot);
         flow.Detected += status => OnUi(() =>
         {
             if (status < 0) ShowError(status, null);
@@ -42,8 +47,9 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
             Progress = _moveTo is null ? percent : _moveInstalling ? 50 + percent / 2 : percent / 2);
         flow.Finished += (status, message) => OnUi(() => Finish(status, message));
 
-        InstallCommand = new Command(Confirm, () => IsInstallRootValid && (!IsMoving || !IsSameFolder(InstallRoot, _installedRoot)));
-        OptionsCommand = new Command(() => Page = SetupPage.Options);
+        InstallCommand = new Command(Confirm, () => IsInstallRootValid && _access == FolderAccess.Writable
+                                                    && (!IsMoving || !IsSameFolder(InstallRoot, _installedRoot)));
+        NextCommand = new Command(() => Page = SetupPage.Options);
         MoveCommand = new Command(() => { IsMoving = true; Page = SetupPage.Options; });
         OpenFolderCommand = new Command(OpenFolder);
         BackCommand = new Command(() =>
@@ -67,7 +73,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public IntPtr WindowHandle { set => _flow.WindowHandle = value; }
 
     public ICommand InstallCommand { get; }
-    public ICommand OptionsCommand { get; }
+    public ICommand NextCommand { get; }
     public ICommand MoveCommand { get; }
     public ICommand OpenFolderCommand { get; }
     public ICommand BackCommand { get; }
@@ -88,6 +94,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         set
         {
             if (!Set(ref _installRoot, value)) return;
+            _access = CheckAccess(value);
             OnPropertyChanged(nameof(IsInstallRootValid));
             OnPropertyChanged(nameof(InstallFolderText));
             CommandManager.InvalidateRequerySuggested();
@@ -109,6 +116,8 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     /// <summary>The app always gets its own BdoTimers folder inside the chosen one.</summary>
     public string InstallFolderText =>
         !IsInstallRootValid ? @"Enter a full folder path, like D:\Games"
+        : _access == FolderAccess.Missing ? "That drive isn't available"
+        : _access == FolderAccess.NeedsAdmin ? "Needs admin rights; pick a folder of your own"
         : IsMoving && IsSameFolder(InstallRoot, _installedRoot) ? "That's where it is now; pick another folder"
         : (IsMoving ? "Moves to " : "Installs to ") + Path.Combine(InstallRoot.Trim(), "BdoTimers");
 
@@ -232,6 +241,25 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     void OpenFolder()
     {
         if (Directory.Exists(InstalledFolder)) Process.Start(new ProcessStartInfo(InstalledFolder) { UseShellExecute = true });
+    }
+
+    /// <summary>Tries a throwaway file in the nearest folder that exists, which is where the app's folder would be created.</summary>
+    static FolderAccess CheckAccess(string path)
+    {
+        string dir;
+        try { dir = Path.GetFullPath(path.Trim()); }
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException) { return FolderAccess.Missing; }
+        while (!Directory.Exists(dir))
+        {
+            if (Path.GetDirectoryName(dir) is not { } parent) return FolderAccess.Missing;
+            dir = parent;
+        }
+        try
+        {
+            using (File.Create(Path.Combine(dir, $".bdotimers-{Guid.NewGuid():N}.tmp"), 1, FileOptions.DeleteOnClose)) { }
+            return FolderAccess.Writable;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException) { return FolderAccess.NeedsAdmin; }
     }
 
     static bool IsSameFolder(string a, string? b) =>
