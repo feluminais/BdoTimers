@@ -65,6 +65,25 @@ public class SchedulerEngineTests : IDisposable
     }
 
     [Fact]
+    public void Timers_without_their_own_times_follow_the_default_in_settings()
+    {
+        _settings.Update(s => s with { DefaultLeadTimesMinutes = [2] });
+        var timer = new TimerDef
+        {
+            Name = "Farm",
+            Kind = TimerKind.Countdown,
+            Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(10) },
+        };
+        _timers.Upsert(timer);
+        _timers.StartCountdown(timer.Id, T0);
+
+        TickAt(T0.AddMinutes(5));
+        TickAt(T0.AddMinutes(8));
+
+        Assert.Equal(new[] { 2 }, _sink.Alerts.Select(a => a.LeadMinutes));
+    }
+
+    [Fact]
     public void Repeating_countdown_restarts()
     {
         var timer = AddCountdown(repeat: true);

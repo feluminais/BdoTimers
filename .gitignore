@@ -4,3 +4,6 @@ publish/
 .vs/
 *.user
 TestResults/
+
+# Kokoro voice model, fetched by scripts/get-voice.ps1 (voice work in progress)
+src/BdoTimers.App/Voice/kokoro/

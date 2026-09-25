@@ -200,15 +200,15 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
             var folder = Path.Combine(_moveTo, "BdoTimers");
             _flow.RepointAutostart(Path.Combine(folder, "BdoTimers.exe"));
             _flow.RemoveIfEmpty(InstalledFolder);
-            (DoneTitle, DoneText) = ("Moved", $"BDO Timers is now in {folder}.");
+            (DoneTitle, DoneText) = ("Moved", folder);
             Page = SetupPage.Done;
             return;
         }
         (DoneTitle, DoneText) = _running switch
         {
-            LaunchAction.Uninstall => ("Removed", "BDO Timers is gone. Your timers and settings stay in %AppData%\\BdoTimers."),
-            LaunchAction.Repair => ("Repaired", "BDO Timers is back in working order."),
-            _ => ("Ready", "BDO Timers is installed. You'll find it in the Start menu."),
+            LaunchAction.Uninstall => ("Removed", "Your timers and settings are kept."),
+            LaunchAction.Repair => ("Repaired", ""),
+            _ => ("Ready", "BDO Timers is in your Start menu."),
         };
         Page = SetupPage.Done;
     }

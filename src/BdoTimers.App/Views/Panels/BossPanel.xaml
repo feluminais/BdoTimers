@@ -17,16 +17,12 @@
                     Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
         </Grid>
 
-        <StackPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
+        <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
+            <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
+                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
             <TextBlock Text="{Binding AppliesText}" Style="{StaticResource LabelText}" Foreground="{StaticResource PastBrush}"
-                       TextTrimming="CharacterEllipsis" Margin="0,0,0,8" />
-            <DockPanel>
-                <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
-                        Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
-                <Button Style="{StaticResource LinkButton}" Content="Edit spawn times" HorizontalAlignment="Left" VerticalAlignment="Center"
-                        Command="{Binding ToggleTimesCommand}" />
-            </DockPanel>
-        </StackPanel>
+                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+        </DockPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,2,22,8">
@@ -34,15 +30,31 @@
                     <DockPanel>
                         <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
                                                 AutomationProperties.Name="Alerts" />
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Alerts" Style="{StaticResource RowLabel}" />
-                            <TextBlock Text="Off: no alerts, hidden from the strip" Style="{StaticResource LabelText}" />
-                        </StackPanel>
+                        <TextBlock Text="Alerts" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
                 <panels:AlertRows DataContext="{Binding Alerts}" />
+                <!-- Opens the spawn times below it, so it stays where it is and can close them again right away -->
+                <Button Style="{StaticResource NameButton}" HorizontalAlignment="Stretch" Margin="0,12,0,4" Command="{Binding ToggleTimesCommand}"
+                        AutomationProperties.Name="Spawn times">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" FontSize="10" VerticalAlignment="Center" Margin="0,0,6,0">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                                    <Setter Property="Text" Value="&#xE70D;" />
+                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding ShowTimes}" Value="True">
+                                            <Setter Property="Text" Value="&#xE70E;" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="Spawn times" Style="{StaticResource SectionText}" Margin="0" />
+                    </DockPanel>
+                </Button>
                 <StackPanel Visibility="{Binding ShowTimes, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="Spawn times" Style="{StaticResource SectionText}" />
                     <TextBlock Text="{Binding TimeZoneNote}" Style="{StaticResource LabelText}" Margin="0,0,0,4" TextWrapping="Wrap" />
                     <panels:SlotList DataContext="{Binding Slots}" />
                 </StackPanel>

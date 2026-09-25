@@ -160,6 +160,8 @@ public sealed partial class GridEntryViewModel : ObservableObject
     [ObservableProperty] private string _tooltip = "";
 
     public string Name => _entry.Boss.Name;
+    /// <summary>Marks bosses with their own alert times or sound, which don't follow the defaults in Settings.</summary>
+    public bool OwnSettings => _entry.Boss.Alerts.OverridesDefaults;
     public CellState State => _entry.State;
     public bool CanSkip => _entry.State is CellState.Upcoming or CellState.Next or CellState.Skipped;
     public string SkipLabel => _entry.State == CellState.Skipped ? "Unskip" : "Skip this spawn";
@@ -180,9 +182,9 @@ public sealed partial class GridEntryViewModel : ObservableObject
         var note = _entry.State switch
         {
             CellState.Skipped => " · skipped",
-            CellState.Unfollowed => " · not followed",
+            CellState.Unfollowed => " · alerts off",
             _ => "",
         };
-        Tooltip = $"{Name} · {when} · {relative}{note}";
+        Tooltip = $"{Name} · {when} · {relative}{note}{(OwnSettings ? " · own alert settings" : "")}";
     }
 }

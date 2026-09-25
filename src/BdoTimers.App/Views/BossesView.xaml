@@ -4,6 +4,15 @@
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:vm="clr-namespace:BdoTimers.App.ViewModels">
     <UserControl.Resources>
+        <!-- A small gold pencil for bosses with their own alert times or sound, which don't follow the defaults -->
+        <Style x:Key="OwnSettingsMark" TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+            <Setter Property="Text" Value="&#xE70F;" />
+            <Setter Property="FontSize" Value="9" />
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="ToolTip" Value="Own alert settings" />
+            <Setter Property="Visibility" Value="{Binding OwnSettings, Converter={StaticResource BoolToVisibility}}" />
+        </Style>
         <!-- Strip tile. The ContentControl's Tag "Next" makes it the large, gold-outlined tile. -->
         <DataTemplate x:Key="StripTile" DataType="{x:Type vm:StripTileViewModel}">
             <Border BorderThickness="1" Background="{StaticResource BgBrush}">
@@ -139,7 +148,10 @@
                     <controls:ArtImage Sources="{Binding Images}" Width="96" HorizontalAlignment="Left" />
                     <!-- Right-aligned in the black; the left margin keeps long names off the picture -->
                     <StackPanel Margin="80,0,24,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right">
-                        <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                        <DockPanel HorizontalAlignment="Right">
+                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource OwnSettingsMark}" Margin="0,0,5,0" />
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
                         <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" />
                     </StackPanel>
                 </Grid>
@@ -238,7 +250,8 @@
                                                                             <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipCommand}" />
                                                                         </ContextMenu>
                                                                     </Button.ContextMenu>
-                                                                    <TextBlock Text="{Binding Name}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock Text="{Binding Name}" FontSize="12">
                                                                         <TextBlock.Style>
                                                                             <Style TargetType="TextBlock">
                                                                                 <Style.Triggers>
@@ -249,6 +262,8 @@
                                                                             </Style>
                                                                         </TextBlock.Style>
                                                                     </TextBlock>
+                                                                    <TextBlock Style="{StaticResource OwnSettingsMark}" Margin="4,0,0,0" />
+                                                                    </StackPanel>
                                                                 </Button>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>

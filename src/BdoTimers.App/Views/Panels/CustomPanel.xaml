@@ -96,10 +96,7 @@
                             <TextBox DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
                                      Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
                                      controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
-                                <TextBlock Text="H:MM, up to 24:00" Style="{StaticResource LabelText}" />
-                            </StackPanel>
+                            <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource Row}">
@@ -125,10 +122,7 @@
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
                         <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Active}" ValueWidth="110" />
-                        <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
-                            <TextBlock Text="Inactive timers never alert" Style="{StaticResource LabelText}" />
-                        </StackPanel>
+                        <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
                 <panels:AlertRows DataContext="{Binding Alerts}" />

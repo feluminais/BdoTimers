@@ -9,13 +9,16 @@ public sealed class AlertPlanner
 
     readonly HashSet<(Guid TimerId, DateTimeOffset Occurrence, int Lead)> _fired = [];
 
+    /// <param name="defaultLeads">The default alert times from Settings, for timers without their own.</param>
     public IReadOnlyList<AlertEvent> Tick(
-        IEnumerable<TimerDef> timers, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now)
+        IEnumerable<TimerDef> timers, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now,
+        IReadOnlyList<int>? defaultLeads = null)
     {
         var events = new List<AlertEvent>();
         foreach (var timer in timers.Where(t => t.Enabled))
         {
-            var leads = timer.Alerts.LeadTimesMinutes.Where(l => l >= 0).Distinct().Order().ToArray();
+            var leads = timer.Alerts.LeadTimes(defaultLeads ?? AlertConfig.StandardLeadTimesMinutes)
+                .Where(l => l >= 0).Distinct().Order().ToArray();
             if (leads.Length == 0) continue;
 
             var window = OccurrenceSource.Between(timer, now - Grace, now + TimeSpan.FromMinutes(leads[^1]));
