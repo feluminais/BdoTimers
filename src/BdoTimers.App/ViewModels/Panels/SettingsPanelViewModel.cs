@@ -36,8 +36,10 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         _autostart = Choice.For(s.Autostart);
         _volume = s.Volume;
         ReloadSounds();
-        Voices = services.Tts.InstalledVoices().Select(v => new Choice(v, v)).ToList();
-        _voice = Voices.FirstOrDefault(v => (string)v.Value! == s.TtsVoice) ?? Voices.FirstOrDefault();
+        Voices = services.Tts.Voices().Select(v => new Choice(v.Label, v.Id)).ToList();
+        _voice = Voices.FirstOrDefault(v => (string)v.Value! == s.TtsVoice)
+                 ?? Voices.FirstOrDefault(v => (string)v.Value! == services.Tts.DefaultVoiceId)
+                 ?? Voices.FirstOrDefault();
         _speechRate = s.TtsRate;
         _isPositioningOverlay = services.Overlay.IsPositioning;
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
@@ -94,6 +96,11 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     [RelayCommand]
     void TestAlert() => _services.SendTestAlert();
+
+    /// <summary>Two respelled boss names, so the test also shows pronunciation.</summary>
+    [RelayCommand]
+    void TestVoice() => _services.Speak("Kzarka and Uturi in 5 minutes");
+
 
     [RelayCommand]
     void OpenNotificationSettings() => ToastChannel.OpenWindowsNotificationSettings();

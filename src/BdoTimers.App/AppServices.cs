@@ -60,7 +60,7 @@ public sealed class AppServices : IDisposable
 
         _toast = new ToastChannel();
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
-        Tts = new TtsChannel();
+        Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")));
         Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
         _engine = new SchedulerEngine(Timers, Settings, Alerts, new SystemClock());
         _loop = new SchedulerLoop(_engine);
@@ -111,12 +111,23 @@ public sealed class AppServices : IDisposable
     /// Plays a sound once at the current volume for the ▶ buttons. A new preview stops the previous one, so repeated
     /// presses don't pile up. UI thread only.
     /// </summary>
-    public async void PlaySound(string? key)
+    public void PlaySound(string? key) => Preview(cancel => _sound.PlayAsync(PlayableSound(key), Settings.Current.Volume, cancel));
+
+    /// <summary>Speaks <paramref name="text"/> with the chosen voice and speed, like an alert would.</summary>
+    public void Speak(string text) => Preview(async cancel =>
+    {
+        var s = Settings.Current;
+        var speech = await Tts.SynthesizeAsync(text, s.TtsVoice, s.TtsRate);
+        if (cancel.IsCancellationRequested) speech.Dispose();
+        else await _sound.PlayAsync(speech, s.Volume, cancel);
+    });
+
+    async void Preview(Func<CancellationToken, Task> play)
     {
         _preview?.Cancel();
         var preview = _preview = new CancellationTokenSource();
-        try { await _sound.PlayAsync(PlayableSound(key), Settings.Current.Volume, preview.Token); }
-        catch (Exception ex) { Log.Error("Sound preview failed", ex); }
+        try { await play(preview.Token); }
+        catch (Exception ex) { Log.Error("Preview failed", ex); }
         finally
         {
             if (_preview == preview) _preview = null;

@@ -16,9 +16,11 @@ public sealed class SoundChannel(UserSounds userSounds)
     /// Plays a sound key: the bundled WAV for a built-in key, the file for a user sound. A user sound that fails to
     /// open plays the built-in default instead. Completes when playback ends or is cancelled.
     /// </summary>
-    public Task PlayAsync(string key, float volume, CancellationToken cancel = default)
+    public Task PlayAsync(string key, float volume, CancellationToken cancel = default) => PlayAsync(Open(key), volume, cancel);
+
+    /// <summary>Plays any audio (e.g. generated speech) the same way, then disposes it.</summary>
+    public Task PlayAsync(WaveStream source, float volume, CancellationToken cancel = default)
     {
-        var source = Open(key);
         var output = new WaveOut();
         var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var stop = cancel.Register(output.Stop);
