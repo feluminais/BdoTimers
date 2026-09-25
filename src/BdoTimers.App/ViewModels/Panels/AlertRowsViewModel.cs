@@ -1,4 +1,3 @@
-using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Storage;
 using BdoTimers.Core.Text;
@@ -87,12 +86,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     void ResetVoiceLine() => VoiceLine = ToEditor(new TtsAlert().Template);
 
     [RelayCommand]
-    async Task HearVoiceLine()
-    {
-        var s = _services.Settings.Current;
-        try { await _services.Tts.SpeakAsync(SampleSpeech(), s.TtsVoice, s.TtsRate, s.Volume); }
-        catch (Exception ex) { Log.Error("Voice preview failed", ex); }
-    }
+    void HearVoiceLine() => _services.Speak(SampleSpeech());
 
     string SampleSpeech()
     {

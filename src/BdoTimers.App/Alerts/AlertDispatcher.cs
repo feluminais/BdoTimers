@@ -9,7 +9,8 @@ namespace BdoTimers.App.Alerts;
 
 /// <summary>
 /// Fans an alert out to its enabled channels. Each channel fails independently; audio
-/// (sound then speech) is serialized so simultaneous alerts don't talk over each other.
+/// (sound then speech) is serialized so simultaneous alerts don't talk over each other. The speech is generated
+/// while the sound plays, so it follows without a gap.
 /// </summary>
 public sealed class AlertDispatcher(
     ToastChannel toast, SoundChannel sound, TtsChannel tts, PersistentState<AppSettings> settings, UserSounds userSounds)
@@ -33,11 +34,14 @@ public sealed class AlertDispatcher(
         try
         {
             var s = settings.Current;
+            var speech = configs.Any(c => c.Tts.Enabled)
+                ? tts.SynthesizeAsync(message.Speech, s.TtsVoice, s.TtsRate)
+                : null;
             if (configs.FirstOrDefault(c => c.Sound.Enabled) is { } withSound)
                 await TryAsync("sound", () => sound.PlayAsync(
                     SoundKeys.Playable(withSound.Sound.Key, s.AlertSound, userSounds.Exists), s.Volume));
-            if (configs.Any(c => c.Tts.Enabled))
-                await TryAsync("tts", () => tts.SpeakAsync(message.Speech, s.TtsVoice, s.TtsRate, s.Volume));
+            if (speech is not null)
+                await TryAsync("tts", async () => await sound.PlayAsync(await speech, s.Volume));
         }
         finally
         {

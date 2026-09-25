@@ -77,7 +77,10 @@
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" ValueWidth="200" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
+                                ToolTip="Test the voice" Command="{Binding TestVoiceCommand}" />
+                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" ValueWidth="200"
+                                                AutomationProperties.Name="Voice" />
                         <TextBlock Text="Voice" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
