@@ -73,8 +73,7 @@
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
                         <TextBlock Text="World-boss and custom timers with alerts that reach you in game." TextWrapping="Wrap"
-                                   Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,4" />
-                        <TextBlock Text="{Binding Version}" Style="{StaticResource LabelText}" Margin="0,0,0,22" />
+                                   Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,24" />
                         <StackPanel Orientation="Horizontal">
                             <Button Style="{StaticResource OutlineButton}" Content="Install" IsDefault="True" Command="{Binding InstallCommand}" />
                             <Button Style="{StaticResource GhostButton}" Content="Options" Margin="10,0,0,0" Command="{Binding OptionsCommand}" />

@@ -17,6 +17,7 @@ internal sealed class SetupFlow
     readonly IEngine _engine;
     readonly IBootstrapperCommand _command;
     volatile bool _cancel;
+    LaunchAction _action;
     string? _lastError;
 
     public SetupFlow(BootstrapperApplication ba, IEngine engine, IBootstrapperCommand command)
@@ -39,7 +40,11 @@ internal sealed class SetupFlow
         ba.ExecuteProgress += (_, e) => e.Cancel = _cancel;
         ba.CacheAcquireProgress += (_, e) => e.Cancel = _cancel;
         ba.Error += (_, e) => _lastError = e.ErrorMessage;
-        ba.ApplyComplete += (_, e) => Finished?.Invoke(e.Status, _lastError);
+        ba.ApplyComplete += (_, e) =>
+        {
+            if (e.Status >= 0 && _action == LaunchAction.Uninstall) RemoveAutostart();
+            Finished?.Invoke(e.Status, _lastError);
+        };
     }
 
     /// <summary>Raised with the detect status; <see cref="IsInstalled"/> is known by then.</summary>
@@ -59,7 +64,6 @@ internal sealed class SetupFlow
 
     public string LogPath => _engine.ContainsVariable("WixBundleLog") ? _engine.GetVariableString("WixBundleLog") : "";
 
-    public string Version => _engine.GetVariableVersion("WixBundleVersion");
 
     public static bool IsCancelled(int status) => status == ErrorCancelled;
 
@@ -84,6 +88,7 @@ internal sealed class SetupFlow
 
     public void Start(LaunchAction action, string? installRoot = null)
     {
+        _action = action;
         _cancel = false;
         _lastError = null;
         if (installRoot is not null)
@@ -112,6 +117,23 @@ internal sealed class SetupFlow
         Start(action, action == LaunchAction.Install ? InitialInstallRoot : null);
         finished.Wait();
         return result;
+    }
+
+    /// <summary>
+    /// The app adds itself to the Run key only when the user turns on Start with Windows, so the package doesn't own
+    /// that value and uninstall would leave it pointing at a deleted exe.
+    /// </summary>
+    void RemoveAutostart()
+    {
+        try
+        {
+            using var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
+            run?.DeleteValue("BdoTimers", throwOnMissingValue: false);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+        {
+            _engine.Log(LogLevel.Error, $"Couldn't remove the Start with Windows entry: {ex.Message}");
+        }
     }
 
     [DllImport("user32.dll")]

@@ -4,7 +4,8 @@ public sealed record WindowPlacement(double Left, double Top, double Width, doub
 
 public sealed record AppSettings
 {
-    public bool Autostart { get; init; } = true;
+    /// <summary>Off until the user turns it on in Settings.</summary>
+    public bool Autostart { get; init; }
     public float Volume { get; init; } = 0.8f;
     /// <summary>Sound key played for timers whose sound is "Default"; see <see cref="Sounds.SoundKeys"/>.</summary>
     public string AlertSound { get; init; } = BuiltInSounds.Default;
