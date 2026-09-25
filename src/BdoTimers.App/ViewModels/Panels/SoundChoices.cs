@@ -9,10 +9,10 @@ public static class SoundChoices
 {
     static readonly IReadOnlyDictionary<string, string> BuiltInLabels = new Dictionary<string, string>
     {
-        [BuiltInSounds.Gong] = "Gong",
         [BuiltInSounds.Horn] = "War horn",
-        [BuiltInSounds.Bell] = "Low bell",
-        [BuiltInSounds.Chime] = "Soft chime",
+        [BuiltInSounds.Harp] = "Harp",
+        [BuiltInSounds.Bowl] = "Singing bowl",
+        [BuiltInSounds.Bell] = "Temple bell",
     };
 
     public static string Label(string key) =>

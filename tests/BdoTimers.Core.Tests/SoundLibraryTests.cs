@@ -9,8 +9,8 @@ public class SoundLibraryTests
     static Func<string, bool> Only(params string[] present) => key => present.Contains(key);
 
     [Theory]
-    [InlineData("horn", "gong", "horn")]
-    [InlineData("mine.mp3", "gong", "mine.mp3")]
+    [InlineData("horn", "bowl", "horn")]
+    [InlineData("mine.mp3", "bowl", "mine.mp3")]
     [InlineData(null, "bell", "bell")]
     [InlineData(null, "mine.mp3", "mine.mp3")]
     [InlineData("gone.wav", "bell", "bell")]
@@ -22,7 +22,7 @@ public class SoundLibraryTests
         Assert.Equal(expected, SoundKeys.Playable(key, appDefault, Only("mine.mp3")));
 
     [Theory]
-    [InlineData("gong", false)]
+    [InlineData("bowl", false)]
     [InlineData("mine.mp3", true)]
     [InlineData("organ", false)]
     [InlineData(@"C:\sounds\mine.mp3", false)]
@@ -73,7 +73,7 @@ public class SoundLibraryTests
         Assert.Equal(["a.mp3", "b.wav"], sounds.Keys());
         Assert.True(sounds.Exists("a.mp3"));
         Assert.False(sounds.Exists("readme.txt"));
-        Assert.False(sounds.Exists("gong"));
+        Assert.False(sounds.Exists("bowl"));
     }
 
     [Fact]

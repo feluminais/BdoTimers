@@ -1,0 +1,23 @@
+Built-in alert sounds
+
+All four are recordings from Freesound released under Creative Commons Zero (CC0 1.0, public domain dedication):
+https://creativecommons.org/publicdomain/zero/1.0/
+Credit is not required; it is given here with thanks. Each was cut to one strike or phrase, faded out, levelled
+to match the others and saved as mono 16-bit WAV.
+
+bowl.wav  "Gong Bell (monkay's Singing Bowl [modified])" by qubodup
+          https://freesound.org/people/qubodup/sounds/169289/
+          derived from "SingingBowl.wav" by Monkay (CC0), https://freesound.org/people/Monkay/sounds/48325/
+          first 4.5 s, 2 s fade-out
+
+bell.wav  "Indian Temple Bell.WAV" by ganiket
+          https://freesound.org/people/ganiket/sounds/466652/
+          the first strike, 0.45 s to 3.65 s, 1.2 s fade-out
+
+harp.wav  "HARP GLISSANDO UP.wav" by olver
+          https://freesound.org/people/olver/sounds/505063/
+          2.2 s to 6.3 s (the top of the first glissando), 1.5 s fade-out
+
+horn.wav  "Distant War Horn.wav" by DeVern
+          https://freesound.org/people/DeVern/sounds/512490/
+          the first blast, 0.05 s to 5.65 s, 0.8 s fade-out
