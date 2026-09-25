@@ -50,3 +50,6 @@ See CLAUDE.md for commands.
 15. Settings → Your sounds → ✕: the sound is gone; timers that used it show Default.
 16. Boss panel → Voice shows what it says; Custom voice line… → + Name / + Time left insert at the caret, ▶ speaks the
     line, Reset restores "Kzarka in 5 minutes".
+17. Settings → Default alert times: change them → bosses without their own times follow. In a boss panel, change a chip
+    → "Use default" appears and the boss gets a pencil in the table; Use default → it follows again.
+18. Boss panel → Spawn times opens the list below it; the same header closes it.

@@ -22,7 +22,7 @@ public sealed class SchedulerEngine(
     {
         var now = clock.UtcNow;
         var data = timers.Current;
-        var alerts = AlertGrouping.Group(_planner.Tick(data.Timers, data.Muted.ToHashSet(), now));
+        var alerts = AlertGrouping.Group(_planner.Tick(data.Timers, data.Muted.ToHashSet(), now, settings.Current.DefaultLeadTimesMinutes));
         // The planner runs even while paused so that resuming doesn't replay the paused period.
         if (!AlertPause.IsPaused(settings.Current, now))
             foreach (var alert in alerts) sink.Dispatch(alert);

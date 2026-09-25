@@ -11,6 +11,7 @@ namespace BdoTimers.App.ViewModels;
 public sealed partial class BossTileViewModel : ObservableObject
 {
     [ObservableProperty] private bool _isOff;
+    [ObservableProperty] private bool _ownSettings;
     [ObservableProperty] private string _detail = "";
 
     public Guid Id { get; }
@@ -31,6 +32,7 @@ public sealed partial class BossTileViewModel : ObservableObject
     public void Show(TimerDef boss, DateTimeOffset now)
     {
         IsOff = !boss.Enabled;
+        OwnSettings = boss.Alerts.OverridesDefaults;
         if (IsOff)
         {
             Detail = "Alerts off";

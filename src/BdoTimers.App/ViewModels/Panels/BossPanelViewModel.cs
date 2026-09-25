@@ -38,7 +38,7 @@ public sealed partial class BossPanelViewModel : ObservableObject
         var spec = boss.Scheduled ?? new ScheduledSpec();
         Slots = new SlotListViewModel(spec.Slots,
             slots => services.Timers.Modify(_id, t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
-        TimeZoneNote = $"Times are in {TimeZones.Find(spec.TimeZoneId).StandardName} (server time).";
+        TimeZoneNote = $"Server time ({TimeZones.Find(spec.TimeZoneId).StandardName})";
     }
 
     partial void OnAlertsOnChanged(Choice value) => _services.Timers.SetEnabled(_id, value.IsOn);

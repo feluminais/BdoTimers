@@ -12,7 +12,6 @@ public sealed partial class NewTimerPanelViewModel(AppServices services, IPanelH
         Name = "New countdown",
         Kind = TimerKind.Countdown,
         Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(60) },
-        Alerts = services.DefaultAlerts() with { LeadTimesMinutes = [5, 0] },
     });
 
     [RelayCommand]
@@ -25,7 +24,6 @@ public sealed partial class NewTimerPanelViewModel(AppServices services, IPanelH
             TimeZoneId = TimeZoneInfo.Local.Id,
             Slots = [new Slot(DayOfWeek.Monday, new TimeOnly(20, 0))],
         },
-        Alerts = services.DefaultAlerts(),
     });
 
     void Create(TimerDef timer)

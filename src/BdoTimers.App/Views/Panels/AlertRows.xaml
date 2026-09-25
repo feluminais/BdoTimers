@@ -6,7 +6,14 @@
     <StackPanel>
         <Border Style="{StaticResource Row}">
             <StackPanel>
-                <TextBlock Text="Alert before (minutes)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
+                <DockPanel Margin="0,0,0,6">
+                    <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Use default" VerticalAlignment="Center"
+                            Command="{Binding UseDefaultLeadsCommand}"
+                            Visibility="{Binding LeadsFollowDefault, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <TextBlock DockPanel.Dock="Right" Text="Default" Style="{StaticResource LabelText}" VerticalAlignment="Center"
+                               Visibility="{Binding LeadsFollowDefault, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="Alert before (minutes)" Style="{StaticResource RowLabel}" />
+                </DockPanel>
                 <panels:LeadChips DataContext="{Binding Leads}" />
             </StackPanel>
         </Border>
@@ -46,9 +53,7 @@
                         Command="{Binding EditVoiceLineCommand}" Click="CustomVoiceLine_Click"
                         Visibility="{Binding EditingVoiceLine, Converter={StaticResource InverseBoolToVisibility}}" />
                 <StackPanel Margin="0,8,0,0" Visibility="{Binding EditingVoiceLine, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="What the voice says. [name] and [time] are filled in when the alert plays."
-                               Style="{StaticResource LabelText}" TextWrapping="Wrap" />
-                    <TextBox x:Name="VoiceLineBox" Text="{Binding VoiceLine, UpdateSourceTrigger=PropertyChanged, Delay=400}" Margin="0,6,0,0"
+                    <TextBox x:Name="VoiceLineBox" Text="{Binding VoiceLine, UpdateSourceTrigger=PropertyChanged, Delay=400}"
                              controls:Ui.HasError="{Binding VoiceLineInvalid}" AutomationProperties.Name="Voice line" />
                     <DockPanel Margin="0,8,0,0">
                         <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Done" VerticalAlignment="Center"
@@ -70,10 +75,7 @@
             <DockPanel>
                 <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OverlayChoices}" SelectedItem="{Binding Overlay}" ValueWidth="110"
                                         AutomationProperties.Name="Overlay over the game" />
-                <StackPanel VerticalAlignment="Center">
-                    <TextBlock Text="Overlay over the game" Style="{StaticResource RowLabel}" />
-                    <TextBlock Text="Borderless window mode only" Style="{StaticResource LabelText}" />
-                </StackPanel>
+                <TextBlock Text="Overlay over the game" Style="{StaticResource RowLabel}" ToolTip="Shows in borderless window mode" />
             </DockPanel>
         </Border>
     </StackPanel>

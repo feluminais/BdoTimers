@@ -26,11 +26,12 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     [ObservableProperty] private bool _editingVoiceLine;
     [ObservableProperty] private string _voiceSample = "";
     [ObservableProperty] private Choice _overlay;
+    [ObservableProperty] private LeadChipsViewModel _leads;
+    [ObservableProperty] private bool _leadsFollowDefault;
 
     public TimerSoundViewModel Sound { get; }
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> OverlayChoices { get; }
-    public LeadChipsViewModel Leads { get; }
 
     public AlertRowsViewModel(AppServices services, TimerDef timer)
     {
@@ -46,7 +47,25 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         OverlayChoices = [new Choice("Off", 0), .. OverlayMinutes.Union([a.Overlay.ShowMinutesBefore]).Order()
             .Select(m => new Choice($"{m} min before", m))];
         _overlay = a.Overlay.Enabled ? OverlayChoices.First(c => (int)c.Value! == a.Overlay.ShowMinutesBefore) : OverlayChoices[0];
-        Leads = new LeadChipsViewModel(a.LeadTimesMinutes, leads => Modify(x => x with { LeadTimesMinutes = leads }));
+        _leadsFollowDefault = a.LeadTimesMinutes is null;
+        _leads = NewLeads(a.LeadTimes(DefaultLeads));
+    }
+
+    IReadOnlyList<int> DefaultLeads => _services.Settings.Current.DefaultLeadTimesMinutes;
+
+    /// <summary>Changing a chip gives the timer its own alert times, so it stops following the default.</summary>
+    LeadChipsViewModel NewLeads(IReadOnlyList<int> selected) => new(selected, leads =>
+    {
+        Modify(a => a with { LeadTimesMinutes = leads });
+        LeadsFollowDefault = false;
+    });
+
+    [RelayCommand]
+    void UseDefaultLeads()
+    {
+        Modify(a => a with { LeadTimesMinutes = null });
+        LeadsFollowDefault = true;
+        Leads = NewLeads(DefaultLeads);
     }
 
     partial void OnToastChanged(Choice value) => Modify(a => a with { Toast = a.Toast with { Enabled = value.IsOn } });

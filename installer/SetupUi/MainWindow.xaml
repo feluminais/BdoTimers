@@ -91,7 +91,7 @@
                                      controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
                         </DockPanel>
                         <TextBlock Text="{Binding InstallFolderText}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="BDO Timers always gets its own BdoTimers folder inside the folder you choose. No admin rights are needed, so folders that require them (like Program Files) won't work."
+                        <TextBlock Text="Folders that need admin rights, like Program Files, won't work."
                                    Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" Margin="0,16,0,0" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
@@ -139,7 +139,7 @@
                     <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
-                        <TextBlock Text="Already installed. Repair, move or remove it; your timers and settings are kept either way."
+                        <TextBlock Text="Already installed."
                                    TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,10" />
                         <StackPanel Margin="0,0,0,22" Visibility="{Binding HasInstalledFolder, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding InstalledFolder}" Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" />

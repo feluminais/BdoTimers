@@ -56,7 +56,7 @@ public sealed class AppServices : IDisposable
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
         Timers = new TimerStore(timersFile, timers.Value);
         Seed = SeedService.LoadEmbedded();
-        Timers.Update(d => SeedService.ApplyIfNeeded(d, Seed, DefaultAlerts()));
+        Timers.Update(d => SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig()));
 
         _toast = new ToastChannel();
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
@@ -67,8 +67,6 @@ public sealed class AppServices : IDisposable
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
     }
-
-    public AlertConfig DefaultAlerts() => new() { LeadTimesMinutes = Settings.Current.DefaultLeadTimesMinutes };
 
     public void Start(bool showWindow)
     {
@@ -104,7 +102,7 @@ public sealed class AppServices : IDisposable
     public void ResumeAlerts() => Settings.Update(AlertPause.Resume);
 
     public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
-        [new TimerDef { Name = "Test boss", Alerts = DefaultAlerts() }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
+        [new TimerDef { Name = "Test boss" }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
 
     /// <summary>The key that plays for a timer sound key; null means the app-wide alert sound.</summary>
     public string PlayableSound(string? key) => SoundKeys.Playable(key, Settings.Current.AlertSound, Sounds.Exists);
@@ -161,7 +159,7 @@ public sealed class AppServices : IDisposable
         Process.Start(new ProcessStartInfo(_dataDir) { UseShellExecute = true });
     }
 
-    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, DefaultAlerts()));
+    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, new AlertConfig()));
 
     public void Quit()
     {
