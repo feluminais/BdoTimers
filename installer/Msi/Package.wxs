@@ -1,8 +1,8 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
-  <!-- Per-user so no admin prompt is needed; autostart is per-user (HKCU) anyway. A folder that
-       needs admin rights (e.g. Program Files) therefore fails with "access denied". -->
+  <!-- Per-user so no admin prompt is needed. A folder that needs admin rights (e.g. Program Files) therefore
+       fails with "access denied". Starting with Windows is left to the app's own setting, off by default. -->
   <Package Name="BDO Timers" Manufacturer="feluminais" Version="$(var.Version)" Scope="perUser"
            UpgradeCode="4d02b9b6-670a-4922-b199-abc2d24057de">
     <MajorUpgrade AllowSameVersionUpgrades="yes"
@@ -36,9 +36,6 @@
     <!-- Registry value as key path because per-user components must not key on files. -->
     <Component Id="Shell" Directory="INSTALLFOLDER">
       <RegistryValue Root="HKCU" Key="Software\BdoTimers" Name="InstallRoot" Type="string" Value="[INSTALLROOT]" KeyPath="yes" />
-      <!-- Same value the app writes on start; authoring it here makes uninstall remove it. -->
-      <RegistryValue Root="HKCU" Key="Software\Microsoft\Windows\CurrentVersion\Run" Name="BdoTimers"
-                     Type="string" Value="&quot;[INSTALLFOLDER]BdoTimers.exe&quot; --minimized" />
       <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="BDO Timers" Icon="AppIcon.ico"
                 Target="[INSTALLFOLDER]BdoTimers.exe" WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="RemoveInstallFolder" On="uninstall" />

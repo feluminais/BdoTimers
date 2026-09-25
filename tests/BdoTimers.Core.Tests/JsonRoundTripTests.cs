@@ -78,6 +78,7 @@ public class JsonRoundTripTests
         Assert.Null(data.Timers.Single().ImageFile);
         Assert.Null(s.Window);
         Assert.Equal(BuiltInSounds.Default, s.AlertSound);
+        Assert.False(s.Autostart);
         Assert.Equal(0.5f, s.Volume);
     }
 

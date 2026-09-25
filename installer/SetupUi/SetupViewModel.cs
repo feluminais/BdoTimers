@@ -52,7 +52,6 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public int ExitCode { get; private set; }
 
     public IntPtr WindowHandle { set => _flow.WindowHandle = value; }
-    public string Version => "Version " + _flow.Version;
 
     public ICommand InstallCommand { get; }
     public ICommand OptionsCommand { get; }
@@ -132,7 +131,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         {
             LaunchAction.Uninstall => ("Removed", "BDO Timers is gone. Your timers and settings stay in %AppData%\\BdoTimers."),
             LaunchAction.Repair => ("Repaired", "BDO Timers is back in working order."),
-            _ => ("Ready", "BDO Timers starts with Windows and lives in the tray."),
+            _ => ("Ready", "BDO Timers is installed. You'll find it in the Start menu."),
         };
         Page = SetupPage.Done;
     }
