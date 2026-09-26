@@ -13,6 +13,9 @@ public static class SoundKeys
     public static bool IsUserKey(string key) =>
         Path.HasExtension(key) && Path.GetFileName(key) == key && key.IndexOfAny(Path.GetInvalidFileNameChars()) < 0;
 
+    /// <summary>False for a built-in sound the app no longer has; a user key counts even if its file is gone.</summary>
+    public static bool IsKnown(string key) => IsBuiltIn(key) || IsUserKey(key);
+
     /// <summary>
     /// The sound to play for a timer: its own key if playable, else the app-wide sound if playable, else the built-in
     /// default. Covers keys from a newer version and user sounds that were removed.
