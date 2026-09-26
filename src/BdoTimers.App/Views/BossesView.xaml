@@ -251,6 +251,8 @@
                                                                         </ContextMenu>
                                                                     </Button.ContextMenu>
                                                                     <StackPanel Orientation="Horizontal">
+                                                                    <!-- Invisible twin of the pencil: the name alone is centred and the pencil hangs to its right -->
+                                                                    <TextBlock Style="{StaticResource OwnSettingsMark}" Margin="0,0,4,0" Opacity="0" IsHitTestVisible="False" />
                                                                     <TextBlock Text="{Binding Name}" FontSize="12">
                                                                         <TextBlock.Style>
                                                                             <Style TargetType="TextBlock">
