@@ -12,7 +12,7 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 `pwsh scripts/publish.ps1` builds `publish/BdoTimers-Setup-<version>.exe`. Run it; no admin rights needed.
 
 - Next shows the install location, `%LocalAppData%\Programs` by default; the app always gets its own `BdoTimers` folder
-  inside it. The install is per-user, so a folder that needs admin rights (Program Files) is refused with a note.
+  inside it, shown in gold after the path. The install is per-user, so a folder that needs admin rights (Program Files) is refused with a note.
 - Adds a Start Menu shortcut and can launch the app when setup finishes. Start with Windows stays off until you turn
   it on in Settings; uninstall removes it.
 - Run the setup again (or Uninstall in Settings → Apps) to see where it's installed and to repair, move or remove it.
