@@ -29,6 +29,19 @@ public class DataMigrationsTests
     }
 
     [Fact]
+    public void Timers_with_a_retired_built_in_sound_go_back_to_default()
+    {
+        static TimerDef Sound(string name, string? key) => new() { Name = name, Alerts = new AlertConfig { Sound = new SoundAlert { Key = key } } };
+        var data = new AppData { DataVersion = 2, Timers = [Sound("Retired", "horn"), Sound("Current", "ping"), Sound("Mine", "mine.mp3")] };
+
+        var keys = DataMigrations.Apply(data, new AppSettings()).Timers.ToDictionary(t => t.Name, t => t.Alerts.Sound.Key);
+
+        Assert.Null(keys["Retired"]);
+        Assert.Equal("ping", keys["Current"]);
+        Assert.Equal("mine.mp3", keys["Mine"]);
+    }
+
+    [Fact]
     public void Current_data_is_left_alone()
     {
         var data = new AppData { DataVersion = DataMigrations.Current, Timers = [With("Mine", [15, 5, 1, 0])] };

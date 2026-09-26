@@ -9,12 +9,12 @@ public class SoundLibraryTests
     static Func<string, bool> Only(params string[] present) => key => present.Contains(key);
 
     [Theory]
-    [InlineData("horn", "bowl", "horn")]
-    [InlineData("mine.mp3", "bowl", "mine.mp3")]
-    [InlineData(null, "bell", "bell")]
+    [InlineData("ping", "chimes", "ping")]
+    [InlineData("mine.mp3", "chimes", "mine.mp3")]
+    [InlineData(null, "beeps", "beeps")]
     [InlineData(null, "mine.mp3", "mine.mp3")]
-    [InlineData("gone.wav", "bell", "bell")]
-    [InlineData("organ", "bell", "bell")]
+    [InlineData("gone.wav", "beeps", "beeps")]
+    [InlineData("horn", "beeps", "beeps")]
     [InlineData(null, "gone.wav", BuiltInSounds.Default)]
     [InlineData("gone.wav", "organ", BuiltInSounds.Default)]
     public void Playable_falls_back_from_the_timer_to_the_app_sound_to_the_built_in_default(
@@ -22,7 +22,7 @@ public class SoundLibraryTests
         Assert.Equal(expected, SoundKeys.Playable(key, appDefault, Only("mine.mp3")));
 
     [Theory]
-    [InlineData("bowl", false)]
+    [InlineData("chimes", false)]
     [InlineData("mine.mp3", true)]
     [InlineData("organ", false)]
     [InlineData(@"C:\sounds\mine.mp3", false)]
@@ -73,7 +73,7 @@ public class SoundLibraryTests
         Assert.Equal(["a.mp3", "b.wav"], sounds.Keys());
         Assert.True(sounds.Exists("a.mp3"));
         Assert.False(sounds.Exists("readme.txt"));
-        Assert.False(sounds.Exists("bowl"));
+        Assert.False(sounds.Exists("chimes"));
     }
 
     [Fact]
@@ -99,14 +99,14 @@ public class SoundLibraryTests
         var store = new TimerStore(file, new AppData());
         TimerDef With(string name, SoundAlert sound) => new() { Name = name, Alerts = new AlertConfig { Sound = sound } };
         store.Upsert(With("A", new SoundAlert { Key = "horn.wav" }));
-        store.Upsert(With("B", new SoundAlert { Key = "bell" }));
+        store.Upsert(With("B", new SoundAlert { Key = "ping" }));
         store.Upsert(With("C", new SoundAlert { Enabled = false }));
 
         store.ForgetSound("horn.wav");
 
         var sounds = store.Current.Timers.ToDictionary(t => t.Name, t => t.Alerts.Sound);
         Assert.Equal(new SoundAlert(), sounds["A"]);
-        Assert.Equal(new SoundAlert { Key = "bell" }, sounds["B"]);
+        Assert.Equal(new SoundAlert { Key = "ping" }, sounds["B"]);
         Assert.Equal(new SoundAlert { Enabled = false }, sounds["C"]);
     }
 }

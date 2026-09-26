@@ -54,6 +54,8 @@ public sealed class AppServices : IDisposable
         RecoveredFiles = new[] { settings.RecoveredBackupPath, timers.RecoveredBackupPath }.OfType<string>().ToList();
 
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
+        // A built-in sound from an earlier version that the app no longer has.
+        if (!SoundKeys.IsKnown(Settings.Current.AlertSound)) Settings.Update(s => s with { AlertSound = BuiltInSounds.Default });
         Timers = new TimerStore(timersFile, timers.Value);
         Seed = SeedService.LoadEmbedded();
         Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig())));
