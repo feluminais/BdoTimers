@@ -14,6 +14,8 @@ public class SchedulerEngineTests : IDisposable
         public List<TimerDef> EndedWhileAway { get; } = [];
         public void Dispatch(AlertEvent alert) => Alerts.Add(alert);
         public void NotifyEndedWhileAway(TimerDef timer) => EndedWhileAway.Add(timer);
+        public int SpeechPrepared { get; private set; }
+        public void PrepareSpeech() => SpeechPrepared++;
     }
 
     readonly TempDir _dir = new();
@@ -81,6 +83,29 @@ public class SchedulerEngineTests : IDisposable
         TickAt(T0.AddMinutes(8));
 
         Assert.Equal(new[] { 2 }, _sink.Alerts.Select(a => a.LeadMinutes));
+    }
+
+    [Fact]
+    public void The_voice_gets_ready_in_the_minute_before_a_spoken_alert()
+    {
+        AddCountdown(); // alerts at 5 and 0 minutes left, so at T0 + 5 and T0 + 10 minutes
+
+        TickAt(T0.AddMinutes(3));
+        Assert.Equal(0, _sink.SpeechPrepared);
+
+        TickAt(T0.AddMinutes(4).AddSeconds(30));
+        Assert.Equal(1, _sink.SpeechPrepared);
+    }
+
+    [Fact]
+    public void Silent_timers_leave_the_voice_unloaded()
+    {
+        var timer = AddCountdown();
+        _timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = new TtsAlert { Enabled = false } } });
+
+        TickAt(T0.AddMinutes(4).AddSeconds(30));
+
+        Assert.Equal(0, _sink.SpeechPrepared);
     }
 
     [Fact]

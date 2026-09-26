@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using BdoTimers.Core.Diagnostics;
 using SherpaOnnx;
@@ -34,9 +35,11 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
     public static KokoroVoice Default => Voices[0];
 
     readonly object _lock = new();
-    OfflineTts? _tts;
-    bool _ttsBritish;
+    // Read without the lock by Warm, which only needs a hint.
+    volatile OfflineTts? _tts;
+    volatile bool _ttsBritish;
     Timer? _unload;
+    int _warming;
 
     public bool IsAvailable => File.Exists(Path.Combine(modelDir, "model.int8.onnx"));
 
@@ -62,11 +65,40 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         }
     }
 
+    /// <summary>
+    /// Loads the model in the background, unless it's already loaded for this voice's English, and keeps it loaded a
+    /// while longer. Returns at once; called ahead of speech so the speech doesn't wait for the model.
+    /// </summary>
+    public void Warm(KokoroVoice voice)
+    {
+        if (!IsAvailable) return;
+        if (_tts is not null && _ttsBritish == voice.British)
+        {
+            _unload?.Change(IdleUnload, Timeout.InfiniteTimeSpan);
+            return;
+        }
+        if (Interlocked.Exchange(ref _warming, 1) == 1) return;
+        Task.Run(() =>
+        {
+            try
+            {
+                lock (_lock)
+                {
+                    Engine(voice.British);
+                    ScheduleUnload();
+                }
+            }
+            catch (Exception ex) { Log.Error("Couldn't load the voice model", ex); }
+            finally { Volatile.Write(ref _warming, 0); }
+        });
+    }
+
     /// <summary>US and UK voices need espeak-ng's American or British English, which is fixed per engine.</summary>
     OfflineTts Engine(bool british)
     {
         if (_tts is not null && _ttsBritish == british) return _tts;
         _tts?.Dispose();
+        var loading = Stopwatch.StartNew();
         var config = new OfflineTtsConfig();
         config.Model.Kokoro.Model = Path.Combine(modelDir, "model.int8.onnx");
         config.Model.Kokoro.Voices = Path.Combine(modelDir, "voices.bin");
@@ -79,7 +111,7 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         config.MaxNumSentences = 1;
         _tts = new OfflineTts(config);
         _ttsBritish = british;
-        Log.Info($"Kokoro voice loaded ({(british ? "UK" : "US")} English)");
+        Log.Info($"Kokoro voice loaded ({(british ? "UK" : "US")} English) in {loading.ElapsedMilliseconds} ms");
         return _tts;
     }
 
