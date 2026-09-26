@@ -83,8 +83,17 @@
                         <TextBlock Text="{Binding OptionsTitle}" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Browse…" Margin="12,0,0,0" Command="{Binding BrowseCommand}" />
-                            <TextBox Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"
-                                     controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
+                            <Grid VerticalAlignment="Center">
+                                <TextBox x:Name="PathBox" Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}"
+                                         controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
+                                <!-- The app's own folder, in gold right after the typed path: an invisible copy of the path
+                                     takes up its width. 4 px is the text box's padding plus the inset of its text. -->
+                                <StackPanel Orientation="Horizontal" Margin="4,0,0,1" VerticalAlignment="Center" ClipToBounds="True"
+                                            IsHitTestVisible="False" TextBlock.FontSize="{Binding FontSize, ElementName=PathBox}">
+                                    <TextBlock Text="{Binding Text, ElementName=PathBox}" Visibility="Hidden" />
+                                    <TextBlock Text="{Binding FolderSuffix}" Foreground="{StaticResource AccentBrush}" />
+                                </StackPanel>
+                            </Grid>
                         </DockPanel>
                         <TextBlock Text="{Binding LocationProblem}" Style="{StaticResource ErrorText}" FontSize="12" Margin="0,8,0,0" />
                     </StackPanel>

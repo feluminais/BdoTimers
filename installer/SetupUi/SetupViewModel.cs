@@ -97,9 +97,13 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
             _access = CheckAccess(value);
             OnPropertyChanged(nameof(IsInstallRootValid));
             OnPropertyChanged(nameof(LocationProblem));
+            OnPropertyChanged(nameof(FolderSuffix));
             CommandManager.InvalidateRequerySuggested();
         }
     }
+
+    /// <summary>The folder setup creates inside the chosen one, shown right after the typed path.</summary>
+    public string FolderSuffix => InstallRoot.TrimEnd().EndsWith(@"\") || InstallRoot.TrimEnd().EndsWith("/") ? "BdoTimers" : @"\BdoTimers";
 
     /// <summary>A full local or network path; relative paths and illegal characters are rejected up front.</summary>
     public bool IsInstallRootValid
