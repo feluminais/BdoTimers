@@ -61,7 +61,9 @@
             <DockPanel Margin="16,0,0,0">
                 <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}" Height="36" Content="&#xE8BB;" ToolTip="Close"
                         Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
-                <Image Source="pack://application:,,,/SetupUi;component/Assets/app.ico" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center" />
+                <!-- The 128 px picture scaled down: the .ico's first frame is 16 px, which blurs when Windows scales it up -->
+                <Image Source="pack://application:,,,/SetupUi;component/Assets/app.png" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
                 <TextBlock Text="BDO Timers setup" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}" VerticalAlignment="Center" />
             </DockPanel>
             <Border Height="1" VerticalAlignment="Bottom" Background="{StaticResource HairlineBrush}" />
