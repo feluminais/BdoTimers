@@ -64,9 +64,9 @@ public class CountdownOpsTests
     }
 
     [Fact]
-    public void Complete_without_repeat_goes_idle()
+    public void Complete_goes_idle()
     {
-        var c = CountdownOps.Complete(CountdownOps.Start(Hour, T0), T0.AddMinutes(60));
+        var c = CountdownOps.Complete(CountdownOps.Start(Hour, T0));
         Assert.Equal(CountdownStatus.Idle, c.Status);
     }
 
@@ -89,22 +89,5 @@ public class CountdownOpsTests
     public void Reset_clears_start_time()
     {
         Assert.Null(CountdownOps.Reset(CountdownOps.Start(Hour, T0)).StartedAtUtc);
-    }
-
-    [Fact]
-    public void Repeat_restart_records_new_start_time()
-    {
-        var repeating = Hour with { AutoRepeat = true };
-        var c = CountdownOps.Complete(CountdownOps.Start(repeating, T0), T0.AddMinutes(61));
-        Assert.Equal(T0.AddMinutes(61), c.StartedAtUtc);
-    }
-
-    [Fact]
-    public void Complete_with_repeat_restarts_from_now()
-    {
-        var repeating = Hour with { AutoRepeat = true };
-        var c = CountdownOps.Complete(CountdownOps.Start(repeating, T0), T0.AddMinutes(61));
-        Assert.Equal(CountdownStatus.Running, c.Status);
-        Assert.Equal(T0.AddMinutes(121), c.EndsAtUtc);
     }
 }

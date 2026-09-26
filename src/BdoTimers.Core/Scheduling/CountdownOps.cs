@@ -38,6 +38,6 @@ public static class CountdownOps
     public static CountdownSpec Reset(CountdownSpec c) =>
         c with { Status = CountdownStatus.Idle, EndsAtUtc = null, Remaining = null, StartedAtUtc = null };
 
-    public static CountdownSpec Complete(CountdownSpec c, DateTimeOffset now) =>
-        c.AutoRepeat ? Start(c, now) : Reset(c);
+    /// <summary>A finished countdown goes back to Ready.</summary>
+    public static CountdownSpec Complete(CountdownSpec c) => Reset(c);
 }

@@ -15,7 +15,6 @@ public sealed record ScheduledSpec
 public sealed record CountdownSpec
 {
     public TimeSpan Duration { get; init; } = TimeSpan.FromMinutes(60);
-    public bool AutoRepeat { get; init; }
     public CountdownStatus Status { get; init; } = CountdownStatus.Idle;
     public DateTimeOffset? EndsAtUtc { get; init; }
     public TimeSpan? Remaining { get; init; }

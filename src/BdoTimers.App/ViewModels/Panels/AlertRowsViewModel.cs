@@ -94,7 +94,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         return AlertMessage.Fill(FromEditor(VoiceLine), name, SampleMinutes);
     }
 
-    void UpdateVoiceSample() => VoiceSample = $"Says “{SampleSpeech()}”";
+    void UpdateVoiceSample() => VoiceSample = $"“{SampleSpeech()}”";
 
     // The editor shows [name] and [time]; saved lines keep the {name} and {duration} placeholders AlertMessage fills.
     static string ToEditor(string template) => template

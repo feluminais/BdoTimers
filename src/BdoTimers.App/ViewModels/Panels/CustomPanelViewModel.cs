@@ -25,9 +25,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _hasPicture;
     [ObservableProperty] private string _durationText = "";
     [ObservableProperty] private bool _durationInvalid;
-    [ObservableProperty] private Choice _repeat = Choice.For(false);
     [ObservableProperty] private string? _timeZoneId;
-    [ObservableProperty] private Choice _active;
+    [ObservableProperty] private Choice _alertsOn;
     [ObservableProperty] private bool _confirmingDelete;
     [ObservableProperty] private string _clockText = "";
     [ObservableProperty] private bool _clockInvalid;
@@ -58,14 +57,13 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _name = timer.Name;
         _images = [services.Art.For(timer)];
         _hasPicture = timer.ImageFile is not null;
-        _active = Choice.For(timer.Enabled);
+        _alertsOn = Choice.For(timer.Enabled);
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = timer.Preset is null;
         if (timer.Countdown is { } c)
         {
             _durationText = Parsing.FormatDuration(c.Duration);
-            _repeat = Choice.For(c.AutoRepeat);
         }
         if (timer.Scheduled is { } spec)
         {
@@ -135,15 +133,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
             Modify(t => t with { Countdown = (t.Countdown ?? new CountdownSpec()) with { Duration = duration } });
     }
 
-    partial void OnRepeatChanged(Choice value) =>
-        Modify(t => t with { Countdown = (t.Countdown ?? new CountdownSpec()) with { AutoRepeat = value.IsOn } });
-
     partial void OnTimeZoneIdChanged(string? value)
     {
         if (value is not null) Modify(t => t with { Scheduled = (t.Scheduled ?? new ScheduledSpec()) with { TimeZoneId = value } });
     }
 
-    partial void OnActiveChanged(Choice value) => Modify(t => t with { Enabled = value.IsOn });
+    partial void OnAlertsOnChanged(Choice value) => Modify(t => t with { Enabled = value.IsOn });
 
     [RelayCommand]
     void ChoosePicture()

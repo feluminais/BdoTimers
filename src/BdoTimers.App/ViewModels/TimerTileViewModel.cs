@@ -53,7 +53,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
 
     public void Refresh(DateTimeOffset now)
     {
-        var off = _timer.Enabled ? "" : "Off · ";
+        var off = _timer.Enabled ? "" : "Alerts off · ";
         if (_timer.Countdown is { } c)
         {
             (Digits, Detail, IsDimmed) = c.Status switch
