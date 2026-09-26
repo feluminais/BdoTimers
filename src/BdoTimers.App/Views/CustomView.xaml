@@ -30,59 +30,123 @@
             </Style.Triggers>
         </Style>
 
+        <!-- Two-digit field of the start picker; the wheel and the arrow keys step it -->
+        <Style x:Key="ClockBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+            <Setter Property="FontFamily" Value="{StaticResource ClockFont}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="FontSize" Value="26" />
+            <Setter Property="Width" Value="48" />
+            <Setter Property="MaxLength" Value="2" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
+            <EventSetter Event="PreviewMouseWheel" Handler="ClockBox_PreviewMouseWheel" />
+            <EventSetter Event="PreviewKeyDown" Handler="ClockBox_PreviewKeyDown" />
+            <EventSetter Event="GotKeyboardFocus" Handler="ClockBox_GotKeyboardFocus" />
+        </Style>
+
         <DataTemplate DataType="{x:Type vm:TimerTileViewModel}">
-            <Button Style="{StaticResource TileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}"
-                    ContextMenuService.IsEnabled="{Binding IsWeekly}">
-                <Button.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipNextCommand}" />
-                    </ContextMenu>
-                </Button.ContextMenu>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*" />
-                        <ColumnDefinition Width="3*" />
-                        <ColumnDefinition Width="40" />
-                    </Grid.ColumnDefinitions>
-                    <controls:ArtImage Sources="{Binding Images}" />
-                    <!-- Text hugs the right edge, in the black the picture fades into -->
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,8,0" TextBlock.TextAlignment="Right">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsDimmed}" Value="True">
-                                        <Setter Property="Opacity" Value="0.55" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
-                        <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
-                    </StackPanel>
-                    <!-- Countdown and stopwatch controls appear only while the tile is hovered -->
-                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                        <StackPanel.Style>
-                            <Style TargetType="StackPanel">
-                                <Setter Property="Visibility" Value="Collapsed" />
-                                <Style.Triggers>
-                                    <MultiDataTrigger>
-                                        <MultiDataTrigger.Conditions>
-                                            <Condition Binding="{Binding HasControls}" Value="True" />
-                                            <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True" />
-                                        </MultiDataTrigger.Conditions>
-                                        <Setter Property="Visibility" Value="Visible" />
-                                    </MultiDataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </StackPanel.Style>
-                        <Button Style="{StaticResource IconButton}" Content="{Binding PlayPauseGlyph}" FontSize="15"
-                                Foreground="{StaticResource AccentBrush}" ToolTip="{Binding PlayPauseTip}" Command="{Binding StartPauseCommand}" />
-                        <Button Style="{StaticResource IconButton}" Content="&#xE72C;" ToolTip="Reset" Command="{Binding ResetCommand}" />
-                    </StackPanel>
-                </Grid>
-            </Button>
+            <Grid>
+                <Button Style="{StaticResource TileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}"
+                        ContextMenuService.IsEnabled="{Binding IsWeekly}">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipNextCommand}" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="2*" />
+                            <ColumnDefinition Width="3*" />
+                            <ColumnDefinition Width="40" />
+                        </Grid.ColumnDefinitions>
+                        <controls:ArtImage Sources="{Binding Images}" />
+                        <!-- Text hugs the right edge, in the black the picture fades into -->
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="4,0,8,0" TextBlock.TextAlignment="Right">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDimmed}" Value="True">
+                                            <Setter Property="Opacity" Value="0.55" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
+                            <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
+                        </StackPanel>
+                        <!-- Countdown and stopwatch controls appear while the tile is hovered or focused, and stay while picking a start -->
+                        <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasControls}" Value="True" />
+                                                <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </MultiDataTrigger>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding HasControls}" Value="True" />
+                                                <Condition Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=Button}}" Value="True" />
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </MultiDataTrigger>
+                                        <DataTrigger Binding="{Binding IsPickingStart}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <Button Style="{StaticResource IconButton}" Height="30" Content="{Binding PlayPauseGlyph}" FontSize="15"
+                                    Foreground="{StaticResource AccentBrush}" ToolTip="{Binding PlayPauseTip}" Command="{Binding StartPauseCommand}" />
+                            <Button x:Name="StartedButton" Style="{StaticResource IconButton}" Height="30" Content="&#xE823;"
+                                    ToolTip="Started earlier" Command="{Binding PickStartCommand}" />
+                            <!-- A drawn square: the icon font's stop glyph sits off-centre next to the others -->
+                            <Button Style="{StaticResource IconButton}" Height="30" ToolTip="Stop" Command="{Binding ResetCommand}">
+                                <Rectangle Width="9" Height="9" StrokeThickness="1.2" SnapsToDevicePixels="True"
+                                           Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Button>
+
+                <!-- Outside the tile's button, so clicks in it never open the timer panel -->
+                <Popup IsOpen="{Binding IsPickingStart}" StaysOpen="False" PlacementTarget="{Binding ElementName=StartedButton}"
+                       Placement="Left" HorizontalOffset="-6" AllowsTransparency="True" Opened="StartPicker_Opened">
+                    <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource AccentSoftBrush}" BorderThickness="1" Padding="16,6,16,14">
+                        <Border.InputBindings>
+                            <KeyBinding Key="Escape" Command="{Binding CancelStartCommand}" />
+                            <KeyBinding Key="Enter" Command="{Binding ConfirmStartCommand}" />
+                        </Border.InputBindings>
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <StackPanel>
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE70E;" FontSize="10" Height="22" ToolTip="Later hour" Command="{Binding HourUpCommand}" />
+                                    <TextBox Text="{Binding StartHour, UpdateSourceTrigger=PropertyChanged}" Tag="Hour" Style="{StaticResource ClockBox}"
+                                             controls:Ui.HasError="{Binding StartInvalid}" AutomationProperties.Name="Start hour" />
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="10" Height="22" ToolTip="Earlier hour" Command="{Binding HourDownCommand}" />
+                                </StackPanel>
+                                <TextBlock Text=":" Style="{StaticResource ClockText}" FontSize="26" VerticalAlignment="Center" Margin="4,0,4,4" />
+                                <StackPanel>
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE70E;" FontSize="10" Height="22" ToolTip="Later minute" Command="{Binding MinuteUpCommand}" />
+                                    <TextBox Text="{Binding StartMinute, UpdateSourceTrigger=PropertyChanged}" Tag="Minute" Style="{StaticResource ClockBox}"
+                                             controls:Ui.HasError="{Binding StartInvalid}" AutomationProperties.Name="Start minute" />
+                                    <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="10" Height="22" ToolTip="Earlier minute" Command="{Binding MinuteDownCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="{Binding StartProblem}" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" TextAlignment="Center"
+                                       MaxWidth="160" />
+                            <Button Style="{StaticResource OutlineButton}" Content="Start" HorizontalAlignment="Center" Margin="0,8,0,0"
+                                    Command="{Binding ConfirmStartCommand}" AutomationProperties.Name="Start from this time" />
+                        </StackPanel>
+                    </Border>
+                </Popup>
+            </Grid>
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vm:CustomViewModel}">

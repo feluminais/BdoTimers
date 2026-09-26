@@ -28,21 +28,20 @@ public class StopwatchOpsTests
     }
 
     [Fact]
-    public void Setting_the_elapsed_time_starts_an_idle_stopwatch_from_there()
+    public void StartFrom_counts_from_the_given_start()
     {
-        var s = StopwatchOps.SetElapsed(Idle, T0, TimeSpan.FromMinutes(40));
+        var s = StopwatchOps.StartFrom(Idle, T0.AddMinutes(-40));
         Assert.Equal(CountdownStatus.Running, s.Status);
-        Assert.Equal(T0.AddMinutes(-40), s.StartedAtUtc);
         Assert.Equal(TimeSpan.FromMinutes(45), StopwatchOps.Elapsed(s, T0.AddMinutes(5)));
     }
 
     [Fact]
-    public void Setting_the_elapsed_time_keeps_a_paused_stopwatch_paused()
+    public void StartFrom_replaces_a_paused_count()
     {
         var paused = StopwatchOps.Pause(StopwatchOps.Start(Idle, T0), T0.AddMinutes(5));
-        var s = StopwatchOps.SetElapsed(paused, T0.AddMinutes(6), TimeSpan.FromHours(2));
-        Assert.Equal(CountdownStatus.Paused, s.Status);
-        Assert.Equal(TimeSpan.FromHours(2), StopwatchOps.Elapsed(s, T0.AddHours(9)));
+        var s = StopwatchOps.StartFrom(paused, T0.AddHours(-2));
+        Assert.Equal(CountdownStatus.Running, s.Status);
+        Assert.Equal(TimeSpan.FromHours(2), StopwatchOps.Elapsed(s, T0));
     }
 
     [Fact]

@@ -90,18 +90,6 @@
                     </DockPanel>
                 </Border>
 
-                <!-- Corrects a timer started late; saved on Enter or when the box loses focus -->
-                <Border Style="{StaticResource Row}" Visibility="{Binding ShowsClock, Converter={StaticResource BoolToVisibility}}">
-                    <DockPanel>
-                        <TextBox x:Name="ClockBox" DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
-                                 Text="{Binding ClockText, UpdateSourceTrigger=LostFocus}" controls:Ui.HasError="{Binding ClockInvalid}"
-                                 ToolTip="Hours:minutes" AutomationProperties.Name="{Binding ClockLabel}"
-                                 GotFocus="ClockBox_GotFocus" LostFocus="ClockBox_LostFocus" PreviewKeyDown="ClockBox_PreviewKeyDown"
-                                 Unloaded="ClockBox_Unloaded" />
-                        <TextBlock Text="{Binding ClockLabel}" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
-
                 <Border Style="{StaticResource Row}" Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel>
                         <TextBox DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"

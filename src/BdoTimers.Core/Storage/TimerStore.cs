@@ -38,13 +38,18 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
     public void PauseCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Pause(c, now));
     public void ResumeCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Resume(c, now));
     public void ResetCountdown(Guid id) => ModifyCountdown(id, CountdownOps.Reset);
-    public void SetTimeLeft(Guid id, DateTimeOffset now, TimeSpan left) => ModifyCountdown(id, c => CountdownOps.SetRemaining(c, now, left));
 
     public void StartStopwatch(Guid id, DateTimeOffset now) => ModifyStopwatch(id, s => StopwatchOps.Start(s, now));
     public void PauseStopwatch(Guid id, DateTimeOffset now) => ModifyStopwatch(id, s => StopwatchOps.Pause(s, now));
     public void ResumeStopwatch(Guid id, DateTimeOffset now) => ModifyStopwatch(id, s => StopwatchOps.Resume(s, now));
     public void ResetStopwatch(Guid id) => ModifyStopwatch(id, StopwatchOps.Reset);
-    public void SetElapsed(Guid id, DateTimeOffset now, TimeSpan elapsed) => ModifyStopwatch(id, s => StopwatchOps.SetElapsed(s, now, elapsed));
+
+    /// <summary>Runs a countdown or stopwatch as if it had been started at <paramref name="startedAtUtc"/>.</summary>
+    public void StartFrom(Guid id, DateTimeOffset startedAtUtc) => Modify(id, t => t with
+    {
+        Countdown = t.Countdown is { } c ? CountdownOps.StartFrom(c, startedAtUtc) : null,
+        Stopwatch = t.Stopwatch is { } s ? StopwatchOps.StartFrom(s, startedAtUtc) : null,
+    });
 
     /// <summary>Completes running countdowns that ended at or before <paramref name="endedBefore"/>; returns them as they were before completion.</summary>
     public IReadOnlyList<TimerDef> CompleteCountdowns(DateTimeOffset now, DateTimeOffset endedBefore)

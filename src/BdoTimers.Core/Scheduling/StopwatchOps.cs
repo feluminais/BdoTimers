@@ -4,8 +4,11 @@ namespace BdoTimers.Core.Scheduling;
 
 public static class StopwatchOps
 {
-    public static StopwatchSpec Start(StopwatchSpec s, DateTimeOffset now) =>
-        s with { Status = CountdownStatus.Running, StartedAtUtc = now, Elapsed = null };
+    public static StopwatchSpec Start(StopwatchSpec s, DateTimeOffset now) => StartFrom(s, now);
+
+    /// <summary>Runs as if started at <paramref name="startedAtUtc"/>, for a stopwatch started late or not at all.</summary>
+    public static StopwatchSpec StartFrom(StopwatchSpec s, DateTimeOffset startedAtUtc) =>
+        s with { Status = CountdownStatus.Running, StartedAtUtc = startedAtUtc, Elapsed = null };
 
     public static StopwatchSpec Pause(StopwatchSpec s, DateTimeOffset now) =>
         s is { Status: CountdownStatus.Running, StartedAtUtc: { } started }
@@ -19,12 +22,6 @@ public static class StopwatchOps
 
     public static StopwatchSpec Reset(StopwatchSpec s) =>
         s with { Status = CountdownStatus.Idle, StartedAtUtc = null, Elapsed = null };
-
-    /// <summary>Corrects the time counted, such as for one started late; an idle stopwatch starts from there.</summary>
-    public static StopwatchSpec SetElapsed(StopwatchSpec s, DateTimeOffset now, TimeSpan elapsed) =>
-        s.Status == CountdownStatus.Paused
-            ? s with { Elapsed = elapsed }
-            : s with { Status = CountdownStatus.Running, StartedAtUtc = now - elapsed, Elapsed = null };
 
     public static TimeSpan Elapsed(StopwatchSpec s, DateTimeOffset now) => s switch
     {
