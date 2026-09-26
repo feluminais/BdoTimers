@@ -38,7 +38,7 @@ covered by the GPL.
 1. First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
 2. Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
 3. Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; hover the tile, press play → alert at 1:00
-   and at 0:00, then it shows Ready again (or restarts if "Restart when it ends" is on).
+   and at 0:00, then it shows Ready again.
 4. Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
 5. Set the countdown's Overlay to 2 min before, BDO in borderless: overlay appears, clicks pass through to the game.
 6. Settings → Position overlay: drag, click "Save overlay position"; restart app; overlay reappears at the saved spot.

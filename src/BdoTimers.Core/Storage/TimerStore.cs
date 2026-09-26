@@ -61,7 +61,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             return d with
             {
                 Timers = d.Timers
-                    .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Complete(t.Countdown!, now) } : t)
+                    .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Complete(t.Countdown!) } : t)
                     .ToList(),
             };
         });

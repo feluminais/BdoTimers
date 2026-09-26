@@ -27,7 +27,6 @@ public class JsonRoundTripTests
             Countdown = new CountdownSpec
             {
                 Duration = TimeSpan.FromMinutes(90),
-                AutoRepeat = true,
                 Status = CountdownStatus.Running,
                 EndsAtUtc = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero),
             },

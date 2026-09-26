@@ -32,13 +32,13 @@ public class SchedulerEngineTests : IDisposable
 
     public void Dispose() => _dir.Dispose();
 
-    TimerDef AddCountdown(bool repeat = false)
+    TimerDef AddCountdown()
     {
         var timer = new TimerDef
         {
             Name = "Farm",
             Kind = TimerKind.Countdown,
-            Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(10), AutoRepeat = repeat },
+            Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(10) },
             Alerts = new AlertConfig { LeadTimesMinutes = [5, 0] },
         };
         _timers.Upsert(timer);
@@ -81,16 +81,6 @@ public class SchedulerEngineTests : IDisposable
         TickAt(T0.AddMinutes(8));
 
         Assert.Equal(new[] { 2 }, _sink.Alerts.Select(a => a.LeadMinutes));
-    }
-
-    [Fact]
-    public void Repeating_countdown_restarts()
-    {
-        var timer = AddCountdown(repeat: true);
-
-        TickAt(T0.AddMinutes(10));
-
-        Assert.Equal(T0.AddMinutes(20), _timers.Current.Timers.Single(t => t.Id == timer.Id).Countdown!.EndsAtUtc);
     }
 
     [Fact]

@@ -102,22 +102,14 @@
                     </DockPanel>
                 </Border>
 
-                <StackPanel Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <TextBox DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
-                                     Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
-                                     controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
-                            <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Repeat}" ValueWidth="110" />
-                            <TextBlock Text="Restart when it ends" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
-                </StackPanel>
+                <Border Style="{StaticResource Row}" Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
+                    <DockPanel>
+                        <TextBox DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
+                                 Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                                 controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
+                        <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
+                    </DockPanel>
+                </Border>
 
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Weekly times" Style="{StaticResource SectionText}" />
@@ -134,8 +126,9 @@
                 <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Active}" ValueWidth="110" />
-                            <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
+                                                    AutomationProperties.Name="Alerts" />
+                            <TextBlock Text="Alerts" Style="{StaticResource RowLabel}" />
                         </DockPanel>
                     </Border>
                     <panels:AlertRows DataContext="{Binding Alerts}" />

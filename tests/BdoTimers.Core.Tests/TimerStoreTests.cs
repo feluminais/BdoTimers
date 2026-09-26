@@ -13,11 +13,11 @@ public class TimerStoreTests
         return (new TimerStore(file, new AppData()), file);
     }
 
-    static TimerDef Countdown(bool repeat = false) => new()
+    static TimerDef Countdown() => new()
     {
         Name = "Farm",
         Kind = TimerKind.Countdown,
-        Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(30), AutoRepeat = repeat },
+        Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(30) },
     };
 
     [Fact]
@@ -81,22 +81,22 @@ public class TimerStoreTests
     }
 
     [Fact]
-    public void CompleteCountdowns_returns_finished_and_applies_repeat()
+    public void CompleteCountdowns_returns_finished_ones_and_sets_them_ready()
     {
         using var dir = new TempDir();
         var (store, _) = NewStore(dir);
-        var once = Countdown();
-        var repeat = Countdown(repeat: true);
-        store.Upsert(once);
-        store.Upsert(repeat);
-        store.StartCountdown(once.Id, T0);
-        store.StartCountdown(repeat.Id, T0);
+        var done = Countdown();
+        var running = Countdown() with { Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(90) } };
+        store.Upsert(done);
+        store.Upsert(running);
+        store.StartCountdown(done.Id, T0);
+        store.StartCountdown(running.Id, T0);
 
-        var done = store.CompleteCountdowns(T0.AddMinutes(30), T0.AddMinutes(30));
+        var completed = store.CompleteCountdowns(T0.AddMinutes(30), T0.AddMinutes(30));
 
-        Assert.Equal(2, done.Count);
-        Assert.Equal(CountdownStatus.Idle, store.Current.Timers.Single(t => t.Id == once.Id).Countdown!.Status);
-        Assert.Equal(T0.AddMinutes(60), store.Current.Timers.Single(t => t.Id == repeat.Id).Countdown!.EndsAtUtc);
+        Assert.Equal(done.Id, completed.Single().Id);
+        Assert.Equal(CountdownStatus.Idle, store.Current.Timers.Single(t => t.Id == done.Id).Countdown!.Status);
+        Assert.Equal(CountdownStatus.Running, store.Current.Timers.Single(t => t.Id == running.Id).Countdown!.Status);
     }
 
     [Fact]
