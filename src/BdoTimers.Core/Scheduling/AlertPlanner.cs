@@ -41,6 +41,24 @@ public sealed class AlertPlanner
         return events;
     }
 
+    /// <summary>True when an alert that speaks is due after <paramref name="now"/> and within <paramref name="window"/>.</summary>
+    public static bool SpeechDueWithin(
+        IEnumerable<TimerDef> timers, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now, TimeSpan window,
+        IReadOnlyList<int>? defaultLeads = null)
+    {
+        foreach (var timer in timers.Where(t => t.Enabled && t.Alerts.Tts.Enabled))
+        {
+            var leads = timer.Alerts.LeadTimes(defaultLeads ?? AlertConfig.StandardLeadTimesMinutes).Where(l => l >= 0).ToArray();
+            if (leads.Length == 0) continue;
+            foreach (var occurrence in OccurrenceSource.Between(timer, now, now + window + TimeSpan.FromMinutes(leads.Max())))
+            {
+                if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
+                if (leads.Select(l => occurrence - TimeSpan.FromMinutes(l)).Any(due => due > now && due <= now + window)) return true;
+            }
+        }
+        return false;
+    }
+
     static int MinutesLeft(DateTimeOffset occurrence, DateTimeOffset now) =>
         Math.Max(0, (int)Math.Ceiling((occurrence - now).TotalMinutes));
 }

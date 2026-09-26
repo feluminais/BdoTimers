@@ -38,6 +38,8 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         _store = services.Timers;
         _id = timer.Id;
         var a = timer.Alerts;
+        // So the voice line's ▶ speaks without first waiting for the model.
+        if (a.Tts.Enabled) services.Tts.Warm(services.Settings.Current.TtsVoice);
         Sound = new TimerSoundViewModel(services, timer);
         _toast = Choice.For(a.Toast.Enabled);
         _voice = Choice.For(a.Tts.Enabled);

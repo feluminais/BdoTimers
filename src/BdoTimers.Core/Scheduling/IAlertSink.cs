@@ -10,4 +10,7 @@ public interface IAlertSink
 {
     void Dispatch(AlertEvent alert);
     void NotifyEndedWhileAway(TimerDef timer);
+    /// <summary>A spoken alert is due soon: get the voice ready so it doesn't load while the alert plays. Called every
+    /// tick until then, so it must be cheap once ready.</summary>
+    void PrepareSpeech();
 }

@@ -42,6 +42,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         _voice = Voices.FirstOrDefault(v => (string)v.Value! == s.TtsVoice)
                  ?? Voices.FirstOrDefault(v => (string)v.Value! == services.Tts.DefaultVoiceId)
                  ?? Voices.FirstOrDefault();
+        // So Test voice speaks without first waiting for the model.
+        services.Tts.Warm(s.TtsVoice);
         _speechRate = s.TtsRate;
         _isPositioningOverlay = services.Overlay.IsPositioning;
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
@@ -88,7 +90,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     partial void OnVolumeChanged(double value) => _services.Settings.Update(s => s with { Volume = (float)value });
 
-    partial void OnVoiceChanged(Choice? value) => _services.Settings.Update(s => s with { TtsVoice = value?.Value as string });
+    partial void OnVoiceChanged(Choice? value)
+    {
+        _services.Settings.Update(s => s with { TtsVoice = value?.Value as string });
+        // A UK voice needs the model loaded for British English, and a US one for American.
+        _services.Tts.Warm(value?.Value as string);
+    }
 
     partial void OnSpeechRateChanged(double value) =>
         _services.Settings.Update(s => s with { TtsRate = (int)Math.Round(value) });

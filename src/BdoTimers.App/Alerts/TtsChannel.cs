@@ -32,5 +32,8 @@ public sealed class TtsChannel(KokoroEngine kokoro) : IDisposable
             return new RawSourceWaveStream(new MemoryStream(bytes), WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1));
         });
 
+    /// <summary>Loads a voice's model in the background, so speech that follows soon starts sooner.</summary>
+    public void Warm(string? voiceId) => kokoro.Warm(KokoroEngine.Find(voiceId) ?? KokoroEngine.Default);
+
     public void Dispose() => kokoro.Dispose();
 }
