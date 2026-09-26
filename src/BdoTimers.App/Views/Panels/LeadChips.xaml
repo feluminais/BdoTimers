@@ -10,7 +10,14 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type pvm:LeadChip}">
-                    <ToggleButton Style="{StaticResource Chip}" Content="{Binding Label}" IsChecked="{Binding IsOn}" />
+                    <ToggleButton Style="{StaticResource Chip}" IsChecked="{Binding IsOn}" ToolTip="{Binding Tip}"
+                                  AutomationProperties.Name="{Binding Label}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Label}" />
+                            <TextBlock Text="&#xE711;" Style="{StaticResource IconText}" FontSize="8" Margin="6,1,0,0" VerticalAlignment="Center"
+                                       Visibility="{Binding IsCustom, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                    </ToggleButton>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>

@@ -5,7 +5,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-/// <summary>"Alert before" chips: common lead times plus any the timer already uses, and a field to add others.</summary>
+/// <summary>
+/// "Alert before" chips: common lead times plus any the timer already uses, and a field to add others. The common ones
+/// switch on and off; a time the user added has no off state, so clicking it removes it.
+/// </summary>
 public sealed partial class LeadChipsViewModel : ObservableObject
 {
     static readonly int[] Presets = [30, 15, 10, 5, 1, 0];
@@ -49,21 +52,28 @@ public sealed partial class LeadChipsViewModel : ObservableObject
 
     void AddChip(int minutes, bool on, int? index = null)
     {
-        var chip = new LeadChip(minutes) { IsOn = on };
-        chip.Toggled += Apply;
+        var chip = new LeadChip(minutes, isCustom: !Presets.Contains(minutes)) { IsOn = on };
+        chip.Toggled += () =>
+        {
+            if (chip.IsCustom && !chip.IsOn) Chips.Remove(chip);
+            Apply();
+        };
         Chips.Insert(index ?? Chips.Count, chip);
     }
 
     void Apply() => _apply(Chips.Where(c => c.IsOn).Select(c => c.Minutes).ToList());
 }
 
-public sealed partial class LeadChip(int minutes) : ObservableObject
+public sealed partial class LeadChip(int minutes, bool isCustom) : ObservableObject
 {
     [ObservableProperty] private bool _isOn;
 
     public event Action? Toggled;
 
     public int Minutes => minutes;
+    /// <summary>A time the user added; it shows a cross and clicking it removes it.</summary>
+    public bool IsCustom => isCustom;
+    public string? Tip => isCustom ? "Remove" : null;
     public string Label => minutes == 0 ? "At spawn" : minutes.ToString();
 
     partial void OnIsOnChanged(bool value) => Toggled?.Invoke();
