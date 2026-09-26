@@ -32,6 +32,7 @@
     <Compile Include="..\..\src\BdoTimers.App\Alerts\NotificationRegistration.cs" Link="Alerts\NotificationRegistration.cs" />
     <Resource Include="..\..\src\BdoTimers.App\Theme\Fonts\Cinzel-Regular.ttf" Link="Theme\Fonts\Cinzel-Regular.ttf" />
     <Resource Include="..\..\src\BdoTimers.App\Assets\app.ico" Link="Assets\app.ico" />
+    <Resource Include="..\..\src\BdoTimers.App\Assets\app.png" Link="Assets\app.png" />
     <Resource Include="..\..\src\BdoTimers.App\Assets\Bosses\garmoth.jpg" Link="Assets\garmoth.jpg" />
     <Resource Include="..\..\src\BdoTimers.App\Assets\Bosses\vell.jpg" Link="Assets\vell.jpg" />
   </ItemGroup>
