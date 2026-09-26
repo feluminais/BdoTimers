@@ -31,19 +31,22 @@ public class CountdownOpsTests
     }
 
     [Fact]
-    public void SetRemaining_moves_the_end_and_the_start_of_a_running_countdown()
+    public void StartFrom_runs_as_if_started_then()
     {
-        var c = CountdownOps.SetRemaining(CountdownOps.Start(Hour, T0), T0.AddMinutes(1), TimeSpan.FromMinutes(20));
-        Assert.Equal(T0.AddMinutes(21), c.EndsAtUtc);
-        Assert.Equal(T0.AddMinutes(-39), c.StartedAtUtc);
+        var c = CountdownOps.StartFrom(Hour, T0.AddMinutes(-40));
+        Assert.Equal(CountdownStatus.Running, c.Status);
+        Assert.Equal(T0.AddMinutes(-40), c.StartedAtUtc);
+        Assert.Equal(T0.AddMinutes(20), c.EndsAtUtc);
     }
 
     [Fact]
-    public void SetRemaining_changes_what_a_paused_countdown_resumes_with_and_leaves_idle_ones()
+    public void StartFrom_replaces_a_paused_run()
     {
         var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(10));
-        Assert.Equal(TimeSpan.FromMinutes(5), CountdownOps.SetRemaining(paused, T0.AddMinutes(11), TimeSpan.FromMinutes(5)).Remaining);
-        Assert.Equal(Hour, CountdownOps.SetRemaining(Hour, T0, TimeSpan.FromMinutes(5)));
+        var c = CountdownOps.StartFrom(paused, T0.AddMinutes(-5));
+        Assert.Equal(CountdownStatus.Running, c.Status);
+        Assert.Null(c.Remaining);
+        Assert.Equal(T0.AddMinutes(55), c.EndsAtUtc);
     }
 
     [Fact]

@@ -61,5 +61,6 @@ covered by the GPL.
 18. Boss panel → Spawn times opens the list below it; the same header closes it.
 19. Settings → Bosses → Reset all boss alert settings → Reset: every pencil is gone, bosses with alerts off are on
     again, spawn times unchanged.
-20. Timers: Farm and Fishing come first and have no Delete. Hover Farm → play, open it → Time left 19:30 → Enter: the
-    tile shows 19:29:xx, started 2.5 h ago. Fishing → Elapsed 1:20 → Enter: it runs on from 01:20:00.
+20. Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → clock icon → pick a time 2 h ago → Start:
+    it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
+    Farm → clock → a time over 22 h ago: "Would have ended at …" and Start stays off. The square stops a timer.

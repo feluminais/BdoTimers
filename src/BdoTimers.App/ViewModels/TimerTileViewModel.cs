@@ -28,6 +28,13 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
 
+    // "Started earlier": the clock time the user really started, picked in a small popup on the tile.
+    [ObservableProperty] private bool _isPickingStart;
+    [ObservableProperty] private string _startHour = "";
+    [ObservableProperty] private string _startMinute = "";
+    [ObservableProperty] private bool _startInvalid;
+    [ObservableProperty] private string _startProblem = "";
+
     public Guid Id => _timer.Id;
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
     public bool HasControls => _timer.Kind is TimerKind.Countdown or TimerKind.Stopwatch;
@@ -133,6 +140,66 @@ public sealed partial class TimerTileViewModel : ObservableObject
             case CountdownStatus.Idle: timers.StartCountdown(_timer.Id, now); break;
         }
     }
+
+    /// <summary>Opens the picker at the current run's start, or at the current time.</summary>
+    [RelayCommand]
+    void PickStart()
+    {
+        var running = _timer.Countdown is { Status: CountdownStatus.Running } c ? c.StartedAtUtc
+            : _timer.Stopwatch is { Status: CountdownStatus.Running } s ? s.StartedAtUtc
+            : null;
+        var from = (running ?? DateTimeOffset.UtcNow).ToLocalTime();
+        StartHour = Two(from.Hour);
+        StartMinute = Two(from.Minute);
+        IsPickingStart = true;
+    }
+
+    [RelayCommand] void HourUp() => StartHour = Step(StartHour, 24, 1);
+    [RelayCommand] void HourDown() => StartHour = Step(StartHour, 24, -1);
+    [RelayCommand] void MinuteUp() => StartMinute = Step(StartMinute, 60, 1);
+    [RelayCommand] void MinuteDown() => StartMinute = Step(StartMinute, 60, -1);
+
+    [RelayCommand]
+    void CancelStart() => IsPickingStart = false;
+
+    [RelayCommand(CanExecute = nameof(CanConfirmStart))]
+    void ConfirmStart()
+    {
+        if (PickedStart() is not { } at) return;
+        _services.Timers.StartFrom(_timer.Id, at);
+        IsPickingStart = false;
+    }
+
+    bool CanConfirmStart() => !StartInvalid && StartProblem.Length == 0;
+
+    partial void OnStartHourChanged(string value) => CheckStart();
+    partial void OnStartMinuteChanged(string value) => CheckStart();
+
+    /// <summary>A countdown that would already have ended by now can't start there.</summary>
+    void CheckStart()
+    {
+        var at = PickedStart();
+        StartInvalid = at is null;
+        StartProblem = at is { } start && _timer.Countdown is { } c && start + c.Duration <= DateTimeOffset.UtcNow
+            ? $"Would have ended at {(start + c.Duration).ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}"
+            : "";
+        ConfirmStartCommand.NotifyCanExecuteChanged();
+    }
+
+    /// <summary>The picked local time, today or, if that's still ahead, yesterday.</summary>
+    DateTimeOffset? PickedStart() =>
+        int.TryParse(StartHour, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) && hour < 24
+        && int.TryParse(StartMinute, NumberStyles.None, CultureInfo.InvariantCulture, out var minute) && minute < 60
+            ? StartTimes.MostRecent(new TimeOnly(hour, minute), DateTimeOffset.UtcNow, TimeZoneInfo.Local)
+            : null;
+
+    static string Step(string text, int modulo, int delta)
+    {
+        var value = int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var v) ? v : 0;
+        return Two(((value + delta) % modulo + modulo) % modulo);
+    }
+
+    static string Two(int value) => value.ToString("00", CultureInfo.InvariantCulture);
 
     [RelayCommand]
     void Reset()
