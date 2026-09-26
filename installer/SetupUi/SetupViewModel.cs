@@ -152,7 +152,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public string DoneText { get => _doneText; private set => Set(ref _doneText, value); }
     public string ErrorText { get => _errorText; private set => Set(ref _errorText, value); }
     public bool LaunchApp { get => _launchApp; set => Set(ref _launchApp, value); }
-    public bool CanLaunch => _running == LaunchAction.Install || _moveTo is not null;
+    public bool CanLaunch => _running is LaunchAction.Install or LaunchAction.Repair || _moveTo is not null;
 
     void Start(LaunchAction action)
     {
@@ -269,11 +269,13 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     static bool IsSameFolder(string a, string? b) =>
         b is not null && string.Equals(a.Trim().TrimEnd('\\'), b.Trim().TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>Launches from the folder the package just recorded: after a repair the typed folder may not be where
+    /// the app is (a Move page edited then abandoned, or the default when repairing a half-finished move).</summary>
     void FinishAndClose()
     {
-        if (CanLaunch && LaunchApp)
+        if (CanLaunch && LaunchApp && SetupFlow.InstalledRoot is { } root)
         {
-            var exe = Path.Combine((_moveTo ?? InstallRoot).Trim(), "BdoTimers", "BdoTimers.exe");
+            var exe = Path.Combine(root, "BdoTimers", "BdoTimers.exe");
             if (File.Exists(exe)) Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true });
         }
         Application.Current.MainWindow?.Close();
