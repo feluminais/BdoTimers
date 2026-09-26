@@ -26,19 +26,19 @@
                     </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Row}">
-                    <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
-                                ToolTip="Test the alert sound" Command="{Binding PreviewSoundCommand}" />
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" ValueWidth="110"
-                                                AutomationProperties.Name="Default sound" />
-                        <TextBlock Text="Default sound" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
-                <Border Style="{StaticResource Row}">
                     <StackPanel>
                         <TextBlock Text="Default alert times (minutes before)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
                         <panels:LeadChips DataContext="{Binding DefaultLeads}" />
                     </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test sound" Margin="8,0,0,0" Width="112"
+                                VerticalAlignment="Center" Command="{Binding PreviewSoundCommand}" />
+                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" ValueWidth="130"
+                                                AutomationProperties.Name="Default sound" />
+                        <TextBlock Text="Default sound" Style="{StaticResource RowLabel}" />
+                    </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
@@ -68,18 +68,16 @@
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
-                                ToolTip="Test the volume" Command="{Binding PreviewSoundCommand}" />
-                        <Slider DockPanel.Dock="Right" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center" Margin="0,0,8,0"
+                        <Slider DockPanel.Dock="Right" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center"
                                 Value="{Binding Volume, Delay=250}" />
                         <TextBlock Text="Volume" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
-                                ToolTip="Test the voice" Command="{Binding TestVoiceCommand}" />
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" ValueWidth="200"
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test voice" Margin="8,0,0,0" Width="112"
+                                VerticalAlignment="Center" Command="{Binding TestVoiceCommand}" />
+                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" ValueWidth="130"
                                                 AutomationProperties.Name="Voice" />
                         <TextBlock Text="Voice" Style="{StaticResource RowLabel}" />
                     </DockPanel>
@@ -87,7 +85,7 @@
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
                         <Slider DockPanel.Dock="Right" Width="170" Minimum="-5" Maximum="5" IsSnapToTickEnabled="True" TickFrequency="1"
-                                VerticalAlignment="Center" Margin="0,0,40,0" Value="{Binding SpeechRate, Delay=250}" />
+                                VerticalAlignment="Center" Value="{Binding SpeechRate, Delay=250}" />
                         <TextBlock Text="Speech speed" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
