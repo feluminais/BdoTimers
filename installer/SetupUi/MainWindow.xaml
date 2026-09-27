@@ -136,6 +136,18 @@
                     <Button Style="{StaticResource OutlineButton}" Content="Close" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding CloseCommand}" />
                 </Grid>
 
+                <!-- Uninstall confirmation, only when the user added sounds or pictures: a chance to copy them first -->
+                <Grid Margin="48,0,48,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=ConfirmUninstall}">
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding UserFilesWarning}" Style="{StaticResource DisplayText}" FontSize="18" TextWrapping="Wrap" />
+                        <Button Style="{StaticResource LinkButton}" Content="Open folder" HorizontalAlignment="Left" Margin="0,12,0,0" Command="{Binding OpenUserFilesCommand}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                        <Button Style="{StaticResource GhostButton}" Content="Back" Command="{Binding BackCommand}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Uninstall" Margin="10,0,0,0" Command="{Binding ConfirmUninstallCommand}" />
+                    </StackPanel>
+                </Grid>
+
                 <!-- Maintenance: already installed (run again, or Uninstall from Settings > Apps) -->
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Maintenance}">
                     <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
