@@ -62,6 +62,13 @@ public sealed class ArtLibrary(string imagesDir)
     /// <summary>Pictures for a spawn group: at most two, since tiles split into two stacked halves.</summary>
     public IReadOnlyList<ArtPicture> For(IEnumerable<TimerDef> timers) => timers.Take(2).Select(For).ToList();
 
+    /// <summary>A picture from the images folder, or null when it's missing or can't be read.</summary>
+    public ImageSource? UserPicture(string file)
+    {
+        var picture = Load(Path.Combine(ImagesDir, file));
+        return ReferenceEquals(picture, Placeholder) ? null : picture;
+    }
+
     /// <summary>Copies a picture into the images folder and returns its new file name.</summary>
     public string Import(string sourcePath)
     {
