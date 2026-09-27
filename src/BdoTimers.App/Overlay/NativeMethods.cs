@@ -15,4 +15,12 @@ static partial class NativeMethods
 
     [LibraryImport("user32.dll", EntryPoint = "SetWindowLongW")]
     public static partial int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnregisterHotKey(IntPtr hWnd, int id);
 }
