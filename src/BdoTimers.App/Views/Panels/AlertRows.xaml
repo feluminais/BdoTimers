@@ -26,6 +26,10 @@
                                             AutomationProperties.Name="Sound" />
                     <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="11" Margin="0,0,4,0"
                             ToolTip="Add your own sound (WAV or MP3)" Command="{Binding AddCommand}" />
+                    <!-- Left of the others, so showing it moves nothing -->
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="9"
+                            ToolTip="Remove this sound" Command="{Binding RemoveCommand}"
+                            Visibility="{Binding IsUserSound, Converter={StaticResource BoolToVisibility}}" />
                     <TextBlock Text="Sound" Style="{StaticResource RowLabel}" />
                 </DockPanel>
                 <TextBlock Text="{Binding Error}" Style="{StaticResource ErrorText}"

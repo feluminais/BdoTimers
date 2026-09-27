@@ -151,19 +151,22 @@ public sealed class AppServices : IDisposable
         }
     }
 
-    /// <summary>Deletes a user sound; timers and the app-wide sound that used it go back to their defaults.</summary>
-    public bool RemoveSound(string key)
+    /// <summary>
+    /// Deletes a user sound; timers and the app-wide sound that used it go back to their defaults. Returns the error
+    /// to show, or null once it's gone.
+    /// </summary>
+    public string? RemoveSound(string key)
     {
         try { Sounds.Delete(key); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             // Most likely still playing; the file is released when playback ends.
             Log.Error($"Couldn't remove sound {key}", ex);
-            return false;
+            return $"Couldn't remove {Path.GetFileNameWithoutExtension(key)}. Try again in a moment.";
         }
         Timers.ForgetSound(key);
         Settings.Update(s => s.AlertSound == key ? s with { AlertSound = BuiltInSounds.Default } : s);
-        return true;
+        return null;
     }
 
     public void OpenDataFolder()

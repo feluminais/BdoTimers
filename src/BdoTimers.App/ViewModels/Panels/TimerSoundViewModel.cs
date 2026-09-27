@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Sounds;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -16,6 +17,7 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     [ObservableProperty] private IReadOnlyList<Choice> _choices = [];
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(TestCommand))]
+    [NotifyPropertyChangedFor(nameof(IsUserSound))]
     private Choice? _selected;
     [ObservableProperty] private string? _error;
 
@@ -30,6 +32,9 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     }
 
     SoundAlert? Sound => Selected?.Value as SoundAlert;
+
+    /// <summary>A sound the user added is selected; only those can be removed.</summary>
+    public bool IsUserSound => Sound is { Key: { } key } && SoundKeys.IsUserKey(key);
 
     partial void OnSelectedChanged(Choice? value)
     {
@@ -52,5 +57,18 @@ public sealed partial class TimerSoundViewModel : ObservableObject
         if (key is null) return;
         Choices = SoundChoices.ForTimer(_services.Sounds);
         Selected = SoundChoices.Matching(Choices, new SoundAlert { Key = key });
+    }
+
+    /// <summary>Deletes the selected user sound; this timer and any other that used it go back to Default.</summary>
+    [RelayCommand]
+    void Remove()
+    {
+        if (!IsUserSound) return;
+        Error = _services.RemoveSound(Sound!.Key!);
+        if (Error is not null) return;
+        _syncing = true;
+        Choices = SoundChoices.ForTimer(_services.Sounds);
+        Selected = SoundChoices.Matching(Choices, _services.Timers.Current.Timers.First(t => t.Id == _id).Alerts.Sound);
+        _syncing = false;
     }
 }

@@ -84,7 +84,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     void RemoveSound(string key)
     {
-        SoundError = _services.RemoveSound(key) ? null : $"Couldn't remove {SoundChoices.Label(key)}. Try again in a moment.";
+        SoundError = _services.RemoveSound(key);
         ReloadSounds();
     }
 
