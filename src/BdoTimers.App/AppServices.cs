@@ -188,6 +188,7 @@ public sealed class AppServices : IDisposable
         UiClock.Stop();
         _loop.Dispose();
         Tts.Dispose();
+        Overlay.Dispose();
         _tray.Dispose();
     }
 }

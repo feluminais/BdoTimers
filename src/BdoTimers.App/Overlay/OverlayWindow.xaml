@@ -3,19 +3,35 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize"
-        SizeToContent="WidthAndHeight" WindowStartupLocation="Manual">
-    <Border x:Name="Frame" Background="#D90B0B0C" Padding="12,6" BorderThickness="1" BorderBrush="{StaticResource AccentSoftBrush}">
-        <ItemsControl x:Name="Items">
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" Foreground="{StaticResource TextBrush}"
-                                   FontSize="14" MinWidth="140" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Countdown}" Style="{StaticResource ClockText}" Foreground="{StaticResource AccentTextBrush}"
-                                   FontSize="16" Margin="14,0,0,0" VerticalAlignment="Center" />
-                    </StackPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </Border>
+        SizeToContent="WidthAndHeight" WindowStartupLocation="Manual" UseLayoutRounding="True"
+        Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI" FontSize="13">
+    <Window.Resources>
+        <ResourceDictionary Source="OverlayLayouts.xaml" />
+    </Window.Resources>
+    <Grid>
+        <Grid.LayoutTransform>
+            <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" />
+        </Grid.LayoutTransform>
+        <!-- Background colour or picture and its gold hairline fade together -->
+        <Border Background="{Binding Background}" BorderBrush="{StaticResource AccentSoftBrush}" BorderThickness="1"
+                Opacity="{Binding BackgroundOpacity}" />
+        <ContentControl Content="{Binding}" Opacity="{Binding TextOpacity}" Focusable="False" Margin="1">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Setter Property="ContentTemplate" Value="{StaticResource ListLayout}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Layout}" Value="Card">
+                            <Setter Property="ContentTemplate" Value="{StaticResource CardLayout}" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Layout}" Value="Bar">
+                            <Setter Property="ContentTemplate" Value="{StaticResource BarLayout}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
+        <!-- Preview: a bright frame over a near-invisible fill, so the overlay can be grabbed at any opacity -->
+        <Border BorderBrush="{StaticResource AccentTextBrush}" BorderThickness="2" Background="#01000000"
+                Visibility="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
+    </Grid>
 </Window>

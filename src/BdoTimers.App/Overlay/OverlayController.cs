@@ -1,69 +1,130 @@
 using System.Windows;
+using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Scheduling;
-using BdoTimers.Core.Text;
+using BdoTimers.Core.Storage;
 
 namespace BdoTimers.App.Overlay;
 
-/// <summary>Shows the overlay only while an opted-in event is inside its "show N minutes before" window.</summary>
-public sealed class OverlayController(AppServices services)
+/// <summary>
+/// Shows the overlay while it's pinned, summoned by hotkey, due for a pop-up or previewed in the Overlay panel
+/// (spec: docs/superpowers/specs/2026-09-28-overlay-design.md). UI thread only.
+/// </summary>
+public sealed class OverlayController(AppServices services) : IDisposable
 {
     OverlayWindow? _window;
+    OverlayPresence _presence = new();
+    bool _previewing;
 
-    public bool IsPositioning { get; private set; }
+    public HotkeyService Hotkeys { get; } = new();
 
-    public void Start() => services.UiClock.Tick += Update;
+    public void Start()
+    {
+        services.UiClock.Tick += Update;
+        services.Settings.Changed += OnSettingsChanged;
+        Hotkeys.Pressed += OnHotkey;
+        HoldHotkeys();
+    }
+
+    /// <summary>Shows the overlay as a draggable preview while the Overlay panel is open.</summary>
+    public void BeginPreview()
+    {
+        _previewing = true;
+        EnsureWindow().SetClickThrough(false);
+        Update(DateTimeOffset.UtcNow);
+    }
+
+    public void EndPreview()
+    {
+        if (!_previewing) return;
+        _previewing = false;
+        _window?.SetClickThrough(true);
+        Update(DateTimeOffset.UtcNow);
+    }
+
+    void OnSettingsChanged()
+    {
+        HoldHotkeys();
+        Update(DateTimeOffset.UtcNow);
+    }
+
+    void HoldHotkeys()
+    {
+        var o = services.Settings.Current.Overlay;
+        Hotkeys.Set(o.Enabled ? o.AlwaysShowHotkey : null, o.Enabled && o.ShowOnHotkey ? o.ShowHotkey : null);
+    }
+
+    void OnHotkey(HotkeyAction action)
+    {
+        var now = DateTimeOffset.UtcNow;
+        try
+        {
+            if (action == HotkeyAction.AlwaysShow)
+                services.Settings.Update(s => s with { Overlay = s.Overlay with { AlwaysShow = !s.Overlay.AlwaysShow } });
+            else
+                _presence = _presence.PressShow(services.Settings.Current.Overlay, now);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Overlay hotkey failed", ex);
+        }
+        Update(now);
+    }
 
     void Update(DateTimeOffset now)
     {
-        if (IsPositioning) return;
-        var items = UpcomingQuery.ForOverlay(services.Timers.Current, now);
-        if (items.Count == 0)
+        try { Refresh(now); }
+        catch (Exception ex) { Log.Error("Overlay update failed", ex); }
+    }
+
+    void Refresh(DateTimeOffset now)
+    {
+        var settings = services.Settings.Current.Overlay;
+        _presence = _presence.Settle(settings);
+        var content = OverlayContent.Build(services.Timers.Current, settings, now);
+        if (!_presence.IsVisible(settings, now, content, _previewing))
         {
             _window?.Hide();
             return;
         }
         var window = EnsureWindow();
-        window.SetRows(items.Select(i => new OverlayRow(i.Timer.Name, DurationFormat.Countdown(i.AtUtc - now))).ToList());
+        window.Model.Update(content, settings, now, _previewing);
         if (!window.IsVisible) window.Show();
         // Re-assert z-order: a borderless game window can climb above other topmost windows.
         window.Topmost = false;
         window.Topmost = true;
     }
 
-    public void TogglePositioning()
-    {
-        if (IsPositioning) FinishPositioning();
-        else StartPositioning();
-    }
-
-    void StartPositioning()
-    {
-        var window = EnsureWindow();
-        IsPositioning = true;
-        window.SetRows([new OverlayRow("Drag me into place", "05:00")]);
-        window.SetClickThrough(false);
-        window.Show();
-    }
-
-    /// <summary>Saves the dragged position and restores click-through. Safe to call when not positioning.</summary>
-    public void FinishPositioning()
-    {
-        if (!IsPositioning || _window is null) return;
-        IsPositioning = false;
-        _window.SetClickThrough(true);
-        _window.Hide();
-        services.Settings.Update(s => s with { OverlayLeft = _window.Left, OverlayTop = _window.Top });
-    }
-
     OverlayWindow EnsureWindow()
     {
         if (_window is not null) return _window;
         var s = services.Settings.Current;
-        _window = new OverlayWindow
-        {
-            Left = s.OverlayLeft ?? SystemParameters.WorkArea.Right - 300,
-            Top = s.OverlayTop ?? 40,
-        };
+        var (left, top) = Placement(s.OverlayLeft, s.OverlayTop);
+        _window = new OverlayWindow(new OverlayViewModel(services.Art)) { Left = left, Top = top };
+        _window.Dropped += SavePosition;
         return _window;
+    }
+
+    /// <summary>The saved spot, unless it's no longer on a screen (a monitor was unplugged, say); then the top right of
+    /// the primary screen.</summary>
+    static (double Left, double Top) Placement(double? left, double? top)
+    {
+        var screen = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
+            SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
+        return left is { } l && top is { } t && screen.Contains(new Point(l + 20, t + 20))
+            ? (l, t)
+            : (SystemParameters.WorkArea.Right - 300, SystemParameters.WorkArea.Top + 40);
+    }
+
+    void SavePosition()
+    {
+        if (_window is not { } window) return;
+        try { services.Settings.Update(s => s with { OverlayLeft = window.Left, OverlayTop = window.Top }); }
+        catch (StateSaveException ex) { Log.Error("Couldn't save the overlay position", ex); }
+    }
+
+    public void Dispose()
+    {
+        Hotkeys.Dispose();
+        _window?.Close();
     }
 }

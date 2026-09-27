@@ -1,34 +1,36 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
 
 namespace BdoTimers.App.Overlay;
-
-public sealed record OverlayRow(string Name, string Countdown);
 
 public partial class OverlayWindow : Window
 {
     bool _clickThrough = true;
 
-    public OverlayWindow()
+    public OverlayWindow(OverlayViewModel model)
     {
         InitializeComponent();
+        DataContext = Model = model;
         SourceInitialized += (_, _) => ApplyStyles();
         MouseLeftButtonDown += (_, e) =>
         {
-            if (!_clickThrough && e.ButtonState == MouseButtonState.Pressed) DragMove();
+            if (_clickThrough || e.ButtonState != MouseButtonState.Pressed) return;
+            DragMove();
+            Dropped?.Invoke();
         };
     }
 
-    public void SetRows(IReadOnlyList<OverlayRow> rows) => Items.ItemsSource = rows;
+    public OverlayViewModel Model { get; }
 
-    /// <summary>Click-through lets mouse input reach the game; positioning mode turns it off so the window can be dragged.</summary>
+    /// <summary>Raised when a drag ends.</summary>
+    public event Action? Dropped;
+
+    /// <summary>Click-through lets mouse input reach the game; the Overlay panel's preview turns it off so the
+    /// overlay can be dragged.</summary>
     public void SetClickThrough(bool enabled)
     {
         _clickThrough = enabled;
-        Frame.BorderBrush = (Brush)FindResource(enabled ? "AccentSoftBrush" : "AccentTextBrush");
-        Frame.BorderThickness = new Thickness(enabled ? 1 : 2);
         ApplyStyles();
     }
 

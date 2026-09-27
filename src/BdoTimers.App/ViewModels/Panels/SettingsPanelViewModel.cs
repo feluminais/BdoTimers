@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
+public sealed partial class SettingsPanelViewModel : ObservableObject
 {
     readonly AppServices _services;
     bool _syncingSound;
@@ -21,7 +21,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private double _volume;
     [ObservableProperty] private Choice? _voice;
     [ObservableProperty] private double _speechRate;
-    [ObservableProperty] private bool _isPositioningOverlay;
     [ObservableProperty] private bool _confirmingReset;
     [ObservableProperty] private bool _confirmingAlertReset;
 
@@ -45,7 +44,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         // So Test voice speaks without first waiting for the model.
         services.Tts.Warm(s.TtsVoice);
         _speechRate = s.TtsRate;
-        _isPositioningOverlay = services.Overlay.IsPositioning;
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
             leads => services.Settings.Update(x => x with { DefaultLeadTimesMinutes = leads }));
     }
@@ -115,13 +113,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     void OpenNotificationSettings() => ToastChannel.OpenWindowsNotificationSettings();
 
     [RelayCommand]
-    void ToggleOverlayPositioning()
-    {
-        _services.Overlay.TogglePositioning();
-        IsPositioningOverlay = _services.Overlay.IsPositioning;
-    }
-
-    [RelayCommand]
     void AskReset() => ConfirmingReset = true;
 
     [RelayCommand]
@@ -158,8 +149,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     void OpenLicenses() => Open(Path.Combine(AppContext.BaseDirectory, "licenses"));
 
     static void Open(string target) => Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
-
-    public void OnClosed() => _services.Overlay.FinishPositioning();
 
     static string AppVersion()
     {
