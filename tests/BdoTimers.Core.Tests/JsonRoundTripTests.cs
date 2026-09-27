@@ -97,4 +97,45 @@ public class JsonRoundTripTests
         var back = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(s, JsonDefaults.Options), JsonDefaults.Options)!;
         Assert.Equal(s.Window, back.Window);
     }
+
+    [Fact]
+    public void Overlay_settings_round_trip()
+    {
+        var s = new AppSettings
+        {
+            OverlayLeft = 12,
+            Overlay = new OverlaySettings
+            {
+                AlwaysShow = true,
+                AlwaysShowHotkey = new Hotkey(HotkeyModifiers.Ctrl | HotkeyModifiers.Shift, 0x4F),
+                ShowOnHotkey = true,
+                ShowHotkey = new Hotkey(HotkeyModifiers.None, 0x78),
+                ShowSeconds = 30,
+                Layout = OverlayLayout.Card,
+                Scale = 1.5,
+                ShowFarm = false,
+                BackgroundColor = "#3A1417",
+                BackgroundImage = "bg.png",
+                BackgroundOpacity = 0.4,
+                TextOpacity = 0.9,
+            },
+        };
+
+        var back = JsonSerializer.Deserialize<AppSettings>(JsonSerializer.Serialize(s, JsonDefaults.Options), JsonDefaults.Options)!;
+
+        Assert.Equal(s.Overlay, back.Overlay);
+        Assert.Equal(12, back.OverlayLeft);
+    }
+
+    [Fact]
+    public void Settings_without_overlay_load_the_defaults_and_keep_the_position()
+    {
+        var s = JsonSerializer.Deserialize<AppSettings>("""{ "overlayLeft": 100, "overlayTop": 40 }""", JsonDefaults.Options)!;
+
+        Assert.Equal(new OverlaySettings(), s.Overlay);
+        Assert.True(s.Overlay.Enabled);
+        Assert.False(s.Overlay.AlwaysShow);
+        Assert.Equal(100, s.OverlayLeft);
+        Assert.Equal(40, s.OverlayTop);
+    }
 }

@@ -15,6 +15,7 @@ public sealed record AppSettings
     public IReadOnlyList<int> DefaultLeadTimesMinutes { get; init; } = AlertConfig.StandardLeadTimesMinutes;
     public double? OverlayLeft { get; init; }
     public double? OverlayTop { get; init; }
+    public OverlaySettings Overlay { get; init; } = new();
     /// <summary>DateTimeOffset.MaxValue means paused until resumed.</summary>
     public DateTimeOffset? AlertsPausedUntilUtc { get; init; }
     /// <summary>Set once the priority notifications hint was shown for the app id notifications use now; the flag
