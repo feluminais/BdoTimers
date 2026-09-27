@@ -47,6 +47,12 @@ public partial class CustomView : UserControl
         box.SelectAll();
     }
 
+    void PercentSlider_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+    {
+        (e.Delta > 0 ? Slider.IncreaseSmall : Slider.DecreaseSmall).Execute(null, (Slider)sender);
+        e.Handled = true;
+    }
+
     static TextBox? FindHourBox(DependencyObject root)
     {
         if (root is TextBox { Tag: "Hour" } box) return box;

@@ -93,4 +93,33 @@ public class CountdownOpsTests
     {
         Assert.Null(CountdownOps.Reset(CountdownOps.Start(Hour, T0)).StartedAtUtc);
     }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(43, 567.6)] // 43 % of 22 h = 9 h 27 m 36 s
+    [InlineData(100, 1320)]
+    public void StartForProgress_goes_back_that_share_of_the_duration(int percent, double minutesAgo)
+    {
+        Assert.Equal(T0.AddMinutes(-minutesAgo), CountdownOps.StartForProgress(TimeSpan.FromHours(22), percent, T0));
+    }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(567.6, 43)]
+    [InlineData(580, 43)] // 43.9 %: rounded down, as the game shows it
+    [InlineData(1320, 100)]
+    [InlineData(1400, 100)]
+    [InlineData(-5, 0)]
+    public void ProgressPercent_is_the_whole_share_elapsed(double elapsedMinutes, int percent)
+    {
+        Assert.Equal(percent, CountdownOps.ProgressPercent(TimeSpan.FromHours(22), TimeSpan.FromMinutes(elapsedMinutes)));
+    }
+
+    [Fact]
+    public void Progress_round_trips_through_its_start()
+    {
+        var farm = TimeSpan.FromHours(22);
+        for (var percent = 0; percent <= 100; percent++)
+            Assert.Equal(percent, CountdownOps.ProgressPercent(farm, T0 - CountdownOps.StartForProgress(farm, percent, T0)));
+    }
 }
