@@ -8,7 +8,7 @@ using WixToolset.BootstrapperApplicationApi;
 
 namespace BdoTimers.SetupUi;
 
-public enum SetupPage { Loading, Welcome, Options, Progress, Done, Error, Maintenance }
+public enum SetupPage { Loading, Welcome, Options, Progress, Done, Error, Maintenance, ConfirmUninstall }
 
 /// <summary>Whether the user can create the app's folder in a place; the install is per-user, so it never elevates.</summary>
 public enum FolderAccess { Writable, NeedsAdmin, Missing }
@@ -29,6 +29,9 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     string _doneTitle = "";
     string _doneText = "";
     string _errorText = "";
+    string _userFilesWarning = "";
+    /// <summary>The folder Open folder shows on the uninstall confirmation.</summary>
+    string? _userFilesFolder;
     bool _launchApp = true;
 
     public SetupViewModel(SetupFlow flow)
@@ -51,15 +54,17 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
                                                     && (!IsMoving || !IsSameFolder(InstallRoot, _installedRoot)));
         NextCommand = new Command(() => Page = SetupPage.Options);
         MoveCommand = new Command(() => { IsMoving = true; Page = SetupPage.Options; });
-        OpenFolderCommand = new Command(OpenFolder);
+        OpenFolderCommand = new Command(() => OpenFolder(InstalledFolder));
         BackCommand = new Command(() =>
         {
-            Page = IsMoving ? SetupPage.Maintenance : SetupPage.Welcome;
+            Page = IsMoving || Page == SetupPage.ConfirmUninstall ? SetupPage.Maintenance : SetupPage.Welcome;
             IsMoving = false;
         });
         BrowseCommand = new Command(Browse);
         RepairCommand = new Command(() => Start(LaunchAction.Repair));
-        UninstallCommand = new Command(() => Start(LaunchAction.Uninstall));
+        UninstallCommand = new Command(Uninstall);
+        ConfirmUninstallCommand = new Command(() => Start(LaunchAction.Uninstall));
+        OpenUserFilesCommand = new Command(() => OpenFolder(_userFilesFolder));
         CancelCommand = new Command(flow.Cancel);
         FinishCommand = new Command(FinishAndClose);
         CloseCommand = new Command(() => Application.Current.MainWindow?.Close());
@@ -80,6 +85,8 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public ICommand BrowseCommand { get; }
     public ICommand RepairCommand { get; }
     public ICommand UninstallCommand { get; }
+    public ICommand ConfirmUninstallCommand { get; }
+    public ICommand OpenUserFilesCommand { get; }
     public ICommand CancelCommand { get; }
     public ICommand FinishCommand { get; }
     public ICommand CloseCommand { get; }
@@ -151,6 +158,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public string DoneTitle { get => _doneTitle; private set => Set(ref _doneTitle, value); }
     public string DoneText { get => _doneText; private set => Set(ref _doneText, value); }
     public string ErrorText { get => _errorText; private set => Set(ref _errorText, value); }
+    public string UserFilesWarning { get => _userFilesWarning; private set => Set(ref _userFilesWarning, value); }
     public bool LaunchApp { get => _launchApp; set => Set(ref _launchApp, value); }
     public bool CanLaunch => _running is LaunchAction.Install or LaunchAction.Repair || _moveTo is not null;
 
@@ -168,6 +176,27 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanLaunch));
         _flow.Start(action, action == LaunchAction.Install ? InstallRoot.Trim() : null);
     }
+
+    /// <summary>Uninstall deletes the app's data; sounds and pictures the user added get a chance to be copied first.</summary>
+    void Uninstall()
+    {
+        var data = HasInstalledFolder ? SetupFlow.DataFolder(InstalledFolder) : null;
+        var sounds = data is not null && HasFiles(Path.Combine(data, "sounds"));
+        var pictures = data is not null && HasFiles(Path.Combine(data, "images"));
+        if (!sounds && !pictures)
+        {
+            Start(LaunchAction.Uninstall);
+            return;
+        }
+        (UserFilesWarning, _userFilesFolder) = sounds && pictures
+            ? ("Your sounds and pictures will be deleted", data)
+            : sounds
+                ? ("Your sounds will be deleted", Path.Combine(data!, "sounds"))
+                : ("Your pictures will be deleted", Path.Combine(data!, "images"));
+        Page = SetupPage.ConfirmUninstall;
+    }
+
+    static bool HasFiles(string folder) => Directory.Exists(folder) && Directory.EnumerateFiles(folder).Any();
 
     void Confirm()
     {
@@ -211,16 +240,19 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         if (_moveTo is not null)
         {
             var folder = Path.Combine(_moveTo, "BdoTimers");
+            var dataMoved = _flow.MoveData(InstalledFolder, folder);
             _flow.RepointAutostart(Path.Combine(folder, "BdoTimers.exe"));
             _flow.ForgetExe(Path.Combine(InstalledFolder, "BdoTimers.exe"));
             _flow.RemoveIfEmpty(InstalledFolder);
-            (DoneTitle, DoneText) = ("Moved", folder);
+            (DoneTitle, DoneText) = ("Moved", dataMoved
+                ? folder
+                : $"{folder}\n\nCouldn't move your data from {SetupFlow.DataFolder(InstalledFolder)}.");
             Page = SetupPage.Done;
             return;
         }
         (DoneTitle, DoneText) = _running switch
         {
-            LaunchAction.Uninstall => ("Removed", "Your timers and settings are kept."),
+            LaunchAction.Uninstall => ("Removed", _flow.UndeletedData is { } left ? $"Couldn't delete {left}." : ""),
             LaunchAction.Repair => ("Repaired", ""),
             _ => ("Ready", ""),
         };
@@ -242,9 +274,9 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         if (FolderPicker.Pick(owner, InstallRoot) is { } folder) InstallRoot = folder;
     }
 
-    void OpenFolder()
+    static void OpenFolder(string? folder)
     {
-        if (Directory.Exists(InstalledFolder)) Process.Start(new ProcessStartInfo(InstalledFolder) { UseShellExecute = true });
+        if (Directory.Exists(folder)) Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true });
     }
 
     /// <summary>Tries a throwaway file in the nearest folder that exists, which is where the app's folder would be created.</summary>

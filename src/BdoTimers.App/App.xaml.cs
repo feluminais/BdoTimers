@@ -7,8 +7,8 @@ namespace BdoTimers.App;
 
 public partial class App : Application
 {
-    /// <summary>Names the data folder, the single-instance handles and the notification app id. Debug builds get their
-    /// own, so a dev copy runs next to the installed app without touching its timers, settings or notifications.</summary>
+    /// <summary>Names the single-instance handles and the notification app id. Debug builds get their own, so a dev
+    /// copy runs next to the installed app without taking over its window or notifications.</summary>
 #if DEBUG
     internal const string InstanceName = "BdoTimers-Dev";
     internal const string DisplayName = "BDO Timers (dev)";
@@ -39,7 +39,16 @@ public partial class App : Application
         ThreadPool.RegisterWaitForSingleObject(_activateSignal,
             (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
 
-        var dataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), InstanceName);
+        // Beside the exe, so everything the app keeps is in the folder it was installed to. Setup carries this folder
+        // along when the app moves and deletes it on uninstall.
+        var dataDir = Path.Combine(AppContext.BaseDirectory, "Data");
+        if (!CanWrite(dataDir))
+        {
+            MessageBox.Show($"BDO Timers can't save to {dataDir}.\n\nRun BDO Timers setup and move it to a folder you can write to.",
+                "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Shutdown(1);
+            return;
+        }
         Log.Init(Path.Combine(dataDir, "logs"));
         DispatcherUnhandledException += (_, args) =>
         {
@@ -73,6 +82,18 @@ public partial class App : Application
             return;
         }
         Log.Info("Started");
+    }
+
+    /// <summary>Creates the folder if needed and tries a throwaway file in it.</summary>
+    static bool CanWrite(string dir)
+    {
+        try
+        {
+            Directory.CreateDirectory(dir);
+            using (File.Create(Path.Combine(dir, $".write-test-{Guid.NewGuid():N}.tmp"), 1, FileOptions.DeleteOnClose)) { }
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { return false; }
     }
 
     protected override void OnExit(ExitEventArgs e)

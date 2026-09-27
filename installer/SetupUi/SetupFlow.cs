@@ -49,10 +49,13 @@ internal sealed class SetupFlow
         ba.Error += (_, e) => _lastError = e.ErrorMessage;
         ba.ApplyComplete += (_, e) =>
         {
-            if (e.Status >= 0 && _action == LaunchAction.Uninstall)
+            // Only once the app is really gone: an upgrade uninstalls the previous bundle after installing the new
+            // app, and a leftover registration of an older build uninstalls without touching the installed app.
+            if (e.Status >= 0 && _action == LaunchAction.Uninstall && (_installedExe is null || !File.Exists(_installedExe)))
             {
                 RemoveAutostart();
                 RemoveNotifications(_installedExe);
+                if (_installedExe is not null) RemoveData(Path.GetDirectoryName(_installedExe)!);
             }
             Finished?.Invoke(e.Status, _lastError);
         };
@@ -67,6 +70,9 @@ internal sealed class SetupFlow
     public event Action<int, string?>? Finished;
 
     public bool IsInstalled { get; private set; }
+
+    /// <summary>The app's Data folder that the last uninstall couldn't delete; null when it went.</summary>
+    public string? UndeletedData { get; private set; }
 
     public LaunchAction RequestedAction => _command.Action;
 
@@ -96,6 +102,10 @@ internal sealed class SetupFlow
         }
     }
 
+    /// <summary>Where the app keeps timers, settings, logs and the user's sounds and pictures (the app's App.OnStartup).
+    /// The package doesn't own it, so setup deletes it on uninstall and carries it along on a move.</summary>
+    public static string DataFolder(string appFolder) => Path.Combine(appFolder, "Data");
+
     public void Detect() => _engine.Detect();
 
     /// <summary>Plans and applies <paramref name="action"/>. <paramref name="packageState"/> overrides what happens to
@@ -108,6 +118,7 @@ internal sealed class SetupFlow
         _packageState = packageState;
         _cancel = false;
         _lastError = null;
+        UndeletedData = null;
         if (installRoot is not null)
             _engine.SetVariableString("InstallRoot", installRoot.TrimEnd('\\') + "\\", false);
         _engine.Plan(action);
@@ -215,6 +226,60 @@ internal sealed class SetupFlow
         {
             _engine.Log(LogLevel.Standard, $"Left the old folder {folder}: {ex.Message}");
         }
+    }
+
+    /// <summary>After uninstall: the app's Data folder, then the app's folder once nothing else is left in it.</summary>
+    void RemoveData(string appFolder)
+    {
+        var data = DataFolder(appFolder);
+        try { DeleteTree(data); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _engine.Log(LogLevel.Error, $"Couldn't delete {data}: {ex.Message}");
+            UndeletedData = data;
+            return;
+        }
+        RemoveIfEmpty(appFolder);
+    }
+
+    /// <summary>
+    /// After a move: copies the Data folder into the new app folder, then deletes the old one. Copying rather than
+    /// renaming works across drives. Returns false when the copy failed; the old folder is then left whole.
+    /// </summary>
+    public bool MoveData(string fromAppFolder, string toAppFolder)
+    {
+        var from = DataFolder(fromAppFolder);
+        var to = DataFolder(toAppFolder);
+        if (!Directory.Exists(from)) return true;
+        try { CopyTree(from, to); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _engine.Log(LogLevel.Error, $"Couldn't copy {from} to {to}: {ex.Message}");
+            return false;
+        }
+        try { DeleteTree(from); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _engine.Log(LogLevel.Standard, $"Left the old data folder {from}: {ex.Message}");
+        }
+        return true;
+    }
+
+    static void CopyTree(string from, string to)
+    {
+        Directory.CreateDirectory(to);
+        foreach (var file in Directory.GetFiles(from)) File.Copy(file, Path.Combine(to, Path.GetFileName(file)), overwrite: true);
+        foreach (var dir in Directory.GetDirectories(from)) CopyTree(dir, Path.Combine(to, Path.GetFileName(dir)));
+    }
+
+    /// <summary>Deletes a folder and everything in it. Sounds copied from read-only files keep that flag, which
+    /// would otherwise stop the delete.</summary>
+    static void DeleteTree(string folder)
+    {
+        if (!Directory.Exists(folder)) return;
+        foreach (var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
+            File.SetAttributes(file, FileAttributes.Normal);
+        Directory.Delete(folder, recursive: true);
     }
 
     /// <summary>After a move: points an existing Start with Windows entry at the moved exe (same format the app writes).</summary>
