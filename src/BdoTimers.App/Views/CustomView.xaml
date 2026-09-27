@@ -139,6 +139,21 @@
                                     <Button Style="{StaticResource IconButton}" Content="&#xE70D;" FontSize="10" Height="22" ToolTip="Earlier minute" Command="{Binding MinuteDownCommand}" />
                                 </StackPanel>
                             </StackPanel>
+                            <!-- Countdowns only: how far along it is, on a line like the game's growth bar; the wheel steps it too -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0"
+                                        Visibility="{Binding HasPercent, Converter={StaticResource BoolToVisibility}}">
+                                <Slider Width="128" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="{Binding StartPercent}" VerticalAlignment="Center" PreviewMouseWheel="PercentSlider_PreviewMouseWheel"
+                                        AutomationProperties.Name="Percent done" />
+                                <!-- Fixed width, so the line doesn't shift as the number grows -->
+                                <TextBlock Text="{Binding StartPercent, StringFormat='{}{0} %'}" Style="{StaticResource ClockText}" FontSize="15" Width="46"
+                                           Margin="8,0,0,0" TextAlignment="Right" VerticalAlignment="Center" />
+                                <!-- The padded, filled border is the hover area; the glyph alone is too small a target -->
+                                <Border Background="Transparent" Padding="6,4,2,4" VerticalAlignment="Center" ToolTipService.InitialShowDelay="0"
+                                        ToolTip="Growth from My Gardens. If your gardens differ, use the lowest.">
+                                    <TextBlock Text="&#xE946;" Style="{StaticResource IconText}" FontSize="12" Foreground="{StaticResource SubtleBrush}" />
+                                </Border>
+                            </StackPanel>
                             <TextBlock Text="{Binding StartProblem}" Style="{StaticResource ErrorText}" HorizontalAlignment="Center" TextAlignment="Center"
                                        MaxWidth="160" />
                             <Button Style="{StaticResource OutlineButton}" Content="Start" HorizontalAlignment="Center" Margin="0,8,0,0"

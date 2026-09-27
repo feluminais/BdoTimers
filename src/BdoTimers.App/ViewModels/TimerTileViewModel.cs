@@ -28,16 +28,24 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
 
-    // "Started earlier": the clock time the user really started, picked in a small popup on the tile.
+    // "Started earlier": the clock time the user really started, picked in a small popup on the tile. A countdown can
+    // be given how far along it is instead (a crop's growth %, on a slider); each follows the other, and Start uses the
+    // one edited last.
     [ObservableProperty] private bool _isPickingStart;
     [ObservableProperty] private string _startHour = "";
     [ObservableProperty] private string _startMinute = "";
+    [ObservableProperty] private int _startPercent;
     [ObservableProperty] private bool _startInvalid;
     [ObservableProperty] private string _startProblem = "";
+    bool _fromPercent;
+    /// <summary>Set while one field is rewritten to follow the other, so that doesn't count as an edit.</summary>
+    bool _following;
 
     public Guid Id => _timer.Id;
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
     public bool HasControls => _timer.Kind is TimerKind.Countdown or TimerKind.Stopwatch;
+    /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
+    public bool HasPercent => _timer.Kind == TimerKind.Countdown;
     public bool IsWeekly => _timer.Kind == TimerKind.Scheduled;
 
     public TimerTileViewModel(TimerDef timer, AppServices services, IPanelHost host, DateTimeOffset now)
@@ -141,16 +149,25 @@ public sealed partial class TimerTileViewModel : ObservableObject
         }
     }
 
-    /// <summary>Opens the picker at the current run's start, or at the current time.</summary>
+    /// <summary>
+    /// Opens the picker at the current run's start, or at the current time. A running countdown's start is where its
+    /// end puts it, so time spent paused doesn't count as progress.
+    /// </summary>
     [RelayCommand]
     void PickStart()
     {
-        var running = _timer.Countdown is { Status: CountdownStatus.Running } c ? c.StartedAtUtc
+        var now = DateTimeOffset.UtcNow;
+        var running = _timer.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } c ? end - c.Duration
             : _timer.Stopwatch is { Status: CountdownStatus.Running } s ? s.StartedAtUtc
             : null;
-        var from = (running ?? DateTimeOffset.UtcNow).ToLocalTime();
-        StartHour = Two(from.Hour);
-        StartMinute = Two(from.Minute);
+        var from = running ?? now;
+        _fromPercent = false;
+        Follow(() =>
+        {
+            ShowTime(from);
+            if (_timer.Countdown is { } countdown) StartPercent = CountdownOps.ProgressPercent(countdown.Duration, now - from);
+        });
+        CheckStart();
         IsPickingStart = true;
     }
 
@@ -172,26 +189,64 @@ public sealed partial class TimerTileViewModel : ObservableObject
 
     bool CanConfirmStart() => !StartInvalid && StartProblem.Length == 0;
 
-    partial void OnStartHourChanged(string value) => CheckStart();
-    partial void OnStartMinuteChanged(string value) => CheckStart();
+    partial void OnStartHourChanged(string value) => TimeEdited();
+    partial void OnStartMinuteChanged(string value) => TimeEdited();
+    partial void OnStartPercentChanged(int value) => PercentEdited();
+
+    void TimeEdited()
+    {
+        if (_following) return;
+        _fromPercent = false;
+        if (TimeStart() is { } at && _timer.Countdown is { } c)
+            Follow(() => StartPercent = CountdownOps.ProgressPercent(c.Duration, DateTimeOffset.UtcNow - at));
+        CheckStart();
+    }
+
+    void PercentEdited()
+    {
+        if (_following) return;
+        _fromPercent = true;
+        if (PercentStart() is { } at) Follow(() => ShowTime(at));
+        CheckStart();
+    }
+
+    void Follow(Action update)
+    {
+        _following = true;
+        try { update(); }
+        finally { _following = false; }
+    }
+
+    void ShowTime(DateTimeOffset at)
+    {
+        var local = at.ToLocalTime();
+        StartHour = Two(local.Hour);
+        StartMinute = Two(local.Minute);
+    }
 
     /// <summary>A countdown that would already have ended by now can't start there.</summary>
     void CheckStart()
     {
+        StartInvalid = TimeStart() is null;
         var at = PickedStart();
-        StartInvalid = at is null;
         StartProblem = at is { } start && _timer.Countdown is { } c && start + c.Duration <= DateTimeOffset.UtcNow
             ? $"Would have ended at {(start + c.Duration).ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}"
             : "";
         ConfirmStartCommand.NotifyCanExecuteChanged();
     }
 
+    DateTimeOffset? PickedStart() => _fromPercent ? PercentStart() : TimeStart();
+
     /// <summary>The picked local time, today or, if that's still ahead, yesterday.</summary>
-    DateTimeOffset? PickedStart() =>
+    DateTimeOffset? TimeStart() =>
         int.TryParse(StartHour, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) && hour < 24
         && int.TryParse(StartMinute, NumberStyles.None, CultureInfo.InvariantCulture, out var minute) && minute < 60
             ? StartTimes.MostRecent(new TimeOnly(hour, minute), DateTimeOffset.UtcNow, TimeZoneInfo.Local)
             : null;
+
+    /// <summary>Taken against the current time, so a pause before pressing Start doesn't shift it.</summary>
+    DateTimeOffset? PercentStart() =>
+        _timer.Countdown is { } c ? CountdownOps.StartForProgress(c.Duration, StartPercent, DateTimeOffset.UtcNow) : null;
 
     static string Step(string text, int modulo, int delta)
     {
