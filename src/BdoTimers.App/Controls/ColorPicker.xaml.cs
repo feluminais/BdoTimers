@@ -54,7 +54,8 @@ public partial class ColorPicker : UserControl
         Canvas.SetLeft(SquareThumb, _hsv.S * Square.Width - SquareThumb.Width / 2);
         Canvas.SetTop(SquareThumb, (1 - _hsv.V) * Square.Height - SquareThumb.Height / 2);
         Canvas.SetTop(HueThumb, _hsv.H / 360 * HueStrip.Height - HueThumb.Height / 2);
-        if (!Hex.IsKeyboardFocused) Hex.Text = Rgb(Color).ToHex();
+        // Picking in the square can leave focus in Hex; keep it in sync so losing focus cannot restore stale text.
+        Hex.Text = Rgb(Color).ToHex();
     }
 
     static RgbColor Rgb(Color c) => new(c.R, c.G, c.B);
