@@ -3,6 +3,7 @@ using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -27,6 +28,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
+    /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
+    [ObservableProperty] private int? _growth;
 
     // "Started earlier": the clock time the user really started, picked in a small popup on the tile. A countdown can
     // be given how far along it is instead (a crop's growth %, on a slider); each follows the other, and Start uses the
@@ -79,6 +82,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
             };
             Detail = off + Detail;
             IsDimmed |= !_timer.Enabled;
+            Growth = _timer.Preset == Presets.Farm ? CountdownOps.Progress(c, now) : null;
             ShowStatus(c.Status);
             return;
         }
