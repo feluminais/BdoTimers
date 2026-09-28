@@ -17,6 +17,7 @@
         <KeyBinding Key="Escape" Command="{Binding ClosePanelCommand}" />
     </Window.InputBindings>
     <Window.Resources>
+        <DataTemplate DataType="{x:Type pvm:OverlayPanelViewModel}"><panels:OverlayPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:SettingsPanelViewModel}"><panels:SettingsPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:BossPanelViewModel}"><panels:BossPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:CustomPanelViewModel}"><panels:CustomPanel /></DataTemplate>
@@ -45,6 +46,9 @@
                         <Button Style="{StaticResource LinkButton}" Content="Resume" Margin="10,0,0,0" Command="{Binding ResumeCommand}"
                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                     </StackPanel>
+                    <Button Style="{StaticResource CaptionButton}" Content="&#xE7F4;" FontSize="13" ToolTip="Overlay"
+                            AutomationProperties.Name="Overlay"
+                            Command="{Binding OpenOverlaySettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE713;" FontSize="13" ToolTip="Settings"
                             Command="{Binding OpenSettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimize"

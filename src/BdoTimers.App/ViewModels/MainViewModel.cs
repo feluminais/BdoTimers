@@ -61,6 +61,13 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
     void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services));
 
     [RelayCommand]
+    public void OpenOverlaySettings()
+    {
+        ClosePanel();
+        Panel = new OverlayPanelViewModel(_services);
+    }
+
+    [RelayCommand]
     void Resume() => _services.ResumeAlerts();
 
     void RefreshPaused(DateTimeOffset now)

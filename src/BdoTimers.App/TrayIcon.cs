@@ -26,6 +26,7 @@ public sealed class TrayIcon : IDisposable
     {
         var menu = new ContextMenu();
         menu.Items.Add(Item("Open", s.ShowMainWindow));
+        menu.Items.Add(Item("Overlay settings", s.ShowOverlaySettings));
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("Pause alerts for 1 hour", () => s.PauseAlerts(TimeSpan.FromHours(1))));
         menu.Items.Add(Item("Pause alerts until resumed", () => s.PauseAlerts(null)));
