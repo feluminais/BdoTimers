@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 
 namespace BdoTimers.Core.Tests;
@@ -47,6 +48,30 @@ public class DataMigrationsTests
         var data = new AppData { DataVersion = DataMigrations.Current, Timers = [With("Mine", [15, 5, 1, 0])] };
 
         Assert.Same(data, DataMigrations.Apply(data, new AppSettings()));
+    }
+
+    [Fact]
+    public void Horse_registration_is_added_after_the_existing_timers()
+    {
+        var data = new AppData { DataVersion = 3, Timers = [With("Mine", null)] };
+
+        var migrated = DataMigrations.Apply(data, new AppSettings());
+
+        Assert.Equal(["Mine", "Horse registration"], migrated.Timers.Select(t => t.Name));
+        Assert.Equal(Presets.HorseRegistration, migrated.Timers[1].Preset);
+    }
+
+    [Fact]
+    public void A_deleted_horse_registration_is_not_added_back()
+    {
+        var settings = new AppSettings();
+        var first = Presets.Ensure(DataMigrations.Apply(new AppData(), settings));
+        var deleted = first with { Timers = first.Timers.Where(t => t.Preset != Presets.HorseRegistration).ToList() };
+
+        var restarted = Presets.Ensure(DataMigrations.Apply(deleted, settings));
+
+        Assert.Single(first.Timers, t => t.Preset == Presets.HorseRegistration);
+        Assert.DoesNotContain(restarted.Timers, t => t.Preset == Presets.HorseRegistration);
     }
 
     [Fact]
