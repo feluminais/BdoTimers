@@ -14,9 +14,10 @@ public sealed class HotkeyService : IDisposable
 {
     const int WM_HOTKEY = 0x0312;
     const int MOD_NOREPEAT = 0x4000;
+    static readonly IntPtr HWND_MESSAGE = new(-3);
 
-    // A window that is never shown; it only receives the hotkey messages.
-    readonly HwndSource _window = new(0, 0, 0, 0, 0, "BdoTimers hotkeys", IntPtr.Zero);
+    // A message-only window: it only receives the hotkey messages, never broadcasts, and isn't a top-level window.
+    readonly HwndSource _window = new(0, 0, 0, 0, 0, "BdoTimers hotkeys", HWND_MESSAGE);
     readonly Dictionary<HotkeyAction, Hotkey> _wanted = [];
     readonly HashSet<HotkeyAction> _held = [];
     HashSet<HotkeyAction> _refused = [];
