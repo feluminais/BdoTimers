@@ -10,7 +10,7 @@ public static class Presets
 
     static readonly string[] Order = [Farm, Fishing];
 
-    /// <summary>Crops take 20 to 22 hours depending on temperature (June 4, 2026 update); at 22 they are ready anywhere.</summary>
+    /// <summary>Default temperature estimate; offline time and crop care can delay the harvest.</summary>
     public static readonly TimeSpan CropGrowth = TimeSpan.FromHours(22);
 
     public static IReadOnlyList<TimerDef> Create() =>

@@ -90,10 +90,24 @@
                     </DockPanel>
                 </Border>
 
+                <StackPanel Visibility="{Binding IsFarm, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="Crop growth" Style="{StaticResource SectionText}"
+                               ToolTip="Online growth estimate. Pause while offline; crop care can delay harvest." />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="Temperature" Style="{StaticResource RowLabel}" Width="110" />
+                            <ComboBox ItemsSource="{Binding FarmGrowthOptions}" DisplayMemberPath="Label"
+                                      SelectedItem="{Binding FarmGrowth}" VerticalAlignment="Center"
+                                      AutomationProperties.Name="Crop temperature and growth time" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
                 <Border Style="{StaticResource Row}" Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel>
-                        <TextBox DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
+                        <TextBox x:Name="DurationBox" DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
                                  Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                                 PreviewKeyDown="DurationBox_PreviewKeyDown" LostKeyboardFocus="DurationBox_LostKeyboardFocus"
                                  controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
                         <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
                     </DockPanel>
