@@ -107,45 +107,46 @@
         </StackPanel>
     </DataTemplate>
 
-    <!-- Layouts -->
+    <!-- Layouts. Sections are ContentControls: a ContentPresenter takes its Content as DataContext, so a Visibility
+         binding on it would miss the view model and an empty section would keep its space. -->
     <DataTemplate x:Key="ListLayout" DataType="{x:Type overlay:OverlayViewModel}">
         <StackPanel Margin="12,8" MinWidth="200">
             <Border Style="{StaticResource OverlayClock}" Margin="0,0,0,4">
                 <TextBlock Style="{StaticResource OverlayClockText}" />
             </Border>
-            <ContentPresenter Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
-                              Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
-            <ContentPresenter Content="{Binding Next}" ContentTemplate="{StaticResource NextRow}"
-                              Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
+                            Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource NextRow}"
+                            Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
             <ItemsControl Style="{StaticResource PopUpList}" ItemTemplate="{StaticResource LineRow}" />
             <Border Height="1" Background="{StaticResource HairlineBrush}" Margin="0,5"
                     Visibility="{Binding ShowDivider, Converter={StaticResource BoolToVisibility}}" />
-            <ContentPresenter Content="{Binding Farm}" ContentTemplate="{StaticResource LineRow}"
-                              Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
-            <ContentPresenter Content="{Binding Fishing}" ContentTemplate="{StaticResource LineRow}"
-                              Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Farm}" ContentTemplate="{StaticResource LineRow}"
+                            Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource LineRow}"
+                            Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
         </StackPanel>
     </DataTemplate>
 
     <DataTemplate x:Key="CardLayout" DataType="{x:Type overlay:OverlayViewModel}">
         <StackPanel Width="250">
             <Grid>
-                <ContentPresenter Content="{Binding Next}" ContentTemplate="{StaticResource CardBanner}"
-                                  Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
+                <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource CardBanner}"
+                                Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
                 <Border Style="{StaticResource OverlayClock}" Background="#CC0B0B0C" HorizontalAlignment="Right" VerticalAlignment="Top"
                         Margin="0,6,6,0">
                     <TextBlock Style="{StaticResource OverlayClockText}" />
                 </Border>
             </Grid>
             <StackPanel Margin="10,4,10,8">
-                <ContentPresenter Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
-                                  Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
+                <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
+                                Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
                 <ItemsControl Style="{StaticResource PopUpList}" ItemTemplate="{StaticResource LineRow}" />
                 <WrapPanel Margin="0,4,0,0">
-                    <ContentPresenter Content="{Binding Farm}" ContentTemplate="{StaticResource ChipLine}"
-                                      Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
-                    <ContentPresenter Content="{Binding Fishing}" ContentTemplate="{StaticResource ChipLine}"
-                                      Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
+                    <ContentControl Content="{Binding Farm}" ContentTemplate="{StaticResource ChipLine}"
+                                    Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
+                    <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource ChipLine}"
+                                    Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
                 </WrapPanel>
             </StackPanel>
         </StackPanel>
@@ -156,19 +157,19 @@
             <Border Style="{StaticResource OverlayClock}" Margin="0,0,12,0" VerticalAlignment="Center">
                 <TextBlock Style="{StaticResource OverlayClockText}" />
             </Border>
-            <ContentPresenter Content="{Binding Previous}" ContentTemplate="{StaticResource BarPrevious}" VerticalAlignment="Center"
-                              Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
-            <ContentPresenter Content="{Binding Next}" ContentTemplate="{StaticResource BarNext}" VerticalAlignment="Center"
-                              Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource BarPrevious}" VerticalAlignment="Center"
+                            Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource BarNext}" VerticalAlignment="Center"
+                            Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
             <ItemsControl Style="{StaticResource PopUpList}" ItemTemplate="{StaticResource BarLine}" VerticalAlignment="Center">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
-            <ContentPresenter Content="{Binding Farm}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
-                              Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
-            <ContentPresenter Content="{Binding Fishing}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
-                              Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Farm}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
+                            Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
+            <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
+                            Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>
