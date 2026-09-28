@@ -1,0 +1,52 @@
+<UserControl x:Class="BdoTimers.App.Controls.ColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Orientation="Horizontal">
+        <!-- Saturation left to right, brightness bottom to top, over the chosen hue -->
+        <Grid x:Name="Square" Width="180" Height="110" Cursor="Cross" ClipToBounds="True" Background="Transparent"
+              MouseLeftButtonDown="Square_MouseDown" MouseMove="Square_MouseMove" MouseLeftButtonUp="Drag_MouseUp">
+            <Rectangle x:Name="HueFill" />
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#FFFFFFFF" Offset="0" />
+                        <GradientStop Color="#00FFFFFF" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#00000000" Offset="0" />
+                        <GradientStop Color="#FF000000" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Canvas>
+                <Ellipse x:Name="SquareThumb" Width="10" Height="10" Stroke="White" StrokeThickness="2" />
+            </Canvas>
+        </Grid>
+        <Grid x:Name="HueStrip" Width="14" Height="110" Margin="10,0,0,0" Cursor="Hand" Background="Transparent"
+              MouseLeftButtonDown="Hue_MouseDown" MouseMove="Hue_MouseMove" MouseLeftButtonUp="Drag_MouseUp">
+            <Rectangle>
+                <Rectangle.Fill>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                        <GradientStop Color="#FF0000" Offset="0" />
+                        <GradientStop Color="#FFFF00" Offset="0.1667" />
+                        <GradientStop Color="#00FF00" Offset="0.3333" />
+                        <GradientStop Color="#00FFFF" Offset="0.5" />
+                        <GradientStop Color="#0000FF" Offset="0.6667" />
+                        <GradientStop Color="#FF00FF" Offset="0.8333" />
+                        <GradientStop Color="#FF0000" Offset="1" />
+                    </LinearGradientBrush>
+                </Rectangle.Fill>
+            </Rectangle>
+            <Canvas>
+                <Rectangle x:Name="HueThumb" Width="18" Height="3" Canvas.Left="-2" Fill="White" />
+            </Canvas>
+        </Grid>
+        <TextBox x:Name="Hex" Width="76" Margin="12,0,0,0" VerticalAlignment="Bottom" FontSize="12"
+                 AutomationProperties.Name="Hex colour"
+                 PreviewKeyDown="Hex_PreviewKeyDown" LostKeyboardFocus="Hex_LostKeyboardFocus" TextChanged="Hex_TextChanged" />
+    </StackPanel>
+</UserControl>
