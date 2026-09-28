@@ -40,7 +40,7 @@ public static class Presets
     ];
 
     /// <summary>
-    /// Deleted like the user's own timers, so <see cref="Storage.DataMigrations"/> adds it once rather than
+    /// Can be deleted like the user's own timers, so <see cref="Storage.DataMigrations"/> adds it once rather than
     /// <see cref="Ensure"/> at every startup.
     /// </summary>
     public static TimerDef CreateHorseRegistration() => new()
