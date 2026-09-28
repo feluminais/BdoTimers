@@ -429,6 +429,10 @@
     <Style TargetType="Slider">
         <Setter Property="FocusVisualStyle" Value="{x:Null}" />
         <Setter Property="Height" Value="20" />
+        <!-- A press on the track puts the thumb where it lands, and moving before letting go drags it. Paging by
+             LargeChange instead throws a 0 to 1 slider, such as Volume, to one end. -->
+        <Setter Property="IsMoveToPointEnabled" Value="True" />
+        <Setter Property="controls:Ui.DragFromTrack" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
