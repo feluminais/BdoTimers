@@ -52,7 +52,7 @@ covered by the GPL.
 8. Bosses, under the table → click a boss tile → panel: set Alerts to Off → the tile says "Alerts off", the boss dims
    in the grid and leaves the strip.
 9. Tray → Pause alerts for 1 hour: "Alerts paused" shows in the top bar; no alerts; Resume clears it.
-10. Close window → stays in tray; launch the exe again → existing window comes to front at the same size and position.
+10. Close window → app quits by default. Enable Settings → Close to tray → close window → stays in tray; launch the exe again → existing window comes to front at the same size and position. Tray → Quit always exits.
 11. Settings → Start with Windows On, reboot → app starts minimized in the tray. Off → it no longer starts.
 12. Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
 13. Timer panel → click the picture (badge "Change picture") → Choose picture…: the tile shows it, fading into black.
