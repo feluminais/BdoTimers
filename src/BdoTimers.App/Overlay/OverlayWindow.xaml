@@ -12,10 +12,9 @@
         <Grid.LayoutTransform>
             <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" />
         </Grid.LayoutTransform>
-        <!-- Background colour or picture and its gold hairline fade together -->
-        <Border Background="{Binding Background}" BorderBrush="{StaticResource AccentSoftBrush}" BorderThickness="1"
-                Opacity="{Binding BackgroundOpacity}" />
-        <ContentControl Content="{Binding}" Opacity="{Binding TextOpacity}" Focusable="False" Margin="1">
+        <!-- Background colour or picture; no outline, so nothing on it draws the eye in game -->
+        <Border Background="{Binding Background}" Opacity="{Binding BackgroundOpacity}" />
+        <ContentControl Content="{Binding}" Opacity="{Binding TextOpacity}" Focusable="False">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Setter Property="ContentTemplate" Value="{StaticResource ListLayout}" />
@@ -30,8 +29,8 @@
                 </Style>
             </ContentControl.Style>
         </ContentControl>
-        <!-- Preview: a bright frame over a near-invisible fill, so the overlay can be grabbed at any opacity -->
-        <Border BorderBrush="{StaticResource AccentTextBrush}" BorderThickness="2" Background="#01000000"
+        <!-- Preview: a faint frame over a near-invisible fill, so the overlay can be found and grabbed at any opacity -->
+        <Border BorderBrush="{StaticResource HairlineStrongBrush}" BorderThickness="1" Background="#01000000"
                 Visibility="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
     </Grid>
 </Window>
