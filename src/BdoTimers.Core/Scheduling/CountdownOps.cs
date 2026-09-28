@@ -6,6 +6,19 @@ public static class CountdownOps
 {
     public static CountdownSpec Start(CountdownSpec c, DateTimeOffset now) => StartFrom(c, now);
 
+    /// <summary>Changes the duration without counting paused time or discarding elapsed growth.</summary>
+    public static CountdownSpec ChangeDuration(CountdownSpec c, TimeSpan duration)
+    {
+        if (duration <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+        var delta = duration - c.Duration;
+        return c with
+        {
+            Duration = duration,
+            EndsAtUtc = c.EndsAtUtc is { } end ? end + delta : null,
+            Remaining = c.Remaining is { } left ? TimeSpan.FromTicks(Math.Max(0, (left + delta).Ticks)) : null,
+        };
+    }
+
     /// <summary>Runs as if started at <paramref name="startedAtUtc"/>, for a countdown started late or not at all.</summary>
     public static CountdownSpec StartFrom(CountdownSpec c, DateTimeOffset startedAtUtc) =>
         c with { Status = CountdownStatus.Running, EndsAtUtc = startedAtUtc + c.Duration, Remaining = null, StartedAtUtc = startedAtUtc };
@@ -19,6 +32,15 @@ public static class CountdownOps
     /// like the game's growth display and kept within 0-100.</summary>
     public static int ProgressPercent(TimeSpan duration, TimeSpan elapsed) =>
         (int)Math.Clamp(elapsed.Ticks * 100 / duration.Ticks, 0, 100);
+
+    /// <summary>How far along a running or paused countdown is, as <see cref="ProgressPercent"/>; time spent paused
+    /// doesn't count. Null while idle.</summary>
+    public static int? Progress(CountdownSpec c, DateTimeOffset now) => c switch
+    {
+        { Status: CountdownStatus.Running, EndsAtUtc: { } end } => ProgressPercent(c.Duration, c.Duration - (end - now)),
+        { Status: CountdownStatus.Paused, Remaining: { } left } => ProgressPercent(c.Duration, c.Duration - left),
+        _ => null,
+    };
 
     public static CountdownSpec Pause(CountdownSpec c, DateTimeOffset now) =>
         c is { Status: CountdownStatus.Running, EndsAtUtc: { } end }

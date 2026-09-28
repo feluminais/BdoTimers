@@ -122,4 +122,25 @@ public class CountdownOpsTests
         for (var percent = 0; percent <= 100; percent++)
             Assert.Equal(percent, CountdownOps.ProgressPercent(farm, T0 - CountdownOps.StartForProgress(farm, percent, T0)));
     }
+
+    [Fact]
+    public void Progress_of_a_running_countdown_is_the_share_elapsed()
+    {
+        Assert.Equal(33, CountdownOps.Progress(CountdownOps.Start(Hour, T0), T0.AddMinutes(20)));
+        Assert.Equal(100, CountdownOps.Progress(CountdownOps.Start(Hour, T0), T0.AddMinutes(75)));
+    }
+
+    [Fact]
+    public void Progress_does_not_count_time_spent_paused()
+    {
+        var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(20));
+        Assert.Equal(33, CountdownOps.Progress(paused, T0.AddMinutes(50)));
+        Assert.Equal(50, CountdownOps.Progress(CountdownOps.Resume(paused, T0.AddMinutes(50)), T0.AddMinutes(60)));
+    }
+
+    [Fact]
+    public void Progress_of_an_idle_countdown_is_none()
+    {
+        Assert.Null(CountdownOps.Progress(Hour, T0));
+    }
 }
