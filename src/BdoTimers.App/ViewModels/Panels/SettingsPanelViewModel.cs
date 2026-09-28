@@ -15,6 +15,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     bool _syncingSound;
 
     [ObservableProperty] private Choice _autostart;
+    [ObservableProperty] private Choice _closeToTray;
     [ObservableProperty] private IReadOnlyList<Choice> _alertSounds = [];
     [ObservableProperty] private Choice? _alertSound;
     [ObservableProperty] private string? _soundError;
@@ -35,6 +36,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
         _services = services;
         var s = services.Settings.Current;
         _autostart = Choice.For(s.Autostart);
+        _closeToTray = Choice.For(s.CloseToTray);
         _volume = s.Volume;
         ReloadSounds();
         Voices = services.Tts.Voices().Select(v => new Choice(v.Label, v.Id)).ToList();
@@ -53,6 +55,9 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
         _services.Settings.Update(s => s with { Autostart = value.IsOn });
         BdoTimers.App.Autostart.Apply(value.IsOn);
     }
+
+    partial void OnCloseToTrayChanged(Choice value) =>
+        _services.Settings.Update(s => s with { CloseToTray = value.IsOn });
 
     partial void OnAlertSoundChanged(Choice? value)
     {

@@ -24,6 +24,8 @@ public partial class App : Application
 
     public bool IsQuittingApp => _services?.IsQuitting ?? true;
 
+    public void Quit() => _services?.Quit();
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);

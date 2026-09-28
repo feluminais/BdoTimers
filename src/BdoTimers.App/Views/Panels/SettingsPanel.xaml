@@ -21,6 +21,13 @@
                 <TextBlock Text="General" Style="{StaticResource SectionText}" Margin="0,4,0,4" />
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
+                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding CloseToTray}"
+                                                ValueWidth="110" AutomationProperties.Name="Close to tray" />
+                        <TextBlock Text="Close to tray" Style="{StaticResource RowLabel}" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
                         <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Autostart}" ValueWidth="110" />
                         <TextBlock Text="Start with Windows" Style="{StaticResource RowLabel}" />
                     </DockPanel>

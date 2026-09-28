@@ -6,6 +6,8 @@ public sealed record AppSettings
 {
     /// <summary>Off until the user turns it on in Settings.</summary>
     public bool Autostart { get; init; }
+    /// <summary>Opt in to keeping timers and alerts running when the main window is closed.</summary>
+    public bool CloseToTray { get; init; }
     public float Volume { get; init; } = 0.8f;
     /// <summary>Sound key played for timers whose sound is "Default"; see <see cref="Sounds.SoundKeys"/>.</summary>
     public string AlertSound { get; init; } = BuiltInSounds.Default;

@@ -84,16 +84,23 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Closing hides to the tray; only Quit ends the app.</summary>
+    /// <summary>Hiding to the tray is opt-in; explicit Quit always closes the window.</summary>
     protected override void OnClosing(CancelEventArgs e)
     {
         SavePlacement();
         _vm.ClosePanel();
-        if (!((App)Application.Current).IsQuittingApp)
+        if (!((App)Application.Current).IsQuittingApp && _settings.Current.CloseToTray)
         {
             e.Cancel = true;
             Hide();
         }
         base.OnClosing(e);
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        var app = (App)Application.Current;
+        if (!app.IsQuittingApp) app.Quit();
     }
 }
