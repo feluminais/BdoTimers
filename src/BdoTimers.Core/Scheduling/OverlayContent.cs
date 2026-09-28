@@ -12,6 +12,10 @@ public sealed record OverlaySnapshot(
     TimeSpan? FarmLeft,
     TimeSpan? FishingElapsed)
 {
+    /// <summary>Includes due occurrences rendered by another section instead of a separate pop-up row.</summary>
+    public bool HasDuePopUp { get => _hasDuePopUp || PopUps.Count > 0; init => _hasDuePopUp = value; }
+    readonly bool _hasDuePopUp;
+
     /// <summary>True when there is nothing to draw, not even the clock.</summary>
     public bool IsEmpty =>
         !Clock && Previous is null && Next is null && PopUps.Count == 0 && FarmLeft is null && FishingElapsed is null;
@@ -25,7 +29,8 @@ public static class OverlayContent
         var next = settings.ShowNext ? board?.Next : null;
         var farm = settings.ShowFarm ? FarmLeft(data, now) : null;
         // An occurrence the overlay already shows gets no second row.
-        var popUps = UpcomingQuery.ForOverlay(data, now)
+        var due = UpcomingQuery.ForOverlay(data, now);
+        var popUps = due
             .Where(i => !(next is not null && i.AtUtc == next.AtUtc && next.Bosses.Any(b => b.Id == i.Timer.Id)))
             .Where(i => !(farm is not null && i.Timer.Preset == Presets.Farm))
             .ToList();
@@ -35,7 +40,7 @@ public static class OverlayContent
             next,
             popUps,
             farm,
-            settings.ShowFishing ? FishingElapsed(data, now) : null);
+            settings.ShowFishing ? FishingElapsed(data, now) : null) { HasDuePopUp = due.Count > 0 };
     }
 
     /// <summary>The Farm preset's time left while its countdown runs or is paused.</summary>

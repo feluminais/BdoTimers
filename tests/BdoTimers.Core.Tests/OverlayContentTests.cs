@@ -130,4 +130,21 @@ public class OverlayContentTests
         Assert.False(OverlayContent.Build(new AppData(), clockOnly, Now).IsEmpty);
         Assert.True(OverlayContent.Build(new AppData(), clockOnly with { ShowClock = false }, Now).IsEmpty);
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Deduplicated_pop_up_still_opens_overlay_and_hides_after_occurrence(bool boss)
+    {
+        var timer = WithPopUp(boss ? Boss("Kzarka", 12, 3)
+            : Farm(CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromMinutes(3) }, Now)), 5);
+        var data = new AppData { Timers = [timer] };
+        var content = OverlayContent.Build(data, All, Now);
+
+        Assert.Empty(content.PopUps);
+        Assert.True(new OverlayPresence().IsVisible(All, Now, content, false));
+        var later = Now.AddMinutes(4);
+        Assert.False(new OverlayPresence().IsVisible(All, later, OverlayContent.Build(data, All, later), false));
+        Assert.False(new OverlayPresence().IsVisible(All with { Enabled = false }, Now, content, false));
+    }
 }
