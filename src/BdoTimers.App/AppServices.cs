@@ -26,6 +26,7 @@ public sealed class AppServices : IDisposable
     readonly SoundChannel _sound;
     readonly string _dataDir;
     MainWindow? _main;
+    MainViewModel? _mainViewModel;
     CancellationTokenSource? _preview;
 
     public TimerStore Timers { get; }
@@ -92,7 +93,11 @@ public sealed class AppServices : IDisposable
 
     public void ShowMainWindow()
     {
-        _main ??= new MainWindow(new MainViewModel(this), Settings);
+        if (_main is null)
+        {
+            _mainViewModel = new MainViewModel(this);
+            _main = new MainWindow(_mainViewModel, Settings);
+        }
         _main.Show();
         if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
         _main.Activate();
@@ -100,6 +105,13 @@ public sealed class AppServices : IDisposable
 
     public void PauseAlerts(TimeSpan? duration) =>
         Settings.Update(s => AlertPause.Pause(s, DateTimeOffset.UtcNow, duration));
+
+    /// <summary>Brings the window up with the Overlay panel open.</summary>
+    public void ShowOverlaySettings()
+    {
+        ShowMainWindow();
+        _mainViewModel?.OpenOverlaySettings();
+    }
 
     public void ResumeAlerts() => Settings.Update(AlertPause.Resume);
 
