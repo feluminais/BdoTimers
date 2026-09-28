@@ -24,7 +24,7 @@ public sealed record OverlayPresence(DateTimeOffset? ShowUntilUtc = null)
 
     public bool IsVisible(OverlaySettings settings, DateTimeOffset now, OverlaySnapshot content, bool previewing) =>
         settings.Enabled
-        && (previewing || (!content.IsEmpty && (settings.AlwaysShow || IsShowing(now) || content.PopUps.Count > 0)));
+        && (previewing || (!content.IsEmpty && (settings.AlwaysShow || IsShowing(now) || content.HasDuePopUp)));
 
     static bool AllowsTimedShow(OverlaySettings s) => s.Enabled && s.ShowOnHotkey && !s.AlwaysShow;
 }
