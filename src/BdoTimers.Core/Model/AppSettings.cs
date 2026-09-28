@@ -24,4 +24,6 @@ public sealed record AppSettings
     /// before it (priorityHintShown) was for the Windows App SDK's id, which Windows' priority list no longer matches.</summary>
     public bool NotificationHintShown { get; init; }
     public WindowPlacement? Window { get; init; }
+    public TodoSchedule DailyTodoReset { get; init; } = TodoSchedule.DailyDefault;
+    public TodoSchedule WeeklyTodoReset { get; init; } = TodoSchedule.WeeklyDefault;
 }
