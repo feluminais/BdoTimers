@@ -44,6 +44,22 @@
             <EventSetter Event="GotKeyboardFocus" Handler="ClockBox_GotKeyboardFocus" />
         </Style>
 
+        <!-- Farm's growth: a gold line over a hairline, like the start picker's slider -->
+        <Style x:Key="GrowthBar" TargetType="ProgressBar">
+            <Setter Property="Height" Value="2" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border x:Name="PART_Track" Background="{StaticResource HairlineStrongBrush}" />
+                            <Border x:Name="PART_Indicator" Background="{StaticResource AccentBrush}" HorizontalAlignment="Left" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <DataTemplate DataType="{x:Type vm:TimerTileViewModel}">
             <Grid>
                 <Button Style="{StaticResource TileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}"
@@ -75,6 +91,13 @@
                                        TextTrimming="CharacterEllipsis" />
                             <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
                             <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
+                            <!-- As wide as the lines above; the number's fixed width keeps the line from shifting as it grows -->
+                            <DockPanel Margin="0,3,0,0" Visibility="{Binding Growth, Converter={StaticResource NullToCollapsed}}">
+                                <TextBlock DockPanel.Dock="Right" Text="{Binding Growth, StringFormat='{}{0} %'}" Style="{StaticResource LabelText}"
+                                           Typography.NumeralAlignment="Tabular" Width="34" VerticalAlignment="Center" />
+                                <ProgressBar Style="{StaticResource GrowthBar}" Value="{Binding Growth, TargetNullValue=0, Mode=OneWay}"
+                                             VerticalAlignment="Center" AutomationProperties.Name="Growth" />
+                            </DockPanel>
                         </StackPanel>
                         <!-- Countdown and stopwatch controls appear while the tile is hovered or focused, and stay while picking a start -->
                         <StackPanel Grid.Column="2" VerticalAlignment="Center">
