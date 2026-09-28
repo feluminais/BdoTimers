@@ -7,7 +7,7 @@ License, version 3, as published by the Free Software Foundation. It is distribu
 but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 See the GNU General Public License for more details: licenses\GPL-3.0.txt in the install folder, LICENSE in the source.
 
-BDO Timers is not affiliated with Pearl Abyss. The boss, farm and fishing pictures are Black Desert game artwork
+BDO Timers is not affiliated with Pearl Abyss. The boss, farm, fishing and horse pictures are Black Desert game artwork
 (c) Pearl Abyss; they are not covered by the GPL.
 
 Paths below are relative to the install folder. The full Apache License 2.0 text is in Voice\kokoro\LICENSE.
