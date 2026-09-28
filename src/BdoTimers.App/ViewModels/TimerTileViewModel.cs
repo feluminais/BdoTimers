@@ -50,6 +50,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
     /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
     public bool HasPercent => _timer.Kind == TimerKind.Countdown;
     public bool IsWeekly => _timer.Kind == TimerKind.Scheduled;
+    /// <summary>What a preset whose use isn't obvious is for; the tile shows it in an (i) beside the name.</summary>
+    public string? Info => _timer.Preset == Presets.HorseRegistration
+        ? "Start at the game's horse registration notice; it ends when the horse goes on sale."
+        : null;
 
     public TimerTileViewModel(TimerDef timer, AppServices services, IPanelHost host, DateTimeOffset now)
     {
