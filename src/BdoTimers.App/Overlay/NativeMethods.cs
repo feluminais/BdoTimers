@@ -10,6 +10,27 @@ static partial class NativeMethods
     public const int WS_EX_LAYERED = 0x00080000;
     public const int WS_EX_NOACTIVATE = 0x08000000;
 
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct Rect
+    {
+        public int Left, Top, Right, Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MonitorInfo
+    {
+        public int Size;
+        public Rect Monitor, Work;
+        public int Flags;
+    }
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr MonitorFromWindow(IntPtr hwnd, int flags);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW")]
     public static partial int GetWindowLong(IntPtr hWnd, int nIndex);
 
