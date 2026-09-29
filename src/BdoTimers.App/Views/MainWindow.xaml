@@ -22,6 +22,7 @@
         <DataTemplate DataType="{x:Type pvm:BossPanelViewModel}"><panels:BossPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:CustomPanelViewModel}"><panels:CustomPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:NewTimerPanelViewModel}"><panels:NewTimerPanel /></DataTemplate>
+        <DataTemplate DataType="{x:Type pvm:TodoListPanelViewModel}"><panels:TodoListPanel /></DataTemplate>
     </Window.Resources>
 
     <Border x:Name="Frame" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1">
@@ -37,6 +38,8 @@
                     <RadioButton Style="{StaticResource TabButton}" Content="Bosses" IsChecked="{Binding IsBossesSection}"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
                     <RadioButton Style="{StaticResource TabButton}" Content="Timers" IsChecked="{Binding IsCustomSection}"
+                                 WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <RadioButton Style="{StaticResource TabButton}" Content="To-do" IsChecked="{Binding IsTodoSection}"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -64,6 +67,8 @@
                                   Visibility="{Binding DataContext.IsBossesSection, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
                 <views:CustomView DataContext="{Binding Custom}"
                                   Visibility="{Binding DataContext.IsCustomSection, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
+                <views:TodoView DataContext="{Binding Todo}"
+                                Visibility="{Binding DataContext.IsTodoSection, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
 
             <!-- Panel layer: dims the whole window and centres one panel; the panel itself can't be moved -->

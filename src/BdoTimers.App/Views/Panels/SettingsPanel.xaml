@@ -104,6 +104,24 @@
                     </DockPanel>
                 </Border>
 
+                <TextBlock Text="To-do" Style="{StaticResource SectionText}" />
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
+                        <panels:TodoScheduleEditor DockPanel.Dock="Right" DataContext="{Binding DailyTodoReset}" />
+                        <TextBlock Text="Daily reset" Style="{StaticResource RowLabel}" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <DockPanel>
+                        <panels:TodoScheduleEditor DockPanel.Dock="Right" DataContext="{Binding WeeklyTodoReset}" />
+                        <TextBlock Text="Weekly reset" Style="{StaticResource RowLabel}" />
+                    </DockPanel>
+                </Border>
+                <Border Style="{StaticResource Row}" Visibility="{Binding HasDeletedTodoDefaults, Converter={StaticResource BoolToVisibility}}">
+                    <Button Style="{StaticResource LinkButton}" Content="Restore default lists" HorizontalAlignment="Left"
+                            Command="{Binding RestoreTodoDefaultsCommand}" />
+                </Border>
+
                 <TextBlock Text="In game" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
                     <StackPanel>

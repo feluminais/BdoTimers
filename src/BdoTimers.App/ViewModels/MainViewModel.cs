@@ -6,14 +6,14 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-public enum Section { Bosses, Custom }
+public enum Section { Bosses, Custom, Todo }
 
 public sealed partial class MainViewModel : ObservableObject, IPanelHost
 {
     readonly AppServices _services;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsBossesSection), nameof(IsCustomSection))]
+    [NotifyPropertyChangedFor(nameof(IsBossesSection), nameof(IsCustomSection), nameof(IsTodoSection))]
     private Section _section;
 
     [ObservableProperty] private object? _panel;
@@ -22,6 +22,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
 
     public BossesViewModel Bosses { get; }
     public CustomViewModel Custom { get; }
+    public TodoViewModel Todo { get; }
 
     public bool IsBossesSection
     {
@@ -35,11 +36,18 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
         set { if (value) Section = Section.Custom; }
     }
 
+    public bool IsTodoSection
+    {
+        get => Section == Section.Todo;
+        set { if (value) Section = Section.Todo; }
+    }
+
     public MainViewModel(AppServices services)
     {
         _services = services;
         Bosses = new BossesViewModel(services, this);
         Custom = new CustomViewModel(services, this);
+        Todo = new TodoViewModel(services, this);
         services.UiClock.Tick += RefreshPaused;
         RefreshPaused(DateTimeOffset.UtcNow);
     }
