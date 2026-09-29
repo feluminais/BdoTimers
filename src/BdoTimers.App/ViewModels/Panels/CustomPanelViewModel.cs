@@ -65,7 +65,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsFarm = timer.Preset == Presets.Farm && IsCountdown;
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
-        CanDelete = timer.Preset is null;
+        CanDelete = Presets.CanDelete(timer.Preset);
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
         _farmGrowth = GrowthOption(timer.Countdown?.Duration);
         if (timer.Scheduled is { } spec)

@@ -45,6 +45,6 @@ public sealed record TimerDef
     public AlertConfig Alerts { get; init; } = new();
     /// <summary>Custom picture's file name inside the app's images folder; built-in bosses and presets use bundled art.</summary>
     public string? ImageFile { get; init; }
-    /// <summary>Which of <see cref="Seed.Presets"/> this timer is; presets can't be deleted.</summary>
+    /// <summary>Which of <see cref="Seed.Presets"/> this timer is; Farm and Fishing can't be deleted.</summary>
     public string? Preset { get; init; }
 }

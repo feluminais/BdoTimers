@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Sounds;
 
 namespace BdoTimers.Core.Storage;
@@ -6,7 +7,7 @@ namespace BdoTimers.Core.Storage;
 /// <summary>Brings timer data saved by older versions up to date; data that is already current comes back unchanged.</summary>
 public static class DataMigrations
 {
-    public const int Current = 3;
+    public const int Current = 4;
 
     /// <summary>Lists that earlier versions gave timers themselves: the built-in default, and 5 and 0 for countdowns.</summary>
     static readonly IReadOnlyList<IReadOnlyList<int>> AssignedLeadTimes = [AlertConfig.StandardLeadTimesMinutes, [5, 0]];
@@ -17,6 +18,7 @@ public static class DataMigrations
         var timers = data.Timers;
         if (data.DataVersion < 2) timers = FollowDefaultLeadTimes(timers, settings);
         if (data.DataVersion < 3) timers = ForgetRetiredSounds(timers);
+        if (data.DataVersion < 4) timers = AddHorseRegistration(timers);
         return data with { DataVersion = Current, Timers = timers };
     }
 
@@ -41,4 +43,11 @@ public static class DataMigrations
                 ? t with { Alerts = t.Alerts with { Sound = t.Alerts.Sound with { Key = null } } }
                 : t)
             .ToList();
+
+    /// <summary>
+    /// Version 4: the Horse registration preset. It can be deleted, so it is added here, once, rather than at every
+    /// startup like Farm and Fishing.
+    /// </summary>
+    static IReadOnlyList<TimerDef> AddHorseRegistration(IReadOnlyList<TimerDef> timers) =>
+        [.. timers, Presets.CreateHorseRegistration()];
 }
