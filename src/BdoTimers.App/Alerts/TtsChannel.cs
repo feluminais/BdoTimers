@@ -25,12 +25,17 @@ public sealed class TtsChannel(KokoroEngine kokoro) : IDisposable
         {
             if (!kokoro.IsAvailable) throw new FileNotFoundException("The voice model is missing; scripts/get-voice.ps1 fetches it.");
             var voice = KokoroEngine.Find(voiceId) ?? KokoroEngine.Default;
-            // Settings' -5..5 maps to 0.6x..1.4x.
-            var samples = kokoro.Generate(Pronunciation.Apply(text), voice, 1f + Math.Clamp(rate, -5, 5) * 0.08f, out var sampleRate);
+            var samples = kokoro.Generate(Pronunciation.Apply(text), voice, Speed(rate), out var sampleRate);
             var bytes = new byte[samples.Length * sizeof(float)];
             Buffer.BlockCopy(samples, 0, bytes, 0, bytes.Length);
             return new RawSourceWaveStream(new MemoryStream(bytes), WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1));
         });
+
+    /// <summary>
+    /// Kokoro's speed for the Settings speed, -5 to 5. Kokoro's own pace (1x) is brisk conversation, about five
+    /// syllables a second, so the middle is 0.85x, about four; each step is 8% faster or slower, 0.58x to 1.25x.
+    /// </summary>
+    static float Speed(int rate) => 0.85f * MathF.Pow(1.08f, Math.Clamp(rate, -5, 5));
 
     /// <summary>Loads a voice's model in the background, so speech that follows soon starts sooner.</summary>
     public void Warm(string? voiceId) => kokoro.Warm(KokoroEngine.Find(voiceId) ?? KokoroEngine.Default);

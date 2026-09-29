@@ -3,7 +3,8 @@
 Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
-- Timers screen: Farm (22-hour crop countdown) and Fishing (stopwatch) on top, then your own countdowns and weekly timers
+- Timers screen: Farm (22-hour crop countdown), Fishing (stopwatch) and Horse registration (10 minutes from the game's
+  horse registration notice to the horse going on sale) on top, then your own countdowns and weekly timers
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
   voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, previous and next boss, farm, fishing)
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
@@ -34,8 +35,8 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 
 ## License
 GPL-3.0 (see LICENSE). Bundled components and their licenses are listed in THIRD-PARTY-NOTICES.txt. BDO Timers is not
-affiliated with Pearl Abyss; the boss, farm and fishing pictures are Black Desert game artwork © Pearl Abyss and are not
-covered by the GPL.
+affiliated with Pearl Abyss; the boss, farm, fishing and horse pictures are Black Desert game artwork © Pearl Abyss and
+are not covered by the GPL.
 
 ## Manual test checklist
 1. First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
@@ -69,3 +70,6 @@ covered by the GPL.
 20. Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → clock icon → pick a time 2 h ago → Start:
     it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
     Farm → clock → a time over 22 h ago: "Would have ended at …" and Start stays off. The square stops a timer.
+21. Timers: Horse registration is third, 10:00, and its (i) shows "Start at the game's horse registration notice; it
+    ends when the horse goes on sale." at once on hover. Clock → 9 min ago → Start: "Horse registration in 1 minute",
+    then "Horse registration now" at 0:00. Its panel → Delete → Yes: gone, and still gone after a restart.

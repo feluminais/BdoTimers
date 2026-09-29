@@ -87,8 +87,17 @@
                                     </Style.Triggers>
                                 </Style>
                             </StackPanel.Style>
-                            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}"
-                                       TextTrimming="CharacterEllipsis" />
+                            <!-- A preset whose use isn't obvious has an (i) beside its name; the negative margin keeps the padded
+                                 hover area from making the line taller -->
+                            <DockPanel>
+                                <Border DockPanel.Dock="Right" Background="Transparent" Padding="5,4,2,4" Margin="0,-4" VerticalAlignment="Center"
+                                        ToolTip="{Binding Info}" ToolTipService.InitialShowDelay="0"
+                                        Visibility="{Binding Info, Converter={StaticResource NullToCollapsed}}">
+                                    <TextBlock Text="&#xE946;" Style="{StaticResource IconText}" FontSize="11" Foreground="{StaticResource SubtleBrush}" />
+                                </Border>
+                                <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{StaticResource SubtleBrush}"
+                                           TextTrimming="CharacterEllipsis" />
+                            </DockPanel>
                             <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
                             <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
                             <!-- As wide as the lines above; the number's fixed width keeps the line from shifting as it grows -->

@@ -33,7 +33,44 @@ public class PresetsTests
     public void Rank_orders_presets_first()
     {
         Assert.True(Presets.Rank(Presets.Farm) < Presets.Rank(Presets.Fishing));
-        Assert.True(Presets.Rank(Presets.Fishing) < Presets.Rank(null));
+        Assert.True(Presets.Rank(Presets.Fishing) < Presets.Rank(Presets.HorseRegistration));
+        Assert.True(Presets.Rank(Presets.HorseRegistration) < Presets.Rank(null));
+    }
+
+    [Fact]
+    public void Horse_registration_is_a_ten_minute_countdown_that_ensure_does_not_add_back()
+    {
+        var horse = Presets.CreateHorseRegistration();
+
+        Assert.Equal("Horse registration", horse.Name);
+        Assert.Equal(Presets.HorseRegistration, horse.Preset);
+        Assert.Equal(TimerKind.Countdown, horse.Kind);
+        Assert.Equal(TimeSpan.FromMinutes(10), horse.Countdown!.Duration);
+        Assert.DoesNotContain(Presets.Ensure(new AppData()).Timers, t => t.Preset == Presets.HorseRegistration);
+    }
+
+    [Fact]
+    public void Horse_registration_alerts_a_minute_before_and_at_the_end_whatever_the_default_times()
+    {
+        var t0 = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+        var horse = Presets.CreateHorseRegistration();
+        horse = horse with { Countdown = CountdownOps.Start(horse.Countdown!, t0) };
+        var planner = new AlertPlanner();
+        var none = new HashSet<MutedOccurrence>();
+        var defaults = AlertConfig.StandardLeadTimesMinutes;
+
+        Assert.Empty(planner.Tick([horse], none, t0, defaults));
+        Assert.Equal(1, Assert.Single(planner.Tick([horse], none, t0.AddMinutes(9), defaults)).LeadMinutes);
+        Assert.Equal(0, Assert.Single(planner.Tick([horse], none, t0.AddMinutes(10), defaults)).LeadMinutes);
+    }
+
+    [Fact]
+    public void Of_the_presets_only_horse_registration_can_be_deleted()
+    {
+        Assert.False(Presets.CanDelete(Presets.Farm));
+        Assert.False(Presets.CanDelete(Presets.Fishing));
+        Assert.True(Presets.CanDelete(Presets.HorseRegistration));
+        Assert.True(Presets.CanDelete(null));
     }
 
     [Fact]
