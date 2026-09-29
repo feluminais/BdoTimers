@@ -59,6 +59,21 @@ public sealed class TodoRefinementTests
     }
 
     [Fact]
+    public void Reset_check_merge_preserves_unfinished_parent_and_child_position()
+    {
+        var child = new TodoRow { Text = "Child", Done = true };
+        var blankParent = new TodoOutlineRow(Guid.NewGuid(), "", false, 0);
+        var staged = new List<TodoOutlineRow> { blankParent, new(child.Id, child.Text, child.Done, 1) };
+
+        var merged = TodoOutline.MergeChecks(staged, [child with { Done = false }]);
+
+        Assert.Equal(blankParent, merged[0]);
+        Assert.Equal(1, merged[1].Level);
+        Assert.False(merged[1].Done);
+        Assert.Equal("Child", TodoOutline.Build(merged).Single().Text);
+    }
+
+    [Fact]
     public void Outline_indent_outdent_and_move_preserve_groups()
     {
         var rows = TodoOutline.Flatten([
