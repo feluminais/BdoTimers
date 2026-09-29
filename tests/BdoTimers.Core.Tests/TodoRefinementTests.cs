@@ -107,6 +107,25 @@ public sealed class TodoRefinementTests
     }
 
     [Fact]
+    public void Lists_checks_children_and_shared_schedule_survive_reload()
+    {
+        using var dir = new TempDir();
+        var settings = new AppSettings();
+        var seed = TodoSeed.Create(Now, settings);
+        var file = new JsonFileStore<TodoData>(dir.File("todos.json"), () => seed);
+        var store = new TodoStore(file, seed, new FakeClock(Now));
+        var id = store.CreateList(TodoCadence.Weekly, settings);
+        store.ReplaceRows(id, [new TodoRow { Text = "Parent", Children = [new TodoRow { Text = "Child" }] }]);
+        store.Toggle(id, store.Current.Lists.Single(l => l.Id == id).Rows[0].Children[0].Id);
+
+        var reloaded = new TodoStore(file, file.Load().Value, new FakeClock(Now));
+        var list = reloaded.Current.Lists.Single(l => l.Id == id);
+        Assert.True(list.Rows[0].Children[0].Done);
+        Assert.Equal(TodoCheck.Done, TodoOps.Check(list.Rows[0]));
+        Assert.Equal(TodoSchedule.WeeklyDefault, list.Schedule);
+    }
+
+    [Fact]
     public void Restore_recreates_a_missing_default_off_and_leaves_custom_lists()
     {
         using var dir = new TempDir();

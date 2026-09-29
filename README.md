@@ -5,6 +5,7 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
 - Timers screen: Farm (22-hour crop countdown), Fishing (stopwatch) and Horse registration (10 minutes from the game's
   horse registration notice to the horse going on sale) on top, then your own countdowns and weekly timers
+- To-do screen: daily and weekly checklists with child rows, shared reset times and your own lists
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
   voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, previous and next boss, farm, fishing)
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
@@ -16,7 +17,7 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
   inside it, shown in gold after the path. The install is per-user, so a folder that needs admin rights (Program Files) is refused with a note.
 - Adds a Start Menu shortcut and can launch the app when setup finishes. Start with Windows stays off until you turn
   it on in Settings; uninstall removes it.
-- Everything the app keeps (timers, settings, your sounds and pictures, logs) is in `Data` inside its folder; the app
+- Everything the app keeps (timers, to-do lists in `todos.json`, settings, your sounds and pictures, logs) is in `Data` inside its folder; the app
   warns and exits if it can't write there.
 - Run the setup again (or Uninstall in Settings → Apps) to see where it's installed and to repair, move or remove it.
   Moving takes the data along; uninstall deletes it, first offering to open the folder if you added sounds or pictures.
@@ -29,6 +30,8 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 - Add BDO Timers to Windows priority notifications (Settings → Priority notifications).
 - The overlay only appears over the game in borderless window mode.
 - Overlay settings are behind the screen icon in the top bar or in the tray menu; drag the overlay while the panel is open.
+- To-do lists start Off. Turn one on, tick its boxes, and click its text to edit. Use + by Weekly or Daily to make a list;
+  Settings controls the reset time for all lists of that kind and can restore deleted default lists.
 
 ## Develop
 `scripts/get-voice.ps1` fetches the voice model (132 MB) that the setup ships.
@@ -73,3 +76,14 @@ are not covered by the GPL.
 21. Timers: Horse registration is third, 10:00, and its (i) shows "Start at the game's horse registration notice; it
     ends when the horse goes on sale." at once on hover. Clock → 9 min ago → Start: "Horse registration in 1 minute",
     then "Horse registration now" at 0:00. Its panel → Delete → Yes: gone, and still gone after a restart.
+22. To-do: Weekly quests and Daily tasks start Off, with grey struck rows. Turn Weekly quests on, tick a Garmoth child;
+    it moves to the bottom of its group and its parent shows partial. Tick the parent; all three children become done and
+    the group moves down. Untick it; the saved order returns. Repeat with Space and check that focus stays on the row.
+23. To-do: click row text to open the editor. Rename a row, Enter to add, Tab to make a child, Shift+Tab to move it out,
+    Backspace on a blank row to remove it, and Alt+arrows or the grip to reorder. Close and reopen; names, order and
+    checks survive. Make a new list with +, then close it untouched; it disappears.
+24. Settings → To-do: change the daily time and weekly day, time and zone. Existing checks remain. At a reset boundary,
+    checks clear even on an Off list; quitting before the boundary and reopening after it also clears them. The next reset
+    is shown in local time in each column header.
+25. Delete a default To-do list, restore it from Settings and check that its edited rows return. Delete a custom list,
+    restart, and confirm it stays deleted.
