@@ -30,6 +30,7 @@ public sealed class AppServices : IDisposable
     CancellationTokenSource? _preview;
 
     public TimerStore Timers { get; }
+    public TodoStore Todos { get; }
     public PersistentState<AppSettings> Settings { get; }
     public BossSeed Seed { get; }
     public UiClock UiClock { get; } = new();
@@ -52,9 +53,20 @@ public sealed class AppServices : IDisposable
         var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => new AppData());
         var settings = settingsFile.Load();
         var timers = timersFile.Load();
-        RecoveredFiles = new[] { settings.RecoveredBackupPath, timers.RecoveredBackupPath }.OfType<string>().ToList();
 
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
+        var todosFile = new JsonFileStore<TodoData>(Path.Combine(dataDir, "todos.json"),
+            () => TodoSeed.Create(DateTimeOffset.UtcNow, Settings.Current));
+        var todos = todosFile.Load();
+        if (!File.Exists(todosFile.FilePath)) todosFile.Save(todos.Value);
+        RecoveredFiles = new[] { settings.RecoveredBackupPath, timers.RecoveredBackupPath, todos.RecoveredBackupPath }
+            .OfType<string>().ToList();
+        Todos = new TodoStore(todosFile, todos.Value, new SystemClock());
+        Settings.Changed += () =>
+        {
+            try { Todos.ApplyDefaultSchedules(Settings.Current); }
+            catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); }
+        };
         // A built-in sound from an earlier version that the app no longer has.
         if (!SoundKeys.IsKnown(Settings.Current.AlertSound)) Settings.Update(s => s with { AlertSound = BuiltInSounds.Default });
         Timers = new TimerStore(timersFile, timers.Value);
@@ -74,6 +86,17 @@ public sealed class AppServices : IDisposable
     public void Start(bool showWindow)
     {
         _engine.ReconcileStartup();
+        try
+        {
+            Todos.ApplyDefaultSchedules(Settings.Current);
+            Todos.Reconcile();
+        }
+        catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); }
+        UiClock.Tick += _ =>
+        {
+            try { Todos.Reconcile(); }
+            catch (StateSaveException ex) { Log.Error("Couldn't reset to-do lists", ex); }
+        };
         _loop.Start();
         UiClock.Start();
         Overlay.Start();
@@ -188,6 +211,26 @@ public sealed class AppServices : IDisposable
     }
 
     public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, new AlertConfig()));
+
+    public void SetTodoReset(TodoCadence cadence, TodoSchedule schedule)
+    {
+        var previous = Settings.Current;
+        var changed = cadence == TodoCadence.Daily
+            ? previous with { DailyTodoReset = schedule }
+            : previous with { WeeklyTodoReset = schedule };
+        if (changed == previous) return;
+        // Save list boundaries first: if that fails, Settings keeps the old reset.
+        Todos.ApplyDefaultSchedules(changed);
+        try { Settings.Update(s => cadence == TodoCadence.Daily
+            ? s with { DailyTodoReset = schedule }
+            : s with { WeeklyTodoReset = schedule }); }
+        catch (StateSaveException)
+        {
+            try { Todos.ApplyDefaultSchedules(previous); }
+            catch (StateSaveException ex) { Log.Error("Couldn't restore to-do reset after settings save failed", ex); }
+            throw;
+        }
+    }
 
     public void Quit()
     {

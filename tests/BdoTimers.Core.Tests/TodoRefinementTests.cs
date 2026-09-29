@@ -42,6 +42,8 @@ public sealed class TodoRefinementTests
 
         var invalid = TodoSchedule.WeeklyDefault with { Day = (DayOfWeek)99 };
         Assert.Equal(TodoReset.Next(TodoSchedule.WeeklyDefault, Now), TodoReset.Next(invalid, Now));
+        var invalidTime = TodoSchedule.DailyDefault with { Hour = 99, Minute = -1 };
+        Assert.Equal(TodoReset.Next(TodoSchedule.DailyDefault, Now), TodoReset.Next(invalidTime, Now));
     }
 
     [Fact]
@@ -69,6 +71,54 @@ public sealed class TodoRefinementTests
         Assert.Equal(0, rows[1].Level);
         Assert.True(TodoOutline.TryMove(rows, 0, 1));
         Assert.Equal(["B", "A", "C"], rows.Select(r => r.Text));
+    }
+
+    [Fact]
+    public void Outline_enter_and_remove_keep_one_level_and_checks()
+    {
+        var parent = new TodoRow { Text = "Parent", Children = [new TodoRow { Text = "First", Done = true }] };
+        var rows = TodoOutline.Flatten([parent, new TodoRow { Text = "Second" }]);
+        var first = TodoOutline.InsertAfter(rows, 0);
+        Assert.Equal(1, rows[first].Level);
+        rows[first] = rows[first] with { Text = "New" };
+        Assert.Equal(["New", "First"], TodoOutline.Build(rows)[0].Children.Select(r => r.Text));
+        Assert.True(TodoOutline.Build(rows)[0].Children[1].Done);
+        Assert.False(TodoOutline.TryIndent(rows, 0));
+        Assert.True(TodoOutline.TryOutdent(rows, first));
+        Assert.Equal(["Parent", "New", "Second"], TodoOutline.Build(rows).Select(r => r.Text));
+        TodoOutline.Remove(rows, 0);
+        Assert.Equal(["New", "Second"], TodoOutline.Build(rows).Select(r => r.Text));
+    }
+
+    [Fact]
+    public void Store_save_failure_keeps_memory_and_file_unchanged()
+    {
+        using var dir = new TempDir();
+        var seed = TodoSeed.Create(Now, new AppSettings());
+        var file = new JsonFileStore<TodoData>(dir.File("todos.json"), () => seed);
+        var store = new TodoStore(file, seed, new FakeClock(Now));
+        store.SetEnabled(TodoSeed.DailyId, true);
+        var before = store.Current;
+        Directory.CreateDirectory(dir.File("todos.json.tmp"));
+
+        Assert.Throws<StateSaveException>(() => store.Toggle(TodoSeed.DailyId, before.Lists[1].Rows[0].Id));
+        Assert.Same(before, store.Current);
+        Assert.False(file.Load().Value.Lists[1].Rows[0].Done);
+    }
+
+    [Fact]
+    public void Restore_recreates_a_missing_default_off_and_leaves_custom_lists()
+    {
+        using var dir = new TempDir();
+        var seed = TodoSeed.Create(Now, new AppSettings());
+        var data = seed with { Lists = [seed.Lists[0]] };
+        var store = new TodoStore(new JsonFileStore<TodoData>(dir.File("todos.json"), () => data), data, new FakeClock(Now));
+        var id = store.CreateList(TodoCadence.Weekly, new AppSettings());
+        store.RestoreDefaults(new AppSettings());
+
+        Assert.Contains(store.Current.Lists, l => l.Id == TodoSeed.DailyId && !l.Enabled && !l.Deleted);
+        Assert.Contains(store.Current.Lists, l => l.Id == id);
+        Assert.Equal([TodoSeed.WeeklyId, TodoSeed.DailyId], store.Current.Lists.Where(l => l.IsBuiltIn).Select(l => l.Id));
     }
 
     [Fact]

@@ -38,7 +38,7 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
         : list with { Schedule = schedule, NextResetUtc = TodoReset.Next(schedule, clock.UtcNow) };
 
     static TodoSchedule Schedule(AppSettings settings, TodoCadence cadence) =>
-        cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset;
+        (cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset) with { Cadence = cadence };
 
     public void Reconcile() => Update(data =>
     {
@@ -139,8 +139,8 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
     {
         var source = TodoSeed.Create(clock.UtcNow, settings ?? new AppSettings());
         var lists = data.Lists.Select(list => list.IsBuiltIn && list.Deleted ? list with { Deleted = false } : list).ToList();
-        foreach (var builtIn in source.Lists)
-            if (lists.All(list => list.Id != builtIn.Id)) lists.Add(builtIn);
+        for (var i = 0; i < source.Lists.Count; i++)
+            if (lists.All(list => list.Id != source.Lists[i].Id)) lists.Insert(Math.Min(i, lists.Count), source.Lists[i]);
         return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
     });
 

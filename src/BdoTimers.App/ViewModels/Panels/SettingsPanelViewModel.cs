@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using BdoTimers.App.Alerts;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -24,11 +25,14 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     [ObservableProperty] private double _speechRate;
     [ObservableProperty] private bool _confirmingReset;
     [ObservableProperty] private bool _confirmingAlertReset;
+    [ObservableProperty] private bool _hasDeletedTodoDefaults;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
     public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
     public LeadChipsViewModel DefaultLeads { get; }
+    public TodoScheduleEditorViewModel DailyTodoReset { get; }
+    public TodoScheduleEditorViewModel WeeklyTodoReset { get; }
     public string Version { get; } = AppVersion();
 
     public SettingsPanelViewModel(AppServices services)
@@ -48,6 +52,13 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
         _speechRate = s.TtsRate;
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
             leads => services.Settings.Update(x => x with { DefaultLeadTimesMinutes = leads }));
+        DailyTodoReset = new TodoScheduleEditorViewModel(s.DailyTodoReset,
+            schedule => services.SetTodoReset(TodoCadence.Daily, schedule));
+        WeeklyTodoReset = new TodoScheduleEditorViewModel(s.WeeklyTodoReset,
+            schedule => services.SetTodoReset(TodoCadence.Weekly, schedule));
+        HasDeletedTodoDefaults = services.Todos.Current.Lists.Any(list => list.IsBuiltIn && list.Deleted)
+            || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.DailyId)
+            || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.WeeklyId);
     }
 
     partial void OnAutostartChanged(Choice value)
@@ -141,6 +152,13 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     {
         _services.Timers.ResetBossAlerts();
         ConfirmingAlertReset = false;
+    }
+
+    [RelayCommand]
+    void RestoreTodoDefaults()
+    {
+        _services.Todos.RestoreDefaults(_services.Settings.Current);
+        HasDeletedTodoDefaults = false;
     }
 
     [RelayCommand]
