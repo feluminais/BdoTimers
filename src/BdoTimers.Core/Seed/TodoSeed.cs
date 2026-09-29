@@ -14,7 +14,7 @@ public static class TodoSeed
         [
             new TodoList
             {
-                Id = WeeklyId, Name = "Weekly", Cadence = TodoCadence.Weekly, IsBuiltIn = true,
+                Id = WeeklyId, Name = "Weekly quests", Cadence = TodoCadence.Weekly, IsBuiltIn = true,
                 Schedule = settings.WeeklyTodoReset,
                 NextResetUtc = TodoReset.Next(settings.WeeklyTodoReset, nowUtc),
                 Rows =
@@ -32,7 +32,7 @@ public static class TodoSeed
             },
             new TodoList
             {
-                Id = DailyId, Name = "Daily", Cadence = TodoCadence.Daily, IsBuiltIn = true,
+                Id = DailyId, Name = "Daily tasks", Cadence = TodoCadence.Daily, IsBuiltIn = true,
                 Schedule = settings.DailyTodoReset,
                 NextResetUtc = TodoReset.Next(settings.DailyTodoReset, nowUtc),
                 Rows =

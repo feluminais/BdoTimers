@@ -13,12 +13,12 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
         return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
     });
 
-    public Guid CreateList(TodoCadence cadence, TodoSchedule schedule)
+    public Guid CreateList(TodoCadence cadence, AppSettings settings)
     {
-        if (schedule.Cadence != cadence) throw new ArgumentException("Schedule cadence differs from list cadence.", nameof(schedule));
+        var schedule = Schedule(settings, cadence);
         var list = new TodoList
         {
-            Name = cadence == TodoCadence.Daily ? "New daily list" : "New weekly list",
+            Name = "New list",
             Cadence = cadence, Enabled = true, Schedule = schedule,
             NextResetUtc = TodoReset.Next(schedule, clock.UtcNow),
         };
@@ -26,27 +26,19 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
         return list.Id;
     }
 
-    public void SetEnabled(Guid id, bool enabled) => Modify(id, list => list with { Enabled = enabled });
-
-    public void SetSchedule(Guid id, TodoSchedule schedule) => Modify(id, list =>
-    {
-        if (list.Cadence != schedule.Cadence) throw new ArgumentException("Schedule cadence differs from list cadence.", nameof(schedule));
-        return list.Schedule == schedule ? list : list with
-        {
-            Schedule = schedule, NextResetUtc = TodoReset.Next(schedule, clock.UtcNow),
-        };
-    });
+    public void SetEnabled(Guid id, bool enabled) => Modify(id, list => list.Enabled == enabled ? list : list with { Enabled = enabled });
 
     public void ApplyDefaultSchedules(AppSettings settings) => Update(data =>
     {
-        var lists = data.Lists.Select(list => list.Id == TodoSeed.DailyId
-            ? WithSchedule(list, settings.DailyTodoReset)
-            : list.Id == TodoSeed.WeeklyId ? WithSchedule(list, settings.WeeklyTodoReset) : list).ToList();
+        var lists = data.Lists.Select(list => WithSchedule(list, Schedule(settings, list.Cadence))).ToList();
         return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
     });
 
     TodoList WithSchedule(TodoList list, TodoSchedule schedule) => list.Schedule == schedule ? list
         : list with { Schedule = schedule, NextResetUtc = TodoReset.Next(schedule, clock.UtcNow) };
+
+    static TodoSchedule Schedule(AppSettings settings, TodoCadence cadence) =>
+        cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset;
 
     public void Reconcile() => Update(data =>
     {
@@ -65,8 +57,14 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
         return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
     });
 
-    public void Toggle(Guid listId, Guid rowId) => Modify(listId, list => !list.Enabled || list.Deleted ? list
-        : list with { Rows = list.Rows.Select(row => ToggleIn(row, rowId)).ToList() });
+    public void Toggle(Guid listId, Guid rowId) => Modify(listId, list =>
+    {
+        if (!list.Enabled || list.Deleted || !list.Rows.Any(row => row.Id == rowId || row.Children.Any(c => c.Id == rowId))) return list;
+        return list with { Rows = list.Rows.Select(row => ToggleIn(row, rowId)).ToList() };
+    });
+
+    public void ReplaceRows(Guid listId, IReadOnlyList<TodoRow> rows) => Modify(listId,
+        list => list.Deleted ? list : list with { Rows = rows });
 
     static TodoRow ToggleIn(TodoRow row, Guid id) => row.Id == id ? TodoOps.Toggle(row)
         : row with { Children = row.Children.Select(child => child.Id == id ? TodoOps.Toggle(child) : child).ToList() };

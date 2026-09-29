@@ -84,7 +84,7 @@ public sealed class TodoTests
         var store = new TodoStore(new JsonFileStore<TodoData>(dir.File("todos.json"), () => data), data, clock);
         var daily = data.Lists.Single(l => l.Cadence == TodoCadence.Daily);
         store.Modify(daily.Id, l => l with { Rows = [l.Rows[0] with { Done = true }, .. l.Rows.Skip(1)] });
-        store.SetSchedule(daily.Id, TodoSchedule.DailyDefault with { Hour = 12 });
+        store.ApplyDefaultSchedules(new AppSettings { DailyTodoReset = TodoSchedule.DailyDefault with { Hour = 12 } });
         Assert.True(store.Current.Lists.Single(l => l.Id == daily.Id).Rows[0].Done);
     }
 }
