@@ -48,6 +48,14 @@ public static class TodoOutline
         return result;
     }
 
+    /// <summary>Take fresh completion flags from storage without replacing unfinished editor structure.</summary>
+    public static List<TodoOutlineRow> MergeChecks(IReadOnlyList<TodoOutlineRow> staged, IReadOnlyList<TodoRow> stored)
+    {
+        var checks = Flatten(stored).ToDictionary(row => row.Id, row => row.Done);
+        return staged.Select(row => checks.TryGetValue(row.Id, out var done)
+            ? row with { Done = done } : row).ToList();
+    }
+
     public static bool TryIndent(List<TodoOutlineRow> rows, int index)
     {
         if (index <= 0 || index >= rows.Count || rows[index].Level != 0 ||

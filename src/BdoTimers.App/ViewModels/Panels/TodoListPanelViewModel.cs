@@ -46,7 +46,14 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         if (_saving) return;
         Application.Current.Dispatcher.BeginInvoke(() =>
         {
-            if (!_nameDirty && !_rowsDirty) Refresh();
+            var list = _services.Todos.Current.Lists.FirstOrDefault(l => l.Id == _id);
+            if (list is null || list.Deleted) return;
+            _outline = TodoOutline.MergeChecks(_outline, list.Rows);
+            // The only outside row change while this modal panel is open is a reset. Keep unfinished rows and focus.
+            _loading = true;
+            if (!_nameDirty) Name = list.Name;
+            Enabled = Choice.For(list.Enabled);
+            _loading = false;
         });
     }
 
@@ -54,6 +61,9 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     {
         var list = _services.Todos.Current.Lists.FirstOrDefault(l => l.Id == _id);
         if (list is null || list.Deleted) return;
+        _saveTimer.Stop();
+        _nameDirty = false;
+        _rowsDirty = false;
         _loading = true;
         Name = list.Name;
         InvalidName = false;
@@ -142,9 +152,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     {
         // A reset may have cleared checks while the editor was open; keep that newer completion state.
         var current = _services.Todos.Current.Lists.First(l => l.Id == _id);
-        var checks = TodoOutline.Flatten(current.Rows).ToDictionary(row => row.Id, row => row.Done);
-        for (var i = 0; i < _outline.Count; i++)
-            if (checks.TryGetValue(_outline[i].Id, out var done)) _outline[i] = _outline[i] with { Done = done };
+        _outline = TodoOutline.MergeChecks(_outline, current.Rows);
         _services.Todos.ReplaceRows(_id, TodoOutline.Build(_outline));
     }
 
@@ -154,7 +162,6 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         var next = _outline.ToList();
         change(next);
         if (next.SequenceEqual(_outline)) return;
-        var previous = _outline;
         _outline = next;
         try
         {
@@ -165,8 +172,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         }
         catch (StateSaveException)
         {
-            _outline = previous;
-            RebuildRows();
+            Refresh();
             throw;
         }
         finally { _saving = false; }
