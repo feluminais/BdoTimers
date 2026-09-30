@@ -39,8 +39,8 @@ See CLAUDE.md for commands. `scripts/get-voice.ps1` fetches the voice model (132
 
 ## License
 GPL-3.0 (see LICENSE). Bundled components and their licenses are listed in THIRD-PARTY-NOTICES.txt. BDO Timers is not
-affiliated with Pearl Abyss; the boss, farm, fishing and horse pictures are Black Desert game artwork © Pearl Abyss and
-are not covered by the GPL.
+affiliated with Pearl Abyss; the boss, farm, fishing, horse and guild pictures are Black Desert game artwork © Pearl Abyss
+and are not covered by the GPL.
 
 ## Manual test checklist
 1. First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.

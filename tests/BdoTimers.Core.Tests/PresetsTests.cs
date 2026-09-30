@@ -131,6 +131,31 @@ public class PresetsTests
     }
 
     [Fact]
+    public void Guild_war_alerts_at_each_configured_weekly_time()
+    {
+        var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+        var war = Presets.Create().Single(t => t.Preset == Presets.GuildWar);
+        war = war with
+        {
+            Scheduled = new ScheduledSpec
+            {
+                TimeZoneId = "Europe/Berlin",
+                Slots = [new Slot(DayOfWeek.Tuesday, new TimeOnly(20, 0)),
+                         new Slot(DayOfWeek.Friday, new TimeOnly(20, 0))],
+            },
+            Alerts = new AlertConfig { LeadTimesMinutes = [0] },
+        };
+        var events = ScheduleMath.Next(war.Scheduled!, now, 2);
+        var planner = new AlertPlanner();
+        HashSet<MutedOccurrence> none = [];
+
+        Assert.Equal(2, events.Count);
+        Assert.Equal(events[0], Assert.Single(planner.Tick([war], none, events[0])).OccurrenceUtc);
+        Assert.Empty(planner.Tick([war], none, events[0].AddMinutes(1)));
+        Assert.Equal(events[1], Assert.Single(planner.Tick([war], none, events[1])).OccurrenceUtc);
+    }
+
+    [Fact]
     public void A_stopwatch_never_alerts()
     {
         var t0 = new DateTimeOffset(2026, 9, 25, 12, 0, 0, TimeSpan.Zero);
