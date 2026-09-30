@@ -161,6 +161,11 @@ public sealed class TodoRefinementTests
         var data = TodoSeed.Create(Now, new AppSettings());
         Assert.Equal("Weekly quests", data.Lists[0].Name);
         Assert.Equal("Daily tasks", data.Lists[1].Name);
+        Assert.Equal([
+            "Liana / Ludowig daily life skill quest",
+            "Imperial Delivery",
+            "Pit of the Undying",
+        ], data.Lists[1].Rows.Select(row => row.Text));
         Assert.Equal(4, data.Lists[0].Rows.Single(r => r.Text == "Olvia Academy").Children.Count);
         using var dir = new TempDir();
         var store = new TodoStore(new JsonFileStore<TodoData>(dir.File("todos.json"), () => data), data, new FakeClock(Now));
@@ -169,5 +174,47 @@ public sealed class TodoRefinementTests
         Assert.Equal("New list", list.Name);
         Assert.True(list.Enabled);
         Assert.Empty(list.Rows);
+    }
+
+    [Fact]
+    public void Old_daily_defaults_update_once_without_losing_custom_rows_or_checks()
+    {
+        using var dir = new TempDir();
+        var seed = TodoSeed.Create(Now, new AppSettings());
+        var imperial = new TodoRow { Text = "Imperial Cooking or Alchemy delivery", Done = true };
+        var custom = new TodoRow { Text = "My daily task", Done = true };
+        var otherList = new TodoList
+        {
+            Name = "Custom", Rows = [new TodoRow { Text = "Claim login and Challenge (Y) rewards" }],
+        };
+        var oldDaily = seed.Lists[1] with
+        {
+            Enabled = true,
+            Rows = [custom, new TodoRow { Text = "Claim login and Challenge (Y) rewards" }, imperial],
+        };
+        var oldData = seed with { DefaultsVersion = 0, Lists = [seed.Lists[0], oldDaily, otherList] };
+        var file = new JsonFileStore<TodoData>(dir.File("todos.json"), () => oldData);
+        var store = new TodoStore(file, oldData, new FakeClock(Now));
+
+        store.Update(TodoMigrations.Apply);
+
+        var migrated = file.Load().Value;
+        Assert.Equal(TodoData.CurrentDefaultsVersion, migrated.DefaultsVersion);
+        var daily = migrated.Lists.Single(list => list.Id == TodoSeed.DailyId);
+        Assert.True(daily.Enabled);
+        Assert.Equal(["My daily task", "Imperial Delivery"], daily.Rows.Select(row => row.Text));
+        Assert.Equal(custom.Id, daily.Rows[0].Id);
+        Assert.True(daily.Rows[0].Done);
+        Assert.Equal(imperial.Id, daily.Rows[1].Id);
+        Assert.True(daily.Rows[1].Done);
+        Assert.Equal("Claim login and Challenge (Y) rewards", migrated.Lists[2].Rows[0].Text);
+
+        var readded = migrated with
+        {
+            Lists = migrated.Lists.Select(list => list.Id == TodoSeed.DailyId
+                ? list with { Rows = [.. list.Rows, new TodoRow { Text = "Claim login and Challenge (Y) rewards" }] }
+                : list).ToList(),
+        };
+        Assert.Same(readded, TodoMigrations.Apply(readded));
     }
 }

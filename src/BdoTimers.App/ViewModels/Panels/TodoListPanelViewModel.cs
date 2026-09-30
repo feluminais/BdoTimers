@@ -240,15 +240,23 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         ChangeStructure(rows => TodoOutline.TryMove(rows, index, direction), id);
     }
 
-    public void MoveTo(Guid sourceId, Guid targetId)
+    public bool CanMoveTo(Guid sourceId, Guid targetId, out bool below)
     {
         var source = _outline.FindIndex(r => r.Id == sourceId);
         var target = _outline.FindIndex(r => r.Id == targetId);
+        below = false;
         if (source < 0 || target < 0 || source == target ||
-            _outline[source].Level != _outline[target].Level || ParentId(source) != ParentId(target)) return;
+            _outline[source].Level != _outline[target].Level || ParentId(source) != ParentId(target)) return false;
+        below = source < target;
+        return true;
+    }
+
+    public void MoveTo(Guid sourceId, Guid targetId)
+    {
+        if (!CanMoveTo(sourceId, targetId, out var below)) return;
         ChangeStructure(rows =>
         {
-            var direction = source < target ? 1 : -1;
+            var direction = below ? 1 : -1;
             for (var tries = 0; tries < rows.Count; tries++)
             {
                 var from = rows.FindIndex(r => r.Id == sourceId);

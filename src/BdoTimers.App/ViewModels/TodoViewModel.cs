@@ -76,7 +76,7 @@ public sealed partial class TodoViewModel : ObservableObject
         for (var i = 0; i < lists.Count; i++)
         {
             var old = cards.FirstOrDefault(c => c.Id == lists[i].Id);
-            if (old is null) cards.Insert(i, new TodoListCardViewModel(lists[i], Open, Toggle, Enable));
+            if (old is null) cards.Insert(i, new TodoListCardViewModel(lists[i], Open, Toggle, SetEnabled));
             else
             {
                 var at = cards.IndexOf(old);
@@ -87,37 +87,53 @@ public sealed partial class TodoViewModel : ObservableObject
         while (cards.Count > lists.Count) cards.RemoveAt(cards.Count - 1);
     }
 
-    void Enable(Guid id) => _services.Todos.SetEnabled(id, true);
+    void SetEnabled(Guid id, bool enabled) => _services.Todos.SetEnabled(id, enabled);
 }
 
 public sealed partial class TodoListCardViewModel : ObservableObject
 {
     readonly Action<Guid> _open;
     readonly Action<Guid, Guid> _toggle;
+    readonly Action<Guid, bool> _setEnabled;
+    bool _syncingEnabled;
     public Guid Id { get; }
     [ObservableProperty] private string _name = "";
     [ObservableProperty] private string _summary = "";
-    [ObservableProperty] private bool _isOff;
+    [ObservableProperty] private bool _isOn;
     public ObservableCollection<TodoRowViewModel> Rows { get; } = [];
     public IRelayCommand OpenCommand { get; }
-    public IRelayCommand EnableCommand { get; }
 
-    public TodoListCardViewModel(TodoList list, Action<Guid> open, Action<Guid, Guid> toggle, Action<Guid> enable)
+    public TodoListCardViewModel(TodoList list, Action<Guid> open, Action<Guid, Guid> toggle, Action<Guid, bool> setEnabled)
     {
         Id = list.Id;
         _open = open;
         _toggle = toggle;
+        _setEnabled = setEnabled;
         OpenCommand = new RelayCommand(() => _open(Id));
-        EnableCommand = new RelayCommand(() => enable(Id));
         Update(list);
+    }
+
+    partial void OnIsOnChanged(bool value)
+    {
+        if (_syncingEnabled) return;
+        try { _setEnabled(Id, value); }
+        catch
+        {
+            _syncingEnabled = true;
+            IsOn = !value;
+            _syncingEnabled = false;
+            throw;
+        }
     }
 
     public void Update(TodoList list)
     {
         Name = list.Name;
-        IsOff = !list.Enabled;
+        _syncingEnabled = true;
+        IsOn = list.Enabled;
+        _syncingEnabled = false;
         var (done, total) = TodoOps.Progress(list.Rows);
-        Summary = IsOff ? "Off" : $"{done}/{total}";
+        Summary = $"{done}/{total}";
         TodoRowViewModel.Sync(Rows, TodoOps.OpenFirst(list.Rows), list.Enabled, Id, _open, _toggle);
     }
 }

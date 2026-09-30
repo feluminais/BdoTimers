@@ -63,6 +63,16 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="TodoActiveToggle" TargetType="ToggleButton" BasedOn="{StaticResource Chip}">
+            <Setter Property="Content" Value="Off" />
+            <Setter Property="MinWidth" Value="42" />
+            <Setter Property="Margin" Value="8,0,0,0" />
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Content" Value="On" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
         <DataTemplate DataType="{x:Type vm:TodoRowViewModel}">
             <StackPanel>
                 <DockPanel MinHeight="26" Margin="0,2,0,2" LastChildFill="True">
@@ -97,9 +107,9 @@
                     <DockPanel Margin="0,0,0,6">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="{Binding Summary}" Foreground="{StaticResource AccentBrush}" Margin="8,0,0,0"
-                                       VerticalAlignment="Center" />
-                            <Button Style="{StaticResource LinkButton}" Content="· Turn on" Command="{Binding EnableCommand}"
-                                    Visibility="{Binding IsOff, Converter={StaticResource BoolToVisibility}}" Margin="4,0,0,0" />
+                                       VerticalAlignment="Center" Visibility="{Binding IsOn, Converter={StaticResource BoolToVisibility}}" />
+                            <ToggleButton Style="{StaticResource TodoActiveToggle}" IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                          AutomationProperties.Name="{Binding Name, StringFormat='Active {0}'}" />
                         </StackPanel>
                         <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}"
                                 HorizontalAlignment="Left" AutomationProperties.Name="{Binding Name}">
@@ -120,7 +130,7 @@
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Column="0">
             <DockPanel DockPanel.Dock="Top" Margin="0,0,8,12">
-                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="+" FontFamily="Segoe UI"
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="16"
                         ToolTip="New weekly list" Command="{Binding NewWeeklyCommand}" />
                 <TextBlock DockPanel.Dock="Right" Text="{Binding WeeklyResetLabel}" Style="{StaticResource LabelText}"
                            VerticalAlignment="Center" Margin="4,0,6,0" />
@@ -132,7 +142,7 @@
         </DockPanel>
         <DockPanel Grid.Column="2">
             <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="+" FontFamily="Segoe UI"
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="16"
                         ToolTip="New daily list" Command="{Binding NewDailyCommand}" />
                 <TextBlock DockPanel.Dock="Right" Text="{Binding DailyResetLabel}" Style="{StaticResource LabelText}"
                            VerticalAlignment="Center" Margin="4,0,6,0" />

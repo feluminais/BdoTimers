@@ -62,6 +62,7 @@ public sealed class AppServices : IDisposable
         RecoveredFiles = new[] { settings.RecoveredBackupPath, timers.RecoveredBackupPath, todos.RecoveredBackupPath }
             .OfType<string>().ToList();
         Todos = new TodoStore(todosFile, todos.Value, new SystemClock());
+        Todos.Update(TodoMigrations.Apply);
         Settings.Changed += () =>
         {
             try { Todos.ApplyDefaultSchedules(Settings.Current); }
