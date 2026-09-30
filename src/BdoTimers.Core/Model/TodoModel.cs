@@ -38,5 +38,7 @@ public sealed record TodoList
 
 public sealed record TodoData
 {
+    public const int CurrentDefaultsVersion = 1;
+    public int DefaultsVersion { get; init; }
     public IReadOnlyList<TodoList> Lists { get; init; } = [];
 }

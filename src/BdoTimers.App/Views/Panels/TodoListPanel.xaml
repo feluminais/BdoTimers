@@ -7,25 +7,30 @@
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type pvm:TodoEditRowViewModel}">
             <StackPanel Margin="{Binding Indent}">
-                <Grid x:Name="RowGrid" MinHeight="32" AllowDrop="True" DragOver="Row_DragOver" Drop="Row_Drop"
-                      Tag="{Binding Id}" Background="Transparent">
+                <Grid x:Name="RowGrid" MinHeight="32" Tag="{Binding Id}" Background="Transparent"
+                      PreviewMouseLeftButtonDown="Row_PreviewMouseLeftButtonDown">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="14" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="•" Grid.Column="0" Foreground="{StaticResource SubtleBrush}" VerticalAlignment="Center"
-                               FontSize="11" />
+                    <Grid Grid.Column="0" Width="14" Height="28" Background="Transparent" Cursor="SizeAll" ToolTip="Drag to move">
+                        <Ellipse Width="4" Height="4" Fill="{StaticResource AccentBrush}"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Ellipse.RenderTransform><TranslateTransform Y="-4" /></Ellipse.RenderTransform>
+                        </Ellipse>
+                    </Grid>
                     <TextBox x:Name="RowText" Grid.Column="1" Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
                              BorderBrush="Transparent" PreviewKeyDown="RowText_PreviewKeyDown" Tag="{Binding Id}"
                              AutomationProperties.Name="To-do row" />
-                    <StackPanel x:Name="Actions" Grid.Column="2" Orientation="Horizontal" Visibility="Collapsed">
-                        <Button Style="{StaticResource IconButton}" Content="&#xE8AB;" Width="25" Height="28" ToolTip="Drag to move"
-                                PreviewMouseLeftButtonDown="Grip_PreviewMouseLeftButtonDown"
-                                PreviewMouseMove="Grip_PreviewMouseMove" Tag="{Binding Id}" />
-                        <Button Style="{StaticResource IconButton}" Content="+" FontFamily="Segoe UI" Width="25" Height="28"
+                    <StackPanel x:Name="Actions" Grid.Column="2" Orientation="Horizontal" Visibility="Hidden"
+                                VerticalAlignment="Center">
+                        <Button Style="{StaticResource IconButton}" Width="25" Height="28"
                                 ToolTip="Add child" Command="{Binding AddChildCommand}"
-                                Visibility="{Binding CanAddChild, Converter={StaticResource BoolToVisibility}}" />
+                                Visibility="{Binding CanAddChild, Converter={StaticResource BoolToVisibility}}">
+                            <Path Data="M 1,9 L 17,9 M 9,1 L 9,17" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  StrokeThickness="1.5" Width="18" Height="18" Stretch="None" />
+                        </Button>
                         <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" Width="25" Height="28"
                                 ToolTip="Remove" Command="{Binding RemoveCommand}" />
                     </StackPanel>
@@ -43,6 +48,7 @@
             <DataTemplate.Triggers>
                 <Trigger SourceName="RowGrid" Property="IsMouseOver" Value="True">
                     <Setter TargetName="Actions" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="RowText" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
                 </Trigger>
                 <Trigger SourceName="RowGrid" Property="IsKeyboardFocusWithin" Value="True">
                     <Setter TargetName="Actions" Property="Visibility" Value="Visible" />
@@ -55,7 +61,18 @@
             <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
                     Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
             <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource DisplayFont}"
-                     FontSize="18" controls:Ui.HasError="{Binding InvalidName}" AutomationProperties.Name="List name" />
+                     FontSize="18" controls:Ui.HasError="{Binding InvalidName}" AutomationProperties.Name="List name">
+                <TextBox.Style>
+                    <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+                        <Setter Property="BorderBrush" Value="Transparent" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource HairlineStrongBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBox.Style>
+            </TextBox>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16">
             <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Done"
@@ -70,7 +87,7 @@
                 </StackPanel>
             </StackPanel>
         </DockPanel>
-        <ScrollViewer MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
+        <ScrollViewer x:Name="RowsScrollViewer" MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <Border Style="{StaticResource Row}" Margin="0,0,0,10">
                     <DockPanel>

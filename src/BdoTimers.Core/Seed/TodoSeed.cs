@@ -10,6 +10,7 @@ public static class TodoSeed
 
     public static TodoData Create(DateTimeOffset nowUtc, AppSettings settings) => new()
     {
+        DefaultsVersion = TodoData.CurrentDefaultsVersion,
         Lists =
         [
             new TodoList
@@ -37,9 +38,8 @@ public static class TodoSeed
                 NextResetUtc = TodoReset.Next(settings.DailyTodoReset, nowUtc),
                 Rows =
                 [
-                    Row("Claim login and Challenge (Y) rewards"),
                     Row("Liana / Ludowig daily life skill quest"),
-                    Row("Imperial Cooking or Alchemy delivery"),
+                    Row("Imperial Delivery"),
                     Row("Pit of the Undying"),
                 ],
             },
