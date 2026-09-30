@@ -43,6 +43,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     ];
     public bool IsStopwatch { get; }
     public bool IsWeekly => !IsCountdown && !IsStopwatch;
+    public string WeeklyHeading => Timer.Preset == Presets.GuildBosses ? "Weekly time" : "Weekly times";
     /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
     public bool HasAlerts => !IsStopwatch;
     public bool CanDelete { get; }
@@ -72,7 +73,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         {
             _timeZoneId = TimeZoneInfo.TryConvertIanaIdToWindowsId(spec.TimeZoneId, out var windowsId) ? windowsId : spec.TimeZoneId;
             Slots = new SlotListViewModel(spec.Slots,
-                slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
+                slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
+                Presets.MinimumSlots(timer.Preset), Presets.MaximumSlots(timer.Preset));
         }
         Alerts = new AlertRowsViewModel(services, timer);
     }

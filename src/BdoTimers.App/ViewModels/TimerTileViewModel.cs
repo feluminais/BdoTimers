@@ -28,6 +28,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
+    [ObservableProperty] private bool _hasNextOccurrence;
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
     [ObservableProperty] private int? _growth;
 
@@ -107,9 +108,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
         // Weekly timers: recompute the next occurrence only once the cached one has passed.
         if (_nextOccurrence is not { } cached || cached <= now)
             _nextOccurrence = OccurrenceSource.Between(_timer, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
+        HasNextOccurrence = _nextOccurrence is not null;
         if (_nextOccurrence is not { } next)
         {
-            (Digits, Detail, IsDimmed) = ("--:--:--", off + "No times set", true);
+            (Digits, Detail, IsDimmed) = ("--:--:--", off + "Not set", true);
             return;
         }
         var skipped = _services.Timers.Current.Muted.Contains(new MutedOccurrence(_timer.Id, next));

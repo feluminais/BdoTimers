@@ -7,17 +7,23 @@ namespace BdoTimers.Core.Tests;
 public class PresetsTests
 {
     [Fact]
-    public void Ensure_puts_farm_and_fishing_ahead_of_existing_timers()
+    public void Ensure_puts_all_presets_ahead_of_existing_timers()
     {
         var own = new TimerDef { Name = "Buff", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
         var data = Presets.Ensure(new AppData { Timers = [own] });
 
-        Assert.Equal(["Farm", "Fishing", "Buff"], data.Timers.Select(t => t.Name));
+        Assert.Equal(["Farm", "Fishing", "Guild bosses", "Guild war", "Buff"], data.Timers.Select(t => t.Name));
         var farm = data.Timers[0];
         Assert.Equal(TimerKind.Countdown, farm.Kind);
         Assert.Equal(TimeSpan.FromHours(22), farm.Countdown!.Duration);
         Assert.Equal(TimerKind.Stopwatch, data.Timers[1].Kind);
         Assert.NotNull(data.Timers[1].Stopwatch);
+        Assert.All(data.Timers.Skip(2).Take(2), t =>
+        {
+            Assert.Equal(TimerKind.Scheduled, t.Kind);
+            Assert.Equal(TimeZoneInfo.Local.Id, t.Scheduled!.TimeZoneId);
+            Assert.Empty(t.Scheduled.Slots);
+        });
     }
 
     [Fact]
@@ -30,11 +36,29 @@ public class PresetsTests
     }
 
     [Fact]
+    public void Ensure_adds_guild_presets_to_existing_data_without_resetting_farm_or_fishing()
+    {
+        var old = Presets.Create().Take(2).Select(t => t with { Name = t.Name + "!" }).ToList();
+        var own = new TimerDef { Name = "Buff", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
+
+        var upgraded = Presets.Ensure(new AppData { Timers = [own, .. old] });
+
+        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.GuildBosses, Presets.GuildWar, null],
+            upgraded.Timers.Select(t => t.Preset));
+        Assert.Same(old[0], upgraded.Timers[0]);
+        Assert.Same(old[1], upgraded.Timers[1]);
+        Assert.Same(own, upgraded.Timers[4]);
+        Assert.Same(upgraded, Presets.Ensure(upgraded));
+    }
+
+    [Fact]
     public void Rank_orders_presets_first()
     {
         Assert.True(Presets.Rank(Presets.Farm) < Presets.Rank(Presets.Fishing));
         Assert.True(Presets.Rank(Presets.Fishing) < Presets.Rank(Presets.HorseRegistration));
-        Assert.True(Presets.Rank(Presets.HorseRegistration) < Presets.Rank(null));
+        Assert.True(Presets.Rank(Presets.HorseRegistration) < Presets.Rank(Presets.GuildBosses));
+        Assert.True(Presets.Rank(Presets.GuildBosses) < Presets.Rank(Presets.GuildWar));
+        Assert.True(Presets.Rank(Presets.GuildWar) < Presets.Rank(null));
     }
 
     [Fact]
@@ -69,8 +93,41 @@ public class PresetsTests
     {
         Assert.False(Presets.CanDelete(Presets.Farm));
         Assert.False(Presets.CanDelete(Presets.Fishing));
+        Assert.False(Presets.CanDelete(Presets.GuildBosses));
+        Assert.False(Presets.CanDelete(Presets.GuildWar));
         Assert.True(Presets.CanDelete(Presets.HorseRegistration));
         Assert.True(Presets.CanDelete(null));
+    }
+
+    [Fact]
+    public void Guild_presets_start_without_occurrences_and_have_fixed_slot_limits()
+    {
+        var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+        var bosses = Presets.Create().Single(t => t.Preset == Presets.GuildBosses);
+        var war = Presets.Create().Single(t => t.Preset == Presets.GuildWar);
+
+        Assert.Empty(OccurrenceSource.Between(bosses, now, now.AddDays(8)));
+        Assert.Empty(OccurrenceSource.Between(war, now, now.AddDays(8)));
+        Assert.Equal(0, Presets.MinimumSlots(bosses.Preset));
+        Assert.Equal(1, Presets.MaximumSlots(bosses.Preset));
+        Assert.Equal(0, Presets.MinimumSlots(war.Preset));
+        Assert.Null(Presets.MaximumSlots(war.Preset));
+        Assert.Equal(1, Presets.MinimumSlots(null));
+    }
+
+    [Fact]
+    public void Guild_bosses_repeats_weekly_and_guild_war_accepts_several_times()
+    {
+        var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+        var boss = Presets.Create().Single(t => t.Preset == Presets.GuildBosses);
+        var war = Presets.Create().Single(t => t.Preset == Presets.GuildWar);
+        var tuesday = new Slot(DayOfWeek.Tuesday, new TimeOnly(20, 0));
+        var friday = new Slot(DayOfWeek.Friday, new TimeOnly(20, 0));
+        boss = boss with { Scheduled = boss.Scheduled! with { Slots = [tuesday] } };
+        war = war with { Scheduled = war.Scheduled! with { Slots = [tuesday, friday] } };
+
+        Assert.Equal(2, OccurrenceSource.Between(boss, now, now.AddDays(9)).Count());
+        Assert.Equal(3, OccurrenceSource.Between(war, now, now.AddDays(9)).Count());
     }
 
     [Fact]

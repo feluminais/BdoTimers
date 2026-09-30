@@ -114,7 +114,7 @@
                 </Border>
 
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="Weekly times" Style="{StaticResource SectionText}" />
+                    <TextBlock Text="{Binding WeeklyHeading}" Style="{StaticResource SectionText}" />
                     <panels:SlotList DataContext="{Binding Slots}" />
                     <Border Style="{StaticResource Row}" Margin="0,6,0,0">
                         <DockPanel>

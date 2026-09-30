@@ -4,7 +4,8 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
 - Timers screen: Farm (22-hour crop countdown), Fishing (stopwatch) and Horse registration (10 minutes from the game's
-  horse registration notice to the horse going on sale) on top, then your own countdowns and weekly timers
+  horse registration notice to the horse going on sale), Guild bosses (one weekly time) and Guild war (multiple weekly
+  times) on top, then your own countdowns and weekly timers. Set the guild times yourself.
 - To-do screen: daily and weekly checklists with child rows, shared reset times and your own lists
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
   voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, previous and next boss, farm, fishing)
@@ -87,3 +88,6 @@ are not covered by the GPL.
     is shown in local time in each column header.
 25. Delete a default To-do list, restore it from Settings and check that its edited rows return. Delete a custom list,
     restart, and confirm it stays deleted.
+26. Guild bosses and Guild war appear after Horse registration with "Not set" and no skip menu. Set a day and time in Guild bosses:
+    it counts down weekly and Add time disappears. Remove that time: it returns to "Not set". Add two different days to
+    Guild war: both occurrences appear in order and can alert independently. Restart: the times remain.
