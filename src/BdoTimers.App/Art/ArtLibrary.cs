@@ -38,6 +38,7 @@ public sealed class ArtLibrary(string imagesDir)
     {
         [Presets.Fishing] = new(0.48, 0.42),
         [Presets.HorseRegistration] = new(0.22, 0.38),
+        [Presets.HorseRegistrationRun] = new(0.22, 0.38),
     };
 
     readonly Dictionary<string, ImageSource> _cache = new(StringComparer.OrdinalIgnoreCase);
@@ -52,7 +53,7 @@ public sealed class ArtLibrary(string imagesDir)
     {
         if (timer.ImageFile is { } file) return new ArtPicture(Load(Path.Combine(ImagesDir, file)));
         if (timer.Preset is { } preset)
-            return new ArtPicture(Load($"pack://application:,,,/Assets/Timers/{preset}.jpg"),
+            return new ArtPicture(Load($"pack://application:,,,/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.jpg"),
                 PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
         if (!timer.IsBuiltIn) return new ArtPicture(Placeholder);
         var slug = Slug(timer.Name);

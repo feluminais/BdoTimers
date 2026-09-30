@@ -53,4 +53,15 @@ public class CountdownDurationTests
         Assert.Null(changed.EndsAtUtc);
         Assert.Null(changed.Remaining);
     }
+
+    [Fact]
+    public void Changing_duration_of_paused_overgrown_farm_preserves_elapsed_growth()
+    {
+        var paused = CountdownOps.Pause(CountdownOps.Start(Farm, T0), T0.AddHours(33), preserveOvergrowth: true);
+
+        var changed = CountdownOps.ChangeDuration(paused, TimeSpan.FromHours(20), preserveOvergrowth: true);
+
+        Assert.Equal(TimeSpan.FromHours(-13), changed.Remaining);
+        Assert.Equal(165, CountdownOps.FarmGrowth(changed, T0.AddDays(2)));
+    }
 }

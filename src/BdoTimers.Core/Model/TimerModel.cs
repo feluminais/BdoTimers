@@ -43,6 +43,10 @@ public sealed record TimerDef
     public CountdownSpec? Countdown { get; init; }
     public StopwatchSpec? Stopwatch { get; init; }
     public AlertConfig Alerts { get; init; } = new();
+    /// <summary>Starts a new registration from the Horse registration preset.</summary>
+    public Hotkey? StartHotkey { get; init; }
+    /// <summary>Slot number of an independently running Horse registration.</summary>
+    public int? HorseRunNumber { get; init; }
     /// <summary>Custom picture's file name inside the app's images folder; built-in bosses and presets use bundled art.</summary>
     public string? ImageFile { get; init; }
     /// <summary>Which of <see cref="Seed.Presets"/> this timer is; Farm and Fishing can't be deleted.</summary>

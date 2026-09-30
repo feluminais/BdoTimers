@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 
 namespace BdoTimers.Core.Tests;
@@ -165,5 +166,62 @@ public class TimerStoreTests
         store.PruneMuted(T0.AddHours(1));
 
         Assert.Equal(T0.AddHours(2), store.Current.Muted.Single().OccurrenceUtc);
+    }
+
+    [Fact]
+    public void Horse_registrations_run_independently_up_to_ten_and_free_a_slot_on_completion()
+    {
+        using var dir = new TempDir();
+        var (store, file) = NewStore(dir);
+        var template = Presets.CreateHorseRegistration();
+        store.Upsert(template);
+
+        for (var i = 0; i < TimerStore.MaxHorseRegistrations; i++)
+            Assert.Equal(HorseStartResult.Started, store.StartHorseRegistration(T0.AddSeconds(i)));
+        Assert.Equal(HorseStartResult.LimitReached, store.StartHorseRegistration(T0.AddMinutes(1)));
+        var runs = store.Current.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun).ToList();
+        Assert.Equal(10, runs.Count);
+        Assert.Equal(10, runs.Select(t => t.Id).Distinct().Count());
+        Assert.Equal(10, runs.Select(t => t.Countdown!.EndsAtUtc).Distinct().Count());
+        Assert.Equal(10, file.Load().Value.Timers.Count(t => t.Preset == Presets.HorseRegistrationRun));
+        store.PauseCountdown(runs[1].Id, T0.AddMinutes(1));
+        Assert.Equal(HorseStartResult.LimitReached, store.StartHorseRegistration(T0.AddMinutes(1)));
+
+        var completed = store.CompleteCountdowns(T0.AddMinutes(10), T0.AddMinutes(10));
+        Assert.Single(completed);
+        Assert.Equal(1, completed[0].HorseRunNumber);
+        Assert.Equal(HorseStartResult.Started, store.StartHorseRegistration(T0.AddMinutes(10)));
+        Assert.Equal(10, store.Current.Timers.Count(t => t.Preset == Presets.HorseRegistrationRun));
+        Assert.Equal(1, store.Current.Timers.Last().HorseRunNumber);
+        Assert.Equal(CountdownStatus.Idle, store.Current.Timers.Single(t => t.Id == template.Id).Countdown!.Status);
+    }
+
+    [Fact]
+    public void Horse_hotkey_cannot_start_after_the_preset_is_deleted()
+    {
+        using var dir = new TempDir();
+        var (store, _) = NewStore(dir);
+
+        Assert.Equal(HorseStartResult.Unavailable, store.StartHorseRegistration(T0));
+        Assert.Empty(store.Current.Timers);
+    }
+
+    [Fact]
+    public void Farm_remains_running_after_harvest_time_and_keeps_negative_time_when_paused()
+    {
+        using var dir = new TempDir();
+        var (store, _) = NewStore(dir);
+        var farm = Presets.Create().Single(t => t.Preset == Presets.Farm) with
+        {
+            Countdown = new CountdownSpec { Duration = TimeSpan.FromHours(1) },
+        };
+        store.Upsert(farm);
+        store.StartCountdown(farm.Id, T0);
+
+        Assert.Empty(store.CompleteCountdowns(T0.AddMinutes(90), T0.AddMinutes(90)));
+        store.PauseCountdown(farm.Id, T0.AddMinutes(90));
+
+        Assert.Equal(CountdownStatus.Paused, store.Current.Timers.Single().Countdown!.Status);
+        Assert.Equal(TimeSpan.FromMinutes(-30), store.Current.Timers.Single().Countdown!.Remaining);
     }
 }

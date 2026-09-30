@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 
@@ -86,5 +87,22 @@ public class DataMigrationsTests
         Assert.False(follows.OverridesDefaults);
         Assert.True((follows with { Sound = new SoundAlert { Key = "harp" } }).OverridesDefaults);
         Assert.True((follows with { Sound = new SoundAlert { Enabled = false } }).OverridesDefaults);
+    }
+
+    [Fact]
+    public void Running_horse_preset_becomes_a_separate_run()
+    {
+        var now = new DateTimeOffset(2026, 9, 29, 12, 0, 0, TimeSpan.Zero);
+        var template = Presets.CreateHorseRegistration();
+        template = template with { Countdown = CountdownOps.Start(template.Countdown!, now) };
+        var data = new AppData { DataVersion = 4, Timers = [template] };
+
+        var migrated = DataMigrations.Apply(data, new AppSettings());
+
+        Assert.Equal(CountdownStatus.Idle, migrated.Timers[0].Countdown!.Status);
+        var run = migrated.Timers[1];
+        Assert.Equal(Presets.HorseRegistrationRun, run.Preset);
+        Assert.Equal(now.AddMinutes(10), run.Countdown!.EndsAtUtc);
+        Assert.Equal(1, run.HorseRunNumber);
     }
 }

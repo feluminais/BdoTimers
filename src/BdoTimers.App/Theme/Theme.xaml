@@ -500,6 +500,7 @@
                         </ToggleButton>
                         <ContentPresenter Margin="2,3,20,3" IsHitTestVisible="False" VerticalAlignment="Center"
                                           Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                           ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" />
                         <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="None">
                             <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource AccentSoftBrush}" BorderThickness="1"

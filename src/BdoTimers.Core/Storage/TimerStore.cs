@@ -1,10 +1,44 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.Core.Storage;
 
+public enum HorseStartResult { Started, LimitReached, Unavailable }
+
 public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : PersistentState<AppData>(file, initial)
 {
+    public const int MaxHorseRegistrations = 10;
+
+    /// <summary>Starts a separate countdown from the horse preset; active runs retain their own settings and times.</summary>
+    public HorseStartResult StartHorseRegistration(DateTimeOffset now)
+    {
+        var result = HorseStartResult.Unavailable;
+        Update(d =>
+        {
+            var template = d.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
+            if (template?.Countdown is not { } countdown) return d;
+            var runs = d.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
+                && t.Countdown?.Status is not CountdownStatus.Idle).ToList();
+            if (runs.Count >= MaxHorseRegistrations)
+            {
+                result = HorseStartResult.LimitReached;
+                return d;
+            }
+            var used = runs.Select(t => t.HorseRunNumber).ToHashSet();
+            var number = Enumerable.Range(1, MaxHorseRegistrations).First(n => !used.Contains(n));
+            var run = template with
+            {
+                Id = Guid.NewGuid(), Name = $"{template.Name} {number}", Preset = Presets.HorseRegistrationRun,
+                HorseRunNumber = number, StartHotkey = null, ImageFile = null,
+                Countdown = CountdownOps.Start(new CountdownSpec { Duration = countdown.Duration }, now),
+            };
+            result = HorseStartResult.Started;
+            return d with { Timers = [.. d.Timers, run] };
+        });
+        return result;
+    }
+
     public void Upsert(TimerDef timer) => Update(d => d with
     {
         Timers = d.Timers.Any(t => t.Id == timer.Id)
@@ -35,7 +69,8 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
     });
 
     public void StartCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Start(c, now));
-    public void PauseCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Pause(c, now));
+    public void PauseCountdown(Guid id, DateTimeOffset now) => Modify(id, t => t.Countdown is { } c
+        ? t with { Countdown = CountdownOps.Pause(c, now, t.Preset == Presets.Farm) } : t);
     public void ResumeCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Resume(c, now));
     public void ResetCountdown(Guid id) => ModifyCountdown(id, CountdownOps.Reset);
 
@@ -58,16 +93,20 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         Update(d =>
         {
             var due = d.Timers
-                .Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end <= endedBefore)
+                .Where(t => t.Preset != Presets.Farm
+                    && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end <= endedBefore)
                 .ToList();
             if (due.Count == 0) return d;
             completed.AddRange(due);
             var ids = due.Select(t => t.Id).ToHashSet();
+            var removedIds = due.Where(t => t.Preset == Presets.HorseRegistrationRun).Select(t => t.Id).ToHashSet();
             return d with
             {
                 Timers = d.Timers
+                    .Where(t => !ids.Contains(t.Id) || t.Preset != Presets.HorseRegistrationRun)
                     .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Complete(t.Countdown!) } : t)
                     .ToList(),
+                Muted = removedIds.Count == 0 ? d.Muted : d.Muted.Where(m => !removedIds.Contains(m.TimerId)).ToList(),
             };
         });
         return completed;

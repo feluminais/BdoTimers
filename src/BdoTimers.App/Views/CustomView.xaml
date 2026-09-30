@@ -104,7 +104,7 @@
                             <DockPanel Margin="0,3,0,0" Visibility="{Binding Growth, Converter={StaticResource NullToCollapsed}}">
                                 <TextBlock DockPanel.Dock="Right" Text="{Binding Growth, StringFormat='{}{0} %'}" Style="{StaticResource LabelText}"
                                            Typography.NumeralAlignment="Tabular" Width="34" VerticalAlignment="Center" />
-                                <ProgressBar Style="{StaticResource GrowthBar}" Value="{Binding Growth, TargetNullValue=0, Mode=OneWay}"
+                                <ProgressBar Style="{StaticResource GrowthBar}" Maximum="200" Value="{Binding Growth, TargetNullValue=0, Mode=OneWay}"
                                              VerticalAlignment="Center" AutomationProperties.Name="Growth" />
                             </DockPanel>
                         </StackPanel>
@@ -144,6 +144,10 @@
                                            Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                             </Button>
                         </StackPanel>
+                        <Button Grid.Column="2" Style="{StaticResource IconButton}" Height="30" Content="&#xE768;" FontSize="15"
+                                Foreground="{StaticResource AccentBrush}" ToolTip="{Binding HorseStartTip}"
+                                Command="{Binding StartHorseRegistrationCommand}" IsEnabled="{Binding CanStartHorse}"
+                                Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                 </Button>
 
@@ -174,7 +178,7 @@
                             <!-- Countdowns only: how far along it is, on a line like the game's growth bar; the wheel steps it too -->
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,6,0,0"
                                         Visibility="{Binding HasPercent, Converter={StaticResource BoolToVisibility}}">
-                                <Slider Width="128" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True"
+                                <Slider Width="128" Minimum="0" Maximum="{Binding MaxStartPercent}" SmallChange="1" LargeChange="10" TickFrequency="1" IsSnapToTickEnabled="True"
                                         Value="{Binding StartPercent}" VerticalAlignment="Center" PreviewMouseWheel="PercentSlider_PreviewMouseWheel"
                                         AutomationProperties.Name="Percent done" />
                                 <!-- Fixed width, so the line doesn't shift as the number grows -->

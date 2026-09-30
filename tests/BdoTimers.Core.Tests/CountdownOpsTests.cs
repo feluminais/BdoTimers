@@ -143,4 +143,29 @@ public class CountdownOpsTests
     {
         Assert.Null(CountdownOps.Progress(Hour, T0));
     }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(60, 100)]
+    [InlineData(90, 150)]
+    [InlineData(120, 200)]
+    [InlineData(150, 200)]
+    public void Farm_growth_continues_past_zero_and_caps_at_200(int elapsedMinutes, int percent)
+    {
+        var running = CountdownOps.Start(Hour, T0);
+        Assert.Equal(percent, CountdownOps.FarmGrowth(running, T0.AddMinutes(elapsedMinutes)));
+    }
+
+    [Fact]
+    public void Pausing_overgrown_farm_freezes_negative_time_until_resumed()
+    {
+        var running = CountdownOps.Start(Hour, T0);
+        var paused = CountdownOps.Pause(running, T0.AddMinutes(90), preserveOvergrowth: true);
+        Assert.Equal(TimeSpan.FromMinutes(-30), paused.Remaining);
+        Assert.Equal(150, CountdownOps.FarmGrowth(paused, T0.AddHours(5)));
+
+        var resumed = CountdownOps.Resume(paused, T0.AddHours(5));
+        Assert.Equal(T0.AddHours(4.5), resumed.EndsAtUtc);
+        Assert.Equal(150, CountdownOps.FarmGrowth(resumed, T0.AddHours(5)));
+    }
 }

@@ -25,10 +25,12 @@ public static class HotkeyRules
     /// Why <paramref name="hotkey"/> can't be used beside <paramref name="other"/>, or null when it can. Windows keeps a
     /// hotkey from the game, so a key that types in chat needs Ctrl or Alt; Shift+letter still types.
     /// </summary>
-    public static string? Check(Hotkey hotkey, Hotkey? other)
+    public static string? Check(Hotkey hotkey, Hotkey? other) => Check(hotkey, other, null);
+
+    public static string? Check(Hotkey hotkey, Hotkey? other, Hotkey? another)
     {
         if (TypesText(hotkey.VirtualKey) && (hotkey.Modifiers & NonTyping) == 0) return NeedsModifier;
-        return hotkey == other ? SameAsOther : null;
+        return hotkey == other || hotkey == another ? SameAsOther : null;
     }
 
     /// <summary>Backspace, Tab, Enter, Space, 0-9, A-Z and the punctuation keys.</summary>

@@ -6,8 +6,8 @@ namespace BdoTimers.Core.Tests;
 public class OverlayPresenceTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 28, 20, 0, 0, TimeSpan.Zero);
-    static readonly OverlaySnapshot Clock = new(true, null, null, [], null, null);
-    static readonly OverlaySnapshot Empty = new(false, null, null, [], null, null);
+    static readonly OverlaySnapshot Clock = new(true, null, null, [], null, null, [], 0);
+    static readonly OverlaySnapshot Empty = new(false, null, null, [], null, null, [], 0);
     static readonly OverlaySnapshot PopUp = Clock with { PopUps = [new UpcomingItem(new TimerDef { Name = "Bread" }, Now.AddMinutes(3))] };
     static readonly OverlaySettings Defaults = new();
     static readonly OverlaySettings TimedShow = new() { ShowOnHotkey = true, ShowSeconds = 10 };

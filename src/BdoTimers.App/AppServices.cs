@@ -34,7 +34,8 @@ public sealed class AppServices : IDisposable
     public PersistentState<AppSettings> Settings { get; }
     public BossSeed Seed { get; }
     public UiClock UiClock { get; } = new();
-    public IAlertSink Alerts { get; }
+    public AlertDispatcher Alerts { get; }
+    public IClock Clock { get; } = new SystemClock();
     public TtsChannel Tts { get; }
     public OverlayController Overlay { get; }
     public ArtLibrary Art { get; }
@@ -78,7 +79,7 @@ public sealed class AppServices : IDisposable
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")));
         Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
-        _engine = new SchedulerEngine(Timers, Settings, Alerts, new SystemClock());
+        _engine = new SchedulerEngine(Timers, Settings, Alerts, Clock);
         _loop = new SchedulerLoop(_engine);
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
@@ -138,6 +139,18 @@ public sealed class AppServices : IDisposable
     }
 
     public void ResumeAlerts() => Settings.Update(AlertPause.Resume);
+
+    public HorseStartResult StartHorseRegistration(bool announce)
+    {
+        var result = Timers.StartHorseRegistration(Clock.UtcNow);
+        if (result == HorseStartResult.Started && announce) Alerts.Say("Horse registration time started");
+        else if (result == HorseStartResult.LimitReached)
+        {
+            try { _toast.ShowInfo("Horse registrations", "Maximum 10 running."); }
+            catch (Exception ex) { Log.Error("Horse registration limit notice failed", ex); }
+        }
+        return result;
+    }
 
     public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
         [new TimerDef { Name = "Test boss" }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));

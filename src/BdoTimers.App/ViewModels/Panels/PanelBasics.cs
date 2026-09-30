@@ -5,6 +5,7 @@ public interface IPanelHost
 {
     void OpenPanel(object panel);
     void ClosePanel();
+    bool IsOpen(object panel);
 }
 
 /// <summary>Implemented by panels that need to tidy up when closed by Done, Esc or a click outside.</summary>

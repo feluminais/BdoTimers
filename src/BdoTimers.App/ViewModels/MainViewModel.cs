@@ -58,6 +58,8 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
         Panel = panel;
     }
 
+    public bool IsOpen(object panel) => ReferenceEquals(Panel, panel);
+
     [RelayCommand]
     public void ClosePanel()
     {

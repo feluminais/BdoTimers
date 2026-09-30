@@ -24,6 +24,7 @@ public sealed record OverlaySettings
     public bool ShowNext { get; init; } = true;
     public bool ShowFarm { get; init; } = true;
     public bool ShowFishing { get; init; } = true;
+    public bool ShowHorseRegistrations { get; init; }
     /// <summary>"#RRGGBB"; also used when the picture can't be read.</summary>
     public string BackgroundColor { get; init; } = DefaultBackgroundColor;
     /// <summary>A picture's file name inside the app's images folder; it replaces the colour.</summary>
