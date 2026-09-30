@@ -28,12 +28,26 @@ public sealed partial class SlotListViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddTime))]
     void AddTime()
     {
-        var slot = Enumerable.Range(0, 7)
-            .Select(day => new Slot((DayOfWeek)((day + 1) % 7), new TimeOnly(20, 0)))
-            .FirstOrDefault(candidate => Rows.All(row => row.Day.Value is not DayOfWeek d || d != candidate.Day || row.TimeText != "20:00"));
-        Add(new SlotRowViewModel(slot == default ? new Slot(DayOfWeek.Monday, new TimeOnly(21, 0)) : slot));
+        Add(new SlotRowViewModel(NextAvailableSlot()));
         LimitsChanged();
         TryApply();
+    }
+
+    Slot NextAvailableSlot()
+    {
+        HashSet<Slot> occupied = [];
+        foreach (var row in Rows)
+            if (row.Day.Value is DayOfWeek day && Parsing.TryParseTime(row.TimeText, out var time))
+                occupied.Add(new Slot(day, time));
+        // Prefer 20:00 on each unused day, then other hours, then remaining minutes.
+        for (var minute = 0; minute < 60; minute++)
+            for (var hour = 0; hour < 24; hour++)
+                for (var day = 0; day < 7; day++)
+                {
+                    var slot = new Slot((DayOfWeek)((day + 1) % 7), new TimeOnly((20 + hour) % 24, minute));
+                    if (!occupied.Contains(slot)) return slot;
+                }
+        return new Slot(DayOfWeek.Monday, new TimeOnly(20, 0));
     }
 
     bool CanAddTime() => MayAddTime;
@@ -64,10 +78,17 @@ public sealed partial class SlotListViewModel : ObservableObject
     void TryApply()
     {
         var slots = new List<Slot>();
+        HashSet<Slot> seen = [];
         foreach (var row in Rows)
         {
-            row.Invalid = !Parsing.TryParseTime(row.TimeText, out var time);
-            if (!row.Invalid) slots.Add(new Slot((DayOfWeek)row.Day.Value!, time));
+            if (row.Day.Value is not DayOfWeek day || !Parsing.TryParseTime(row.TimeText, out var time))
+            {
+                row.Invalid = true;
+                continue;
+            }
+            var slot = new Slot(day, time);
+            row.Invalid = !seen.Add(slot);
+            if (!row.Invalid) slots.Add(slot);
         }
         if (slots.Count == Rows.Count) _apply(slots);
     }
