@@ -1,5 +1,7 @@
 using System.IO;
+using System.Windows;
 using BdoTimers.App.Controls;
+using BdoTimers.App.Overlay;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -31,9 +33,17 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private string? _timeZoneId;
     [ObservableProperty] private Choice _alertsOn;
     [ObservableProperty] private bool _confirmingDelete;
+    [ObservableProperty] private Hotkey? _horseHotkey;
+    [ObservableProperty] private bool _horseHotkeyRefused;
+    [ObservableProperty] private bool _listeningHorseHotkey;
 
     public bool IsCountdown { get; }
     public bool IsFarm { get; }
+    public bool IsHorseTemplate { get; }
+    public bool IsHorseRun { get; }
+    public bool CanChangePicture { get; }
+    public Hotkey? OverlayAlwaysHotkey { get; }
+    public Hotkey? OverlayShowHotkey { get; }
     public IReadOnlyList<FarmGrowthOption> FarmGrowthOptions { get; } =
     [
         new("20 h · Suitable", TimeSpan.FromHours(20)),
@@ -64,6 +74,17 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _alertsOn = Choice.For(timer.Enabled);
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsFarm = timer.Preset == Presets.Farm && IsCountdown;
+        IsHorseTemplate = timer.Preset == Presets.HorseRegistration;
+        IsHorseRun = timer.Preset == Presets.HorseRegistrationRun;
+        CanChangePicture = timer.Preset != Presets.HorseRegistrationRun;
+        _horseHotkey = timer.StartHotkey;
+        OverlayAlwaysHotkey = services.Settings.Current.Overlay.AlwaysShowHotkey;
+        OverlayShowHotkey = services.Settings.Current.Overlay.ShowHotkey;
+        if (IsHorseTemplate)
+        {
+            services.Overlay.Hotkeys.RefusedChanged += LoadHorseHotkeyRefused;
+            LoadHorseHotkeyRefused();
+        }
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
@@ -75,6 +96,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
                 slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
         }
         Alerts = new AlertRowsViewModel(services, timer);
+        if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
     }
 
     partial void OnNameChanged(string value)
@@ -101,10 +123,38 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         if (_typedFarmDuration is not { } duration) return;
         _typedFarmDuration = null;
-        Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration) });
+        Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) });
     }
 
-    public void OnClosed() => CommitDuration();
+    public void OnClosed()
+    {
+        CommitDuration();
+        if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
+        if (!IsHorseTemplate) return;
+        ListeningHorseHotkey = false;
+        _services.Overlay.Hotkeys.RefusedChanged -= LoadHorseHotkeyRefused;
+    }
+
+    /// <summary>A finished run is removed by the scheduler; close its panel before another edit targets it.</summary>
+    void OnHorseRunChanged() => Application.Current.Dispatcher.BeginInvoke((Action)(() =>
+    {
+        if (_host.IsOpen(this) && _services.Timers.Current.Timers.All(t => t.Id != _id)) _host.ClosePanel();
+    }));
+
+    void LoadHorseHotkeyRefused() =>
+        HorseHotkeyRefused = _services.Overlay.Hotkeys.Refused.Contains(HotkeyAction.StartHorseRegistration);
+
+    partial void OnHorseHotkeyChanged(Hotkey? value)
+    {
+        if (IsHorseTemplate) Modify(t => t with { StartHotkey = value });
+    }
+
+    partial void OnListeningHorseHotkeyChanged(bool value)
+    {
+        if (!IsHorseTemplate) return;
+        if (value) _services.Overlay.Hotkeys.Suspend();
+        else _services.Overlay.Hotkeys.Resume();
+    }
 
     FarmGrowthOption GrowthOption(TimeSpan? duration) =>
         FarmGrowthOptions.FirstOrDefault(o => o.Duration == duration) ?? FarmGrowthOptions[^1];
@@ -113,7 +163,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         if (_syncingDuration || !IsFarm || value.Duration is not { } duration) return;
         _typedFarmDuration = null;
-        Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration) });
+        Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) });
         _syncingDuration = true;
         DurationText = Parsing.FormatDuration(duration);
         _syncingDuration = false;

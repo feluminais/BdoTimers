@@ -52,6 +52,7 @@ public class OverlayContentTests
         Assert.Null(s.Previous);
         Assert.Null(s.Next);
         Assert.Null(s.FarmLeft);
+        Assert.Null(s.FarmProgress);
         Assert.Null(s.FishingElapsed);
         Assert.True(s.IsEmpty);
     }
@@ -81,6 +82,20 @@ public class OverlayContentTests
             OverlayContent.Build(new AppData { Timers = [Fishing(paused)] }, All, Now.AddHours(1)).FishingElapsed);
 
         Assert.Null(OverlayContent.Build(new AppData { Timers = [Fishing(new StopwatchSpec())] }, All, Now).FishingElapsed);
+    }
+
+    [Fact]
+    public void Farm_overlay_keeps_signed_time_and_growth_after_harvest()
+    {
+        var running = CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromHours(22) }, Now.AddHours(-33));
+        var current = OverlayContent.Build(new AppData { Timers = [Farm(running)] }, All, Now);
+        Assert.Equal(TimeSpan.FromHours(-11), current.FarmLeft);
+        Assert.Equal(150, current.FarmProgress);
+
+        var paused = CountdownOps.Pause(running, Now, preserveOvergrowth: true);
+        var later = OverlayContent.Build(new AppData { Timers = [Farm(paused)] }, All, Now.AddHours(5));
+        Assert.Equal(TimeSpan.FromHours(-11), later.FarmLeft);
+        Assert.Equal(150, later.FarmProgress);
     }
 
     [Fact]
@@ -146,5 +161,26 @@ public class OverlayContentTests
         var later = Now.AddMinutes(4);
         Assert.False(new OverlayPresence().IsVisible(All, later, OverlayContent.Build(data, All, later), false));
         Assert.False(new OverlayPresence().IsVisible(All with { Enabled = false }, Now, content, false));
+    }
+
+    [Fact]
+    public void Horse_section_shows_two_newest_running_registrations_and_counts_the_rest()
+    {
+        var runs = Enumerable.Range(1, 4).Select(i => new TimerDef
+        {
+            Name = $"Horse registration {i}", Kind = TimerKind.Countdown, Preset = Presets.HorseRegistrationRun,
+            HorseRunNumber = i,
+            Countdown = CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromMinutes(10) }, Now.AddSeconds(i)),
+            Alerts = new AlertConfig { Overlay = new OverlayAlert { Enabled = true, ShowMinutesBefore = 10 } },
+        }).ToList();
+        var data = new AppData { Timers = runs };
+        var settings = All with { ShowHorseRegistrations = true };
+
+        var snapshot = OverlayContent.Build(data, settings, Now.AddSeconds(5));
+
+        Assert.Equal(["Horse 4", "Horse 3"], snapshot.HorseRegistrations.Select(r => r.Name));
+        Assert.Equal(2, snapshot.MoreHorseRegistrations);
+        Assert.Empty(snapshot.PopUps);
+        Assert.Equal(4, OverlayContent.Build(data, settings with { ShowHorseRegistrations = false }, Now.AddSeconds(5)).PopUps.Count);
     }
 }

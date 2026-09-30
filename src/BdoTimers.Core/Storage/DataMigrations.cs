@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Sounds;
 
@@ -7,7 +8,7 @@ namespace BdoTimers.Core.Storage;
 /// <summary>Brings timer data saved by older versions up to date; data that is already current comes back unchanged.</summary>
 public static class DataMigrations
 {
-    public const int Current = 4;
+    public const int Current = 5;
 
     /// <summary>Lists that earlier versions gave timers themselves: the built-in default, and 5 and 0 for countdowns.</summary>
     static readonly IReadOnlyList<IReadOnlyList<int>> AssignedLeadTimes = [AlertConfig.StandardLeadTimesMinutes, [5, 0]];
@@ -19,6 +20,7 @@ public static class DataMigrations
         if (data.DataVersion < 2) timers = FollowDefaultLeadTimes(timers, settings);
         if (data.DataVersion < 3) timers = ForgetRetiredSounds(timers);
         if (data.DataVersion < 4) timers = AddHorseRegistration(timers);
+        if (data.DataVersion < 5) timers = SeparateHorseRegistration(timers);
         return data with { DataVersion = Current, Timers = timers };
     }
 
@@ -50,4 +52,17 @@ public static class DataMigrations
     /// </summary>
     static IReadOnlyList<TimerDef> AddHorseRegistration(IReadOnlyList<TimerDef> timers) =>
         [.. timers, Presets.CreateHorseRegistration()];
+
+    /// <summary>Version 5: keep an existing horse countdown as its own run when the preset becomes a launcher.</summary>
+    static IReadOnlyList<TimerDef> SeparateHorseRegistration(IReadOnlyList<TimerDef> timers)
+    {
+        var template = timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
+        if (template?.Countdown is not { Status: not CountdownStatus.Idle } countdown) return timers;
+        var run = template with
+        {
+            Id = Guid.NewGuid(), Name = $"{template.Name} 1", Preset = Presets.HorseRegistrationRun,
+            HorseRunNumber = 1, StartHotkey = null, ImageFile = null,
+        };
+        return [.. timers.Select(t => t.Id == template.Id ? t with { Countdown = CountdownOps.Reset(countdown) } : t), run];
+    }
 }

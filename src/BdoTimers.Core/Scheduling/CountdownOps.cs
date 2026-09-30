@@ -7,7 +7,7 @@ public static class CountdownOps
     public static CountdownSpec Start(CountdownSpec c, DateTimeOffset now) => StartFrom(c, now);
 
     /// <summary>Changes the duration without counting paused time or discarding elapsed growth.</summary>
-    public static CountdownSpec ChangeDuration(CountdownSpec c, TimeSpan duration)
+    public static CountdownSpec ChangeDuration(CountdownSpec c, TimeSpan duration, bool preserveOvergrowth = false)
     {
         if (duration <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
         var delta = duration - c.Duration;
@@ -15,7 +15,9 @@ public static class CountdownOps
         {
             Duration = duration,
             EndsAtUtc = c.EndsAtUtc is { } end ? end + delta : null,
-            Remaining = c.Remaining is { } left ? TimeSpan.FromTicks(Math.Max(0, (left + delta).Ticks)) : null,
+            Remaining = c.Remaining is { } left
+                ? (preserveOvergrowth ? left + delta : TimeSpan.FromTicks(Math.Max(0, (left + delta).Ticks)))
+                : null,
         };
     }
 
@@ -33,6 +35,17 @@ public static class CountdownOps
     public static int ProgressPercent(TimeSpan duration, TimeSpan elapsed) =>
         (int)Math.Clamp(elapsed.Ticks * 100 / duration.Ticks, 0, 100);
 
+    /// <summary>Farm growth continues past the harvest time and stops displaying at 200%.</summary>
+    public static int GrowthPercent(TimeSpan duration, TimeSpan elapsed) =>
+        duration <= TimeSpan.Zero ? 0 : (int)Math.Clamp((decimal)elapsed.Ticks * 100 / duration.Ticks, 0, 200);
+
+    public static int? FarmGrowth(CountdownSpec c, DateTimeOffset now) => c switch
+    {
+        { Status: CountdownStatus.Running, EndsAtUtc: { } end } => GrowthPercent(c.Duration, c.Duration - (end - now)),
+        { Status: CountdownStatus.Paused, Remaining: { } left } => GrowthPercent(c.Duration, c.Duration - left),
+        _ => null,
+    };
+
     /// <summary>How far along a running or paused countdown is, as <see cref="ProgressPercent"/>; time spent paused
     /// doesn't count. Null while idle.</summary>
     public static int? Progress(CountdownSpec c, DateTimeOffset now) => c switch
@@ -42,13 +55,13 @@ public static class CountdownOps
         _ => null,
     };
 
-    public static CountdownSpec Pause(CountdownSpec c, DateTimeOffset now) =>
+    public static CountdownSpec Pause(CountdownSpec c, DateTimeOffset now, bool preserveOvergrowth = false) =>
         c is { Status: CountdownStatus.Running, EndsAtUtc: { } end }
             ? c with
             {
                 Status = CountdownStatus.Paused,
                 EndsAtUtc = null,
-                Remaining = end > now ? end - now : TimeSpan.Zero,
+                Remaining = preserveOvergrowth ? end - now : end > now ? end - now : TimeSpan.Zero,
             }
             : c;
 

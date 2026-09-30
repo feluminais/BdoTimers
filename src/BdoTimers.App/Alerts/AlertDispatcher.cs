@@ -20,6 +20,21 @@ public sealed class AlertDispatcher(
 
     public void Dispatch(AlertEvent alert) => _ = RunAsync(alert);
 
+    /// <summary>Speaks a short confirmation through the same audio queue as timer alerts.</summary>
+    public void Say(string text) => _ = SayAsync(text);
+
+    async Task SayAsync(string text)
+    {
+        await _audio.WaitAsync();
+        try
+        {
+            var s = settings.Current;
+            await TryAsync("tts", async () => await sound.PlayAsync(
+                await tts.SynthesizeAsync(text, s.TtsVoice, s.TtsRate), s.Volume));
+        }
+        finally { _audio.Release(); }
+    }
+
     public void PrepareSpeech() => Try("tts", () => tts.Warm(settings.Current.TtsVoice));
 
     public void NotifyEndedWhileAway(TimerDef timer) =>

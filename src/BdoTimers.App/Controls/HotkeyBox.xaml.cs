@@ -19,6 +19,9 @@ public partial class HotkeyBox : UserControl
     public static readonly DependencyProperty OtherProperty =
         DependencyProperty.Register(nameof(Other), typeof(Hotkey), typeof(HotkeyBox));
 
+    public static readonly DependencyProperty Other2Property =
+        DependencyProperty.Register(nameof(Other2), typeof(Hotkey), typeof(HotkeyBox));
+
     /// <summary>Windows refused the combo.</summary>
     public static readonly DependencyProperty IsRefusedProperty =
         DependencyProperty.Register(nameof(IsRefused), typeof(bool), typeof(HotkeyBox), new PropertyMetadata(false, Changed));
@@ -45,6 +48,12 @@ public partial class HotkeyBox : UserControl
     {
         get => (Hotkey?)GetValue(OtherProperty);
         set => SetValue(OtherProperty, value);
+    }
+
+    public Hotkey? Other2
+    {
+        get => (Hotkey?)GetValue(Other2Property);
+        set => SetValue(Other2Property, value);
     }
 
     public bool IsRefused
@@ -85,7 +94,16 @@ public partial class HotkeyBox : UserControl
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
-        if (!IsListening) return;
+        if (!IsListening)
+        {
+            if (!ClearButton.IsKeyboardFocusWithin && (e.Key is Key.Enter or Key.Space))
+            {
+                _error = null;
+                SetCurrentValue(IsListeningProperty, true);
+                e.Handled = true;
+            }
+            return;
+        }
         e.Handled = true;
         var key = e.Key switch { Key.System => e.SystemKey, Key.ImeProcessed => e.ImeProcessedKey, _ => e.Key };
         // Wait for the key the modifiers go with.
@@ -96,15 +114,15 @@ public partial class HotkeyBox : UserControl
         SetCurrentValue(IsListeningProperty, false);
         if (key == Key.Escape && modifiers == HotkeyModifiers.None) return;
         var combo = new Hotkey(modifiers, KeyInterop.VirtualKeyFromKey(key));
-        _error = HotkeyRules.Check(combo, Other);
+        _error = HotkeyRules.Check(combo, Other, Other2);
         if (_error is null) SetCurrentValue(ComboProperty, combo);
         Refresh();
     }
 
     void Refresh()
     {
-        KeyText.Text = IsListening ? "…" : Combo is { } combo ? HotkeyText.Format(combo) : "—";
-        KeyText.Foreground = Brush(IsListening || Combo is not null ? "AccentTextBrush" : "PastBrush");
+        KeyText.Text = IsListening ? "Press keys…" : Combo is { } combo ? HotkeyText.Format(combo) : "Set hotkey";
+        KeyText.Foreground = Brush(IsListening || Combo is not null ? "AccentTextBrush" : "SubtleBrush");
         Field.BorderBrush = Brush(IsListening ? "AccentBrush" : _error is not null ? "DangerBrush" : "HairlineStrongBrush");
         ClearButton.Visibility = Combo is not null && !IsListening ? Visibility.Visible : Visibility.Collapsed;
         var message = _error ?? (IsRefused && Combo is not null && !IsListening ? RefusedText : null);

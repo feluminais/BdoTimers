@@ -1,6 +1,7 @@
 using System.Text.Json;
 using BdoTimers.Core.Json;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.Core.Tests;
 
@@ -114,6 +115,7 @@ public class JsonRoundTripTests
                 Layout = OverlayLayout.Card,
                 Scale = 1.5,
                 ShowFarm = false,
+                ShowHorseRegistrations = true,
                 BackgroundColor = "#3A1417",
                 BackgroundImage = "bg.png",
                 BackgroundOpacity = 0.4,
@@ -125,6 +127,27 @@ public class JsonRoundTripTests
 
         Assert.Equal(s.Overlay, back.Overlay);
         Assert.Equal(12, back.OverlayLeft);
+    }
+
+    [Fact]
+    public void Horse_preset_hotkey_and_run_number_round_trip()
+    {
+        var preset = Presets.CreateHorseRegistration() with
+        {
+            StartHotkey = new Hotkey(HotkeyModifiers.Ctrl, 0x48),
+        };
+        var run = preset with
+        {
+            Id = Guid.NewGuid(), Preset = Presets.HorseRegistrationRun,
+            HorseRunNumber = 3, StartHotkey = null,
+        };
+        var data = new AppData { Timers = [preset, run] };
+
+        var back = JsonSerializer.Deserialize<AppData>(JsonSerializer.Serialize(data, JsonDefaults.Options), JsonDefaults.Options)!;
+
+        Assert.Equal(preset.StartHotkey, back.Timers[0].StartHotkey);
+        Assert.Equal(3, back.Timers[1].HorseRunNumber);
+        Assert.Null(back.Timers[1].StartHotkey);
     }
 
     [Fact]

@@ -125,6 +125,9 @@
                             Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
             <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource LineRow}"
                             Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
+            <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
+            <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
+                       Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
         </StackPanel>
     </DataTemplate>
 
@@ -148,6 +151,9 @@
                     <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource ChipLine}"
                                     Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
                 </WrapPanel>
+                <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
+                <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
+                           Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
             </StackPanel>
         </StackPanel>
     </DataTemplate>
@@ -170,6 +176,13 @@
                             Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
             <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
                             Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
+            <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource BarLine}" VerticalAlignment="Center" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="4,0,0,0"
+                       Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>

@@ -36,6 +36,8 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private IReadOnlyList<OverlayLine> _popUps = [];
     [ObservableProperty] private OverlayLine? _farm;
     [ObservableProperty] private OverlayLine? _fishing;
+    [ObservableProperty] private IReadOnlyList<OverlayLine> _horseRegistrations = [];
+    [ObservableProperty] private string? _moreHorseRegistrations;
     [ObservableProperty] private bool _showDivider;
 
     public void Update(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
@@ -55,11 +57,18 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
             ? Spawn(next, DurationFormat.Clock(next.AtUtc - now), ImagesFor(next))
             : preview && settings.ShowNext ? new OverlaySpawn("Nouver", "00:47:12", false, [], true) : null;
         var popUps = content.PopUps.Select(i => new OverlayLine(i.Timer.Name, DurationFormat.Clock(i.AtUtc - now), false)).ToList();
-        if (popUps.Count == 0 && preview) popUps.Add(new OverlayLine("Timer", "00:05:00", true));
         if (!popUps.SequenceEqual(PopUps)) PopUps = popUps;
-        Farm = Line("Farm", content.FarmLeft, preview && settings.ShowFarm, "21:59:59");
+        Farm = content.FarmLeft is { } farmLeft
+            ? new OverlayLine("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
+            : preview && settings.ShowFarm ? new OverlayLine("Farm", "21:59:59 · 0%", true) : null;
         Fishing = Line("Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
-        ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0) && (Farm is not null || Fishing is not null);
+        var horse = content.HorseRegistrations.Select(r => new OverlayLine(r.Name, DurationFormat.Clock(r.EndsAtUtc - now), false)).ToList();
+        if (horse.Count == 0 && preview && settings.ShowHorseRegistrations)
+            horse.Add(new OverlayLine("Horse 1", "00:08:30", true));
+        if (!horse.SequenceEqual(HorseRegistrations)) HorseRegistrations = horse;
+        MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
+        ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
+            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0);
     }
 
     static OverlaySpawn Spawn(SpawnGroup group, string time, IReadOnlyList<ArtPicture> images) =>

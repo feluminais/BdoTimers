@@ -60,7 +60,7 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlwaysShow}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Other="{Binding ShowHotkey}"
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Other="{Binding ShowHotkey}" Other2="{Binding HorseHotkey}"
                                                 IsRefused="{Binding AlwaysShowRefused}" IsListening="{Binding ListeningAlwaysShow}"
                                                 AutomationProperties.Name="Always show hotkey" />
                             <TextBlock Text="Always show" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
@@ -70,7 +70,7 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding ShowOnHotkey}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Other="{Binding AlwaysShowHotkey}"
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Other="{Binding AlwaysShowHotkey}" Other2="{Binding HorseHotkey}"
                                                 IsRefused="{Binding ShowRefused}" IsListening="{Binding ListeningShow}"
                                                 AutomationProperties.Name="Show hotkey" />
                             <TextBlock Text="Show on hotkey" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
@@ -108,6 +108,7 @@
                                 <ToggleButton Style="{StaticResource Chip}" Content="Next boss" IsChecked="{Binding ShowNext}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Farm" IsChecked="{Binding ShowFarm}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Fishing" IsChecked="{Binding ShowFishing}" />
+                                <ToggleButton Style="{StaticResource Chip}" Content="Horse registrations" IsChecked="{Binding ShowHorseRegistrations}" />
                             </WrapPanel>
                         </StackPanel>
                     </Border>

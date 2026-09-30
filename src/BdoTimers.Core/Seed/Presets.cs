@@ -11,6 +11,7 @@ public static class Presets
     public const string Farm = "farm";
     public const string Fishing = "fishing";
     public const string HorseRegistration = "horse-registration";
+    public const string HorseRegistrationRun = "horse-registration-run";
 
     static readonly string[] Order = [Farm, Fishing, HorseRegistration];
 
@@ -61,8 +62,9 @@ public static class Presets
     }
 
     /// <summary>Farm and Fishing can't be deleted; Horse registration and the user's own timers can.</summary>
-    public static bool CanDelete(string? preset) => preset is null or HorseRegistration;
+    public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun;
 
     /// <summary>Sort key that puts presets first, in their fixed order, and keeps other timers after them.</summary>
-    public static int Rank(string? preset) => preset is null ? Order.Length : Math.Max(0, Array.IndexOf(Order, preset));
+    public static int Rank(string? preset) => preset == HorseRegistrationRun ? Array.IndexOf(Order, HorseRegistration)
+        : preset is null ? Order.Length : Math.Max(0, Array.IndexOf(Order, preset));
 }

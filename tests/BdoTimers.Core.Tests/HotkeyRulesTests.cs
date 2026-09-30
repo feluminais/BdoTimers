@@ -34,4 +34,13 @@ public class HotkeyRulesTests
         Assert.Equal(HotkeyRules.SameAsOther, HotkeyRules.Check(combo, combo with { }));
         Assert.Null(HotkeyRules.Check(combo, new Hotkey(HotkeyModifiers.Ctrl, 0x4F)));
     }
+
+    [Fact]
+    public void Horse_hotkey_must_differ_from_both_overlay_hotkeys()
+    {
+        var combo = new Hotkey(HotkeyModifiers.Ctrl, 0x48);
+        var other = new Hotkey(HotkeyModifiers.Alt, 0x48);
+        Assert.Equal(HotkeyRules.SameAsOther, HotkeyRules.Check(combo, other, combo));
+        Assert.Null(HotkeyRules.Check(combo, other, null));
+    }
 }

@@ -78,6 +78,13 @@ public class TextTests
         Assert.Equal(expected, DurationFormat.Clock(TimeSpan.FromSeconds(seconds)));
 
     [Theory]
+    [InlineData(-5, "−00:00:05")]
+    [InlineData(0, "00:00:00")]
+    [InlineData(5, "00:00:05")]
+    public void Formats_signed_clock(int seconds, string expected) =>
+        Assert.Equal(expected, DurationFormat.SignedClock(TimeSpan.FromSeconds(seconds)));
+
+    [Theory]
     [InlineData("1:30", 90)]
     [InlineData("0:05", 5)]
     [InlineData(" 90 ", 90)]

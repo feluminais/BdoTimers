@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using BdoTimers.App.Overlay;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -30,6 +31,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _listeningAlwaysShow;
     [ObservableProperty] private Choice _showOnHotkey = Choice.OnOff[1];
     [ObservableProperty] private Hotkey? _showHotkey;
+    [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private bool _showRefused;
     [ObservableProperty] private bool _listeningShow;
     [ObservableProperty] private Choice _showSeconds;
@@ -40,6 +42,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _showNext;
     [ObservableProperty] private bool _showFarm;
     [ObservableProperty] private bool _showFishing;
+    [ObservableProperty] private bool _showHorseRegistrations;
     [ObservableProperty] private bool _pickerOpen;
     [ObservableProperty] private Color _customColor;
     [ObservableProperty] private bool _isCustomColor;
@@ -59,6 +62,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     {
         _services = services;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
+        _horseHotkey = services.Timers.Current.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration)?.StartHotkey;
         _showSeconds = SecondsChoices[1];
         _layout = Layouts[0];
         _colorSave.Tick += (_, _) => SaveCustomColor();
@@ -85,6 +89,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         ShowNext = o.ShowNext;
         ShowFarm = o.ShowFarm;
         ShowFishing = o.ShowFishing;
+        ShowHorseRegistrations = o.ShowHorseRegistrations;
         BackgroundOpacity = o.BackgroundOpacity;
         TextOpacity = o.TextOpacity;
         if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) CustomColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
@@ -127,6 +132,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     partial void OnShowNextChanged(bool value) => Modify(o => o with { ShowNext = value });
     partial void OnShowFarmChanged(bool value) => Modify(o => o with { ShowFarm = value });
     partial void OnShowFishingChanged(bool value) => Modify(o => o with { ShowFishing = value });
+    partial void OnShowHorseRegistrationsChanged(bool value) => Modify(o => o with { ShowHorseRegistrations = value });
     partial void OnBackgroundOpacityChanged(double value) => Modify(o => o with { BackgroundOpacity = Math.Round(value, 2) });
     partial void OnTextOpacityChanged(double value) => Modify(o => o with { TextOpacity = Math.Round(value, 2) });
     partial void OnListeningAlwaysShowChanged(bool value) => Listen(value);

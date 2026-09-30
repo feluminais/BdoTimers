@@ -3,11 +3,12 @@
 Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
-- Timers screen: Farm (22-hour crop countdown), Fishing (stopwatch) and Horse registration (10 minutes from the game's
-  horse registration notice to the horse going on sale) on top, then your own countdowns and weekly timers
+- Timers screen: Farm (22-hour growth estimate that continues through overgrowth to 200%), Fishing (stopwatch) and
+  Horse registration (up to ten independent 10-minute waits from the game's registration notice to sale) on top,
+  then your own countdowns and weekly timers
 - To-do screen: daily and weekly checklists with child rows, shared reset times and your own lists
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
-  voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, previous and next boss, farm, fishing)
+  voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, bosses, farm, fishing, horse registrations)
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
 
 ## Install
@@ -32,6 +33,9 @@ Bump `<Version>` in `Directory.Build.props` for each release you hand out.
 - Overlay settings are behind the screen icon in the top bar or in the tray menu; drag the overlay while the panel is open.
 - To-do lists start Off. Turn one on, tick its boxes, and click its text to edit. Use + by Weekly or Daily to make a list;
   Settings controls the reset time for all lists of that kind and can restore deleted default lists.
+- Open the Horse registration tile to set its start hotkey. Each press starts a separate timer and speaks
+  “Horse registration time started”. The overlay's Sections include horse registrations; it shows the newest two and
+  counts any others that are running.
 
 ## Develop
 See CLAUDE.md for commands. `scripts/get-voice.ps1` fetches the voice model (132 MB) that the setup ships.
@@ -72,10 +76,15 @@ are not covered by the GPL.
     again, spawn times unchanged.
 20. Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → clock icon → pick a time 2 h ago → Start:
     it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
-    Farm → clock → a time over 22 h ago: "Would have ended at …" and Start stays off. The square stops a timer.
-21. Timers: Horse registration is third, 10:00, and its (i) shows "Start at the game's horse registration notice; it
-    ends when the horse goes on sale." at once on hover. Clock → 9 min ago → Start: "Horse registration in 1 minute",
-    then "Horse registration now" at 0:00. Its panel → Delete → Yes: gone, and still gone after a restart.
+    Farm → clock → a time over 22 h ago: it starts overgrown, shows negative time and growth above 100% on the tile
+    and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. The square
+    resets a timer.
+21. Timers: Horse registration is third, 10:00, and its (i) explains when to start. Open its panel and set a start
+    hotkey. Press it twice: two numbered registration tiles appear with independent countdowns, and each press speaks
+    "Horse registration time started". The first alerts at 1:00 and 0:00, then disappears without stopping the second.
+    Start ten at once: the next press adds none and shows the limit notice. Stop one and a new press can start another.
+    With horse registrations enabled in Overlay → Sections, the newest two appear with their time left and "+8 more
+    running" at ten. Delete the preset, restart, and check that its hotkey no longer starts registrations.
 22. To-do: Weekly quests and Daily tasks start Off, with grey struck rows. Turn Weekly quests on, tick a Garmoth child;
     it moves to the bottom of its group and its parent shows partial. Tick the parent; all three children become done and
     the group moves down. Untick it; the saved order returns. Repeat with Space and check that focus stays on the row.

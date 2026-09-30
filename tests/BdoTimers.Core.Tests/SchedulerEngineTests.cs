@@ -1,5 +1,6 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 
 namespace BdoTimers.Core.Tests;
@@ -146,5 +147,27 @@ public class SchedulerEngineTests : IDisposable
         Assert.Equal(timer.Id, _sink.EndedWhileAway.Single().Id);
         Assert.Empty(_sink.Alerts);
         Assert.Equal(CountdownStatus.Idle, _timers.Current.Timers.Single().Countdown!.Status);
+    }
+
+    [Fact]
+    public void Farm_alerts_at_harvest_then_keeps_growing_without_replaying_on_startup()
+    {
+        var farm = Presets.Create().Single(t => t.Preset == Presets.Farm) with
+        {
+            Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(10) },
+            Alerts = new AlertConfig { LeadTimesMinutes = [0] },
+        };
+        _timers.Upsert(farm);
+        _timers.StartCountdown(farm.Id, T0);
+
+        TickAt(T0.AddMinutes(10));
+        TickAt(T0.AddMinutes(12));
+        _clock.UtcNow = T0.AddMinutes(30);
+        _engine.ReconcileStartup();
+
+        Assert.Single(_sink.Alerts);
+        Assert.Empty(_sink.EndedWhileAway);
+        Assert.Equal(CountdownStatus.Running, _timers.Current.Timers.Single().Countdown!.Status);
+        Assert.Equal(T0.AddMinutes(10), _timers.Current.Timers.Single().Countdown!.EndsAtUtc);
     }
 }

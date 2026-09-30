@@ -17,4 +17,7 @@ public static class DurationFormat
         var hms = $"{span.Hours:00}:{span.Minutes:00}:{span.Seconds:00}";
         return span.Days > 0 ? $"{span.Days}d {hms}" : hms;
     }
+
+    /// <summary>A countdown that keeps counting past zero, with a minus sign for overdue time.</summary>
+    public static string SignedClock(TimeSpan span) => span < TimeSpan.Zero ? "−" + Clock(-span) : Clock(span);
 }

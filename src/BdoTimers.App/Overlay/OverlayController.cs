@@ -2,6 +2,7 @@ using System.Windows;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Storage;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.App.Overlay;
 
@@ -21,6 +22,7 @@ public sealed class OverlayController(AppServices services) : IDisposable
     {
         services.UiClock.Tick += Update;
         services.Settings.Changed += OnSettingsChanged;
+        services.Timers.Changed += OnTimersChanged;
         Hotkeys.Pressed += OnHotkey;
         HoldHotkeys();
     }
@@ -47,10 +49,14 @@ public sealed class OverlayController(AppServices services) : IDisposable
         Update(DateTimeOffset.UtcNow);
     }
 
+    void OnTimersChanged() => Application.Current.Dispatcher.BeginInvoke(HoldHotkeys);
+
     void HoldHotkeys()
     {
         var o = services.Settings.Current.Overlay;
-        Hotkeys.Set(o.Enabled ? o.AlwaysShowHotkey : null, o.Enabled && o.ShowOnHotkey ? o.ShowHotkey : null);
+        var horse = services.Timers.Current.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
+        Hotkeys.Set(o.Enabled ? o.AlwaysShowHotkey : null, o.Enabled && o.ShowOnHotkey ? o.ShowHotkey : null,
+            horse?.StartHotkey);
     }
 
     void OnHotkey(HotkeyAction action)
@@ -58,7 +64,9 @@ public sealed class OverlayController(AppServices services) : IDisposable
         var now = DateTimeOffset.UtcNow;
         try
         {
-            if (action == HotkeyAction.AlwaysShow)
+            if (action == HotkeyAction.StartHorseRegistration)
+                services.StartHorseRegistration(announce: true);
+            else if (action == HotkeyAction.AlwaysShow)
                 services.Settings.Update(s => s with { Overlay = s.Overlay with { AlwaysShow = !s.Overlay.AlwaysShow } });
             else
                 _presence = _presence.PressShow(services.Settings.Current.Overlay, now);

@@ -4,6 +4,7 @@ using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
+using BdoTimers.Core.Storage;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -28,6 +29,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
+    [ObservableProperty] private bool _canStartHorse;
+    [ObservableProperty] private string _horseStartTip = "Start registration";
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
     [ObservableProperty] private int? _growth;
 
@@ -46,13 +49,16 @@ public sealed partial class TimerTileViewModel : ObservableObject
 
     public Guid Id => _timer.Id;
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
-    public bool HasControls => _timer.Kind is TimerKind.Countdown or TimerKind.Stopwatch;
+    public bool HasControls => !IsHorseTemplate && _timer.Kind is (TimerKind.Countdown or TimerKind.Stopwatch);
+    public bool IsHorseTemplate => _timer.Preset == Presets.HorseRegistration;
+    public bool IsFarm => _timer.Preset == Presets.Farm;
     /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
     public bool HasPercent => _timer.Kind == TimerKind.Countdown;
+    public int MaxStartPercent => _timer.Preset == Presets.Farm ? 200 : 100;
     public bool IsWeekly => _timer.Kind == TimerKind.Scheduled;
     /// <summary>What a preset whose use isn't obvious is for; the tile shows it in an (i) beside the name.</summary>
     public string? Info => _timer.Preset == Presets.HorseRegistration
-        ? "Start at the game's horse registration notice; it ends when the horse goes on sale."
+        ? "Start a registration at the game's notice; each ends when the horse goes on sale."
         : null;
 
     public TimerTileViewModel(TimerDef timer, AppServices services, IPanelHost host, DateTimeOffset now)
@@ -76,17 +82,31 @@ public sealed partial class TimerTileViewModel : ObservableObject
     public void Refresh(DateTimeOffset now)
     {
         var off = _timer.Enabled ? "" : "Alerts off · ";
+        if (IsHorseTemplate && _timer.Countdown is { } horse)
+        {
+            var runs = _services.Timers.Current.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
+                && t.Countdown?.Status is not CountdownStatus.Idle).ToList();
+            CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
+            HorseStartTip = CanStartHorse ? "Start registration" : "Limit of 10 registrations";
+            var nextHorse = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
+                .MinBy(t => t.Countdown!.EndsAtUtc);
+            Digits = nextHorse?.Countdown?.EndsAtUtc is { } end ? DurationFormat.Clock(end - now) : DurationFormat.Clock(horse.Duration);
+            Detail = off + (runs.Count == 0 ? "Ready" : $"{runs.Count} of 10 active");
+            IsDimmed = runs.Count == 0 || !_timer.Enabled;
+            return;
+        }
         if (_timer.Countdown is { } c)
         {
+            var farm = _timer.Preset == Presets.Farm;
             (Digits, Detail, IsDimmed) = c.Status switch
             {
-                CountdownStatus.Running when c.EndsAtUtc is { } end => (DurationFormat.Clock(end - now), StartedText(c.StartedAtUtc), false),
-                CountdownStatus.Paused when c.Remaining is { } left => (DurationFormat.Clock(left), "Paused", true),
+                CountdownStatus.Running when c.EndsAtUtc is { } end => (farm ? DurationFormat.SignedClock(end - now) : DurationFormat.Clock(end - now), StartedText(c.StartedAtUtc), false),
+                CountdownStatus.Paused when c.Remaining is { } left => (farm ? DurationFormat.SignedClock(left) : DurationFormat.Clock(left), "Paused", true),
                 _ => (DurationFormat.Clock(c.Duration), "Ready", true),
             };
             Detail = off + Detail;
             IsDimmed |= !_timer.Enabled;
-            Growth = _timer.Preset == Presets.Farm ? CountdownOps.Progress(c, now) : null;
+            Growth = farm ? CountdownOps.FarmGrowth(c, now) : null;
             ShowStatus(c.Status);
             return;
         }
@@ -135,6 +155,9 @@ public sealed partial class TimerTileViewModel : ObservableObject
     void Open() => _host.OpenPanel(new CustomPanelViewModel(_services, _host, _timer));
 
     [RelayCommand]
+    void StartHorseRegistration() => _services.StartHorseRegistration(announce: false);
+
+    [RelayCommand]
     void StartPause()
     {
         var now = DateTimeOffset.UtcNow;
@@ -173,7 +196,9 @@ public sealed partial class TimerTileViewModel : ObservableObject
         Follow(() =>
         {
             ShowTime(from);
-            if (_timer.Countdown is { } countdown) StartPercent = CountdownOps.ProgressPercent(countdown.Duration, now - from);
+            if (_timer.Countdown is { } countdown) StartPercent = _timer.Preset == Presets.Farm
+                ? CountdownOps.GrowthPercent(countdown.Duration, now - from)
+                : CountdownOps.ProgressPercent(countdown.Duration, now - from);
         });
         CheckStart();
         IsPickingStart = true;
@@ -206,7 +231,9 @@ public sealed partial class TimerTileViewModel : ObservableObject
         if (_following) return;
         _fromPercent = false;
         if (TimeStart() is { } at && _timer.Countdown is { } c)
-            Follow(() => StartPercent = CountdownOps.ProgressPercent(c.Duration, DateTimeOffset.UtcNow - at));
+            Follow(() => StartPercent = _timer.Preset == Presets.Farm
+                ? CountdownOps.GrowthPercent(c.Duration, DateTimeOffset.UtcNow - at)
+                : CountdownOps.ProgressPercent(c.Duration, DateTimeOffset.UtcNow - at));
         CheckStart();
     }
 
@@ -237,7 +264,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     {
         StartInvalid = TimeStart() is null;
         var at = PickedStart();
-        StartProblem = at is { } start && _timer.Countdown is { } c && start + c.Duration <= DateTimeOffset.UtcNow
+        StartProblem = !IsFarm && at is { } start && _timer.Countdown is { } c && start + c.Duration <= DateTimeOffset.UtcNow
             ? $"Would have ended at {(start + c.Duration).ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}"
             : "";
         ConfirmStartCommand.NotifyCanExecuteChanged();
@@ -268,6 +295,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     void Reset()
     {
         if (_timer.Stopwatch is not null) _services.Timers.ResetStopwatch(_timer.Id);
+        else if (_timer.Preset == Presets.HorseRegistrationRun) _services.Timers.Delete(_timer.Id);
         else _services.Timers.ResetCountdown(_timer.Id);
     }
 
