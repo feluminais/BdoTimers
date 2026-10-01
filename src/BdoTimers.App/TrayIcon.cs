@@ -1,15 +1,24 @@
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
+using BdoTimers.Core.Diagnostics;
 using H.NotifyIcon;
 
 namespace BdoTimers.App;
 
+/// <summary>
+/// The notification area icon. Creating it fails while the taskbar isn't ready, e.g. at logon autostart; it is then
+/// retried until it works while the rest of the app runs.
+/// </summary>
 public sealed class TrayIcon : IDisposable
 {
     readonly TaskbarIcon _icon;
+    readonly RepeatingErrorLog _errors;
+    readonly DispatcherTimer _retry = new() { Interval = TimeSpan.FromSeconds(5) };
 
     public TrayIcon(AppServices services)
     {
+        _errors = new RepeatingErrorLog("Tray icon", services.Clock);
         _icon = new TaskbarIcon
         {
             ToolTipText = "BDO Timers",
@@ -18,8 +27,24 @@ public sealed class TrayIcon : IDisposable
             ContextMenu = BuildMenu(services),
         };
         _icon.TrayLeftMouseUp += (_, _) => services.ShowMainWindow();
-        // Efficiency mode would lower process priority while hidden and delay alerts.
-        _icon.ForceCreate(enablesEfficiencyMode: false);
+        _retry.Tick += (_, _) => { if (TryCreate()) _retry.Stop(); };
+        if (!TryCreate()) _retry.Start();
+    }
+
+    bool TryCreate()
+    {
+        try
+        {
+            // Efficiency mode would lower process priority while hidden and delay alerts.
+            _icon.ForceCreate(enablesEfficiencyMode: false);
+            _errors.Succeeded();
+            return true;
+        }
+        catch (InvalidOperationException ex)
+        {
+            _errors.Failed(ex);
+            return false;
+        }
     }
 
     static ContextMenu BuildMenu(AppServices s)
@@ -43,5 +68,9 @@ public sealed class TrayIcon : IDisposable
         return item;
     }
 
-    public void Dispose() => _icon.Dispose();
+    public void Dispose()
+    {
+        _retry.Stop();
+        _icon.Dispose();
+    }
 }
