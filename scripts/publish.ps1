@@ -14,7 +14,7 @@ New-Item -ItemType Directory -Force publish | Out-Null
 Get-ChildItem publish | Remove-Item -Recurse -Force
 
 # App -> MSI (the package) -> setup window -> bundle (the setup.exe users run)
-dotnet publish src/BdoTimers.App -c Release -r win-x64 --self-contained true -o $stage
+dotnet publish src/BdoTimers.App -c Release -o $stage
 if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
 dotnet build installer/Msi/BdoTimers.Installer.wixproj -c Release "-p:AppDir=$(Resolve-Path $stage)"
 if ($LASTEXITCODE -ne 0) { throw 'MSI build failed' }

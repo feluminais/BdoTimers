@@ -50,4 +50,15 @@
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
+  <!-- Publishing: self-contained, so users need no .NET installed, and precompiled, so starting at logon and the first
+       alert don't wait for the JIT. The Windows SDK projection stays IL: the app makes only a few notification calls
+       into it, and precompiling it would more than double its 24 MB. -->
+  <PropertyGroup>
+    <PublishSelfContained>true</PublishSelfContained>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+  <ItemGroup>
+    <PublishReadyToRunExclude Include="Microsoft.Windows.SDK.NET.dll" />
+  </ItemGroup>
+
 </Project>
