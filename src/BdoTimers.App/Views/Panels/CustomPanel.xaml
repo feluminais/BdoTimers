@@ -47,7 +47,6 @@
     </UserControl.Resources>
     <DockPanel>
         <Grid DockPanel.Dock="Top" Height="88">
-            <!-- Clicking the picture offers to change or remove it -->
             <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="230" HorizontalAlignment="Left"
                     AutomationProperties.Name="Change picture" IsEnabled="{Binding CanChangePicture}" Click="PictureButton_Click">
                 <Button.ContextMenu>
