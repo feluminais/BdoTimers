@@ -25,7 +25,8 @@ public sealed record OverlaySnapshot(
         && FishingElapsed is null && HorseRegistrations.Count == 0;
 }
 
-public sealed record HorseOverlayRun(string Name, DateTimeOffset EndsAtUtc);
+/// <summary>A running horse registration; <see cref="Id"/> is its timer's.</summary>
+public sealed record HorseOverlayRun(Guid Id, string Name, DateTimeOffset EndsAtUtc);
 
 public static class OverlayContent
 {
@@ -57,7 +58,7 @@ public static class OverlayContent
             farm,
             settings.ShowFishing ? FishingElapsed(data, now) : null,
             horse.Take(2).Select(t => new HorseOverlayRun(
-                t.HorseRunNumber is { } number ? $"Horse {number}" : t.Name, t.Countdown!.EndsAtUtc!.Value)).ToList(),
+                t.Id, t.HorseRunNumber is { } number ? $"Horse {number}" : t.Name, t.Countdown!.EndsAtUtc!.Value)).ToList(),
             Math.Max(0, horse.Count - 2))
         {
             FarmProgress = settings.ShowFarm ? FarmProgress(data, now) : null,
