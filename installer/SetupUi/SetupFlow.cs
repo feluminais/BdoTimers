@@ -21,7 +21,6 @@ internal sealed class SetupFlow
     readonly IBootstrapperCommand _command;
     volatile bool _cancel;
     LaunchAction _action;
-    RequestState? _packageState;
     /// <summary>The installed exe when the current action started; uninstall removes the record of where it was.</summary>
     string? _installedExe;
     string? _lastError;
@@ -32,7 +31,6 @@ internal sealed class SetupFlow
         _command = command;
         ba.DetectBegin += (_, e) => IsInstalled = e.RegistrationType == RegistrationType.Full;
         ba.DetectComplete += (_, e) => Detected?.Invoke(e.Status);
-        ba.PlanPackageBegin += (_, e) => { if (_packageState is { } state) e.State = state; };
         ba.PlanComplete += (_, e) =>
         {
             if (e.Status < 0 || _cancel)
@@ -103,19 +101,18 @@ internal sealed class SetupFlow
     }
 
     /// <summary>Where the app keeps timers, settings, logs and the user's sounds and pictures (the app's App.OnStartup).
-    /// The package doesn't own it, so setup deletes it on uninstall and carries it along on a move.</summary>
+    /// The package doesn't own it, so setup deletes it on uninstall.</summary>
     public static string DataFolder(string appFolder) => Path.Combine(appFolder, "Data");
 
     public void Detect() => _engine.Detect();
 
-    /// <summary>Plans and applies <paramref name="action"/>. <paramref name="packageState"/> overrides what happens to
-    /// the app package, e.g. Modify with Absent removes the app while the bundle stays registered.</summary>
-    public void Start(LaunchAction action, string? installRoot = null, RequestState? packageState = null)
+    /// <summary>Plans and applies <paramref name="action"/>; <paramref name="installRoot"/> is the chosen folder for an
+    /// install.</summary>
+    public void Start(LaunchAction action, string? installRoot = null)
     {
         CloseInstalledApp();
         _installedExe = InstalledRoot is { } root ? Path.Combine(root, "BdoTimers", "BdoTimers.exe") : null;
         _action = action;
-        _packageState = packageState;
         _cancel = false;
         _lastError = null;
         UndeletedData = null;
@@ -164,21 +161,14 @@ internal sealed class SetupFlow
         }
     }
 
-    /// <summary>Removes the registration earlier versions made for a copy that has moved away; Windows tied it to the
-    /// exe path. The current one is by app id, so it carries over to the new folder.</summary>
-    public void ForgetExe(string exePath) =>
-        TryNotificationCleanup(() => NotificationRegistration.RemoveLegacy(exePath));
-
     /// <summary>After uninstall: the app's notification registration and settings, and any earlier version's.</summary>
-    void RemoveNotifications(string? exePath) => TryNotificationCleanup(() =>
+    void RemoveNotifications(string? exePath)
     {
-        NotificationRegistration.Remove(NotificationRegistration.InstalledAppId);
-        if (exePath is not null) NotificationRegistration.RemoveLegacy(exePath);
-    });
-
-    void TryNotificationCleanup(Action cleanup)
-    {
-        try { cleanup(); }
+        try
+        {
+            NotificationRegistration.Remove(NotificationRegistration.InstalledAppId);
+            if (exePath is not null) NotificationRegistration.RemoveLegacy(exePath);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             _engine.Log(LogLevel.Error, $"Couldn't remove the notification registration: {ex.Message}");
@@ -212,22 +202,6 @@ internal sealed class SetupFlow
         }
     }
 
-    /// <summary>
-    /// After a move: removes the old BdoTimers folder when nothing is left in it. The package removes it too, but not
-    /// while the app it just closed still holds the folder open.
-    /// </summary>
-    public void RemoveIfEmpty(string folder)
-    {
-        try
-        {
-            if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _engine.Log(LogLevel.Standard, $"Left the old folder {folder}: {ex.Message}");
-        }
-    }
-
     /// <summary>After uninstall: the app's Data folder, then the app's folder once nothing else is left in it.</summary>
     void RemoveData(string appFolder)
     {
@@ -242,34 +216,18 @@ internal sealed class SetupFlow
         RemoveIfEmpty(appFolder);
     }
 
-    /// <summary>
-    /// After a move: copies the Data folder into the new app folder, then deletes the old one. Copying rather than
-    /// renaming works across drives. Returns false when the copy failed; the old folder is then left whole.
-    /// </summary>
-    public bool MoveData(string fromAppFolder, string toAppFolder)
+    /// <summary>Removes <paramref name="folder"/> if it is empty. The package's own removal skips it while it holds the
+    /// data or the app it just closed still has it open.</summary>
+    void RemoveIfEmpty(string folder)
     {
-        var from = DataFolder(fromAppFolder);
-        var to = DataFolder(toAppFolder);
-        if (!Directory.Exists(from)) return true;
-        try { CopyTree(from, to); }
+        try
+        {
+            if (Directory.Exists(folder) && !Directory.EnumerateFileSystemEntries(folder).Any()) Directory.Delete(folder);
+        }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            _engine.Log(LogLevel.Error, $"Couldn't copy {from} to {to}: {ex.Message}");
-            return false;
+            _engine.Log(LogLevel.Standard, $"Left the folder {folder}: {ex.Message}");
         }
-        try { DeleteTree(from); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            _engine.Log(LogLevel.Standard, $"Left the old data folder {from}: {ex.Message}");
-        }
-        return true;
-    }
-
-    static void CopyTree(string from, string to)
-    {
-        Directory.CreateDirectory(to);
-        foreach (var file in Directory.GetFiles(from)) File.Copy(file, Path.Combine(to, Path.GetFileName(file)), overwrite: true);
-        foreach (var dir in Directory.GetDirectories(from)) CopyTree(dir, Path.Combine(to, Path.GetFileName(dir)));
     }
 
     /// <summary>Deletes a folder and everything in it. Sounds copied from read-only files keep that flag, which
@@ -280,20 +238,6 @@ internal sealed class SetupFlow
         foreach (var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
             File.SetAttributes(file, FileAttributes.Normal);
         Directory.Delete(folder, recursive: true);
-    }
-
-    /// <summary>After a move: points an existing Start with Windows entry at the moved exe (same format the app writes).</summary>
-    public void RepointAutostart(string exePath)
-    {
-        try
-        {
-            using var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-            if (run?.GetValue("BdoTimers") is not null) run.SetValue("BdoTimers", $"\"{exePath}\" --minimized");
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
-        {
-            _engine.Log(LogLevel.Error, $"Couldn't update the Start with Windows entry: {ex.Message}");
-        }
     }
 
     [DllImport("user32.dll")]
