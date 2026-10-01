@@ -24,17 +24,22 @@ public sealed class ToastChannel
 
     public ToastChannel(string appId, string displayName)
     {
-        try
-        {
-            NotificationRegistration.RemoveLegacy(Environment.ProcessPath!);
-            NotificationRegistration.Register(appId, displayName, Path.Combine(AppContext.BaseDirectory, "app.png"));
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
-        {
-            Log.Error("Couldn't update the notification registration", ex);
-        }
+        // Separate, so a failed cleanup doesn't skip the registration that urgent toasts need.
+        TryRegistry("Couldn't remove the old notification registration",
+            () => NotificationRegistration.RemoveLegacy(Environment.ProcessPath!));
+        TryRegistry("Couldn't update the notification registration",
+            () => NotificationRegistration.Register(appId, displayName, Path.Combine(AppContext.BaseDirectory, "app.png")));
         SetCurrentProcessExplicitAppUserModelID(appId);
         _notifier = ToastNotificationManager.CreateToastNotifier(appId);
+    }
+
+    static void TryRegistry(string failure, Action change)
+    {
+        try { change(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or SecurityException)
+        {
+            Log.Error(failure, ex);
+        }
     }
 
     /// <summary>Urgent (or alarm) scenario so it breaks through gaming Do Not Disturb; our own sound plays instead of the toast's.</summary>
