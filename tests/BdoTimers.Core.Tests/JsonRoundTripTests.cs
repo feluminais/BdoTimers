@@ -93,8 +93,15 @@ public class JsonRoundTripTests
     public void Retired_fields_are_ignored()
     {
         var data = JsonSerializer.Deserialize<AppData>("""{ "seedApplied": true, "dataVersion": 5 }""", JsonDefaults.Options)!;
+        var todos = JsonSerializer.Deserialize<TodoData>(
+            """{ "lists": [ { "name": "Mine", "cadence": "Weekly", "schedule": { "cadence": "Weekly", "day": "Monday" } } ] }""",
+            JsonDefaults.Options)!;
+        var settings = JsonSerializer.Deserialize<AppSettings>(
+            """{ "weeklyTodoReset": { "cadence": "Weekly", "day": "Monday", "hour": 5 } }""", JsonDefaults.Options)!;
 
         Assert.Equal(5, data.DataVersion);
+        Assert.Equal(TodoCadence.Weekly, todos.Lists.Single().Cadence);
+        Assert.Equal(new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5 }, settings.WeeklyTodoReset);
     }
 
     [Fact]

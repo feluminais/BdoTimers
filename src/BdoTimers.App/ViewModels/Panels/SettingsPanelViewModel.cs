@@ -38,9 +38,9 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         services.Tts.Warm(s.TtsVoice);
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
             leads => services.Settings.Update(x => x with { DefaultLeadTimesMinutes = leads }));
-        DailyTodoReset = new TodoScheduleEditorViewModel(s.DailyTodoReset,
+        DailyTodoReset = new TodoScheduleEditorViewModel(TodoCadence.Daily, s.DailyTodoReset,
             schedule => services.SetTodoReset(TodoCadence.Daily, schedule));
-        WeeklyTodoReset = new TodoScheduleEditorViewModel(s.WeeklyTodoReset,
+        WeeklyTodoReset = new TodoScheduleEditorViewModel(TodoCadence.Weekly, s.WeeklyTodoReset,
             schedule => services.SetTodoReset(TodoCadence.Weekly, schedule));
         AlertReset = new Confirmation(services.Timers.ResetBossAlerts);
         TimetableReset = new Confirmation(services.ResetBossTimetable);

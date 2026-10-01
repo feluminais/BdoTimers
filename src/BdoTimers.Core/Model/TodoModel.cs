@@ -3,16 +3,13 @@ namespace BdoTimers.Core.Model;
 public enum TodoCadence { Daily, Weekly }
 public enum TodoCheck { Open, Partial, Done }
 
+/// <summary>When every list of a cadence resets; <see cref="Day"/> applies to weekly lists only.</summary>
 public sealed record TodoSchedule
 {
-    public TodoCadence Cadence { get; init; }
     public DayOfWeek Day { get; init; } = DayOfWeek.Thursday;
     public int Hour { get; init; }
     public int Minute { get; init; }
     public bool LocalTime { get; init; }
-
-    public static TodoSchedule DailyDefault { get; } = new() { Cadence = TodoCadence.Daily };
-    public static TodoSchedule WeeklyDefault { get; } = new() { Cadence = TodoCadence.Weekly };
 }
 
 public sealed record TodoRow
@@ -31,7 +28,6 @@ public sealed record TodoList
     public bool IsBuiltIn { get; init; }
     public bool Enabled { get; init; }
     public bool Deleted { get; init; }
-    public TodoSchedule Schedule { get; init; } = TodoSchedule.DailyDefault;
     public DateTimeOffset NextResetUtc { get; init; }
     public IReadOnlyList<TodoRow> Rows { get; init; } = [];
 }
