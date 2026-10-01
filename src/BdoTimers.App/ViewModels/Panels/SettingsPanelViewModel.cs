@@ -20,7 +20,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private string? _soundError;
     [ObservableProperty] private bool _hasDeletedTodoDefaults;
 
-    public IReadOnlyList<Choice> Voices { get; }
+    public IReadOnlyList<Choice> Voices { get; } = KokoroEngine.Voices.Select(v => new Choice(v.Label, v.Id)).ToList();
     public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
     public LeadChipsViewModel DefaultLeads { get; }
     public TodoScheduleEditorViewModel DailyTodoReset { get; }
@@ -34,7 +34,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         _services = services;
         var s = services.Settings.Current;
         ReloadSounds();
-        Voices = services.Tts.Voices().Select(v => new Choice(v.Label, v.Id)).ToList();
         // So Test voice speaks without first waiting for the model.
         services.Tts.Warm(s.TtsVoice);
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
@@ -84,7 +83,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public Choice? Voice
     {
         get => Voices.FirstOrDefault(v => (string)v.Value! == Current.TtsVoice)
-               ?? Voices.FirstOrDefault(v => (string)v.Value! == _services.Tts.DefaultVoiceId)
+               ?? Voices.FirstOrDefault(v => (string)v.Value! == KokoroEngine.Default.Id)
                ?? Voices.FirstOrDefault();
         set
         {

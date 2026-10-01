@@ -18,8 +18,8 @@ public sealed class HotkeyService : IDisposable
 
     // A message-only window: it only receives the hotkey messages, never broadcasts, and isn't a top-level window.
     readonly HwndSource _window = new(0, 0, 0, 0, 0, "BdoTimers hotkeys", HWND_MESSAGE);
-    readonly Dictionary<HotkeyAction, Hotkey> _wanted = [];
     readonly HashSet<HotkeyAction> _held = [];
+    Dictionary<HotkeyAction, Hotkey> _wanted = [];
     HashSet<HotkeyAction> _refused = [];
     int _suspended;
 
@@ -39,8 +39,7 @@ public sealed class HotkeyService : IDisposable
         if (show is not null) wanted[HotkeyAction.Show] = show;
         if (horseRegistration is not null) wanted[HotkeyAction.StartHorseRegistration] = horseRegistration;
         if (wanted.Count == _wanted.Count && wanted.All(w => _wanted.TryGetValue(w.Key, out var k) && k == w.Value)) return;
-        _wanted.Clear();
-        foreach (var (action, key) in wanted) _wanted[action] = key;
+        _wanted = wanted;
         Apply();
     }
 
@@ -59,8 +58,7 @@ public sealed class HotkeyService : IDisposable
 
     void Apply()
     {
-        foreach (var action in _held) NativeMethods.UnregisterHotKey(_window.Handle, (int)action);
-        _held.Clear();
+        ReleaseHeld();
         if (_suspended > 0) return;
         var refused = new HashSet<HotkeyAction>();
         foreach (var (action, key) in _wanted)
@@ -78,6 +76,12 @@ public sealed class HotkeyService : IDisposable
         RefusedChanged?.Invoke();
     }
 
+    void ReleaseHeld()
+    {
+        foreach (var action in _held) NativeMethods.UnregisterHotKey(_window.Handle, (int)action);
+        _held.Clear();
+    }
+
     IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
         if (msg == WM_HOTKEY && Enum.IsDefined((HotkeyAction)wParam.ToInt32()))
@@ -90,8 +94,7 @@ public sealed class HotkeyService : IDisposable
 
     public void Dispose()
     {
-        foreach (var action in _held) NativeMethods.UnregisterHotKey(_window.Handle, (int)action);
-        _held.Clear();
+        ReleaseHeld();
         _window.Dispose();
     }
 }
