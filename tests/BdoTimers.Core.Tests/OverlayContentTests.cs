@@ -179,6 +179,7 @@ public class OverlayContentTests
         var snapshot = OverlayContent.Build(data, settings, Now.AddSeconds(5));
 
         Assert.Equal(["Horse 4", "Horse 3"], snapshot.HorseRegistrations.Select(r => r.Name));
+        Assert.Equal([runs[3].Id, runs[2].Id], snapshot.HorseRegistrations.Select(r => r.Id));
         Assert.Equal(2, snapshot.MoreHorseRegistrations);
         Assert.Empty(snapshot.PopUps);
         Assert.Equal(4, OverlayContent.Build(data, settings with { ShowHorseRegistrations = false }, Now.AddSeconds(5)).PopUps.Count);

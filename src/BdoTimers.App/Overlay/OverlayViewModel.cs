@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Windows.Media;
 using BdoTimers.App.Art;
@@ -9,17 +10,57 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace BdoTimers.App.Overlay;
 
-/// <summary>A boss spawn on the overlay: its names, the time to or since it, and its pictures for the Card banner.</summary>
-public sealed record OverlaySpawn(string Names, string Time, bool Skipped, IReadOnlyList<ArtPicture> Images, bool IsSample);
+/// <summary>A boss spawn on the overlay: its names, the time to or since it, and its pictures for the Card banner.
+/// Kept from tick to tick and updated in place, so only the text that changed is drawn again.</summary>
+public sealed partial class OverlaySpawn : ObservableObject
+{
+    [ObservableProperty] private string _names = "";
+    [ObservableProperty] private string _time = "";
+    [ObservableProperty] private bool _skipped;
+    [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
+    [ObservableProperty] private bool _isSample;
 
-/// <summary>A named time on the overlay: a pop-up timer, Farm or Fishing.</summary>
-public sealed record OverlayLine(string Name, string Time, bool IsSample);
+    public OverlaySpawn Show(string names, string time, bool skipped, IReadOnlyList<ArtPicture> images, bool isSample)
+    {
+        Names = names;
+        Time = time;
+        Skipped = skipped;
+        Images = images;
+        IsSample = isSample;
+        return this;
+    }
+}
+
+/// <summary>A named time on the overlay: a pop-up timer, Farm, Fishing or a horse registration. <see cref="Key"/> is
+/// what it stands for, so a list keeps the row from tick to tick and only its text changes.</summary>
+public sealed partial class OverlayLine(object key) : ObservableObject
+{
+    [ObservableProperty] private string _name = "";
+    [ObservableProperty] private string _time = "";
+    [ObservableProperty] private bool _isSample;
+
+    public object Key { get; } = key;
+
+    public OverlayLine Show(string name, string time, bool isSample)
+    {
+        Name = name;
+        Time = time;
+        IsSample = isSample;
+        return this;
+    }
+}
 
 /// <summary>What the overlay window shows. In preview, a section with no live data gets a dimmed sample.</summary>
 public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
 {
     static readonly RgbColor FallbackColor = new(0x0B, 0x0B, 0x0C);
+    static readonly IReadOnlyList<ArtPicture> NoImages = [];
+    static readonly object SampleKey = new();
 
+    readonly OverlaySpawn _previousRow = new();
+    readonly OverlaySpawn _nextRow = new();
+    readonly OverlayLine _farmRow = new("Farm");
+    readonly OverlayLine _fishingRow = new("Fishing");
     string _imagesKey = "";
     IReadOnlyList<ArtPicture> _images = [];
     string? _backgroundKey;
@@ -33,12 +74,13 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private string? _clock;
     [ObservableProperty] private OverlaySpawn? _previous;
     [ObservableProperty] private OverlaySpawn? _next;
-    [ObservableProperty] private IReadOnlyList<OverlayLine> _popUps = [];
     [ObservableProperty] private OverlayLine? _farm;
     [ObservableProperty] private OverlayLine? _fishing;
-    [ObservableProperty] private IReadOnlyList<OverlayLine> _horseRegistrations = [];
     [ObservableProperty] private string? _moreHorseRegistrations;
     [ObservableProperty] private bool _showDivider;
+
+    public ObservableCollection<OverlayLine> PopUps { get; } = [];
+    public ObservableCollection<OverlayLine> HorseRegistrations { get; } = [];
 
     public void Update(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
     {
@@ -51,33 +93,53 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
 
         Clock = content.Clock ? now.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture) : null;
         Previous = content.Previous is { } previous
-            ? Spawn(previous, "−" + DurationFormat.Clock(now - previous.AtUtc), [])
-            : preview && settings.ShowPrevious ? new OverlaySpawn("Kzarka", "−00:12:05", false, [], true) : null;
+            ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false)
+            : preview && settings.ShowPrevious ? _previousRow.Show("Kzarka", "−00:12:05", false, NoImages, true) : null;
         Next = content.Next is { } next
-            ? Spawn(next, DurationFormat.Clock(next.AtUtc - now), ImagesFor(next))
-            : preview && settings.ShowNext ? new OverlaySpawn("Nouver", "00:47:12", false, [], true) : null;
-        var popUps = content.PopUps.Select(i => new OverlayLine(i.Timer.Name, DurationFormat.Clock(i.AtUtc - now), false)).ToList();
-        if (!popUps.SequenceEqual(PopUps)) PopUps = popUps;
+            ? _nextRow.Show(Names(next), DurationFormat.Clock(next.AtUtc - now), next.Skipped, ImagesFor(next), false)
+            : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true) : null;
+        Sync(PopUps, content.PopUps.Select(i => ((object)(i.Timer.Id, i.AtUtc), i.Timer.Name, DurationFormat.Clock(i.AtUtc - now), false)));
         Farm = content.FarmLeft is { } farmLeft
-            ? new OverlayLine("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
-            : preview && settings.ShowFarm ? new OverlayLine("Farm", "21:59:59 · 0%", true) : null;
-        Fishing = Line("Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
-        var horse = content.HorseRegistrations.Select(r => new OverlayLine(r.Name, DurationFormat.Clock(r.EndsAtUtc - now), false)).ToList();
+            ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
+            : preview && settings.ShowFarm ? _farmRow.Show("Farm", "21:59:59 · 0%", true) : null;
+        Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
+        var horse = content.HorseRegistrations
+            .Select(r => ((object)r.Id, r.Name, DurationFormat.Clock(r.EndsAtUtc - now), false)).ToList();
         if (horse.Count == 0 && preview && settings.ShowHorseRegistrations)
-            horse.Add(new OverlayLine("Horse 1", "00:08:30", true));
-        if (!horse.SequenceEqual(HorseRegistrations)) HorseRegistrations = horse;
+            horse.Add((SampleKey, "Horse 1", "00:08:30", true));
+        Sync(HorseRegistrations, horse);
         MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
         ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
             && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0);
     }
 
-    static OverlaySpawn Spawn(SpawnGroup group, string time, IReadOnlyList<ArtPicture> images) =>
-        new(string.Join(" · ", group.Bosses.Select(b => b.Name)), time, group.Skipped, images, false);
+    static string Names(SpawnGroup group) => string.Join(" · ", group.Bosses.Select(b => b.Name));
 
-    static OverlayLine? Line(string name, TimeSpan? time, bool sample, string sampleTime) =>
-        time is { } t ? new OverlayLine(name, DurationFormat.Clock(t), false)
-        : sample ? new OverlayLine(name, sampleTime, true)
+    static OverlayLine? Line(OverlayLine row, string name, TimeSpan? time, bool sample, string sampleTime) =>
+        time is { } t ? row.Show(name, DurationFormat.Clock(t), false)
+        : sample ? row.Show(name, sampleTime, true)
         : null;
+
+    /// <summary>Brings <paramref name="rows"/> in line with <paramref name="wanted"/>, keeping the row of each key that is
+    /// still wanted, so the overlay only redraws its text rather than regenerating every row each second.</summary>
+    static void Sync(ObservableCollection<OverlayLine> rows,
+        IEnumerable<(object Key, string Name, string Time, bool IsSample)> wanted)
+    {
+        var i = 0;
+        foreach (var (key, name, time, isSample) in wanted)
+        {
+            var at = i;
+            while (at < rows.Count && !Equals(rows[at].Key, key)) at++;
+            if (at == rows.Count) rows.Insert(i, new OverlayLine(key).Show(name, time, isSample));
+            else
+            {
+                if (at != i) rows.Move(at, i);
+                rows[i].Show(name, time, isSample);
+            }
+            i++;
+        }
+        while (rows.Count > i) rows.RemoveAt(rows.Count - 1);
+    }
 
     /// <summary>The same list while the spawn stays the same, so the banner isn't reloaded every second.</summary>
     IReadOnlyList<ArtPicture> ImagesFor(SpawnGroup group)
