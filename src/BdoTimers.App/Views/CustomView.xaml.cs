@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
+using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels;
 
 namespace BdoTimers.App.Views;
@@ -14,7 +14,7 @@ public partial class CustomView : UserControl
     /// <summary>The hour field takes the keyboard as soon as the start picker opens.</summary>
     void StartPicker_Opened(object? sender, EventArgs e)
     {
-        if (sender is Popup { Child: { } child } && FindHourBox(child) is { } hour)
+        if (sender is Popup { Child: { } child } && VisualTree.FindDescendant<TextBox>(child, box => box.Tag is "Hour") is { } hour)
             Dispatcher.BeginInvoke(() => hour.Focus());
     }
 
@@ -51,13 +51,5 @@ public partial class CustomView : UserControl
     {
         (e.Delta > 0 ? Slider.IncreaseSmall : Slider.DecreaseSmall).Execute(null, (Slider)sender);
         e.Handled = true;
-    }
-
-    static TextBox? FindHourBox(DependencyObject root)
-    {
-        if (root is TextBox { Tag: "Hour" } box) return box;
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
-            if (FindHourBox(VisualTreeHelper.GetChild(root, i)) is { } found) return found;
-        return null;
     }
 }
