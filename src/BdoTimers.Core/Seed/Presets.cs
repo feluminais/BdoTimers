@@ -41,8 +41,8 @@ public static class Presets
     ];
 
     /// <summary>
-    /// Can be deleted like the user's own timers, so <see cref="Storage.DataMigrations"/> adds it once rather than
-    /// <see cref="Ensure"/> at every startup.
+    /// Can be deleted like the user's own timers, so only new data starts with it (<see cref="SeedService.NewData"/>);
+    /// <see cref="Ensure"/> doesn't add it back.
     /// </summary>
     public static TimerDef CreateHorseRegistration() => new()
     {
