@@ -1,52 +1,50 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
 public class CountdownOpsTests
 {
-    static readonly DateTimeOffset T0 = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
     static readonly CountdownSpec Hour = new() { Duration = TimeSpan.FromMinutes(60) };
+    static readonly CountdownSpec Farm = new() { Duration = TimeSpan.FromHours(22) };
 
-    [Fact]
-    public void Start_sets_end_time()
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-40)] // started late
+    public void Start_runs_from_the_given_start(int startMinutes)
     {
-        var c = CountdownOps.Start(Hour, T0);
+        var start = T0.AddMinutes(startMinutes);
+        var c = CountdownOps.Start(Hour, start);
         Assert.Equal(CountdownStatus.Running, c.Status);
-        Assert.Equal(T0.AddMinutes(60), c.EndsAtUtc);
+        Assert.Equal(start, c.StartedAtUtc);
+        Assert.Equal(start.AddMinutes(60), c.EndsAtUtc);
         Assert.Null(c.Remaining);
     }
 
     [Fact]
-    public void Pause_then_resume_keeps_remaining_time()
-    {
-        var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(20));
-        Assert.Equal(CountdownStatus.Paused, paused.Status);
-        Assert.Equal(TimeSpan.FromMinutes(40), paused.Remaining);
-        Assert.Null(paused.EndsAtUtc);
-
-        var resumed = CountdownOps.Resume(paused, T0.AddMinutes(30));
-        Assert.Equal(CountdownStatus.Running, resumed.Status);
-        Assert.Equal(T0.AddMinutes(70), resumed.EndsAtUtc);
-    }
-
-    [Fact]
-    public void StartFrom_runs_as_if_started_then()
-    {
-        var c = CountdownOps.Start(Hour, T0.AddMinutes(-40));
-        Assert.Equal(CountdownStatus.Running, c.Status);
-        Assert.Equal(T0.AddMinutes(-40), c.StartedAtUtc);
-        Assert.Equal(T0.AddMinutes(20), c.EndsAtUtc);
-    }
-
-    [Fact]
-    public void StartFrom_replaces_a_paused_run()
+    public void Start_replaces_a_paused_run()
     {
         var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(10));
         var c = CountdownOps.Start(paused, T0.AddMinutes(-5));
         Assert.Equal(CountdownStatus.Running, c.Status);
         Assert.Null(c.Remaining);
         Assert.Equal(T0.AddMinutes(55), c.EndsAtUtc);
+    }
+
+    [Fact]
+    public void Pause_then_resume_keeps_remaining_and_start_time()
+    {
+        var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(20));
+        Assert.Equal(CountdownStatus.Paused, paused.Status);
+        Assert.Equal(TimeSpan.FromMinutes(40), paused.Remaining);
+        Assert.Null(paused.EndsAtUtc);
+        Assert.Equal(T0, paused.StartedAtUtc);
+
+        var resumed = CountdownOps.Resume(paused, T0.AddMinutes(30));
+        Assert.Equal(CountdownStatus.Running, resumed.Status);
+        Assert.Equal(T0.AddMinutes(70), resumed.EndsAtUtc);
+        Assert.Equal(T0, resumed.StartedAtUtc);
     }
 
     [Fact]
@@ -64,34 +62,7 @@ public class CountdownOpsTests
         Assert.Equal(CountdownStatus.Idle, c.Status);
         Assert.Null(c.EndsAtUtc);
         Assert.Null(c.Remaining);
-    }
-
-    [Fact]
-    public void Complete_goes_idle()
-    {
-        var c = CountdownOps.Reset(CountdownOps.Start(Hour, T0));
-        Assert.Equal(CountdownStatus.Idle, c.Status);
-    }
-
-    [Fact]
-    public void Start_records_start_time()
-    {
-        Assert.Equal(T0, CountdownOps.Start(Hour, T0).StartedAtUtc);
-    }
-
-    [Fact]
-    public void Pause_and_resume_keep_start_time()
-    {
-        var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(20));
-        var resumed = CountdownOps.Resume(paused, T0.AddMinutes(30));
-        Assert.Equal(T0, paused.StartedAtUtc);
-        Assert.Equal(T0, resumed.StartedAtUtc);
-    }
-
-    [Fact]
-    public void Reset_clears_start_time()
-    {
-        Assert.Null(CountdownOps.Reset(CountdownOps.Start(Hour, T0)).StartedAtUtc);
+        Assert.Null(c.StartedAtUtc);
     }
 
     [Theory]
@@ -114,6 +85,10 @@ public class CountdownOpsTests
     {
         Assert.Equal(percent, CountdownOps.ProgressPercent(TimeSpan.FromHours(22), TimeSpan.FromMinutes(elapsedMinutes)));
     }
+
+    [Fact]
+    public void A_zero_duration_has_no_progress() =>
+        Assert.Equal(0, CountdownOps.ProgressPercent(TimeSpan.Zero, TimeSpan.FromMinutes(5)));
 
     [Fact]
     public void Progress_round_trips_through_its_start()
@@ -167,5 +142,62 @@ public class CountdownOpsTests
         var resumed = CountdownOps.Resume(paused, T0.AddHours(5));
         Assert.Equal(T0.AddHours(4.5), resumed.EndsAtUtc);
         Assert.Equal(150, CountdownOps.Progress(resumed, T0.AddHours(5), overgrows: true));
+    }
+
+    [Theory]
+    [InlineData(20, 40)]
+    [InlineData(21, 38)]
+    [InlineData(22, 36)]
+    public void Running_farm_keeps_elapsed_time_when_duration_changes(int hours, int progress)
+    {
+        var changed = CountdownOps.ChangeDuration(CountdownOps.Start(Farm, T0), TimeSpan.FromHours(hours));
+        Assert.Equal(T0.AddHours(hours), changed.EndsAtUtc);
+        Assert.Equal(T0, changed.StartedAtUtc);
+        Assert.Equal(progress, CountdownOps.Progress(changed, T0.AddHours(8)));
+        Assert.Equal(CountdownStatus.Running, changed.Status);
+    }
+
+    [Fact]
+    public void Duration_change_after_pause_and_resume_excludes_paused_time()
+    {
+        var paused = CountdownOps.Pause(CountdownOps.Start(Farm, T0), T0.AddHours(8));
+        var changed = CountdownOps.ChangeDuration(paused, TimeSpan.FromHours(20));
+        Assert.Equal(TimeSpan.FromHours(12), changed.Remaining);
+        Assert.Equal(40, CountdownOps.Progress(changed, T0.AddHours(10)));
+        var resumed = CountdownOps.Resume(changed, T0.AddHours(10));
+        var longer = CountdownOps.ChangeDuration(resumed, TimeSpan.FromHours(21));
+        Assert.Equal(T0.AddHours(23), longer.EndsAtUtc);
+        Assert.Equal(38, CountdownOps.Progress(longer, T0.AddHours(10)));
+    }
+
+    [Fact]
+    public void Shortening_below_elapsed_time_is_due_or_zero_remaining()
+    {
+        var running = CountdownOps.Start(Farm, T0);
+        var shortened = CountdownOps.ChangeDuration(running, TimeSpan.FromHours(20));
+        Assert.True(shortened.EndsAtUtc <= T0.AddHours(21));
+        var paused = CountdownOps.Pause(running, T0.AddHours(21));
+        Assert.Equal(TimeSpan.Zero, CountdownOps.ChangeDuration(paused, TimeSpan.FromHours(20)).Remaining);
+    }
+
+    [Fact]
+    public void Idle_duration_changes_without_starting()
+    {
+        var changed = CountdownOps.ChangeDuration(Farm, TimeSpan.FromHours(20.5));
+        Assert.Equal(TimeSpan.FromHours(20.5), changed.Duration);
+        Assert.Equal(CountdownStatus.Idle, changed.Status);
+        Assert.Null(changed.EndsAtUtc);
+        Assert.Null(changed.Remaining);
+    }
+
+    [Fact]
+    public void Changing_duration_of_paused_overgrown_farm_preserves_elapsed_growth()
+    {
+        var paused = CountdownOps.Pause(CountdownOps.Start(Farm, T0), T0.AddHours(33), preserveOvergrowth: true);
+
+        var changed = CountdownOps.ChangeDuration(paused, TimeSpan.FromHours(20), preserveOvergrowth: true);
+
+        Assert.Equal(TimeSpan.FromHours(-13), changed.Remaining);
+        Assert.Equal(165, CountdownOps.Progress(changed, T0.AddDays(2), overgrows: true));
     }
 }
