@@ -265,7 +265,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     DateTimeOffset? TimeStart() =>
         int.TryParse(StartHour, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) && hour < 24
         && int.TryParse(StartMinute, NumberStyles.None, CultureInfo.InvariantCulture, out var minute) && minute < 60
-            ? StartTimes.MostRecent(new TimeOnly(hour, minute), DateTimeOffset.UtcNow, TimeZoneInfo.Local)
+            ? ScheduleMath.MostRecent(new TimeOnly(hour, minute), DateTimeOffset.UtcNow, TimeZoneInfo.Local)
             : null;
 
     /// <summary>Taken against the current time, so a pause before pressing Start doesn't shift it.</summary>

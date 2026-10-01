@@ -23,6 +23,18 @@ public static class ScheduleMath
     }
 
     /// <summary>
+    /// The latest moment, at or before <paramref name="nowUtc"/>, when the clock in <paramref name="zone"/> showed
+    /// <paramref name="time"/>: today, or yesterday when today's is still ahead (23:30 picked at 01:00). It turns a time
+    /// picked for "I started at…" into the moment it means.
+    /// </summary>
+    public static DateTimeOffset MostRecent(TimeOnly time, DateTimeOffset nowUtc, TimeZoneInfo zone)
+    {
+        var today = TimeZoneInfo.ConvertTime(nowUtc, zone).Date + time.ToTimeSpan();
+        var at = LocalToUtc(today, zone);
+        return at <= nowUtc ? at : LocalToUtc(today.AddDays(-1), zone);
+    }
+
+    /// <summary>
     /// All occurrences at or after <paramref name="fromUtc"/>, ascending and unbounded; callers limit it
     /// with Take/TakeWhile. Computed lazily so a short look-ahead only evaluates the days it needs.
     /// </summary>
@@ -31,7 +43,7 @@ public static class ScheduleMath
         // Slots come from an editable file; a day outside DayOfWeek would never match and loop forever.
         if (!spec.Slots.Any(s => Enum.IsDefined(s.Day))) yield break;
 
-        var tz = TimeZones.Find(spec.TimeZoneId);
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId);
         // Start a day early: a late slot on the previous local day that falls in a spring-forward gap
         // is pushed past midnight, into the day that contains fromUtc.
         for (var day = TimeZoneInfo.ConvertTime(fromUtc, tz).Date.AddDays(-1); ; day = day.AddDays(1))

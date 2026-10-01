@@ -7,7 +7,7 @@ public class WeekGridTests
 {
     // 2026-09-22 is a Tuesday; Berlin is UTC+2 until 2026-10-25.
     static readonly DateTimeOffset TuesdayThreePmBerlin = new(2026, 9, 22, 13, 0, 0, TimeSpan.Zero);
-    static readonly TimeZoneInfo Berlin = TimeZones.Find("Europe/Berlin");
+    static readonly TimeZoneInfo Berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
 
     static TimerDef Boss(string name, params (DayOfWeek Day, int Hour, int Minute)[] slots) => new()
     {
