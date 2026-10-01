@@ -118,7 +118,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         : _access == FolderAccess.NeedsAdmin ? "Needs admin rights"
         : "";
 
-    public string InstalledFolder => _installedRoot is null ? "" : Path.Combine(_installedRoot, "BdoTimers");
+    public string InstalledFolder => _installedRoot is null ? "" : SetupFlow.AppFolder(_installedRoot);
     public bool HasInstalledFolder => _installedRoot is not null;
 
     public int Progress { get => _progress; private set => Set(ref _progress, value); }
@@ -227,7 +227,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     {
         if (CanLaunch && LaunchApp && SetupFlow.InstalledRoot is { } root)
         {
-            var exe = Path.Combine(root, "BdoTimers", "BdoTimers.exe");
+            var exe = SetupFlow.ExePath(root);
             if (File.Exists(exe)) Process.Start(new ProcessStartInfo(exe) { UseShellExecute = true });
         }
         Application.Current.MainWindow?.Close();

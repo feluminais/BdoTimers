@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using BdoTimers.App;
 using BdoTimers.App.Alerts;
 using Microsoft.Win32;
 using WixToolset.BootstrapperApplicationApi;
@@ -15,7 +16,8 @@ namespace BdoTimers.SetupUi;
 /// </summary>
 internal sealed class SetupFlow
 {
-    const int ErrorCancelled = unchecked((int)0x800704C7);
+    /// <summary>HRESULT_FROM_WIN32(ERROR_CANCELLED): a cancelled apply, and a cancelled folder picker.</summary>
+    internal const int ErrorCancelled = unchecked((int)0x800704C7);
 
     readonly IEngine _engine;
     readonly IBootstrapperCommand _command;
@@ -79,7 +81,6 @@ internal sealed class SetupFlow
 
     public string LogPath => _engine.ContainsVariable("WixBundleLog") ? _engine.GetVariableString("WixBundleLog") : "";
 
-
     public static bool IsCancelled(int status) => status == ErrorCancelled;
 
     /// <summary>InstallRoot from the command line if given, else the installed one, else %LocalAppData%\Programs.</summary>
@@ -100,6 +101,11 @@ internal sealed class SetupFlow
         }
     }
 
+    /// <summary>The app's own folder inside the chosen one (the package's INSTALLFOLDER).</summary>
+    public static string AppFolder(string root) => Path.Combine(root, "BdoTimers");
+
+    public static string ExePath(string root) => Path.Combine(AppFolder(root), "BdoTimers.exe");
+
     /// <summary>Where the app keeps timers, settings, logs and the user's sounds and pictures (the app's App.OnStartup).
     /// The package doesn't own it, so setup deletes it on uninstall.</summary>
     public static string DataFolder(string appFolder) => Path.Combine(appFolder, "Data");
@@ -111,7 +117,7 @@ internal sealed class SetupFlow
     public void Start(LaunchAction action, string? installRoot = null)
     {
         CloseInstalledApp();
-        _installedExe = InstalledRoot is { } root ? Path.Combine(root, "BdoTimers", "BdoTimers.exe") : null;
+        _installedExe = InstalledRoot is { } root ? ExePath(root) : null;
         _action = action;
         _cancel = false;
         _lastError = null;
@@ -144,17 +150,10 @@ internal sealed class SetupFlow
         return result;
     }
 
-    /// <summary>
-    /// The app adds itself to the Run key only when the user turns on Start with Windows, so the package doesn't own
-    /// that value and uninstall would leave it pointing at a deleted exe.
-    /// </summary>
+    /// <summary>After uninstall: the Start with Windows entry, which would otherwise point at a deleted exe.</summary>
     void RemoveAutostart()
     {
-        try
-        {
-            using var run = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-            run?.DeleteValue("BdoTimers", throwOnMissingValue: false);
-        }
+        try { Autostart.Remove(); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
         {
             _engine.Log(LogLevel.Error, $"Couldn't remove the Start with Windows entry: {ex.Message}");
@@ -183,7 +182,7 @@ internal sealed class SetupFlow
     void CloseInstalledApp()
     {
         if (InstalledRoot is not { } root) return;
-        var folder = Path.Combine(root, "BdoTimers") + "\\";
+        var folder = AppFolder(root) + "\\";
         foreach (var process in Process.GetProcessesByName("BdoTimers"))
         {
             using (process)
