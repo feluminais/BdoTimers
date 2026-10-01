@@ -16,7 +16,7 @@ public sealed class SchedulerEngine(
     public void ReconcileStartup()
     {
         var now = clock.UtcNow;
-        foreach (var timer in timers.CompleteCountdowns(now, now - AlertPlanner.Grace))
+        foreach (var timer in timers.CompleteCountdowns(now - AlertPlanner.Grace))
             sink.NotifyEndedWhileAway(timer);
     }
 
@@ -37,7 +37,7 @@ public sealed class SchedulerEngine(
         }
 
         // An end older than the planner's grace was never alerted: the PC slept through it or the loop stalled.
-        foreach (var timer in timers.CompleteCountdowns(now, now))
+        foreach (var timer in timers.CompleteCountdowns(now))
             if (!paused && timer.Countdown!.EndsAtUtc < now - AlertPlanner.Grace) sink.NotifyEndedWhileAway(timer);
         // Skips are kept as long as fired alerts, so setting the clock back doesn't replay either.
         timers.PruneMuted(now - AlertPlanner.Memory);

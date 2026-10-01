@@ -20,11 +20,7 @@ public static class DataMigrations
     {
         var template = timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
         if (template?.Countdown is not { Status: not CountdownStatus.Idle } countdown) return timers;
-        var run = template with
-        {
-            Id = Guid.NewGuid(), Name = $"{template.Name} 1", Preset = Presets.HorseRegistrationRun,
-            HorseRunNumber = 1, StartHotkey = null, ImageFile = null,
-        };
-        return [.. timers.Select(t => t.Id == template.Id ? t with { Countdown = CountdownOps.Reset(countdown) } : t), run];
+        var idle = timers.Select(t => t.Id == template.Id ? t with { Countdown = CountdownOps.Reset(countdown) } : t);
+        return [.. idle, Presets.HorseRun(template, 1)];
     }
 }
