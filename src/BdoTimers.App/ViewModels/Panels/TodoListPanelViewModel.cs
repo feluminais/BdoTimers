@@ -77,16 +77,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     {
         Rows.Clear();
         for (var i = 0; i < _outline.Count; i++)
-            Rows.Add(new TodoEditRowViewModel(this, _outline[i],
-                _outline[i].Level == 0 && i + 1 < _outline.Count && _outline[i + 1].Level == 1
-                    ? CountChildren(i) : 0));
-    }
-
-    int CountChildren(int index)
-    {
-        var count = 0;
-        while (index + count + 1 < _outline.Count && _outline[index + count + 1].Level == 1) count++;
-        return count;
+            Rows.Add(new TodoEditRowViewModel(this, _outline[i], TodoOutline.CountChildren(_outline, i)));
     }
 
     partial void OnNameChanged(string value)
@@ -188,38 +179,21 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     public void Enter(Guid id)
     {
         var newId = Guid.NewGuid();
-        ChangeStructure(rows =>
-        {
-            var index = rows.FindIndex(r => r.Id == id);
-            if (index < 0) return;
-            var source = rows[index];
-            var child = source.Level == 1 || index + 1 < rows.Count && rows[index + 1].Level == 1;
-            rows.Insert(index + 1, new TodoOutlineRow(newId, "", false, child ? 1 : 0));
-            if (source.Level == 0 && child) rows[index] = source with { Done = false };
-        }, newId);
+        ChangeStructure(rows => TodoOutline.InsertAfter(rows, rows.FindIndex(r => r.Id == id), newId), newId);
     }
 
     public bool Indent(Guid id)
     {
         var index = _outline.FindIndex(r => r.Id == id);
-        if (index < 0) return false;
-        var next = _outline.ToList();
-        if (!TodoOutline.TryIndent(next, index)) return false;
-        ChangeStructure(rows =>
-        {
-            TodoOutline.TryIndent(rows, index);
-            var parentIndex = index - 1;
-            while (parentIndex > 0 && rows[parentIndex].Level == 1) parentIndex--;
-            rows[parentIndex] = rows[parentIndex] with { Done = false };
-        }, id);
+        if (!TodoOutline.CanIndent(_outline, index)) return false;
+        ChangeStructure(rows => TodoOutline.TryIndent(rows, index), id);
         return true;
     }
 
     public bool Outdent(Guid id)
     {
         var index = _outline.FindIndex(r => r.Id == id);
-        var next = _outline.ToList();
-        if (!TodoOutline.TryOutdent(next, index)) return false;
+        if (!TodoOutline.CanOutdent(_outline, index)) return false;
         ChangeStructure(rows => TodoOutline.TryOutdent(rows, index), id);
         return true;
     }
@@ -227,8 +201,8 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     public bool Backspace(Guid id)
     {
         var index = _outline.FindIndex(r => r.Id == id);
-        if (index < 0 || !string.IsNullOrEmpty(_outline[index].Text) ||
-            _outline[index].Level == 0 && CountChildren(index) > 0) return false;
+        if (index < 0 || !string.IsNullOrEmpty(_outline[index].Text) || TodoOutline.CountChildren(_outline, index) > 0)
+            return false;
         var focus = index > 0 ? _outline[index - 1].Id : (Guid?)null;
         ChangeStructure(rows => TodoOutline.Remove(rows, index), focus);
         return true;
@@ -244,34 +218,16 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     {
         var source = _outline.FindIndex(r => r.Id == sourceId);
         var target = _outline.FindIndex(r => r.Id == targetId);
-        below = false;
-        if (source < 0 || target < 0 || source == target ||
-            _outline[source].Level != _outline[target].Level || ParentId(source) != ParentId(target)) return false;
-        below = source < target;
-        return true;
+        var can = TodoOutline.CanMoveTo(_outline, source, target);
+        below = can && source < target;
+        return can;
     }
 
     public void MoveTo(Guid sourceId, Guid targetId)
     {
-        if (!CanMoveTo(sourceId, targetId, out var below)) return;
-        ChangeStructure(rows =>
-        {
-            var direction = below ? 1 : -1;
-            for (var tries = 0; tries < rows.Count; tries++)
-            {
-                var from = rows.FindIndex(r => r.Id == sourceId);
-                var to = rows.FindIndex(r => r.Id == targetId);
-                if (direction > 0 ? from > to : from < to) break;
-                if (!TodoOutline.TryMove(rows, from, direction)) break;
-            }
-        }, sourceId);
-    }
-
-    Guid? ParentId(int index)
-    {
-        if (_outline[index].Level == 0) return null;
-        while (index > 0 && _outline[index].Level == 1) index--;
-        return _outline[index].Id;
+        if (!CanMoveTo(sourceId, targetId, out _)) return;
+        ChangeStructure(rows => TodoOutline.MoveTo(
+            rows, rows.FindIndex(r => r.Id == sourceId), rows.FindIndex(r => r.Id == targetId)), sourceId);
     }
 
     public void AddChild(Guid id)
@@ -279,14 +235,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         var index = _outline.FindIndex(r => r.Id == id);
         if (index < 0 || _outline[index].Level != 0) return;
         var childId = Guid.NewGuid();
-        ChangeStructure(rows =>
-        {
-            var at = rows.FindIndex(r => r.Id == id);
-            var insert = at + 1;
-            while (insert < rows.Count && rows[insert].Level == 1) insert++;
-            rows.Insert(insert, new TodoOutlineRow(childId, "", false, 1));
-            rows[at] = rows[at] with { Done = false };
-        }, childId);
+        ChangeStructure(rows => TodoOutline.AddChild(rows, rows.FindIndex(r => r.Id == id), childId), childId);
     }
 
     public void Remove(Guid id)

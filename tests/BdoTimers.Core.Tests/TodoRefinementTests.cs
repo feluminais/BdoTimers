@@ -93,7 +93,10 @@ public sealed class TodoRefinementTests
     {
         var parent = new TodoRow { Text = "Parent", Children = [new TodoRow { Text = "First", Done = true }] };
         var rows = TodoOutline.Flatten([parent, new TodoRow { Text = "Second" }]);
-        var first = TodoOutline.InsertAfter(rows, 0);
+        var id = Guid.NewGuid();
+        TodoOutline.InsertAfter(rows, 0, id);
+        var first = rows.FindIndex(r => r.Id == id);
+        Assert.Equal(1, first);
         Assert.Equal(1, rows[first].Level);
         rows[first] = rows[first] with { Text = "New" };
         Assert.Equal(["New", "First"], TodoOutline.Build(rows)[0].Children.Select(r => r.Text));
