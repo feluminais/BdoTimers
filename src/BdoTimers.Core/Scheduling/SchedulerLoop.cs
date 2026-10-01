@@ -3,9 +3,10 @@ using BdoTimers.Core.Diagnostics;
 namespace BdoTimers.Core.Scheduling;
 
 /// <summary>Drives <see cref="SchedulerEngine.Tick"/> once per second on a background thread.</summary>
-public sealed class SchedulerLoop(SchedulerEngine engine) : IDisposable
+public sealed class SchedulerLoop(SchedulerEngine engine, IClock clock) : IDisposable
 {
     readonly CancellationTokenSource _cts = new();
+    readonly RepeatingErrorLog _errors = new("Scheduler tick", clock);
     Task? _run;
 
     public void Start() => _run = Task.Run(RunAsync);
@@ -15,8 +16,12 @@ public sealed class SchedulerLoop(SchedulerEngine engine) : IDisposable
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
         do
         {
-            try { engine.Tick(); }
-            catch (Exception ex) { Log.Error("Scheduler tick failed", ex); }
+            try
+            {
+                engine.Tick();
+                _errors.Succeeded();
+            }
+            catch (Exception ex) { _errors.Failed(ex); }
         }
         while (await WaitAsync(timer));
     }
