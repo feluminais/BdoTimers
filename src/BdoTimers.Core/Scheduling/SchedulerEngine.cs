@@ -6,7 +6,6 @@ namespace BdoTimers.Core.Scheduling;
 public sealed class SchedulerEngine(
     TimerStore timers, PersistentState<AppSettings> settings, IAlertSink sink, IClock clock)
 {
-    static readonly TimeSpan MuteRetention = TimeSpan.FromHours(1);
     /// <summary>How early the voice gets ready for a spoken alert; loading it takes about a second.</summary>
     static readonly TimeSpan SpeechLead = TimeSpan.FromMinutes(1);
 
@@ -38,6 +37,7 @@ public sealed class SchedulerEngine(
         // An end older than the planner's grace was never alerted: the PC slept through it or the loop stalled.
         foreach (var timer in timers.CompleteCountdowns(now, now))
             if (!paused && timer.Countdown!.EndsAtUtc < now - AlertPlanner.Grace) sink.NotifyEndedWhileAway(timer);
-        timers.PruneMuted(now - MuteRetention);
+        // Skips are kept as long as fired alerts, so setting the clock back doesn't replay either.
+        timers.PruneMuted(now - AlertPlanner.Memory);
     }
 }

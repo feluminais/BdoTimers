@@ -123,6 +123,20 @@ public class SchedulerEngineTests : IDisposable
     }
 
     [Fact]
+    public void Setting_the_clock_back_keeps_a_skipped_spawn_skipped()
+    {
+        var kzarka = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 5, 0); // spawns at T0
+        _timers.Upsert(kzarka);
+        _timers.ToggleMute(kzarka.Id, T0);
+
+        TickAt(T0.AddMinutes(50));
+        TickAt(T0.AddMinutes(-5));
+        TickAt(T0);
+
+        Assert.Empty(_sink.Alerts);
+    }
+
+    [Fact]
     public void Bosses_spawning_together_raise_one_alert()
     {
         var kzarka = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 0);
