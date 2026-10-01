@@ -164,6 +164,55 @@ public class SchedulerEngineTests : IDisposable
     }
 
     [Fact]
+    public void A_countdown_that_ended_while_asleep_is_reported()
+    {
+        var timer = AddCountdown(); // ends at T0 + 10 minutes
+
+        TickAt(T0.AddMinutes(5));
+        TickAt(T0.AddMinutes(40));
+
+        Assert.Equal(new[] { 5 }, _sink.Alerts.Select(a => a.LeadMinutes));
+        Assert.Equal(timer.Id, _sink.EndedWhileAway.Single().Id);
+        Assert.Equal(CountdownStatus.Idle, _timers.Current.Timers.Single().Countdown!.Status);
+    }
+
+    [Fact]
+    public void A_countdown_that_ended_during_a_stall_longer_than_the_grace_is_reported()
+    {
+        AddCountdown();
+
+        TickAt(T0.AddMinutes(10).AddSeconds(-1));
+        TickAt(T0.AddMinutes(10) + AlertPlanner.Grace + TimeSpan.FromSeconds(1));
+
+        Assert.DoesNotContain(_sink.Alerts, a => a.LeadMinutes == 0);
+        Assert.Single(_sink.EndedWhileAway);
+    }
+
+    [Fact]
+    public void A_countdown_alerted_at_its_end_is_not_reported_again()
+    {
+        AddCountdown();
+
+        TickAt(T0.AddMinutes(10) + AlertPlanner.Grace);
+        TickAt(T0.AddMinutes(40));
+
+        Assert.Equal(0, _sink.Alerts.Single().LeadMinutes);
+        Assert.Empty(_sink.EndedWhileAway);
+    }
+
+    [Fact]
+    public void Paused_alerts_dont_report_countdowns_that_ended_while_asleep()
+    {
+        AddCountdown();
+        _settings.Update(s => s with { AlertsPausedUntilUtc = DateTimeOffset.MaxValue });
+
+        TickAt(T0.AddMinutes(40));
+
+        Assert.Empty(_sink.EndedWhileAway);
+        Assert.Equal(CountdownStatus.Idle, _timers.Current.Timers.Single().Countdown!.Status);
+    }
+
+    [Fact]
     public void Farm_alerts_at_harvest_then_keeps_growing_without_replaying_on_startup()
     {
         var farm = Presets.Create().Single(t => t.Preset == Presets.Farm) with
