@@ -56,6 +56,14 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         return voices.Exists && voices.Length % perSpeaker == 0 && voices.Length / perSpeaker > Voices.Max(v => v.SpeakerId);
     }
 
+    /// <summary>Changes with the model, its voices or the speech runtime, so speech they made isn't reused after an update.
+    /// Call only while <see cref="IsAvailable"/>.</summary>
+    public string ModelIdentity =>
+        string.Join(' ', new[] { "model.int8.onnx", "voices.bin" }
+            .Select(name => new FileInfo(ModelFile(name)))
+            .Select(f => $"{f.Length}@{f.LastWriteTimeUtc.Ticks}")
+            .Append(typeof(OfflineTts).Assembly.GetName().Version?.ToString()));
+
     public static KokoroVoice? Find(string? id) => Voices.FirstOrDefault(v => v.Id == id);
 
     /// <summary>Mono samples at <paramref name="sampleRate"/>. Blocks while it loads the model and generates; call off the UI thread.</summary>

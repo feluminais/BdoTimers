@@ -79,7 +79,9 @@ public sealed class AppServices : IDisposable
 
         _toast = new ToastChannel(App.InstanceName, App.DisplayName);
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
-        Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")));
+        Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")),
+            new SpeechCache(Path.Combine(dataDir, "speech")));
+        Tts.CleanCacheInBackground();
         Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
         _engine = new SchedulerEngine(Timers, Settings, Alerts, Clock);
         _loop = new SchedulerLoop(_engine, Clock);
