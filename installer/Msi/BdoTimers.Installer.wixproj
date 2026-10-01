@@ -13,8 +13,4 @@
     <SuppressIces>ICE38;ICE61;ICE64;ICE91</SuppressIces>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.2" />
-  </ItemGroup>
-
 </Project>
