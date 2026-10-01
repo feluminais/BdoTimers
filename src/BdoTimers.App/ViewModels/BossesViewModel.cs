@@ -71,21 +71,11 @@ public sealed partial class BossesViewModel : ObservableObject
         }
     }
 
-    static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
-        data.Timers.Where(t => t.IsBuiltIn).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>Updates the tiles in place; rebuilds them only when the set of bosses changed (a timetable reset).</summary>
-    void SyncTiles(AppData data, DateTimeOffset now)
-    {
-        var bosses = BuiltInBosses(data).ToList();
-        if (bosses.Select(b => b.Id).SequenceEqual(Tiles.Select(t => t.Id)))
-        {
-            foreach (var (tile, boss) in Tiles.Zip(bosses)) tile.Show(boss, now);
-            return;
-        }
-        Tiles.Clear();
-        foreach (var boss in bosses) Tiles.Add(new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now));
-    }
+    /// <summary>Keeps each boss's tile, in name order, and updates it in place.</summary>
+    void SyncTiles(AppData data, DateTimeOffset now) =>
+        Tiles.Sync(data.Timers.Where(t => t.IsBuiltIn).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase),
+            (tile, boss) => tile.Id == boss.Id, boss => new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now),
+            (tile, boss) => tile.Show(boss, now));
 
     /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
     /// and own-settings marks, and their skipped spawns.</summary>
