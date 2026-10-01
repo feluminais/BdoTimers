@@ -20,7 +20,8 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     LaunchAction _running;
     SetupPage _page = SetupPage.Loading;
     string _installRoot;
-    FolderAccess _access;
+    /// <summary>Null until the folder is checked again after an edit.</summary>
+    FolderAccess? _access;
     int _progress;
     string _progressTitle = "";
     string _doneTitle = "";
@@ -44,7 +45,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         flow.ProgressChanged += percent => OnUi(() => Progress = percent);
         flow.Finished += (status, message) => OnUi(() => Finish(status, message));
 
-        InstallCommand = new Command(() => Start(LaunchAction.Install), () => IsInstallRootValid && _access == FolderAccess.Writable);
+        InstallCommand = new Command(Install, () => IsInstallRootValid && _access is null or FolderAccess.Writable);
         NextCommand = new Command(() => Page = SetupPage.Options);
         OpenFolderCommand = new Command(() => OpenFolder(InstalledFolder));
         BackCommand = new Command(() => Page = Page == SetupPage.ConfirmUninstall ? SetupPage.Maintenance : SetupPage.Welcome);
@@ -88,7 +89,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         set
         {
             if (!Set(ref _installRoot, value)) return;
-            _access = CheckAccess(value);
+            _access = null;
             OnPropertyChanged(nameof(IsInstallRootValid));
             OnPropertyChanged(nameof(LocationProblem));
             OnPropertyChanged(nameof(FolderSuffix));
@@ -117,6 +118,17 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         : _access == FolderAccess.Missing ? "That drive isn't available"
         : _access == FolderAccess.NeedsAdmin ? "Needs admin rights"
         : "";
+
+    /// <summary>
+    /// Checks that the app's folder can be created in the typed folder. Typing only checks the syntax: this touches the
+    /// disk, or the network for a share, so it runs when the box loses focus and on Browse and Install.
+    /// </summary>
+    public void CheckFolder()
+    {
+        _access = IsInstallRootValid ? CheckAccess(InstallRoot) : null;
+        OnPropertyChanged(nameof(LocationProblem));
+        CommandManager.InvalidateRequerySuggested();
+    }
 
     public string InstalledFolder => _installedRoot is null ? "" : SetupFlow.AppFolder(_installedRoot);
     public bool HasInstalledFolder => _installedRoot is not null;
@@ -166,6 +178,12 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
 
     static bool HasFiles(string folder) => Directory.Exists(folder) && Directory.EnumerateFiles(folder).Any();
 
+    void Install()
+    {
+        CheckFolder();
+        if (_access == FolderAccess.Writable) Start(LaunchAction.Install);
+    }
+
     void Finish(int status, string? message)
     {
         ExitCode = status;
@@ -195,7 +213,9 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     void Browse()
     {
         var owner = Application.Current.MainWindow;
-        if (FolderPicker.Pick(owner, InstallRoot) is { } folder) InstallRoot = folder;
+        if (FolderPicker.Pick(owner, InstallRoot) is not { } folder) return;
+        InstallRoot = folder;
+        CheckFolder();
     }
 
     static void OpenFolder(string? folder)

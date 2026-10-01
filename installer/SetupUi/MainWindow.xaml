@@ -86,7 +86,7 @@
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Browse…" Margin="12,0,0,0" Command="{Binding BrowseCommand}" />
                             <Grid VerticalAlignment="Center">
-                                <TextBox x:Name="PathBox" Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}"
+                                <TextBox x:Name="PathBox" Text="{Binding InstallRoot, UpdateSourceTrigger=PropertyChanged}" LostFocus="PathBox_LostFocus"
                                          controls:Ui.HasError="{Binding IsInstallRootValid, Converter={StaticResource Not}}" />
                                 <!-- The app's own folder, in gold right after the typed path: an invisible copy of the path
                                      takes up its width. 4 px is the text box's padding plus the inset of its text. -->
