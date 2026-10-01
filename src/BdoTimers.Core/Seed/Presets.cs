@@ -61,6 +61,9 @@ public static class Presets
         return missing.Count == 0 ? data : data with { Timers = [.. missing, .. data.Timers] };
     }
 
+    /// <summary>Farm crops keep growing after the harvest time, so its countdown runs on past zero until reset.</summary>
+    public static bool Overgrows(string? preset) => preset == Farm;
+
     /// <summary>Farm and Fishing can't be deleted; Horse registration and the user's own timers can.</summary>
     public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun;
 
