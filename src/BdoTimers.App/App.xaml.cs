@@ -38,12 +38,11 @@ public partial class App : Application
         ThreadPool.RegisterWaitForSingleObject(_activateSignal,
             (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
 
-        // Beside the exe, so everything the app keeps is in the folder it was installed to. Setup carries this folder
-        // along when the app moves and deletes it on uninstall.
+        // Beside the exe, so everything the app keeps is in the folder it was installed to; uninstall deletes it.
         var dataDir = Path.Combine(AppContext.BaseDirectory, "Data");
         if (!CanWrite(dataDir))
         {
-            MessageBox.Show($"BDO Timers can't save to {dataDir}.\n\nRun BDO Timers setup and move it to a folder you can write to.",
+            MessageBox.Show($"BDO Timers can't save to {dataDir}.\n\nReinstall it to a folder you can write to.",
                 "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
             Shutdown(1);
             return;
