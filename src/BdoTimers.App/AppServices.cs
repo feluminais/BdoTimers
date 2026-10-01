@@ -80,7 +80,7 @@ public sealed class AppServices : IDisposable
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")));
         Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
         _engine = new SchedulerEngine(Timers, Settings, Alerts, Clock);
-        _loop = new SchedulerLoop(_engine);
+        _loop = new SchedulerLoop(_engine, Clock);
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
     }
@@ -94,10 +94,15 @@ public sealed class AppServices : IDisposable
             Todos.Reconcile();
         }
         catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); }
+        var todoResetErrors = new RepeatingErrorLog("To-do reset", Clock);
         UiClock.Tick += _ =>
         {
-            try { Todos.Reconcile(); }
-            catch (StateSaveException ex) { Log.Error("Couldn't reset to-do lists", ex); }
+            try
+            {
+                Todos.Reconcile();
+                todoResetErrors.Succeeded();
+            }
+            catch (StateSaveException ex) { todoResetErrors.Failed(ex); }
         };
         _loop.Start();
         UiClock.Start();
