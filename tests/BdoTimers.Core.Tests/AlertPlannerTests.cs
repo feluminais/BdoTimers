@@ -94,6 +94,34 @@ public class AlertPlannerTests
         Assert.Empty(new AlertPlanner().Tick([timer], NoMutes, T));
     }
 
+    static List<AlertEvent> Run(AlertPlanner planner, TimerDef timer, DateTimeOffset from, DateTimeOffset to)
+    {
+        var events = new List<AlertEvent>();
+        for (var at = from; at <= to; at = at.AddSeconds(10)) events.AddRange(planner.Tick([timer], NoMutes, at));
+        return events;
+    }
+
+    [Fact]
+    public void Setting_the_clock_back_doesnt_replay_alerts()
+    {
+        var timer = TestTimers.Countdown(T, 5, 1, 0);
+        var planner = new AlertPlanner();
+        Assert.Equal(new[] { 5, 1, 0 }, Run(planner, timer, T.AddMinutes(-6), T.AddMinutes(30)).Select(a => a.LeadMinutes));
+
+        Assert.Empty(Run(planner, timer, T.AddMinutes(-6), T.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void Setting_the_clock_back_further_than_the_planner_remembers_alerts_again()
+    {
+        var timer = TestTimers.Countdown(T, 0);
+        var planner = new AlertPlanner();
+        Run(planner, timer, T, T);
+        Run(planner, timer, T + AlertPlanner.Memory + AlertPlanner.Grace, T + AlertPlanner.Memory + AlertPlanner.Grace);
+
+        Assert.Single(Run(planner, timer, T, T));
+    }
+
     [Fact]
     public void A_timer_that_cant_be_scheduled_doesnt_stop_the_others()
     {

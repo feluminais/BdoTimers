@@ -7,6 +7,11 @@ namespace BdoTimers.Core.Scheduling;
 public sealed class AlertPlanner
 {
     public static readonly TimeSpan Grace = TimeSpan.FromSeconds(60);
+    /// <summary>
+    /// How long after an occurrence its fired alerts are remembered: a clock set back by less than this replays
+    /// nothing, while a larger jump counts as setting a new time and its alerts follow the new clock.
+    /// </summary>
+    public static readonly TimeSpan Memory = TimeSpan.FromHours(1);
 
     readonly HashSet<(Guid TimerId, DateTimeOffset Occurrence, int Lead)> _fired = [];
     readonly HashSet<Guid> _failed = [];
@@ -42,7 +47,7 @@ public sealed class AlertPlanner
             }
             catch (Exception ex) { Failed(timer, ex); }
         }
-        _fired.RemoveWhere(k => k.Occurrence < now - Grace - Grace);
+        _fired.RemoveWhere(k => k.Occurrence < now - Memory);
         return events;
     }
 
