@@ -18,8 +18,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [NotifyPropertyChangedFor(nameof(AlertSound))]
     private IReadOnlyList<Choice> _alertSounds = [];
     [ObservableProperty] private string? _soundError;
-    [ObservableProperty] private bool _confirmingReset;
-    [ObservableProperty] private bool _confirmingAlertReset;
     [ObservableProperty] private bool _hasDeletedTodoDefaults;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
@@ -28,6 +26,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public LeadChipsViewModel DefaultLeads { get; }
     public TodoScheduleEditorViewModel DailyTodoReset { get; }
     public TodoScheduleEditorViewModel WeeklyTodoReset { get; }
+    public Confirmation AlertReset { get; }
+    public Confirmation TimetableReset { get; }
     public string Version { get; } = AppVersion();
 
     public SettingsPanelViewModel(AppServices services)
@@ -44,6 +44,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
             schedule => services.SetTodoReset(TodoCadence.Daily, schedule));
         WeeklyTodoReset = new TodoScheduleEditorViewModel(s.WeeklyTodoReset,
             schedule => services.SetTodoReset(TodoCadence.Weekly, schedule));
+        AlertReset = new Confirmation(services.Timers.ResetBossAlerts);
+        TimetableReset = new Confirmation(services.ResetBossTimetable);
         HasDeletedTodoDefaults = services.Todos.Current.Lists.Any(list => list.IsBuiltIn && list.Deleted)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.DailyId)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.WeeklyId);
@@ -139,32 +141,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     [RelayCommand]
     void OpenNotificationSettings() => ToastChannel.OpenWindowsNotificationSettings();
-
-    [RelayCommand]
-    void AskReset() => ConfirmingReset = true;
-
-    [RelayCommand]
-    void CancelReset() => ConfirmingReset = false;
-
-    [RelayCommand]
-    void ConfirmReset()
-    {
-        _services.ResetBossTimetable();
-        ConfirmingReset = false;
-    }
-
-    [RelayCommand]
-    void AskAlertReset() => ConfirmingAlertReset = true;
-
-    [RelayCommand]
-    void CancelAlertReset() => ConfirmingAlertReset = false;
-
-    [RelayCommand]
-    void ConfirmAlertReset()
-    {
-        _services.Timers.ResetBossAlerts();
-        ConfirmingAlertReset = false;
-    }
 
     [RelayCommand]
     void RestoreTodoDefaults()

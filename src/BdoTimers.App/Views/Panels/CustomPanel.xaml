@@ -72,13 +72,13 @@
                     Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}">
-                <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding AskDeleteCommand}"
-                        Visibility="{Binding ConfirmingDelete, Converter={StaticResource InverseBoolToVisibility}}" />
-                <StackPanel Orientation="Horizontal" Visibility="{Binding ConfirmingDelete, Converter={StaticResource BoolToVisibility}}">
+                <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding Delete.AskCommand}"
+                        Visibility="{Binding Delete.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding Delete.IsAsking, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Delete?" Foreground="{StaticResource SubtleBrush}" FontSize="12" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding ConfirmDeleteCommand}" />
+                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding Delete.ConfirmCommand}" />
                     <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding CancelDeleteCommand}" />
+                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding Delete.CancelCommand}" />
                 </StackPanel>
             </StackPanel>
         </DockPanel>
