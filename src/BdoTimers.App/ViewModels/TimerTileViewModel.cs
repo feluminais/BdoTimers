@@ -54,7 +54,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     public bool IsFarm => _timer.Preset == Presets.Farm;
     /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
     public bool HasPercent => _timer.Kind == TimerKind.Countdown;
-    public int MaxStartPercent => _timer.Preset == Presets.Farm ? 200 : 100;
+    public int MaxStartPercent => IsFarm ? 200 : 100;
     public bool IsWeekly => _timer.Kind == TimerKind.Scheduled;
     /// <summary>What a preset whose use isn't obvious is for; the tile shows it in an (i) beside the name.</summary>
     public string? Info => _timer.Preset == Presets.HorseRegistration
@@ -97,16 +97,16 @@ public sealed partial class TimerTileViewModel : ObservableObject
         }
         if (_timer.Countdown is { } c)
         {
-            var farm = _timer.Preset == Presets.Farm;
+            string Remaining(TimeSpan left) => IsFarm ? DurationFormat.SignedClock(left) : DurationFormat.Clock(left);
             (Digits, Detail, IsDimmed) = c.Status switch
             {
-                CountdownStatus.Running when c.EndsAtUtc is { } end => (farm ? DurationFormat.SignedClock(end - now) : DurationFormat.Clock(end - now), StartedText(c.StartedAtUtc), false),
-                CountdownStatus.Paused when c.Remaining is { } left => (farm ? DurationFormat.SignedClock(left) : DurationFormat.Clock(left), "Paused", true),
+                CountdownStatus.Running when c.EndsAtUtc is { } end => (Remaining(end - now), StartedText(c.StartedAtUtc), false),
+                CountdownStatus.Paused when c.Remaining is { } left => (Remaining(left), "Paused", true),
                 _ => (DurationFormat.Clock(c.Duration), "Ready", true),
             };
             Detail = off + Detail;
             IsDimmed |= !_timer.Enabled;
-            Growth = farm ? CountdownOps.FarmGrowth(c, now) : null;
+            Growth = IsFarm ? CountdownOps.FarmGrowth(c, now) : null;
             ShowStatus(c.Status);
             return;
         }
@@ -134,7 +134,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         }
         var skipped = _services.Timers.Current.Muted.Contains(new MutedOccurrence(_timer.Id, next));
         Digits = DurationFormat.Clock(next - now);
-        Detail = $"{off}Next {next.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture)}{(skipped ? " · skipped" : "")}";
+        Detail = $"{off}Next {Formats.DayTime(next)}{(skipped ? " · skipped" : "")}";
         IsDimmed = !_timer.Enabled || skipped;
         SkipLabel = skipped ? "Unskip next" : "Skip next";
     }
@@ -196,9 +196,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         Follow(() =>
         {
             ShowTime(from);
-            if (_timer.Countdown is { } countdown) StartPercent = _timer.Preset == Presets.Farm
-                ? CountdownOps.GrowthPercent(countdown.Duration, now - from)
-                : CountdownOps.ProgressPercent(countdown.Duration, now - from);
+            if (_timer.Countdown is { } countdown) StartPercent = PercentFor(countdown.Duration, now - from);
         });
         CheckStart();
         IsPickingStart = true;
@@ -231,9 +229,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         if (_following) return;
         _fromPercent = false;
         if (TimeStart() is { } at && _timer.Countdown is { } c)
-            Follow(() => StartPercent = _timer.Preset == Presets.Farm
-                ? CountdownOps.GrowthPercent(c.Duration, DateTimeOffset.UtcNow - at)
-                : CountdownOps.ProgressPercent(c.Duration, DateTimeOffset.UtcNow - at));
+            Follow(() => StartPercent = PercentFor(c.Duration, DateTimeOffset.UtcNow - at));
         CheckStart();
     }
 
@@ -244,6 +240,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
         if (PercentStart() is { } at) Follow(() => ShowTime(at));
         CheckStart();
     }
+
+    /// <summary>How far along a countdown is after <paramref name="elapsed"/>; Farm's as its crops' growth.</summary>
+    int PercentFor(TimeSpan duration, TimeSpan elapsed) =>
+        IsFarm ? CountdownOps.GrowthPercent(duration, elapsed) : CountdownOps.ProgressPercent(duration, elapsed);
 
     void Follow(Action update)
     {
@@ -265,7 +265,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         StartInvalid = TimeStart() is null;
         var at = PickedStart();
         StartProblem = !IsFarm && at is { } start && _timer.Countdown is { } c && start + c.Duration <= DateTimeOffset.UtcNow
-            ? $"Would have ended at {(start + c.Duration).ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture)}"
+            ? $"Would have ended at {Formats.Time(start + c.Duration)}"
             : "";
         ConfirmStartCommand.NotifyCanExecuteChanged();
     }

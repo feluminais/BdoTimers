@@ -1,4 +1,3 @@
-using System.Globalization;
 using BdoTimers.App.Controls;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -43,6 +42,6 @@ public sealed partial class BossTileViewModel : ObservableObject
             return;
         }
         var next = OccurrenceSource.Between(boss, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
-        Detail = next is { } at ? "Next · " + at.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture) : "No upcoming spawns";
+        Detail = next is { } at ? "Next · " + Formats.DayTime(at) : "No upcoming spawns";
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Windows;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
@@ -54,10 +53,8 @@ public sealed partial class TodoViewModel : ObservableObject
     {
         var now = DateTimeOffset.UtcNow;
         var settings = _services.Settings.Current;
-        WeeklyResetLabel = "Resets " + TodoReset.Next(settings.WeeklyTodoReset with { Cadence = TodoCadence.Weekly }, now)
-            .ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture);
-        DailyResetLabel = "Resets " + TodoReset.Next(settings.DailyTodoReset with { Cadence = TodoCadence.Daily }, now)
-            .ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
+        WeeklyResetLabel = "Resets " + Formats.DayTime(TodoReset.Next(settings.WeeklyTodoReset with { Cadence = TodoCadence.Weekly }, now));
+        DailyResetLabel = "Resets " + Formats.Time(TodoReset.Next(settings.DailyTodoReset with { Cadence = TodoCadence.Daily }, now));
     }
 
     void Sync()

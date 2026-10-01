@@ -72,10 +72,8 @@ public partial class MainWindow : Window
     void RestorePlacement(WindowPlacement? placement)
     {
         if (placement is null) return;
-        var screen = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
-            SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
         // The top bar must be reachable, or the window couldn't be dragged back from a disconnected screen.
-        if (!screen.Contains(new Point(placement.Left + 60, placement.Top + 20))) return;
+        if (!VirtualScreen.Contains(new Point(placement.Left + 60, placement.Top + 20))) return;
         WindowStartupLocation = WindowStartupLocation.Manual;
         Left = placement.Left;
         Top = placement.Top;
