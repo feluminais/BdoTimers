@@ -28,13 +28,16 @@ public sealed class SchedulerEngine(
         var defaultLeads = settings.Current.DefaultLeadTimesMinutes;
         var alerts = AlertGrouping.Group(_planner.Tick(data.Timers, muted, now, defaultLeads));
         // The planner runs even while paused so that resuming doesn't replay the paused period.
-        if (!AlertPause.IsPaused(settings.Current, now))
+        var paused = AlertPause.IsPaused(settings.Current, now);
+        if (!paused)
         {
             foreach (var alert in alerts) sink.Dispatch(alert);
             if (AlertPlanner.SpeechDueWithin(data.Timers, muted, now, SpeechLead, defaultLeads)) sink.PrepareSpeech();
         }
 
-        timers.CompleteCountdowns(now, now);
+        // An end older than the planner's grace was never alerted: the PC slept through it or the loop stalled.
+        foreach (var timer in timers.CompleteCountdowns(now, now))
+            if (!paused && timer.Countdown!.EndsAtUtc < now - AlertPlanner.Grace) sink.NotifyEndedWhileAway(timer);
         timers.PruneMuted(now - MuteRetention);
     }
 }

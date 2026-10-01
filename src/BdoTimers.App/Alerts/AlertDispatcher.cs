@@ -38,7 +38,9 @@ public sealed class AlertDispatcher(
     public void PrepareSpeech() => Try("tts", () => tts.Warm(settings.Current.TtsVoice));
 
     public void NotifyEndedWhileAway(TimerDef timer) =>
-        Try("toast", () => toast.ShowInfo(timer.Name, "Countdown ended while BDO Timers was closed."));
+        Try("toast", () => toast.ShowInfo(timer.Name, timer.Countdown?.EndsAtUtc is { } end
+            ? $"Countdown ended at {end.ToLocalTime():HH:mm}."
+            : "Countdown ended."));
 
     async Task RunAsync(AlertEvent alert)
     {
