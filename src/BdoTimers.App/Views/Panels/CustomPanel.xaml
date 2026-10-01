@@ -116,9 +116,8 @@
 
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Start hotkey"
                                         Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
-                    <controls:HotkeyBox Combo="{Binding HorseHotkey}" Other="{Binding OverlayAlwaysHotkey}"
-                                        Other2="{Binding OverlayShowHotkey}" IsRefused="{Binding HorseHotkeyRefused}"
-                                        IsListening="{Binding ListeningHorseHotkey}" AutomationProperties.Name="Start horse registration hotkey" />
+                    <controls:HotkeyBox Combo="{Binding HorseHotkey}" Taken="{Binding OverlayHotkeys}" Hotkeys="{Binding Hotkeys}"
+                                        Action="StartHorseRegistration" AutomationProperties.Name="Start horse registration hotkey" />
                 </HeaderedContentControl>
 
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
