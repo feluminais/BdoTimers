@@ -24,6 +24,8 @@ public sealed class AppServices : IDisposable
     readonly TrayIcon _tray;
     readonly ToastChannel _toast;
     readonly SoundChannel _sound;
+    readonly AlertDispatcher _alerts;
+    readonly BossSeed _seed;
     readonly string _dataDir;
     MainWindow? _main;
     MainViewModel? _mainViewModel;
@@ -32,11 +34,9 @@ public sealed class AppServices : IDisposable
     public TimerStore Timers { get; }
     public TodoStore Todos { get; }
     public PersistentState<AppSettings> Settings { get; }
-    public BossSeed Seed { get; }
     public UiClock UiClock { get; } = new();
     /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
     public BossBoardCache Boards { get; } = new();
-    public AlertDispatcher Alerts { get; }
     public IClock Clock { get; } = new SystemClock();
     public TtsChannel Tts { get; }
     public OverlayController Overlay { get; }
@@ -64,7 +64,7 @@ public sealed class AppServices : IDisposable
         if (!File.Exists(todosFile.FilePath)) todosFile.Save(todos.Value);
         RecoveredFiles = new[] { settings.RecoveredBackupPath, timers.RecoveredBackupPath, todos.RecoveredBackupPath }
             .OfType<string>().ToList();
-        Todos = new TodoStore(todosFile, todos.Value, new SystemClock());
+        Todos = new TodoStore(todosFile, todos.Value, Clock);
         Todos.Update(TodoMigrations.Apply);
         Settings.Changed += () =>
         {
@@ -74,16 +74,16 @@ public sealed class AppServices : IDisposable
         // A built-in sound from an earlier version that the app no longer has.
         if (!SoundKeys.IsKnown(Settings.Current.AlertSound)) Settings.Update(s => s with { AlertSound = BuiltInSounds.Default });
         Timers = new TimerStore(timersFile, timers.Value);
-        Seed = SeedService.LoadEmbedded();
-        Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig())));
+        _seed = SeedService.LoadEmbedded();
+        Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), _seed, new AlertConfig())));
 
         _toast = new ToastChannel(App.InstanceName, App.DisplayName);
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")),
             new SpeechCache(Path.Combine(dataDir, "speech")));
         Tts.CleanCacheInBackground();
-        Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
-        _engine = new SchedulerEngine(Timers, Settings, Alerts, Clock);
+        _alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
+        _engine = new SchedulerEngine(Timers, Settings, _alerts, Clock);
         _loop = new SchedulerLoop(_engine, Clock);
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
@@ -145,7 +145,7 @@ public sealed class AppServices : IDisposable
         if (_main is null)
         {
             _mainViewModel = new MainViewModel(this);
-            _main = new MainWindow(_mainViewModel, Settings);
+            _main = new MainWindow(_mainViewModel, this);
         }
         _main.Show();
         if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
@@ -167,7 +167,7 @@ public sealed class AppServices : IDisposable
     public HorseStartResult StartHorseRegistration(bool announce)
     {
         var result = Timers.StartHorseRegistration(Clock.UtcNow);
-        if (result == HorseStartResult.Started && announce) Alerts.Say("Horse registration time started");
+        if (result == HorseStartResult.Started && announce) _alerts.Say("Horse registration time started");
         else if (result == HorseStartResult.LimitReached)
         {
             try { _toast.ShowInfo("Horse registrations", "Maximum 10 running."); }
@@ -176,7 +176,7 @@ public sealed class AppServices : IDisposable
         return result;
     }
 
-    public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
+    public void SendTestAlert() => _alerts.Dispatch(new AlertEvent(
         [new TimerDef { Name = "Test boss" }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
 
     /// <summary>The key that plays for a timer sound key; null means the app-wide alert sound.</summary>
@@ -261,7 +261,7 @@ public sealed class AppServices : IDisposable
         Process.Start(new ProcessStartInfo(_dataDir) { UseShellExecute = true });
     }
 
-    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, new AlertConfig()));
+    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, _seed, new AlertConfig()));
 
     public void SetTodoReset(TodoCadence cadence, TodoSchedule schedule)
     {

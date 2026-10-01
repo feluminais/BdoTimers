@@ -23,10 +23,6 @@ public partial class App : Application
     EventWaitHandle? _activateSignal;
     AppServices? _services;
 
-    public bool IsQuittingApp => _services?.IsQuitting ?? true;
-
-    public void Quit() => _services?.Quit();
-
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
