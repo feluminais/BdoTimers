@@ -36,13 +36,10 @@
                            Visibility="{Binding Error, Converter={StaticResource NullToCollapsed}}" />
             </StackPanel>
         </Border>
-        <Border Style="{StaticResource Row}">
-            <DockPanel>
-                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Toast}" ValueWidth="110"
-                                        AutomationProperties.Name="Windows notification" />
-                <TextBlock Text="Windows notification" Style="{StaticResource RowLabel}" />
-            </DockPanel>
-        </Border>
+        <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Windows notification">
+            <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding Toast}" ValueWidth="110"
+                                    AutomationProperties.Name="Windows notification" />
+        </HeaderedContentControl>
         <Border Style="{StaticResource Row}">
             <StackPanel>
                 <DockPanel>
