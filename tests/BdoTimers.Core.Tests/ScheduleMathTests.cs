@@ -51,4 +51,13 @@ public class ScheduleMathTests
     {
         Assert.Empty(ScheduleMath.From(Berlin(At((DayOfWeek)9, 14, 0)), Utc(2026, 9, 22, 10, 0)));
     }
+
+    // 2026-09-25 12:00 UTC is 15:00 in Kyiv.
+    [Theory]
+    [InlineData("2026-09-25 12:00", 14, 20, "2026-09-25 11:20")] // earlier today is today
+    [InlineData("2026-09-25 22:00", 23, 30, "2026-09-25 20:30")] // still ahead at 01:00 on the 26th is yesterday
+    [InlineData("2026-09-25 12:00", 15, 0, "2026-09-25 12:00")] // the current minute is now
+    public void Most_recent_clock_time(string nowUtc, int hour, int minute, string expectedUtc) =>
+        Assert.Equal(ParseUtc(expectedUtc),
+            ScheduleMath.MostRecent(new TimeOnly(hour, minute), ParseUtc(nowUtc), TimeZoneInfo.FindSystemTimeZoneById("Europe/Kyiv")));
 }

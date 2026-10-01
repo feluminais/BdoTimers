@@ -10,7 +10,7 @@ public class BossSeedDataTests
     {
         var seed = SeedService.LoadEmbedded();
 
-        Assert.NotNull(TimeZones.Find(seed.TimeZoneId));
+        Assert.NotNull(TimeZoneInfo.FindSystemTimeZoneById(seed.TimeZoneId));
         Assert.True(seed.Bosses.Count >= 5, "EU has at least five scheduled world bosses");
         Assert.Contains(seed.Bosses, b => b.Name == "Kzarka");
         Assert.Contains(seed.Bosses, b => b.Name == "Nouver");
