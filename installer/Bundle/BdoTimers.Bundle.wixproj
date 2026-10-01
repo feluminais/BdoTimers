@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/5.0.2">
+<Project Sdk="WixToolset.Sdk">
 
   <!-- The setup users run: a Burn bundle that shows the styled setup window (../SetupUi) and installs the MSI. -->
   <PropertyGroup>
