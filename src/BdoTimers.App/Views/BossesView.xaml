@@ -100,17 +100,14 @@
         </Style>
 
         <!-- Boss tile under the table: the whole tile opens the boss panel; the corner gear says so -->
-        <Style x:Key="BossTileButton" TargetType="Button">
+        <Style x:Key="BossTileButton" TargetType="Button" BasedOn="{StaticResource TileButton}">
             <Setter Property="Height" Value="52" />
             <Setter Property="Margin" Value="0,0,8,8" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
             <Setter Property="ToolTip" Value="Alerts, sound and spawn times" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{StaticResource BgBrush}" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1"
+                        <Border Background="{StaticResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
                                 ClipToBounds="True">
                             <Grid>
                                 <ContentPresenter />
@@ -120,12 +117,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
                                 <Setter TargetName="Gear" Property="Foreground" Value="{StaticResource AccentTextBrush}" />
                                 <Setter TargetName="Gear" Property="Opacity" Value="1" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
