@@ -22,10 +22,6 @@ public static class ScheduleMath
         return new DateTimeOffset(local, offset).ToUniversalTime();
     }
 
-    /// <summary>The next <paramref name="count"/> occurrences at or after <paramref name="fromUtc"/>, ascending.</summary>
-    public static IReadOnlyList<DateTimeOffset> Next(ScheduledSpec spec, DateTimeOffset fromUtc, int count) =>
-        From(spec, fromUtc).Take(Math.Max(0, count)).ToList();
-
     /// <summary>
     /// All occurrences at or after <paramref name="fromUtc"/>, ascending and unbounded; callers limit it
     /// with Take/TakeWhile. Computed lazily so a short look-ahead only evaluates the days it needs.

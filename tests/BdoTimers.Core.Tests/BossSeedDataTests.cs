@@ -18,6 +18,6 @@ public class BossSeedDataTests
         Assert.Equal(seed.Bosses.Count, seed.Bosses.Select(b => b.Name).Distinct().Count());
 
         var timers = SeedService.ToTimers(seed, new());
-        Assert.All(timers, t => Assert.NotEmpty(ScheduleMath.Next(t.Scheduled!, DateTimeOffset.UtcNow, 1)));
+        Assert.All(timers, t => Assert.NotEmpty(ScheduleMath.From(t.Scheduled!, DateTimeOffset.UtcNow)));
     }
 }
