@@ -58,8 +58,7 @@
     </UserControl.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="22,16,12,4">
-            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
             <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource DisplayFont}"
                      FontSize="18" controls:Ui.HasError="{Binding InvalidName}" AutomationProperties.Name="List name">
                 <TextBox.Style>
@@ -75,8 +74,7 @@
             </TextBox>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16">
-            <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Done"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelDoneButton}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Style="{StaticResource DangerLinkButton}" Content="Delete list" Command="{Binding AskDeleteCommand}"
                         Visibility="{Binding ConfirmingDelete, Converter={StaticResource InverseBoolToVisibility}}" />

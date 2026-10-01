@@ -12,14 +12,11 @@
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding NextText}" Style="{StaticResource LabelText}" />
             </StackPanel>
-            <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelCloseButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0" />
         </Grid>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
-            <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
             <TextBlock Text="{Binding AppliesText}" Style="{StaticResource LabelText}" Foreground="{StaticResource PastBrush}"
                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
         </DockPanel>

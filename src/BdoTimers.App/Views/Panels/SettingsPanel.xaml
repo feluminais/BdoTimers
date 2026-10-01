@@ -6,14 +6,12 @@
              Width="460">
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="22,16,12,4">
-            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
             <TextBlock Text="Settings" Style="{StaticResource DisplayText}" FontSize="18" VerticalAlignment="Center" />
         </DockPanel>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16" LastChildFill="False">
-            <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
         </DockPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
