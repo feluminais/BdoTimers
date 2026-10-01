@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using BdoTimers.Core.Diagnostics;
@@ -22,14 +23,38 @@ public partial class App : Application
     Mutex? _singleInstance;
     EventWaitHandle? _activateSignal;
     AppServices? _services;
+    PreparedRestore? _restartRestore;
 
     public bool IsQuittingApp => _services?.IsQuitting ?? true;
 
     public void Quit() => _services?.Quit();
 
+    internal void RestartForRestore(PreparedRestore restore)
+    {
+        _restartRestore = restore;
+        _services?.Quit();
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        if (Argument(e.Args, "--wait-for-exit") is { } processId && int.TryParse(processId, out var previousId))
+        {
+            try
+            {
+                if (previousId == Environment.ProcessId) throw new InvalidOperationException("Invalid restart request.");
+                using var previous = Process.GetProcessById(previousId);
+                if (!previous.WaitForExit(30000)) throw new IOException("The previous app is still closing.");
+            }
+            catch (ArgumentException) { }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Shutdown(1);
+                return;
+            }
+        }
 
         _singleInstance = new Mutex(true, $@"Local\{InstanceName}.SingleInstance", out var isFirst);
         _activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{InstanceName}.Activate");
@@ -43,7 +68,7 @@ public partial class App : Application
             (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
 
         // Beside the exe, so everything the app keeps is in the folder it was installed to. Setup carries this folder
-        // along when the app moves and deletes it on uninstall.
+        // along when the app moves; uninstall keeps it unless the player opts in to deletion.
         var dataDir = Path.Combine(AppContext.BaseDirectory, "Data");
         if (!CanWrite(dataDir))
         {
@@ -51,6 +76,18 @@ public partial class App : Application
                 "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
             Shutdown(1);
             return;
+        }
+        string? restoredPrevious = null;
+        var restoring = Argument(e.Args, "--restore-prepared");
+        if (restoring is not null)
+        {
+            try { restoredPrevious = BackupArchive.ApplyPrepared(restoring, dataDir, new SystemClock()); }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Couldn't restore the backup: {ex.Message}", "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
+                Shutdown(1);
+                return;
+            }
         }
         Log.Init(Path.Combine(dataDir, "logs"), new SystemClock());
         DispatcherUnhandledException += (_, args) =>
@@ -75,6 +112,7 @@ public partial class App : Application
         {
             _services = new AppServices(this, dataDir);
             _services.Start(showWindow: !e.Args.Contains("--minimized"));
+            if (restoring is not null) _services.NotifyRestore(restoredPrevious);
         }
         catch (Exception ex)
         {
@@ -85,6 +123,12 @@ public partial class App : Application
             return;
         }
         Log.Info("Started");
+    }
+
+    static string? Argument(string[] args, string name)
+    {
+        var index = Array.IndexOf(args, name);
+        return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
     }
 
     /// <summary>Creates the folder if needed and tries a throwaway file in it.</summary>
@@ -105,5 +149,22 @@ public partial class App : Application
         _singleInstance?.Dispose();
         _activateSignal?.Dispose();
         base.OnExit(e);
+        if (_restartRestore is { } restore)
+        {
+            try
+            {
+                var start = new ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, "BdoTimers.exe")) { UseShellExecute = false };
+                start.ArgumentList.Add("--wait-for-exit");
+                start.ArgumentList.Add(Environment.ProcessId.ToString());
+                start.ArgumentList.Add("--restore-prepared");
+                start.ArgumentList.Add(restore.Directory);
+                Process.Start(start);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Couldn't restart: {ex.Message}\nOpen BDO Timers and choose the backup again.",
+                    "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }

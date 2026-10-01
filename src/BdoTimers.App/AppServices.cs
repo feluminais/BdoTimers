@@ -136,6 +136,16 @@ public sealed class AppServices : IDisposable
         }
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
+        var timetableRevision = TimetableUpdates.Revision(Seed);
+        if (TimetableUpdates.Review(Timers.Current, Seed).NeedsReview && Settings.Current.TimetableNoticeRevision != timetableRevision)
+        {
+            try
+            {
+                _toast.ShowInfo("Review the EU timetable", "Bundled spawn times can be reviewed in Settings → Bosses.");
+                Settings.Update(s => s with { TimetableNoticeRevision = timetableRevision });
+            }
+            catch (Exception ex) { Log.Error("Timetable notice failed", ex); }
+        }
         if (showWindow) ShowMainWindow();
         else EcoQos.Set(true);
     }
@@ -246,6 +256,22 @@ public sealed class AppServices : IDisposable
     {
         Directory.CreateDirectory(_dataDir);
         Process.Start(new ProcessStartInfo(_dataDir) { UseShellExecute = true });
+    }
+
+    public void ExportBackup(string destination, string appVersion) => BackupArchive.Export(_dataDir, destination,
+        new(Settings.Current, Timers.Current, Todos.Current), Clock, appVersion);
+
+    public PreparedRestore PrepareRestore(string archive) => BackupArchive.Prepare(archive, AppContext.BaseDirectory);
+
+    public void RestartForRestore(PreparedRestore restore) => ((App)_app).RestartForRestore(restore);
+
+    public void ApplyTimetable(IEnumerable<string> names) => Timers.Update(data => TimetableUpdates.Apply(data, Seed, names));
+
+    public void NotifyRestore(string? previousDirectory)
+    {
+        Log.Info($"Backup restored; previous data: {previousDirectory ?? "none"}");
+        try { _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder."); }
+        catch (Exception ex) { Log.Error("Couldn't show the restore notice", ex); }
     }
 
     public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, new AlertConfig()));

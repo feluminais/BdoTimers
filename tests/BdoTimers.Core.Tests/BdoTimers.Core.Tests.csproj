@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\BdoTimers.Core\BdoTimers.Core.csproj" />
+    <Compile Include="..\..\installer\SetupUi\PersonalDataCleanup.cs" Link="Installer\PersonalDataCleanup.cs" />
   </ItemGroup>
 
 </Project>

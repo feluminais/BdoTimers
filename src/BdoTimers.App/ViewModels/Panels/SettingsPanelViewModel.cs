@@ -2,18 +2,23 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Microsoft.Win32;
 using BdoTimers.App.Alerts;
+using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Seed;
+using BdoTimers.Core.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-public sealed partial class SettingsPanelViewModel : ObservableObject
+public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 {
     readonly AppServices _services;
     bool _syncingSound;
+    bool _closed;
+    PreparedRestore? _preparedRestore;
 
     [ObservableProperty] private Choice _autostart;
     [ObservableProperty] private Choice _closeToTray;
@@ -26,6 +31,14 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     [ObservableProperty] private bool _confirmingReset;
     [ObservableProperty] private bool _confirmingAlertReset;
     [ObservableProperty] private bool _hasDeletedTodoDefaults;
+    [ObservableProperty] private bool _needsTimetableReview;
+    [ObservableProperty] private bool _reviewingTimetable;
+    [ObservableProperty] private bool _confirmingRestore;
+    [ObservableProperty] private string? _restoreDescription;
+    [ObservableProperty] private string? _dataStatus;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExportBackupCommand), nameof(ChooseRestoreCommand), nameof(ConfirmRestoreCommand))]
+    private bool _dataBusy;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
@@ -34,6 +47,11 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     public TodoScheduleEditorViewModel DailyTodoReset { get; }
     public TodoScheduleEditorViewModel WeeklyTodoReset { get; }
     public string Version { get; } = AppVersion();
+    public string TimetableVerified => $"EU · Verified {_services.Seed.VerifiedOn ?? "unknown"}";
+    public string? TimetableSource => _services.Seed.Source;
+    public string TimetableZone => $"Times in {_services.Seed.TimeZoneId}";
+    public ObservableCollection<TimetableChangeRow> TimetableChanges { get; } = [];
+    public bool CanUseData => !DataBusy;
 
     public SettingsPanelViewModel(AppServices services)
     {
@@ -59,6 +77,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
         HasDeletedTodoDefaults = services.Todos.Current.Lists.Any(list => list.IsBuiltIn && list.Deleted)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.DailyId)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.WeeklyId);
+        RefreshTimetable();
     }
 
     partial void OnAutostartChanged(Choice value)
@@ -139,6 +158,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     {
         _services.ResetBossTimetable();
         ConfirmingReset = false;
+        RefreshTimetable();
     }
 
     [RelayCommand]
@@ -159,6 +179,116 @@ public sealed partial class SettingsPanelViewModel : ObservableObject
     {
         _services.Todos.RestoreDefaults(_services.Settings.Current);
         HasDeletedTodoDefaults = false;
+    }
+
+    void RefreshTimetable()
+    {
+        var review = TimetableUpdates.Review(_services.Timers.Current, _services.Seed);
+        NeedsTimetableReview = review.NeedsReview;
+        TimetableChanges.Clear();
+        foreach (var change in review.Changes) TimetableChanges.Add(new(change));
+    }
+
+    [RelayCommand]
+    void ReviewTimetable()
+    {
+        RefreshTimetable();
+        ReviewingTimetable = true;
+    }
+
+    [RelayCommand]
+    void CancelTimetable() => ReviewingTimetable = false;
+
+    [RelayCommand]
+    void ApplyTimetable()
+    {
+        _services.ApplyTimetable(TimetableChanges.Where(c => c.Apply.IsOn).Select(c => c.Change.Name));
+        ReviewingTimetable = false;
+        RefreshTimetable();
+    }
+
+    [RelayCommand]
+    void KeepTimetable()
+    {
+        _services.ApplyTimetable([]);
+        ReviewingTimetable = false;
+        RefreshTimetable();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUseData))]
+    async Task ExportBackup()
+    {
+        var dialog = new SaveFileDialog
+        {
+            Title = "Export backup", Filter = "BDO Timers backup (*.zip)|*.zip", DefaultExt = ".zip",
+            FileName = $"BdoTimers-backup-{_services.Clock.UtcNow.ToLocalTime():yyyy-MM-dd}.zip",
+        };
+        if (dialog.ShowDialog() != true) return;
+        DataBusy = true;
+        DataStatus = "Saving backup…";
+        try
+        {
+            await Task.Run(() => _services.ExportBackup(dialog.FileName, Version));
+            DataStatus = "Backup saved";
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Couldn't export backup", ex);
+            DataStatus = $"Couldn't save backup: {ex.Message}";
+        }
+        finally { DataBusy = false; }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUseData))]
+    async Task ChooseRestore()
+    {
+        var dialog = new OpenFileDialog { Title = "Restore backup", Filter = "BDO Timers backup (*.zip)|*.zip" };
+        if (dialog.ShowDialog() != true) return;
+        CancelRestore();
+        DataBusy = true;
+        DataStatus = "Checking backup…";
+        try
+        {
+            var prepared = await Task.Run(() => _services.PrepareRestore(dialog.FileName));
+            if (_closed) { BackupArchive.Discard(prepared); return; }
+            _preparedRestore = prepared;
+            RestoreDescription = $"{Path.GetFileName(dialog.FileName)} · {prepared.Manifest.CreatedAtUtc.ToLocalTime():g}";
+            ConfirmingRestore = true;
+            DataStatus = null;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Couldn't prepare backup restore", ex);
+            DataStatus = $"Couldn't restore backup: {ex.Message}";
+        }
+        finally { DataBusy = false; }
+    }
+
+    [RelayCommand]
+    void CancelRestore()
+    {
+        if (_preparedRestore is { } prepared)
+        {
+            try { BackupArchive.Discard(prepared); }
+            catch (Exception ex) { Log.Error("Couldn't remove prepared restore", ex); }
+        }
+        _preparedRestore = null;
+        ConfirmingRestore = false;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanUseData))]
+    void ConfirmRestore()
+    {
+        if (_preparedRestore is not { } prepared) return;
+        _preparedRestore = null;
+        ConfirmingRestore = false;
+        _services.RestartForRestore(prepared);
+    }
+
+    public void OnClosed()
+    {
+        _closed = true;
+        CancelRestore();
     }
 
     [RelayCommand]

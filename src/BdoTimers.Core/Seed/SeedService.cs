@@ -36,8 +36,8 @@ public static class SeedService
     /// <summary>Copies the seed into the user's timers once; afterwards the user's copy is authoritative.</summary>
     public static AppData ApplyIfNeeded(AppData data, BossSeed seed, AlertConfig alerts) =>
         data.SeedApplied
-            ? data
-            : data with { Timers = [.. data.Timers, .. ToTimers(seed, alerts)], SeedApplied = true };
+            ? TimetableUpdates.InitializeBaseline(data, seed)
+            : data with { Timers = [.. data.Timers, .. ToTimers(seed, alerts)], SeedApplied = true, AcceptedBossTimetable = seed };
 
     /// <summary>
     /// Replaces all built-in timers with the seed's spawn times. A boss still in the seed keeps, by name, its id (which
@@ -54,6 +54,6 @@ public static class SeedService
             .Select(t => previous.TryGetValue(t.Name, out var old) ? t with { Id = old.Id, Enabled = old.Enabled, Alerts = old.Alerts } : t);
         List<TimerDef> timers = [.. data.Timers.Where(t => !t.IsBuiltIn), .. fresh];
         var ids = timers.Select(t => t.Id).ToHashSet();
-        return data with { Timers = timers, Muted = data.Muted.Where(m => ids.Contains(m.TimerId)).ToList(), SeedApplied = true };
+        return data with { Timers = timers, Muted = data.Muted.Where(m => ids.Contains(m.TimerId)).ToList(), SeedApplied = true, AcceptedBossTimetable = seed };
     }
 }

@@ -10,6 +10,7 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
   voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, bosses, farm, fishing, horse registrations)
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
+- Local backup and restore, and a review of timetable changes included in newer releases
 
 ## Install
 `pwsh scripts/publish.ps1` builds `publish/BdoTimers-Setup-<version>.exe`. Run it; no admin rights needed.
@@ -21,9 +22,11 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 - Everything the app keeps (timers, to-do lists in `todos.json`, settings, your sounds and pictures, logs) is in `Data` inside its folder; the app
   warns and exits if it can't write there.
 - Run the setup again (or Uninstall in Settings → Apps) to see where it's installed and to repair or remove it.
-  Uninstall deletes the data, first offering to open the folder if you added sounds or pictures.
+  Uninstall keeps your data by default. Clear "Keep my timers, lists and settings" to delete it, including the recovery
+  copies made by backup restore. Reinstall into the same folder to use the kept data.
 - Newer builds upgrade in place, reuse the chosen folder, and close the running app first.
 - Silent: `BdoTimers-Setup-<version>.exe /quiet InstallRoot=D:\Games` and `/quiet /uninstall`.
+  Quiet uninstall keeps data; `/quiet /uninstall DeleteData=1` explicitly deletes it.
 
 The setup's version is `1.0.<number of commits>`, so each commit you build gets a higher one.
 
@@ -33,6 +36,13 @@ The setup's version is `1.0.<number of commits>`, so each commit you build gets 
 - Overlay settings are behind the screen icon in the top bar or in the tray menu; drag the overlay while the panel is open.
 - To-do lists start Off. Turn one on, tick its boxes, and click its text to edit. Use + by Weekly or Daily to make a list;
   Settings controls the reset time for all lists of that kind and can restore deleted default lists.
+- Settings → Data → Export backup saves timers, lists, settings, sounds and pictures in one ZIP outside `Data`.
+  Restore backup checks the file before asking to replace current data and restart. The previous folder is kept beside
+  `Data` as `Data.before-restore-<timestamp>-<id>`. Running timers and checklist resets reconcile with the current time.
+- Settings → Bosses shows the bundled EU timetable's verification date (source in its tooltip). When its spawn times
+  change, review the added, removed and changed bosses, then Apply selected or Keep current times. Custom spawn times
+  are marked and Off initially. Alert settings and the timers you created are kept. Timetable updates arrive with app
+  releases and do not require an online feed.
 - Open the Horse registration tile to set its start hotkey. Each press starts a separate timer and speaks
   “Horse registration time started”. The overlay's Sections include horse registrations; it shows the newest two and
   counts any others that are running.
@@ -96,3 +106,12 @@ are not covered by the GPL.
     is shown in local time in each column header.
 25. Delete a default To-do list, restore it from Settings and check that its edited rows return. Delete a custom list,
     restart, and confirm it stays deleted.
+26. Settings → Data → Export backup: save a ZIP outside Data, edit a timer and checklist, then Restore backup → Restore.
+    The app restarts with the backed-up data; the previous Data folder is kept beside the restored one. Invalid ZIPs
+    report an error without closing the app. Cancel a checked restore and confirm the current data stays.
+27. With a newer bundled EU seed, Settings → Bosses → Review timetable changes: compare the slot changes, keep a
+    marked custom schedule Off, apply other changes and verify the boss's sound, voice, lead times and Alerts state stay.
+    Restart and confirm the reviewed version no longer prompts. Reset spawn times also accepts the bundled version.
+28. Uninstall through setup with only JSON edits: the keep-data choice still appears, checked. Keep and reinstall into
+    the same folder: edits return. Explicit deletion removes Data and restore recovery copies. Quiet uninstall keeps
+    them unless DeleteData=1 is passed.

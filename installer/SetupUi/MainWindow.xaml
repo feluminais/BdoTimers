@@ -136,10 +136,24 @@
                     <Button Style="{StaticResource OutlineButton}" Content="Close" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding CloseCommand}" />
                 </Grid>
 
-                <!-- Uninstall confirmation, only when the user added sounds or pictures: a chance to copy them first -->
+                <!-- Personal data is kept unless deletion is explicitly selected. -->
                 <Grid Margin="48,0,48,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=ConfirmUninstall}">
                     <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding UserFilesWarning}" Style="{StaticResource DisplayText}" FontSize="18" TextWrapping="Wrap" />
+                        <TextBlock Text="Uninstall BDO Timers?" Style="{StaticResource DisplayText}" FontSize="18" />
+                        <CheckBox Style="{StaticResource GoldCheckBox}" Content="Keep my timers, lists and settings"
+                                  IsChecked="{Binding KeepPersonalData}" Margin="0,16,0,0"
+                                  ToolTip="Also keeps your sounds and pictures" />
+                        <TextBlock Text="Deletes all personal data, sounds and pictures." FontSize="12" Margin="0,6,0,0" Foreground="{StaticResource DangerBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding KeepPersonalData}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <Button Style="{StaticResource LinkButton}" Content="Open folder" HorizontalAlignment="Left" Margin="0,12,0,0" Command="{Binding OpenUserFilesCommand}" />
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">

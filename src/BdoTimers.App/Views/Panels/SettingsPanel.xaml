@@ -135,6 +135,40 @@
                 <TextBlock Text="Bosses" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
+                        <TextBlock Text="{Binding TimetableVerified}" Style="{StaticResource LabelText}" ToolTip="{Binding TimetableSource}" />
+                        <Button Style="{StaticResource LinkButton}" Content="Review timetable changes" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                Command="{Binding ReviewTimetableCommand}"
+                                Visibility="{Binding NeedsTimetableReview, Converter={StaticResource BoolToVisibility}}" />
+                        <StackPanel Margin="0,6,0,0" Visibility="{Binding ReviewingTimetable, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding TimetableZone}" Style="{StaticResource LabelText}" Margin="0,0,0,4" />
+                            <ItemsControl ItemsSource="{Binding TimetableChanges}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,4,0,8">
+                                            <DockPanel>
+                                                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Apply}"
+                                                                        ValueWidth="65" AutomationProperties.Name="Apply timetable change" />
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding Name}" FontSize="12" />
+                                                    <TextBlock Text="{Binding CustomLabel}" FontSize="11" Foreground="{StaticResource AccentBrush}"
+                                                               Visibility="{Binding CustomLabel, Converter={StaticResource NullToCollapsed}}" />
+                                                </StackPanel>
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding Details}" Style="{StaticResource LabelText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <WrapPanel Margin="0,6,0,0">
+                                <Button Style="{StaticResource LinkButton}" Content="Apply selected" Command="{Binding ApplyTimetableCommand}" Margin="0,0,12,6" />
+                                <Button Style="{StaticResource LinkButton}" Content="Keep current times" Command="{Binding KeepTimetableCommand}" Margin="0,0,12,6" />
+                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelTimetableCommand}" Margin="0,0,0,6" />
+                            </WrapPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <StackPanel>
                         <Button Style="{StaticResource LinkButton}" Content="Reset all boss alert settings" HorizontalAlignment="Left"
                                 Command="{Binding AskAlertResetCommand}"
                                 Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource InverseBoolToVisibility}}" />
@@ -166,6 +200,28 @@
                     </StackPanel>
                 </Border>
 
+                <TextBlock Text="Data" Style="{StaticResource SectionText}" />
+                <Border Style="{StaticResource Row}">
+                    <StackPanel>
+                        <WrapPanel>
+                            <Button Style="{StaticResource LinkButton}" Content="Export backup…" Command="{Binding ExportBackupCommand}" Margin="0,0,14,6" />
+                            <Button Style="{StaticResource LinkButton}" Content="Restore backup…" Command="{Binding ChooseRestoreCommand}" Margin="0,0,14,6" />
+                            <Button Style="{StaticResource LinkButton}" Content="Open data folder" Command="{Binding OpenDataFolderCommand}" Margin="0,0,0,6" />
+                        </WrapPanel>
+                        <TextBlock Text="{Binding DataStatus}" Style="{StaticResource LabelText}" TextWrapping="Wrap"
+                                   Visibility="{Binding DataStatus, Converter={StaticResource NullToCollapsed}}" />
+                        <StackPanel Visibility="{Binding ConfirmingRestore, Converter={StaticResource BoolToVisibility}}" Margin="0,6,0,0">
+                            <TextBlock Text="{Binding RestoreDescription}" Style="{StaticResource LabelText}" TextWrapping="Wrap" />
+                            <TextBlock Text="Replace current data and restart?" FontSize="12" Margin="0,6,0,0" />
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Restore" Command="{Binding ConfirmRestoreCommand}" />
+                                <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelRestoreCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
                 <TextBlock Text="About" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
@@ -178,8 +234,6 @@
                             <Button Style="{StaticResource LinkButton}" Content="Source code" Command="{Binding OpenSourceCommand}" />
                             <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
                             <Button Style="{StaticResource LinkButton}" Content="Licenses" Command="{Binding OpenLicensesCommand}" />
-                            <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
-                            <Button Style="{StaticResource LinkButton}" Content="Open data folder" Command="{Binding OpenDataFolderCommand}" />
                         </StackPanel>
                     </StackPanel>
                 </Border>
