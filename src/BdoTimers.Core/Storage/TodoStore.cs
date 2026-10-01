@@ -15,12 +15,11 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
 
     public Guid CreateList(TodoCadence cadence, AppSettings settings)
     {
-        var schedule = Schedule(settings, cadence);
         var list = new TodoList
         {
             Name = "New list",
-            Cadence = cadence, Enabled = true, Schedule = schedule,
-            NextResetUtc = TodoReset.Next(schedule, clock.UtcNow),
+            Cadence = cadence, Enabled = true,
+            NextResetUtc = TodoReset.Next(cadence, Schedule(settings, cadence), clock.UtcNow),
         };
         Update(data => data with { Lists = [.. data.Lists, list] });
         return list.Id;
@@ -28,31 +27,24 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
 
     public void SetEnabled(Guid id, bool enabled) => Modify(id, list => list.Enabled == enabled ? list : list with { Enabled = enabled });
 
-    public void ApplyDefaultSchedules(AppSettings settings) => Update(data =>
-    {
-        var lists = data.Lists.Select(list => WithSchedule(list, Schedule(settings, list.Cadence))).ToList();
-        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
-    });
-
-    TodoList WithSchedule(TodoList list, TodoSchedule schedule) => list.Schedule == schedule ? list
-        : list with { Schedule = schedule, NextResetUtc = TodoReset.Next(schedule, clock.UtcNow) };
-
     static TodoSchedule Schedule(AppSettings settings, TodoCadence cadence) =>
-        (cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset) with { Cadence = cadence };
+        cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset;
 
-    public void Reconcile() => Update(data =>
+    /// <summary>
+    /// Clears the lists whose reset is due and moves every list's next reset to its cadence's schedule in
+    /// <paramref name="settings"/>, so a changed schedule applies without clearing checks and a reset set while the clock
+    /// ran ahead comes back instead of skipping resets.
+    /// </summary>
+    public void Reconcile(AppSettings settings) => Update(data =>
     {
         var now = clock.UtcNow;
         var lists = data.Lists.Select(list =>
         {
-            var next = TodoReset.Next(list.Schedule, now);
-            // Later than the schedule's next reset means it was set while the clock ran ahead; kept, it would skip resets.
-            if (list.NextResetUtc == default || list.NextResetUtc > next) return list with { NextResetUtc = next };
-            if (list.NextResetUtc > now) return list;
+            var due = list.NextResetUtc != default && list.NextResetUtc <= now;
             return list with
             {
-                Rows = list.Rows.Select(row => TodoOps.SetDone(row, false)).ToList(),
-                NextResetUtc = next,
+                Rows = due ? list.Rows.Select(row => TodoOps.SetDone(row, false)).ToList() : list.Rows,
+                NextResetUtc = TodoReset.Next(list.Cadence, Schedule(settings, list.Cadence), now),
             };
         }).ToList();
         return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };

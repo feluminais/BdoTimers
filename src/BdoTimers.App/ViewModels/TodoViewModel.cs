@@ -53,8 +53,8 @@ public sealed partial class TodoViewModel : ObservableObject
     {
         var now = DateTimeOffset.UtcNow;
         var settings = _services.Settings.Current;
-        WeeklyResetLabel = "Resets " + Formats.DayTime(TodoReset.Next(settings.WeeklyTodoReset with { Cadence = TodoCadence.Weekly }, now));
-        DailyResetLabel = "Resets " + Formats.Time(TodoReset.Next(settings.DailyTodoReset with { Cadence = TodoCadence.Daily }, now));
+        WeeklyResetLabel = "Resets " + Formats.DayTime(TodoReset.Next(TodoCadence.Weekly, settings.WeeklyTodoReset, now));
+        DailyResetLabel = "Resets " + Formats.Time(TodoReset.Next(TodoCadence.Daily, settings.DailyTodoReset, now));
     }
 
     void Sync()

@@ -51,8 +51,8 @@ public sealed class TodoTests
     public void Daily_and_weekly_defaults_follow_utc_boundaries()
     {
         var now = new DateTimeOffset(2026, 9, 30, 23, 59, 0, TimeSpan.Zero);
-        Assert.Equal(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero), TodoReset.Next(TodoSchedule.DailyDefault, now));
-        Assert.Equal(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero), TodoReset.Next(TodoSchedule.WeeklyDefault, now));
+        Assert.Equal(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero), TodoReset.Next(TodoCadence.Daily, new TodoSchedule(), now));
+        Assert.Equal(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero), TodoReset.Next(TodoCadence.Weekly, new TodoSchedule(), now));
     }
 
     [Fact]
@@ -68,7 +68,7 @@ public sealed class TodoTests
         var row = daily.Rows[0];
         store.Modify(daily.Id, l => l with { Rows = [row with { Done = true }, .. l.Rows.Skip(1)] });
         clock.UtcNow = now.AddDays(3);
-        store.Reconcile();
+        store.Reconcile(new AppSettings());
         var result = store.Current.Lists.Single(l => l.Id == daily.Id);
         Assert.False(result.Rows[0].Done);
         Assert.True(result.NextResetUtc > clock.UtcNow);
@@ -86,17 +86,17 @@ public sealed class TodoTests
         store.Modify(daily.Id, l => l with { Rows = [l.Rows[0] with { Done = true }, .. l.Rows.Skip(1)] });
         clock.UtcNow = now;
 
-        store.Reconcile();
+        store.Reconcile(new AppSettings());
 
         var result = store.Current.Lists.Single(l => l.Id == daily.Id);
         Assert.Equal(new DateTimeOffset(2026, 9, 29, 0, 0, 0, TimeSpan.Zero), result.NextResetUtc);
         Assert.True(result.Rows[0].Done);
         var changes = 0;
         store.Changed += () => changes++;
-        store.Reconcile();
+        store.Reconcile(new AppSettings());
         Assert.Equal(0, changes);
         clock.UtcNow = result.NextResetUtc;
-        store.Reconcile();
+        store.Reconcile(new AppSettings());
         Assert.False(store.Current.Lists.Single(l => l.Id == daily.Id).Rows[0].Done);
     }
 
@@ -110,7 +110,7 @@ public sealed class TodoTests
         var store = new TodoStore(new JsonFileStore<TodoData>(dir.File("todos.json"), () => data), data, clock);
         var daily = data.Lists.Single(l => l.Cadence == TodoCadence.Daily);
         store.Modify(daily.Id, l => l with { Rows = [l.Rows[0] with { Done = true }, .. l.Rows.Skip(1)] });
-        store.ApplyDefaultSchedules(new AppSettings { DailyTodoReset = TodoSchedule.DailyDefault with { Hour = 12 } });
+        store.Reconcile(new AppSettings { DailyTodoReset = new TodoSchedule { Hour = 12 } });
         Assert.True(store.Current.Lists.Single(l => l.Id == daily.Id).Rows[0].Done);
     }
 }

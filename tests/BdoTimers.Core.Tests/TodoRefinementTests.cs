@@ -22,7 +22,7 @@ public sealed class TodoRefinementTests
         store.Modify(weeklyId, l => l with { Rows = [child, .. l.Rows.Skip(1)] });
         var changed = settings with { WeeklyTodoReset = settings.WeeklyTodoReset with { Day = DayOfWeek.Friday, Hour = 12 } };
 
-        store.ApplyDefaultSchedules(changed);
+        store.Reconcile(changed);
 
         var weekly = store.Current.Lists.Where(l => l.Cadence == TodoCadence.Weekly).ToList();
         Assert.Equal(2, weekly.Count);
@@ -36,14 +36,14 @@ public sealed class TodoRefinementTests
     {
         var berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
         var spring = new DateTimeOffset(2026, 3, 28, 12, 0, 0, TimeSpan.Zero);
-        var schedule = TodoSchedule.DailyDefault with { Hour = 2, Minute = 30, LocalTime = true };
+        var schedule = new TodoSchedule { Hour = 2, Minute = 30, LocalTime = true };
         Assert.Equal(ScheduleMath.LocalToUtc(new DateTime(2026, 3, 29, 2, 30, 0), berlin),
-            TodoReset.Next(schedule, spring, berlin));
+            TodoReset.Next(TodoCadence.Daily, schedule, spring, berlin));
 
-        var invalid = TodoSchedule.WeeklyDefault with { Day = (DayOfWeek)99 };
-        Assert.Equal(TodoReset.Next(TodoSchedule.WeeklyDefault, Now), TodoReset.Next(invalid, Now));
-        var invalidTime = TodoSchedule.DailyDefault with { Hour = 99, Minute = -1 };
-        Assert.Equal(TodoReset.Next(TodoSchedule.DailyDefault, Now), TodoReset.Next(invalidTime, Now));
+        var invalid = new TodoSchedule { Day = (DayOfWeek)99 };
+        Assert.Equal(TodoReset.Next(TodoCadence.Weekly, new TodoSchedule(), Now), TodoReset.Next(TodoCadence.Weekly, invalid, Now));
+        var invalidTime = new TodoSchedule { Hour = 99, Minute = -1 };
+        Assert.Equal(TodoReset.Next(TodoCadence.Daily, new TodoSchedule(), Now), TodoReset.Next(TodoCadence.Daily, invalidTime, Now));
     }
 
     [Fact]
@@ -137,7 +137,8 @@ public sealed class TodoRefinementTests
         var list = reloaded.Current.Lists.Single(l => l.Id == id);
         Assert.True(list.Rows[0].Children[0].Done);
         Assert.Equal(TodoCheck.Done, TodoOps.Check(list.Rows[0]));
-        Assert.Equal(TodoSchedule.WeeklyDefault, list.Schedule);
+        Assert.Equal(TodoCadence.Weekly, list.Cadence);
+        Assert.Equal(TodoReset.Next(TodoCadence.Weekly, new TodoSchedule(), Now), list.NextResetUtc);
     }
 
     [Fact]

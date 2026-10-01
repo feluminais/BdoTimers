@@ -70,7 +70,7 @@ public sealed class AppServices : IDisposable
         Todos.Update(TodoMigrations.Apply);
         Settings.Changed += () =>
         {
-            try { Todos.ApplyDefaultSchedules(Settings.Current); }
+            try { Todos.Reconcile(Settings.Current); }
             catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); }
         };
         Timers = new TimerStore(timersFile, timers.Value);
@@ -93,18 +93,14 @@ public sealed class AppServices : IDisposable
     {
         try { _engine.ReconcileStartup(); }
         catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); }
-        try
-        {
-            Todos.ApplyDefaultSchedules(Settings.Current);
-            Todos.Reconcile();
-        }
+        try { Todos.Reconcile(Settings.Current); }
         catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); }
         var todoResetErrors = new RepeatingErrorLog("To-do reset", Clock);
         UiClock.Tick += _ =>
         {
             try
             {
-                Todos.Reconcile();
+                Todos.Reconcile(Settings.Current);
                 todoResetErrors.Succeeded();
             }
             catch (StateSaveException ex) { todoResetErrors.Failed(ex); }
@@ -270,13 +266,13 @@ public sealed class AppServices : IDisposable
             : previous with { WeeklyTodoReset = schedule };
         if (changed == previous) return;
         // Save list boundaries first: if that fails, Settings keeps the old reset.
-        Todos.ApplyDefaultSchedules(changed);
+        Todos.Reconcile(changed);
         try { Settings.Update(s => cadence == TodoCadence.Daily
             ? s with { DailyTodoReset = schedule }
             : s with { WeeklyTodoReset = schedule }); }
         catch (StateSaveException)
         {
-            try { Todos.ApplyDefaultSchedules(previous); }
+            try { Todos.Reconcile(previous); }
             catch (StateSaveException ex) { Log.Error("Couldn't restore to-do reset after settings save failed", ex); }
             throw;
         }
