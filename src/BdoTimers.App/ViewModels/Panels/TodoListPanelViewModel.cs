@@ -23,10 +23,9 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private string _name = "";
     [ObservableProperty] private bool _invalidName;
     [ObservableProperty] private Choice _enabled = Choice.OnOff[0];
-    [ObservableProperty] private bool _confirmingDelete;
 
     public bool IsNew { get; }
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
+    public Confirmation Delete { get; }
     public ObservableCollection<TodoEditRowViewModel> Rows { get; } = [];
     public event Action<Guid>? FocusRequested;
 
@@ -36,6 +35,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         _host = host;
         _id = id;
         IsNew = isNew;
+        Delete = new Confirmation(DeleteList, hideAfter: false);
         _saveTimer.Tick += (_, _) => Flush();
         services.Todos.Changed += OnStoreChanged;
         Refresh();
@@ -244,11 +244,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         if (index >= 0) ChangeStructure(rows => TodoOutline.Remove(rows, index));
     }
 
-    [RelayCommand] void AskDelete() => ConfirmingDelete = true;
-    [RelayCommand] void CancelDelete() => ConfirmingDelete = false;
-
-    [RelayCommand]
-    void ConfirmDelete()
+    void DeleteList()
     {
         Flush();
         _services.Todos.Delete(_id);
@@ -267,20 +263,14 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
 public sealed partial class TodoEditRowViewModel : ObservableObject
 {
     readonly TodoListPanelViewModel _owner;
-    bool _loading;
     public Guid Id { get; }
     public int Level { get; }
     public Thickness Indent => new(Level * 24, 0, 0, 0);
     public bool CanAddChild => Level == 0;
     public int ChildCount { get; }
-    [ObservableProperty] private string _text = "";
-    [ObservableProperty] private bool _confirmingRemove;
-    public IRelayCommand AddChildCommand { get; }
-    public IRelayCommand MoveUpCommand { get; }
-    public IRelayCommand MoveDownCommand { get; }
-    public IRelayCommand RemoveCommand { get; }
-    public IRelayCommand ConfirmRemoveCommand { get; }
-    public IRelayCommand CancelRemoveCommand { get; }
+    [ObservableProperty] private string _text;
+    /// <summary>Asked only for a row with children, which go with it.</summary>
+    public Confirmation Removal { get; }
 
     public TodoEditRowViewModel(TodoListPanelViewModel owner, TodoOutlineRow row, int childCount)
     {
@@ -288,19 +278,19 @@ public sealed partial class TodoEditRowViewModel : ObservableObject
         Id = row.Id;
         Level = row.Level;
         ChildCount = childCount;
-        _loading = true;
-        Text = row.Text;
-        _loading = false;
-        AddChildCommand = new RelayCommand(() => _owner.AddChild(Id));
-        MoveUpCommand = new RelayCommand(() => _owner.Move(Id, -1));
-        MoveDownCommand = new RelayCommand(() => _owner.Move(Id, 1));
-        RemoveCommand = new RelayCommand(() => { if (ChildCount > 0) ConfirmingRemove = true; else _owner.Remove(Id); });
-        ConfirmRemoveCommand = new RelayCommand(() => _owner.Remove(Id));
-        CancelRemoveCommand = new RelayCommand(() => ConfirmingRemove = false);
+        _text = row.Text;
+        Removal = new Confirmation(() => _owner.Remove(Id), hideAfter: false);
     }
 
-    partial void OnTextChanged(string value)
+    [RelayCommand]
+    void AddChild() => _owner.AddChild(Id);
+
+    [RelayCommand]
+    void Remove()
     {
-        if (!_loading) _owner.UpdateText(Id, value);
+        if (ChildCount > 0) Removal.IsAsking = true;
+        else _owner.Remove(Id);
     }
+
+    partial void OnTextChanged(string value) => _owner.UpdateText(Id, value);
 }
