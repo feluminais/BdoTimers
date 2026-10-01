@@ -4,10 +4,8 @@ namespace BdoTimers.Core.Scheduling;
 
 public static class StopwatchOps
 {
-    public static StopwatchSpec Start(StopwatchSpec s, DateTimeOffset now) => StartFrom(s, now);
-
-    /// <summary>Runs as if started at <paramref name="startedAtUtc"/>, for a stopwatch started late or not at all.</summary>
-    public static StopwatchSpec StartFrom(StopwatchSpec s, DateTimeOffset startedAtUtc) =>
+    /// <summary>Counts from <paramref name="startedAtUtc"/>: now, or earlier for a stopwatch started late.</summary>
+    public static StopwatchSpec Start(StopwatchSpec s, DateTimeOffset startedAtUtc) =>
         s with { Status = CountdownStatus.Running, StartedAtUtc = startedAtUtc, Elapsed = null };
 
     public static StopwatchSpec Pause(StopwatchSpec s, DateTimeOffset now) =>

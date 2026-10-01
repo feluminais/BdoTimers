@@ -106,7 +106,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
             };
             Detail = off + Detail;
             IsDimmed |= !_timer.Enabled;
-            Growth = IsFarm ? CountdownOps.FarmGrowth(c, now) : null;
+            Growth = IsFarm ? CountdownOps.Progress(c, now, overgrows: true) : null;
             ShowStatus(c.Status);
             return;
         }
@@ -243,7 +243,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
 
     /// <summary>How far along a countdown is after <paramref name="elapsed"/>; Farm's as its crops' growth.</summary>
     int PercentFor(TimeSpan duration, TimeSpan elapsed) =>
-        IsFarm ? CountdownOps.GrowthPercent(duration, elapsed) : CountdownOps.ProgressPercent(duration, elapsed);
+        CountdownOps.ProgressPercent(duration, elapsed, Presets.Overgrows(_timer.Preset));
 
     void Follow(Action update)
     {

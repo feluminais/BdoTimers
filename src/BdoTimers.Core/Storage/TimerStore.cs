@@ -70,7 +70,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
 
     public void StartCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Start(c, now));
     public void PauseCountdown(Guid id, DateTimeOffset now) => Modify(id, t => t.Countdown is { } c
-        ? t with { Countdown = CountdownOps.Pause(c, now, t.Preset == Presets.Farm) } : t);
+        ? t with { Countdown = CountdownOps.Pause(c, now, Presets.Overgrows(t.Preset)) } : t);
     public void ResumeCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Resume(c, now));
     public void ResetCountdown(Guid id) => ModifyCountdown(id, CountdownOps.Reset);
 
@@ -82,8 +82,8 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
     /// <summary>Runs a countdown or stopwatch as if it had been started at <paramref name="startedAtUtc"/>.</summary>
     public void StartFrom(Guid id, DateTimeOffset startedAtUtc) => Modify(id, t => t with
     {
-        Countdown = t.Countdown is { } c ? CountdownOps.StartFrom(c, startedAtUtc) : null,
-        Stopwatch = t.Stopwatch is { } s ? StopwatchOps.StartFrom(s, startedAtUtc) : null,
+        Countdown = t.Countdown is { } c ? CountdownOps.Start(c, startedAtUtc) : null,
+        Stopwatch = t.Stopwatch is { } s ? StopwatchOps.Start(s, startedAtUtc) : null,
     });
 
     /// <summary>Completes running countdowns that ended at or before <paramref name="endedBefore"/>; returns them as they were before completion.</summary>
@@ -93,7 +93,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         Update(d =>
         {
             var due = d.Timers
-                .Where(t => t.Preset != Presets.Farm
+                .Where(t => !Presets.Overgrows(t.Preset)
                     && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end <= endedBefore)
                 .ToList();
             if (due.Count == 0) return d;
@@ -104,7 +104,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             {
                 Timers = d.Timers
                     .Where(t => !ids.Contains(t.Id) || t.Preset != Presets.HorseRegistrationRun)
-                    .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Complete(t.Countdown!) } : t)
+                    .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Reset(t.Countdown!) } : t)
                     .ToList(),
                 Muted = removedIds.Count == 0 ? d.Muted : d.Muted.Where(m => !removedIds.Contains(m.TimerId)).ToList(),
             };

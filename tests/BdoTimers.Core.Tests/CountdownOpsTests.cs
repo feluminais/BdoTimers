@@ -33,7 +33,7 @@ public class CountdownOpsTests
     [Fact]
     public void StartFrom_runs_as_if_started_then()
     {
-        var c = CountdownOps.StartFrom(Hour, T0.AddMinutes(-40));
+        var c = CountdownOps.Start(Hour, T0.AddMinutes(-40));
         Assert.Equal(CountdownStatus.Running, c.Status);
         Assert.Equal(T0.AddMinutes(-40), c.StartedAtUtc);
         Assert.Equal(T0.AddMinutes(20), c.EndsAtUtc);
@@ -43,7 +43,7 @@ public class CountdownOpsTests
     public void StartFrom_replaces_a_paused_run()
     {
         var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(10));
-        var c = CountdownOps.StartFrom(paused, T0.AddMinutes(-5));
+        var c = CountdownOps.Start(paused, T0.AddMinutes(-5));
         Assert.Equal(CountdownStatus.Running, c.Status);
         Assert.Null(c.Remaining);
         Assert.Equal(T0.AddMinutes(55), c.EndsAtUtc);
@@ -69,7 +69,7 @@ public class CountdownOpsTests
     [Fact]
     public void Complete_goes_idle()
     {
-        var c = CountdownOps.Complete(CountdownOps.Start(Hour, T0));
+        var c = CountdownOps.Reset(CountdownOps.Start(Hour, T0));
         Assert.Equal(CountdownStatus.Idle, c.Status);
     }
 
@@ -153,7 +153,7 @@ public class CountdownOpsTests
     public void Farm_growth_continues_past_zero_and_caps_at_200(int elapsedMinutes, int percent)
     {
         var running = CountdownOps.Start(Hour, T0);
-        Assert.Equal(percent, CountdownOps.FarmGrowth(running, T0.AddMinutes(elapsedMinutes)));
+        Assert.Equal(percent, CountdownOps.Progress(running, T0.AddMinutes(elapsedMinutes), overgrows: true));
     }
 
     [Fact]
@@ -162,10 +162,10 @@ public class CountdownOpsTests
         var running = CountdownOps.Start(Hour, T0);
         var paused = CountdownOps.Pause(running, T0.AddMinutes(90), preserveOvergrowth: true);
         Assert.Equal(TimeSpan.FromMinutes(-30), paused.Remaining);
-        Assert.Equal(150, CountdownOps.FarmGrowth(paused, T0.AddHours(5)));
+        Assert.Equal(150, CountdownOps.Progress(paused, T0.AddHours(5), overgrows: true));
 
         var resumed = CountdownOps.Resume(paused, T0.AddHours(5));
         Assert.Equal(T0.AddHours(4.5), resumed.EndsAtUtc);
-        Assert.Equal(150, CountdownOps.FarmGrowth(resumed, T0.AddHours(5)));
+        Assert.Equal(150, CountdownOps.Progress(resumed, T0.AddHours(5), overgrows: true));
     }
 }

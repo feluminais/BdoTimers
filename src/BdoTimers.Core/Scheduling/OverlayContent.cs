@@ -68,16 +68,12 @@ public static class OverlayContent
 
     /// <summary>The Farm preset's signed time left while its countdown runs or is paused.</summary>
     static TimeSpan? FarmLeft(AppData data, DateTimeOffset now) =>
-        data.Timers.FirstOrDefault(t => t.Preset == Presets.Farm)?.Countdown switch
-        {
-            { Status: CountdownStatus.Running, EndsAtUtc: { } end } => end - now,
-            { Status: CountdownStatus.Paused, Remaining: { } left } => left,
-            _ => null,
-        };
+        data.Timers.FirstOrDefault(t => t.Preset == Presets.Farm)?.Countdown is { } countdown
+            ? CountdownOps.Left(countdown, now) : null;
 
     static int? FarmProgress(AppData data, DateTimeOffset now) =>
         data.Timers.FirstOrDefault(t => t.Preset == Presets.Farm)?.Countdown is { } countdown
-            ? CountdownOps.FarmGrowth(countdown, now) : null;
+            ? CountdownOps.Progress(countdown, now, overgrows: true) : null;
 
     /// <summary>The Fishing preset's counted time while its stopwatch runs or is paused.</summary>
     static TimeSpan? FishingElapsed(AppData data, DateTimeOffset now) =>

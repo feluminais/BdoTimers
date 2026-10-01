@@ -62,6 +62,6 @@ public class CountdownDurationTests
         var changed = CountdownOps.ChangeDuration(paused, TimeSpan.FromHours(20), preserveOvergrowth: true);
 
         Assert.Equal(TimeSpan.FromHours(-13), changed.Remaining);
-        Assert.Equal(165, CountdownOps.FarmGrowth(changed, T0.AddDays(2)));
+        Assert.Equal(165, CountdownOps.Progress(changed, T0.AddDays(2), overgrows: true));
     }
 }
