@@ -25,7 +25,7 @@ Tray app for Black Desert Online (EU) world-boss spawns and your own timers.
 - Newer builds upgrade in place, reuse the chosen folder, and close the running app first.
 - Silent: `BdoTimers-Setup-<version>.exe /quiet InstallRoot=D:\Games` and `/quiet /uninstall`.
 
-Bump `<Version>` in `Directory.Build.props` for each release you hand out.
+The setup's version is `1.0.<number of commits>`, so each commit you build gets a higher one.
 
 ## Tips
 - Add BDO Timers to Windows priority notifications (Settings → Priority notifications).
