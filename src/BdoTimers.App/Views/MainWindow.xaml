@@ -35,11 +35,11 @@
             <!-- Top bar: the empty area drags the window -->
             <Grid Margin="22,0,0,0">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <RadioButton Style="{StaticResource TabButton}" Content="Bosses" IsChecked="{Binding IsBossesSection}"
+                    <RadioButton x:Name="BossesTab" Style="{StaticResource TabButton}" Content="Bosses" IsChecked="True"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <RadioButton Style="{StaticResource TabButton}" Content="Timers" IsChecked="{Binding IsCustomSection}"
+                    <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" Content="Timers"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <RadioButton Style="{StaticResource TabButton}" Content="To-do" IsChecked="{Binding IsTodoSection}"
+                    <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" Content="To-do"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -64,11 +64,11 @@
 
             <Grid Grid.Row="1" Margin="22,18,22,20">
                 <views:BossesView DataContext="{Binding Bosses}"
-                                  Visibility="{Binding DataContext.IsBossesSection, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
+                                  Visibility="{Binding IsChecked, ElementName=BossesTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:CustomView DataContext="{Binding Custom}"
-                                  Visibility="{Binding DataContext.IsCustomSection, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
+                                  Visibility="{Binding IsChecked, ElementName=CustomTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:TodoView DataContext="{Binding Todo}"
-                                Visibility="{Binding DataContext.IsTodoSection, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVisibility}}" />
+                                Visibility="{Binding IsChecked, ElementName=TodoTab, Converter={StaticResource BoolToVisibility}}" />
             </Grid>
 
             <!-- Panel layer: dims the whole window and centres one panel; the panel itself can't be moved -->
