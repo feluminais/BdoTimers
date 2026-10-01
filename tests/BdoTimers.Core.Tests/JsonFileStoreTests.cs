@@ -29,7 +29,21 @@ public class JsonFileStoreTests
         Assert.Equal(new[] { "settings.json" }, Directory.GetFiles(dir.Path).Select(Path.GetFileName));
     }
 
+    [Fact]
+    public void Save_replaces_an_existing_file()
+    {
+        using var dir = new TempDir();
+        var store = new JsonFileStore<AppSettings>(dir.File("settings.json"), () => new AppSettings());
+        store.Save(new AppSettings { TtsRate = 3 });
+
+        store.Save(new AppSettings { TtsRate = 5 });
+
+        Assert.Equal(5, store.Load().Value.TtsRate);
+        Assert.Equal(new[] { "settings.json" }, Directory.GetFiles(dir.Path).Select(Path.GetFileName));
+    }
+
     [Theory]
+    [InlineData("")]
     [InlineData("{ not json")]
     [InlineData("null")]
     public void Corrupt_file_is_backed_up_and_defaults_load(string content)
