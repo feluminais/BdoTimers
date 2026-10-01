@@ -41,7 +41,7 @@ public sealed partial class BossTileViewModel : ObservableObject
             Detail = "Alerts off";
             return;
         }
-        var next = OccurrenceSource.Between(boss, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
+        var next = OccurrenceSource.Next(boss, now);
         Detail = next is { } at ? "Next · " + Formats.DayTime(at) : "No upcoming spawns";
     }
 }
