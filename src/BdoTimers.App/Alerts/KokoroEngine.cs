@@ -106,7 +106,9 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         config.Model.Kokoro.DataDir = Path.Combine(modelDir, "espeak-ng-data");
         // espeak-ng's "en" is British English. English goes through espeak-ng in this model, so no lexicon is loaded.
         config.Model.Kokoro.Lang = british ? "en" : "en-us";
-        config.Model.NumThreads = Math.Clamp(Environment.ProcessorCount / 2, 1, 4);
+        // One thread runs inference on the calling thread, so the caller's priority applies and no worker pool spins.
+        // More threads speak a short line no sooner but burn two to four times the CPU, which a game feels.
+        config.Model.NumThreads = 1;
         config.Model.Provider = "cpu";
         config.MaxNumSentences = 1;
         _tts = new OfflineTts(config);
