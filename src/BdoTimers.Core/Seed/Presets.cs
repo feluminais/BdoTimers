@@ -13,8 +13,6 @@ public static class Presets
     public const string HorseRegistration = "horse-registration";
     public const string HorseRegistrationRun = "horse-registration-run";
 
-    static readonly string[] Order = [Farm, Fishing, HorseRegistration];
-
     /// <summary>Default temperature estimate; offline time and crop care can delay the harvest.</summary>
     public static readonly TimeSpan CropGrowth = TimeSpan.FromHours(22);
 
@@ -80,6 +78,11 @@ public static class Presets
     public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun;
 
     /// <summary>Sort key that puts presets first, in their fixed order, and keeps other timers after them.</summary>
-    public static int Rank(string? preset) => preset == HorseRegistrationRun ? Array.IndexOf(Order, HorseRegistration)
-        : preset is null ? Order.Length : Math.Max(0, Array.IndexOf(Order, preset));
+    public static int Rank(string? preset) => preset switch
+    {
+        null => 3,
+        Fishing => 1,
+        HorseRegistration or HorseRegistrationRun => 2,
+        _ => 0, // Farm, and a preset from a newer version
+    };
 }
