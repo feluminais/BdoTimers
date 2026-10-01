@@ -259,7 +259,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         StartMinute = Two(local.Minute);
     }
 
-    /// <summary>A countdown that would already have ended by now can't start there.</summary>
+    /// <summary>A countdown that would already have ended by now can't start there; Farm can, since it keeps growing.</summary>
     void CheckStart()
     {
         StartInvalid = TimeStart() is null;

@@ -68,9 +68,10 @@ public partial class TodoListPanel : UserControl
             e.Handled = shift ? _model.Outdent(id) : _model.Indent(id);
         else if (e.Key == Key.Back && box.Text.Length == 0 && Keyboard.Modifiers == ModifierKeys.None)
             e.Handled = _model.Backspace(id);
-        else if (Keyboard.Modifiers == ModifierKeys.Alt && e.Key is Key.Up or Key.Down)
+        // With Alt held, WPF reports the arrow as Key.System and puts it in SystemKey.
+        else if (Keyboard.Modifiers == ModifierKeys.Alt && e.SystemKey is Key.Up or Key.Down)
         {
-            _model.Move(id, e.Key == Key.Up ? -1 : 1);
+            _model.Move(id, e.SystemKey == Key.Up ? -1 : 1);
             e.Handled = true;
         }
     }

@@ -7,7 +7,7 @@ public sealed record OverlaySettings
 {
     public const string DefaultBackgroundColor = "#0B0B0C";
 
-    /// <summary>Off: the overlay never shows, pop-ups included, and no hotkeys are held.</summary>
+    /// <summary>Off: the overlay never shows, pop-ups included, and its hotkeys are released.</summary>
     public bool Enabled { get; init; } = true;
     public bool AlwaysShow { get; init; }
     /// <summary>Flips <see cref="AlwaysShow"/>.</summary>
