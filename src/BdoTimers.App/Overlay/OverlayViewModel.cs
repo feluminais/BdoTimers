@@ -108,7 +108,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         if (horse.Count == 0 && preview && settings.ShowHorseRegistrations)
             horse.Add((SampleKey, "Horse 1", "00:08:30", true));
         Sync(HorseRegistrations, horse);
-        MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
+        MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more" : null;
         ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
             && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0);
     }

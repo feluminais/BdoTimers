@@ -87,11 +87,11 @@ public sealed partial class TimerTileViewModel : ObservableObject
             var runs = _services.Timers.Current.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
                 && t.Countdown?.Status is not CountdownStatus.Idle).ToList();
             CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
-            HorseStartTip = CanStartHorse ? "Start registration" : "Limit of 10 registrations";
+            HorseStartTip = CanStartHorse ? "Start registration" : Formats.HorseRegistrations(runs.Count);
             var nextHorse = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
                 .MinBy(t => t.Countdown!.EndsAtUtc);
             Digits = nextHorse?.Countdown?.EndsAtUtc is { } end ? DurationFormat.Clock(end - now) : DurationFormat.Clock(horse.Duration);
-            Detail = off + (runs.Count == 0 ? "Ready" : $"{runs.Count} of 10 active");
+            Detail = off + (runs.Count == 0 ? "Ready" : Formats.HorseRegistrations(runs.Count));
             IsDimmed = runs.Count == 0 || !_timer.Enabled;
             return;
         }
