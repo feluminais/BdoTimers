@@ -1,4 +1,4 @@
-using BdoTimers.Core.Diagnostics;
+﻿using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Scheduling;
 
 namespace BdoTimers.Core.Tests;
