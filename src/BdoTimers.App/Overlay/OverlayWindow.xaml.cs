@@ -45,6 +45,38 @@ public partial class OverlayWindow : Window
         Top = Math.Clamp(Top, start.Y, Math.Max(start.Y, end.Y - ActualHeight));
     }
 
+    /// <summary>
+    /// A borderless game window can climb above other topmost windows. Raises the overlay again only when another app's
+    /// window that overlaps it sits above it, so the z-order over the game isn't changed on every tick.
+    /// </summary>
+    public void KeepOnTop()
+    {
+        var handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero || !NativeMethods.GetWindowRect(handle, out var bounds)) return;
+        // Bounded, since the z-order can change during the walk.
+        var above = NativeMethods.GetWindow(handle, NativeMethods.GW_HWNDPREV);
+        for (var i = 0; i < 256 && above != IntPtr.Zero; i++, above = NativeMethods.GetWindow(above, NativeMethods.GW_HWNDPREV))
+        {
+            if (!Covers(above, bounds)) continue;
+            NativeMethods.SetWindowPos(handle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0, NativeMethods.SWP_NOMOVE
+                | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_NOOWNERZORDER);
+            return;
+        }
+    }
+
+    /// <summary>A shown, uncloaked window that overlaps <paramref name="bounds"/>. The app's own menus and tooltips may
+    /// stay above the overlay.</summary>
+    static bool Covers(IntPtr window, NativeMethods.Rect bounds)
+    {
+        if (!NativeMethods.IsWindowVisible(window)) return false;
+        NativeMethods.GetWindowThreadProcessId(window, out var process);
+        if (process == (uint)Environment.ProcessId) return false;
+        if (NativeMethods.DwmGetWindowAttribute(window, NativeMethods.DWMWA_CLOAKED, out var cloaked, sizeof(int)) == 0
+            && cloaked != 0) return false;
+        return NativeMethods.GetWindowRect(window, out var r)
+               && r.Left < bounds.Right && bounds.Left < r.Right && r.Top < bounds.Bottom && bounds.Top < r.Bottom;
+    }
+
     /// <summary>Click-through lets mouse input reach the game; the Overlay panel's preview turns it off so the
     /// overlay can be dragged.</summary>
     public void SetClickThrough(bool enabled)
