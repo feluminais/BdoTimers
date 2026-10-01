@@ -27,7 +27,6 @@ public sealed partial class TodoViewModel : ObservableObject
         _host = host;
         services.Todos.Changed += () => Application.Current.Dispatcher.BeginInvoke(Sync);
         services.Settings.Changed += () => Application.Current.Dispatcher.BeginInvoke(UpdateResetLabels);
-        services.UiClock.Tick += _ => UpdateResetLabels();
         Sync();
         UpdateResetLabels();
     }
@@ -49,7 +48,7 @@ public sealed partial class TodoViewModel : ObservableObject
         _services.Todos.Toggle(listId, rowId);
     }
 
-    void UpdateResetLabels()
+    public void UpdateResetLabels()
     {
         var now = DateTimeOffset.UtcNow;
         var settings = _services.Settings.Current;

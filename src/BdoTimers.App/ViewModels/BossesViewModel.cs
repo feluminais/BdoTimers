@@ -33,13 +33,12 @@ public sealed partial class BossesViewModel : ObservableObject
     {
         _services = services;
         _host = host;
-        services.UiClock.Tick += Refresh;
         // Changed can fire on the scheduler thread (countdown completion).
         services.Timers.Changed += () => Application.Current.Dispatcher.BeginInvoke(() => Refresh(DateTimeOffset.UtcNow));
         Refresh(DateTimeOffset.UtcNow);
     }
 
-    void Refresh(DateTimeOffset now)
+    public void Refresh(DateTimeOffset now)
     {
         var data = _services.Timers.Current;
         var board = _services.Boards.Get(data, now);

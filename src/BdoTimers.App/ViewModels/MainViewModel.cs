@@ -11,6 +11,7 @@ public enum Section { Bosses, Custom, Todo }
 public sealed partial class MainViewModel : ObservableObject, IPanelHost
 {
     readonly AppServices _services;
+    bool _shown;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsBossesSection), nameof(IsCustomSection), nameof(IsTodoSection))]
@@ -48,8 +49,32 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
         Bosses = new BossesViewModel(services, this);
         Custom = new CustomViewModel(services, this);
         Todo = new TodoViewModel(services, this);
-        services.UiClock.Tick += RefreshPaused;
         RefreshPaused(DateTimeOffset.UtcNow);
+    }
+
+    /// <summary>
+    /// The screens follow the clock only while the window can be seen; hidden to the tray or minimized, they skip the
+    /// ticks and catch up when it comes back.
+    /// </summary>
+    public void SetShown(bool shown)
+    {
+        if (shown == _shown) return;
+        _shown = shown;
+        if (!shown)
+        {
+            _services.UiClock.Tick -= Tick;
+            return;
+        }
+        _services.UiClock.Tick += Tick;
+        Tick(DateTimeOffset.UtcNow);
+    }
+
+    void Tick(DateTimeOffset now)
+    {
+        Bosses.Refresh(now);
+        Custom.Refresh(now);
+        Todo.UpdateResetLabels();
+        RefreshPaused(now);
     }
 
     public void OpenPanel(object panel)
