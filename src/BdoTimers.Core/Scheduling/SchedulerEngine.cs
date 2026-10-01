@@ -6,7 +6,8 @@ namespace BdoTimers.Core.Scheduling;
 public sealed class SchedulerEngine(
     TimerStore timers, PersistentState<AppSettings> settings, IAlertSink sink, IClock clock)
 {
-    /// <summary>How early the voice gets ready for a spoken alert; loading it takes about a second.</summary>
+    /// <summary>How early speech is prepared before an occurrence's next spoken alert; loading the voice and saying a line
+    /// take a few seconds at low priority.</summary>
     static readonly TimeSpan SpeechLead = TimeSpan.FromMinutes(1);
 
     readonly AlertPlanner _planner = new();
@@ -31,7 +32,8 @@ public sealed class SchedulerEngine(
         if (!paused)
         {
             foreach (var alert in alerts) sink.Dispatch(alert);
-            if (AlertPlanner.SpeechDueWithin(data.Timers, muted, now, SpeechLead, defaultLeads)) sink.PrepareSpeech();
+            var speech = _planner.UpcomingSpeech(data.Timers, muted, now, SpeechLead, defaultLeads);
+            if (speech.Count > 0) sink.PrepareSpeech(speech);
         }
 
         // An end older than the planner's grace was never alerted: the PC slept through it or the loop stalled.

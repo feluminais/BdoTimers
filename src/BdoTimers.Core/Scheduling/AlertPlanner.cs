@@ -1,5 +1,6 @@
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Text;
 
 namespace BdoTimers.Core.Scheduling;
 
@@ -51,26 +52,49 @@ public sealed class AlertPlanner
         return events;
     }
 
-    /// <summary>True when an alert that speaks is due after <paramref name="now"/> and within <paramref name="window"/>.</summary>
-    public static bool SpeechDueWithin(
+    /// <summary>
+    /// The speech of every spoken alert still to come for each occurrence whose next spoken alert is due within
+    /// <paramref name="window"/>, soonest first, so one preparation covers an occurrence's whole sequence. Lines are worded
+    /// as <see cref="Tick"/> and <see cref="AlertGrouping"/> word them when each alert comes due on time.
+    /// </summary>
+    public IReadOnlyList<string> UpcomingSpeech(
         IEnumerable<TimerDef> timers, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now, TimeSpan window,
         IReadOnlyList<int>? defaultLeads = null)
     {
-        foreach (var timer in timers.Where(t => t.Enabled && t.Alerts.Tts.Enabled))
+        var planned = timers.Where(t => t.Enabled).Select(t => (Timer: t, Leads: Leads(t, defaultLeads)))
+            .Where(p => p.Leads.Length > 0).ToList();
+        if (!planned.Any(p => p.Timer.Alerts.Tts.Enabled)) return [];
+
+        // Every timer is looked at as far ahead as the longest lead: a silent one still names itself in a shared line.
+        var until = now + window + TimeSpan.FromMinutes(planned.Max(p => p.Leads[^1]));
+        var pending = new List<AlertEvent>();
+        foreach (var (timer, leads) in planned)
         {
-            var leads = timer.Alerts.LeadTimes(defaultLeads ?? AlertConfig.StandardLeadTimesMinutes).Where(l => l >= 0).ToArray();
-            if (leads.Length == 0) continue;
-            IReadOnlyList<DateTimeOffset> occurrences;
-            // A timer that can't be scheduled is logged by Tick.
-            try { occurrences = OccurrenceSource.Between(timer, now, now + window + TimeSpan.FromMinutes(leads.Max())).ToList(); }
-            catch (Exception) { continue; }
-            foreach (var occurrence in occurrences)
+            try
             {
-                if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
-                if (leads.Select(l => occurrence - TimeSpan.FromMinutes(l)).Any(due => due > now && due <= now + window)) return true;
+                foreach (var occurrence in OccurrenceSource.Between(timer, now, until))
+                {
+                    if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
+                    foreach (var lead in leads)
+                        if (occurrence - TimeSpan.FromMinutes(lead) > now && !_fired.Contains((timer.Id, occurrence, lead)))
+                            pending.Add(new AlertEvent([timer], occurrence, lead, lead));
+                }
             }
+            catch (Exception ex) { Failed(timer, ex); }
         }
-        return false;
+        if (pending.Count == 0) return [];
+
+        return AlertGrouping.Group(pending)
+            .Where(a => a.Timers.Any(t => t.Alerts.Tts.Enabled))
+            .GroupBy(a => a.OccurrenceUtc)
+            .Where(occurrence => occurrence.Min(Due) <= now + window)
+            .SelectMany(occurrence => occurrence)
+            .OrderBy(Due)
+            .Select(a => AlertMessage.Build(a).Speech)
+            .Distinct()
+            .ToList();
+
+        static DateTimeOffset Due(AlertEvent a) => a.OccurrenceUtc - TimeSpan.FromMinutes(a.LeadMinutes);
     }
 
     static int[] Leads(TimerDef timer, IReadOnlyList<int>? defaultLeads) =>

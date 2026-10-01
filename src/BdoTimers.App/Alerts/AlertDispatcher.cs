@@ -35,7 +35,11 @@ public sealed class AlertDispatcher(
         finally { _audio.Release(); }
     }
 
-    public void PrepareSpeech() => Try("tts", () => tts.Warm(settings.Current.TtsVoice));
+    public void PrepareSpeech(IReadOnlyCollection<string> texts) => Try("tts", () =>
+    {
+        var s = settings.Current;
+        tts.Prepare(texts, s.TtsVoice, s.TtsRate);
+    });
 
     public void NotifyEndedWhileAway(TimerDef timer) =>
         Try("toast", () => toast.ShowInfo(timer.Name, timer.Countdown?.EndsAtUtc is { } end
