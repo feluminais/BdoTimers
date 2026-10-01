@@ -46,6 +46,8 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <RootNamespace>BdoTimers.App</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- The app is English only, so the runtime's translated messages are left out. -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
   </PropertyGroup>
 
 </Project>
