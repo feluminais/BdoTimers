@@ -18,8 +18,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         {
             var template = d.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
             if (template?.Countdown is not { } countdown) return d;
-            var runs = d.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
-                && t.Countdown?.Status is not CountdownStatus.Idle).ToList();
+            var runs = d.Timers.Where(Presets.IsActiveHorseRun).ToList();
             if (runs.Count >= MaxHorseRegistrations)
             {
                 result = HorseStartResult.LimitReached;
@@ -27,10 +26,8 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             }
             var used = runs.Select(t => t.HorseRunNumber).ToHashSet();
             var number = Enumerable.Range(1, MaxHorseRegistrations).First(n => !used.Contains(n));
-            var run = template with
+            var run = Presets.HorseRun(template, number) with
             {
-                Id = Guid.NewGuid(), Name = $"{template.Name} {number}", Preset = Presets.HorseRegistrationRun,
-                HorseRunNumber = number, StartHotkey = null, ImageFile = null,
                 Countdown = CountdownOps.Start(new CountdownSpec { Duration = countdown.Duration }, now),
             };
             result = HorseStartResult.Started;
@@ -68,45 +65,36 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             .ToList(),
     });
 
-    public void StartCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Start(c, now));
-    public void PauseCountdown(Guid id, DateTimeOffset now) => Modify(id, t => t.Countdown is { } c
-        ? t with { Countdown = CountdownOps.Pause(c, now, Presets.Overgrows(t.Preset)) } : t);
-    public void ResumeCountdown(Guid id, DateTimeOffset now) => ModifyCountdown(id, c => CountdownOps.Resume(c, now));
-    public void ResetCountdown(Guid id) => ModifyCountdown(id, CountdownOps.Reset);
+    /// <summary>Runs a countdown or stopwatch from <paramref name="startedAtUtc"/>: now, or earlier when started late.</summary>
+    public void Start(Guid id, DateTimeOffset startedAtUtc) =>
+        ModifyRun(id, (_, c) => CountdownOps.Start(c, startedAtUtc), s => StopwatchOps.Start(s, startedAtUtc));
+    public void Pause(Guid id, DateTimeOffset now) =>
+        ModifyRun(id, (t, c) => CountdownOps.Pause(c, now, Presets.Overgrows(t.Preset)), s => StopwatchOps.Pause(s, now));
+    public void Resume(Guid id, DateTimeOffset now) =>
+        ModifyRun(id, (_, c) => CountdownOps.Resume(c, now), s => StopwatchOps.Resume(s, now));
+    public void Reset(Guid id) => ModifyRun(id, (_, c) => CountdownOps.Reset(c), StopwatchOps.Reset);
 
-    public void StartStopwatch(Guid id, DateTimeOffset now) => ModifyStopwatch(id, s => StopwatchOps.Start(s, now));
-    public void PauseStopwatch(Guid id, DateTimeOffset now) => ModifyStopwatch(id, s => StopwatchOps.Pause(s, now));
-    public void ResumeStopwatch(Guid id, DateTimeOffset now) => ModifyStopwatch(id, s => StopwatchOps.Resume(s, now));
-    public void ResetStopwatch(Guid id) => ModifyStopwatch(id, StopwatchOps.Reset);
-
-    /// <summary>Runs a countdown or stopwatch as if it had been started at <paramref name="startedAtUtc"/>.</summary>
-    public void StartFrom(Guid id, DateTimeOffset startedAtUtc) => Modify(id, t => t with
-    {
-        Countdown = t.Countdown is { } c ? CountdownOps.Start(c, startedAtUtc) : null,
-        Stopwatch = t.Stopwatch is { } s ? StopwatchOps.Start(s, startedAtUtc) : null,
-    });
-
-    /// <summary>Completes running countdowns that ended at or before <paramref name="endedBefore"/>; returns them as they were before completion.</summary>
-    public IReadOnlyList<TimerDef> CompleteCountdowns(DateTimeOffset now, DateTimeOffset endedBefore)
+    /// <summary>
+    /// Completes running countdowns that ended at or before <paramref name="endedBefore"/>, removing finished horse
+    /// registrations with their skips; returns the countdowns as they were before completion.
+    /// </summary>
+    public IReadOnlyList<TimerDef> CompleteCountdowns(DateTimeOffset endedBefore)
     {
         List<TimerDef> completed = [];
         Update(d =>
         {
-            var due = d.Timers
-                .Where(t => !Presets.Overgrows(t.Preset)
-                    && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end <= endedBefore)
-                .ToList();
-            if (due.Count == 0) return d;
-            completed.AddRange(due);
-            var ids = due.Select(t => t.Id).ToHashSet();
-            var removedIds = due.Where(t => t.Preset == Presets.HorseRegistrationRun).Select(t => t.Id).ToHashSet();
+            completed.AddRange(d.Timers.Where(t => !Presets.Overgrows(t.Preset)
+                && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end <= endedBefore));
+            if (completed.Count == 0) return d;
+            var ids = completed.Select(t => t.Id).ToHashSet();
+            var removed = completed.Where(t => t.Preset == Presets.HorseRegistrationRun).Select(t => t.Id).ToHashSet();
             return d with
             {
                 Timers = d.Timers
-                    .Where(t => !ids.Contains(t.Id) || t.Preset != Presets.HorseRegistrationRun)
+                    .Where(t => !removed.Contains(t.Id))
                     .Select(t => ids.Contains(t.Id) ? t with { Countdown = CountdownOps.Reset(t.Countdown!) } : t)
                     .ToList(),
-                Muted = removedIds.Count == 0 ? d.Muted : d.Muted.Where(m => !removedIds.Contains(m.TimerId)).ToList(),
+                Muted = d.Muted.Where(m => !removed.Contains(m.TimerId)).ToList(),
             };
         });
         return completed;
@@ -126,9 +114,11 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
     public void Modify(Guid id, Func<TimerDef, TimerDef> change) =>
         Update(d => d with { Timers = d.Timers.Select(t => t.Id == id ? change(t) : t).ToList() });
 
-    void ModifyCountdown(Guid id, Func<CountdownSpec, CountdownSpec> change) =>
-        Modify(id, t => t.Countdown is null ? t : t with { Countdown = change(t.Countdown) });
-
-    void ModifyStopwatch(Guid id, Func<StopwatchSpec, StopwatchSpec> change) =>
-        Modify(id, t => t.Stopwatch is null ? t : t with { Stopwatch = change(t.Stopwatch) });
+    /// <summary>Changes whichever of a countdown and a stopwatch the timer has.</summary>
+    void ModifyRun(Guid id, Func<TimerDef, CountdownSpec, CountdownSpec> countdown, Func<StopwatchSpec, StopwatchSpec> stopwatch) =>
+        Modify(id, t => t with
+        {
+            Countdown = t.Countdown is { } c ? countdown(t, c) : null,
+            Stopwatch = t.Stopwatch is { } s ? stopwatch(s) : null,
+        });
 }

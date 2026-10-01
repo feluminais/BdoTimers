@@ -54,6 +54,18 @@ public static class Presets
         Alerts = new AlertConfig { LeadTimesMinutes = [1, 0] },
     };
 
+    /// <summary>A registration started from the Horse registration preset: its copy numbered <paramref name="number"/>,
+    /// without the preset's hotkey or picture.</summary>
+    public static TimerDef HorseRun(TimerDef template, int number) => template with
+    {
+        Id = Guid.NewGuid(), Name = $"{template.Name} {number}", Preset = HorseRegistrationRun,
+        HorseRunNumber = number, StartHotkey = null, ImageFile = null,
+    };
+
+    /// <summary>A horse registration that is running or paused; these count towards the limit of runs.</summary>
+    public static bool IsActiveHorseRun(TimerDef timer) =>
+        timer.Preset == HorseRegistrationRun && timer.Countdown?.Status is not CountdownStatus.Idle;
+
     /// <summary>Adds any preset that can't be deleted and the data lacks, ahead of the other timers.</summary>
     public static AppData Ensure(AppData data)
     {

@@ -84,8 +84,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         var off = _timer.Enabled ? "" : "Alerts off · ";
         if (IsHorseTemplate && _timer.Countdown is { } horse)
         {
-            var runs = _services.Timers.Current.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
-                && t.Countdown?.Status is not CountdownStatus.Idle).ToList();
+            var runs = _services.Timers.Current.Timers.Where(Presets.IsActiveHorseRun).ToList();
             CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
             HorseStartTip = CanStartHorse ? "Start registration" : Formats.HorseRegistrations(runs.Count);
             var nextHorse = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
@@ -162,21 +161,11 @@ public sealed partial class TimerTileViewModel : ObservableObject
     {
         var now = DateTimeOffset.UtcNow;
         var timers = _services.Timers;
-        if (_timer.Stopwatch is { } s)
+        switch (_timer.Stopwatch?.Status ?? _timer.Countdown?.Status)
         {
-            switch (s.Status)
-            {
-                case CountdownStatus.Running: timers.PauseStopwatch(_timer.Id, now); break;
-                case CountdownStatus.Paused: timers.ResumeStopwatch(_timer.Id, now); break;
-                case CountdownStatus.Idle: timers.StartStopwatch(_timer.Id, now); break;
-            }
-            return;
-        }
-        switch (_timer.Countdown?.Status)
-        {
-            case CountdownStatus.Running: timers.PauseCountdown(_timer.Id, now); break;
-            case CountdownStatus.Paused: timers.ResumeCountdown(_timer.Id, now); break;
-            case CountdownStatus.Idle: timers.StartCountdown(_timer.Id, now); break;
+            case CountdownStatus.Running: timers.Pause(_timer.Id, now); break;
+            case CountdownStatus.Paused: timers.Resume(_timer.Id, now); break;
+            case CountdownStatus.Idle: timers.Start(_timer.Id, now); break;
         }
     }
 
@@ -214,7 +203,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     void ConfirmStart()
     {
         if (PickedStart() is not { } at) return;
-        _services.Timers.StartFrom(_timer.Id, at);
+        _services.Timers.Start(_timer.Id, at);
         IsPickingStart = false;
     }
 
@@ -294,9 +283,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [RelayCommand]
     void Reset()
     {
-        if (_timer.Stopwatch is not null) _services.Timers.ResetStopwatch(_timer.Id);
-        else if (_timer.Preset == Presets.HorseRegistrationRun) _services.Timers.Delete(_timer.Id);
-        else _services.Timers.ResetCountdown(_timer.Id);
+        if (_timer.Preset == Presets.HorseRegistrationRun) _services.Timers.Delete(_timer.Id);
+        else _services.Timers.Reset(_timer.Id);
     }
 
     [RelayCommand]

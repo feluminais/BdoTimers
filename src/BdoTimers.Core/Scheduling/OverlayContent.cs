@@ -36,6 +36,7 @@ public static class OverlayContent
         var board = settings.ShowPrevious || settings.ShowNext ? boards?.Get(data, now) ?? BossBoard.Build(data, now) : null;
         var next = settings.ShowNext ? board?.Next : null;
         var farm = settings.ShowFarm ? FarmLeft(data, now) : null;
+        // Running registrations only: a paused one has no end to count down to.
         var horse = settings.ShowHorseRegistrations
             ? data.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
                 && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end >= now)

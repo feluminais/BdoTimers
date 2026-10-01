@@ -71,13 +71,13 @@ public class TimerStoreTests
         var timer = Countdown();
         store.Upsert(timer);
 
-        store.StartCountdown(timer.Id, T0);
+        store.Start(timer.Id, T0);
         Assert.Equal(T0.AddMinutes(30), store.Current.Timers.Single().Countdown!.EndsAtUtc);
-        store.PauseCountdown(timer.Id, T0.AddMinutes(10));
+        store.Pause(timer.Id, T0.AddMinutes(10));
         Assert.Equal(TimeSpan.FromMinutes(20), store.Current.Timers.Single().Countdown!.Remaining);
-        store.ResumeCountdown(timer.Id, T0.AddMinutes(15));
+        store.Resume(timer.Id, T0.AddMinutes(15));
         Assert.Equal(T0.AddMinutes(35), store.Current.Timers.Single().Countdown!.EndsAtUtc);
-        store.ResetCountdown(timer.Id);
+        store.Reset(timer.Id);
         Assert.Equal(CountdownStatus.Idle, store.Current.Timers.Single().Countdown!.Status);
     }
 
@@ -90,10 +90,10 @@ public class TimerStoreTests
         var running = Countdown() with { Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(90) } };
         store.Upsert(done);
         store.Upsert(running);
-        store.StartCountdown(done.Id, T0);
-        store.StartCountdown(running.Id, T0);
+        store.Start(done.Id, T0);
+        store.Start(running.Id, T0);
 
-        var completed = store.CompleteCountdowns(T0.AddMinutes(30), T0.AddMinutes(30));
+        var completed = store.CompleteCountdowns(T0.AddMinutes(30));
 
         Assert.Equal(done.Id, completed.Single().Id);
         Assert.Equal(CountdownStatus.Idle, store.Current.Timers.Single(t => t.Id == done.Id).Countdown!.Status);
@@ -109,7 +109,7 @@ public class TimerStoreTests
         store.Changed += () => raised++;
 
         store.PruneMuted(T0);
-        store.CompleteCountdowns(T0, T0);
+        store.CompleteCountdowns(T0);
 
         Assert.Equal(0, raised);
         Assert.False(File.Exists(dir.File("timers.json")));
@@ -184,10 +184,10 @@ public class TimerStoreTests
         Assert.Equal(10, runs.Select(t => t.Id).Distinct().Count());
         Assert.Equal(10, runs.Select(t => t.Countdown!.EndsAtUtc).Distinct().Count());
         Assert.Equal(10, file.Load().Value.Timers.Count(t => t.Preset == Presets.HorseRegistrationRun));
-        store.PauseCountdown(runs[1].Id, T0.AddMinutes(1));
+        store.Pause(runs[1].Id, T0.AddMinutes(1));
         Assert.Equal(HorseStartResult.LimitReached, store.StartHorseRegistration(T0.AddMinutes(1)));
 
-        var completed = store.CompleteCountdowns(T0.AddMinutes(10), T0.AddMinutes(10));
+        var completed = store.CompleteCountdowns(T0.AddMinutes(10));
         Assert.Single(completed);
         Assert.Equal(1, completed[0].HorseRunNumber);
         Assert.Equal(HorseStartResult.Started, store.StartHorseRegistration(T0.AddMinutes(10)));
@@ -216,10 +216,10 @@ public class TimerStoreTests
             Countdown = new CountdownSpec { Duration = TimeSpan.FromHours(1) },
         };
         store.Upsert(farm);
-        store.StartCountdown(farm.Id, T0);
+        store.Start(farm.Id, T0);
 
-        Assert.Empty(store.CompleteCountdowns(T0.AddMinutes(90), T0.AddMinutes(90)));
-        store.PauseCountdown(farm.Id, T0.AddMinutes(90));
+        Assert.Empty(store.CompleteCountdowns(T0.AddMinutes(90)));
+        store.Pause(farm.Id, T0.AddMinutes(90));
 
         Assert.Equal(CountdownStatus.Paused, store.Current.Timers.Single().Countdown!.Status);
         Assert.Equal(TimeSpan.FromMinutes(-30), store.Current.Timers.Single().Countdown!.Remaining);

@@ -42,7 +42,7 @@ public sealed class TodoTests
         store.Modify(weekly.Id, l => l with { Name = "Mine" });
         store.Delete(weekly.Id);
         Assert.True(store.Current.Lists.Single(l => l.Id == weekly.Id).Deleted);
-        store.RestoreDefaults();
+        store.RestoreDefaults(new AppSettings());
         Assert.Equal("Mine", store.Current.Lists.Single(l => l.Id == weekly.Id).Name);
         Assert.False(store.Current.Lists.Single(l => l.Id == weekly.Id).Deleted);
     }
