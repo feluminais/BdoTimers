@@ -15,6 +15,7 @@
          match), or the setup window's choice. Empty lets the MSI reuse the remembered folder. bal:CommandLineVariables
          isn't used: WiX 5.0.2 writes it in a form its managed API can't read. -->
     <Variable Name="InstallRoot" bal:Overridable="yes" />
+    <Variable Name="DeleteData" Type="numeric" Value="0" bal:Overridable="yes" />
 
     <Chain>
       <MsiPackage Id="BdoTimersMsi" SourceFile="$(var.MsiPath)">

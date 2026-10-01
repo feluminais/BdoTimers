@@ -27,10 +27,10 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     string _doneTitle = "";
     string _doneText = "";
     string _errorText = "";
-    string _userFilesWarning = "";
     /// <summary>The folder Open folder shows on the uninstall confirmation.</summary>
     string? _userFilesFolder;
     bool _launchApp = true;
+    bool _keepPersonalData = true;
 
     public SetupViewModel(SetupFlow flow)
     {
@@ -52,7 +52,11 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         BrowseCommand = new Command(Browse);
         RepairCommand = new Command(() => Start(LaunchAction.Repair));
         UninstallCommand = new Command(Uninstall);
-        ConfirmUninstallCommand = new Command(() => Start(LaunchAction.Uninstall));
+        ConfirmUninstallCommand = new Command(() =>
+        {
+            _flow.DeletePersonalData = !KeepPersonalData;
+            Start(LaunchAction.Uninstall);
+        });
         OpenUserFilesCommand = new Command(() => OpenFolder(_userFilesFolder));
         CancelCommand = new Command(flow.Cancel);
         FinishCommand = new Command(FinishAndClose);
@@ -138,7 +142,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public string DoneTitle { get => _doneTitle; private set => Set(ref _doneTitle, value); }
     public string DoneText { get => _doneText; private set => Set(ref _doneText, value); }
     public string ErrorText { get => _errorText; private set => Set(ref _errorText, value); }
-    public string UserFilesWarning { get => _userFilesWarning; private set => Set(ref _userFilesWarning, value); }
+    public bool KeepPersonalData { get => _keepPersonalData; set => Set(ref _keepPersonalData, value); }
     public bool LaunchApp { get => _launchApp; set => Set(ref _launchApp, value); }
     public bool CanLaunch => _running is LaunchAction.Install or LaunchAction.Repair;
 
@@ -157,26 +161,13 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         _flow.Start(action, action == LaunchAction.Install ? InstallRoot.Trim() : null);
     }
 
-    /// <summary>Uninstall deletes the app's data; sounds and pictures the user added get a chance to be copied first.</summary>
+    /// <summary>Always offers the keep/delete choice, including when only timers or lists were edited.</summary>
     void Uninstall()
     {
-        var data = HasInstalledFolder ? SetupFlow.DataFolder(InstalledFolder) : null;
-        var sounds = data is not null && HasFiles(Path.Combine(data, "sounds"));
-        var pictures = data is not null && HasFiles(Path.Combine(data, "images"));
-        if (!sounds && !pictures)
-        {
-            Start(LaunchAction.Uninstall);
-            return;
-        }
-        (UserFilesWarning, _userFilesFolder) = sounds && pictures
-            ? ("Your sounds and pictures will be deleted", data)
-            : sounds
-                ? ("Your sounds will be deleted", Path.Combine(data!, "sounds"))
-                : ("Your pictures will be deleted", Path.Combine(data!, "images"));
+        _userFilesFolder = HasInstalledFolder ? SetupFlow.DataFolder(InstalledFolder) : null;
+        KeepPersonalData = !_flow.DeletePersonalData;
         Page = SetupPage.ConfirmUninstall;
     }
-
-    static bool HasFiles(string folder) => Directory.Exists(folder) && Directory.EnumerateFiles(folder).Any();
 
     void Install()
     {
@@ -194,7 +185,8 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
         }
         (DoneTitle, DoneText) = _running switch
         {
-            LaunchAction.Uninstall => ("Removed", _flow.UndeletedData is { } left ? $"Couldn't delete {left}." : ""),
+            LaunchAction.Uninstall => ("Removed", _flow.UndeletedData is { } left ? $"Couldn't delete {left}."
+                : KeepPersonalData && HasInstalledFolder ? $"Data kept in {SetupFlow.DataFolder(InstalledFolder)}." : ""),
             LaunchAction.Repair => ("Repaired", ""),
             _ => ("Ready", ""),
         };

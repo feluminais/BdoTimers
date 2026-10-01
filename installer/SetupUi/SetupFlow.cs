@@ -58,7 +58,7 @@ internal sealed class SetupFlow
             {
                 RemoveAutostart();
                 RemoveNotifications(_installedExe);
-                if (_installedExe is not null) RemoveData(Path.GetDirectoryName(_installedExe)!);
+                if (_installedExe is not null && DeletePersonalData) RemoveData(Path.GetDirectoryName(_installedExe)!);
             }
             Finished?.Invoke(e.Status, _lastError);
         };
@@ -66,6 +66,7 @@ internal sealed class SetupFlow
         // Sets the variables the bundle marks overridable (InstallRoot) from the command line; the engine leaves that
         // to the bootstrapper application.
         command.ParseCommandLine().SetOverridableVariables(new BootstrapperApplicationData().Bundle.OverridableVariables, engine);
+        DeletePersonalData = engine.ContainsVariable("DeleteData") && engine.GetVariableNumeric("DeleteData") == 1;
     }
 
     /// <summary>Raised with the detect status; <see cref="IsInstalled"/> is known by then.</summary>
@@ -80,6 +81,9 @@ internal sealed class SetupFlow
 
     /// <summary>The app's Data folder that the last uninstall couldn't delete; null when it went.</summary>
     public string? UndeletedData { get; private set; }
+
+    /// <summary>Personal data is kept unless the player explicitly opts in to deletion.</summary>
+    public bool DeletePersonalData { get; set; }
 
     public LaunchAction RequestedAction => _command.Action;
 
@@ -121,7 +125,7 @@ internal sealed class SetupFlow
     public static string ExePath(string root) => Path.Combine(AppFolder(root), "BdoTimers.exe");
 
     /// <summary>Where the app keeps timers, settings, logs and the user's sounds and pictures (the app's App.OnStartup).
-    /// The package doesn't own it, so setup deletes it on uninstall.</summary>
+    /// The package doesn't own it; deletion on uninstall is optional.</summary>
     public static string DataFolder(string appFolder) => Path.Combine(appFolder, "Data");
 
     public void Detect() => _engine.Detect();
@@ -215,11 +219,11 @@ internal sealed class SetupFlow
         }
     }
 
-    /// <summary>After uninstall: the app's Data folder, then the app's folder once nothing else is left in it.</summary>
+    /// <summary>Explicit deletion also removes the recovery copies made by backup restore.</summary>
     void RemoveData(string appFolder)
     {
         var data = DataFolder(appFolder);
-        try { DeleteTree(data); }
+        try { PersonalDataCleanup.Delete(appFolder); }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             _engine.Log(LogLevel.Error, $"Couldn't delete {data}: {ex.Message}");
@@ -241,16 +245,6 @@ internal sealed class SetupFlow
         {
             _engine.Log(LogLevel.Standard, $"Left the folder {folder}: {ex.Message}");
         }
-    }
-
-    /// <summary>Deletes a folder and everything in it. Sounds copied from read-only files keep that flag, which
-    /// would otherwise stop the delete.</summary>
-    static void DeleteTree(string folder)
-    {
-        if (!Directory.Exists(folder)) return;
-        foreach (var file in Directory.GetFiles(folder, "*", SearchOption.AllDirectories))
-            File.SetAttributes(file, FileAttributes.Normal);
-        Directory.Delete(folder, recursive: true);
     }
 
     [DllImport("user32.dll")]
