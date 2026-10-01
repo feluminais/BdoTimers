@@ -45,13 +45,14 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
         var now = clock.UtcNow;
         var lists = data.Lists.Select(list =>
         {
-            if (list.NextResetUtc == default)
-                return list with { NextResetUtc = TodoReset.Next(list.Schedule, now) };
+            var next = TodoReset.Next(list.Schedule, now);
+            // Later than the schedule's next reset means it was set while the clock ran ahead; kept, it would skip resets.
+            if (list.NextResetUtc == default || list.NextResetUtc > next) return list with { NextResetUtc = next };
             if (list.NextResetUtc > now) return list;
             return list with
             {
                 Rows = list.Rows.Select(row => TodoOps.SetDone(row, false)).ToList(),
-                NextResetUtc = TodoReset.Next(list.Schedule, now),
+                NextResetUtc = next,
             };
         }).ToList();
         return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
