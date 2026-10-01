@@ -75,6 +75,32 @@ public sealed class TodoTests
     }
 
     [Fact]
+    public void Reconcile_brings_a_reset_set_while_the_clock_ran_ahead_back_to_the_schedule()
+    {
+        var now = new DateTimeOffset(2026, 9, 28, 10, 0, 0, TimeSpan.Zero);
+        var clock = new FakeClock(now.AddDays(5));
+        var data = TodoSeed.Create(clock.UtcNow, new AppSettings());
+        using var dir = new TempDir();
+        var store = new TodoStore(new JsonFileStore<TodoData>(dir.File("todos.json"), () => data), data, clock);
+        var daily = data.Lists.Single(l => l.Cadence == TodoCadence.Daily);
+        store.Modify(daily.Id, l => l with { Rows = [l.Rows[0] with { Done = true }, .. l.Rows.Skip(1)] });
+        clock.UtcNow = now;
+
+        store.Reconcile();
+
+        var result = store.Current.Lists.Single(l => l.Id == daily.Id);
+        Assert.Equal(new DateTimeOffset(2026, 9, 29, 0, 0, 0, TimeSpan.Zero), result.NextResetUtc);
+        Assert.True(result.Rows[0].Done);
+        var changes = 0;
+        store.Changed += () => changes++;
+        store.Reconcile();
+        Assert.Equal(0, changes);
+        clock.UtcNow = result.NextResetUtc;
+        store.Reconcile();
+        Assert.False(store.Current.Lists.Single(l => l.Id == daily.Id).Rows[0].Done);
+    }
+
+    [Fact]
     public void Changing_reset_schedule_does_not_clear_current_checks()
     {
         var now = new DateTimeOffset(2026, 9, 28, 10, 0, 0, TimeSpan.Zero);
