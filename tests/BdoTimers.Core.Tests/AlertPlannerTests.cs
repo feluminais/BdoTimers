@@ -1,8 +1,10 @@
+using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 
 namespace BdoTimers.Core.Tests;
 
+[Collection(nameof(Log))]
 public class AlertPlannerTests
 {
     static readonly DateTimeOffset T = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
@@ -90,5 +92,33 @@ public class AlertPlannerTests
     {
         var timer = TestTimers.Countdown(T, 0) with { Countdown = new CountdownSpec() };
         Assert.Empty(new AlertPlanner().Tick([timer], NoMutes, T));
+    }
+
+    [Fact]
+    public void A_timer_that_cant_be_scheduled_doesnt_stop_the_others()
+    {
+        var broken = TestTimers.Scheduled("Broken", DayOfWeek.Tuesday, 14, 0, 0);
+        broken = broken with { Scheduled = broken.Scheduled! with { TimeZoneId = "Nowhere/Nothing" } };
+        var kzarka = TestTimers.Scheduled("Kzarka", DayOfWeek.Tuesday, 14, 0, 0);
+
+        var alert = new AlertPlanner().Tick([broken, kzarka], NoMutes, T).Single();
+
+        Assert.Equal("Kzarka", alert.Timers.Single().Name);
+    }
+
+    [Fact]
+    public void A_timer_that_cant_be_scheduled_is_logged_once()
+    {
+        using var dir = new TempDir();
+        Log.Init(dir.Path, new FakeClock(T));
+        var broken = TestTimers.Scheduled("Unschedulable", DayOfWeek.Tuesday, 14, 0, 0);
+        broken = broken with { Scheduled = broken.Scheduled! with { TimeZoneId = "Nowhere/Nothing" } };
+        var planner = new AlertPlanner();
+
+        planner.Tick([broken], NoMutes, T);
+        planner.Tick([broken], NoMutes, T.AddSeconds(1));
+
+        var log = File.ReadAllLines(Directory.GetFiles(dir.Path, "*.log").Single());
+        Assert.Single(log, line => line.Contains("Unschedulable"));
     }
 }

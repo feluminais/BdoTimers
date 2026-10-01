@@ -136,6 +136,20 @@ public class SchedulerEngineTests : IDisposable
     }
 
     [Fact]
+    public void A_timer_that_cant_be_scheduled_doesnt_stop_other_alerts()
+    {
+        var broken = TestTimers.Scheduled("Broken", DayOfWeek.Tuesday, 12, 10, 5, 0);
+        _timers.Upsert(broken with { Scheduled = broken.Scheduled! with { TimeZoneId = "Nowhere/Nothing" } });
+        var timer = AddCountdown();
+
+        TickAt(T0.AddMinutes(5));
+        TickAt(T0.AddMinutes(10));
+
+        Assert.Equal(new[] { 5, 0 }, _sink.Alerts.Select(a => a.LeadMinutes));
+        Assert.Equal(CountdownStatus.Idle, _timers.Current.Timers.Single(t => t.Id == timer.Id).Countdown!.Status);
+    }
+
+    [Fact]
     public void Startup_reports_countdowns_that_ended_while_closed()
     {
         var timer = AddCountdown();
