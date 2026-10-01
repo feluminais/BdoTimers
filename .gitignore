@@ -6,7 +6,7 @@ publish/
 TestResults/
 
 # Kokoro voice model, fetched by scripts/get-voice.ps1
-src/BdoTimers.App/Voice/kokoro/
+src/BdoTimers.App/Voice/
 
 # Isolated git worktrees for parallel work
 .worktrees/
