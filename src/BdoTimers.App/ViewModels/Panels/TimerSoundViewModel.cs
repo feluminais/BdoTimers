@@ -25,10 +25,8 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     {
         _services = services;
         _id = timer.Id;
-        _syncing = true;
-        Choices = SoundChoices.ForTimer(services.Sounds);
-        Selected = SoundChoices.Matching(Choices, timer.Alerts.Sound);
-        _syncing = false;
+        _choices = SoundChoices.ForTimer(services.Sounds);
+        _selected = SoundChoices.Matching(_choices, timer.Alerts.Sound);
     }
 
     SoundAlert? Sound => Selected?.Value as SoundAlert;

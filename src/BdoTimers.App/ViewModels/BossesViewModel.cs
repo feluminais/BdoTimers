@@ -146,10 +146,12 @@ public sealed partial class BossesViewModel : ObservableObject
 }
 
 /// <summary>A boss name that opens the boss panel when clicked.</summary>
-public sealed class BossLink(Guid id, string name, Action<Guid> open)
+public sealed partial class BossLink(Guid id, string name, Action<Guid> open)
 {
     public string Name => name;
-    public IRelayCommand OpenCommand { get; } = new RelayCommand(() => open(id));
+
+    [RelayCommand]
+    void Open() => open(id);
 }
 
 public sealed partial class StripTileViewModel(string caption, bool elapsed) : ObservableObject
@@ -195,6 +197,8 @@ public sealed partial class GridCellViewModel(bool isToday, bool isNext, IReadOn
 
 public sealed partial class GridEntryViewModel : ObservableObject
 {
+    readonly Core.Storage.TimerStore _store;
+    readonly Action<Guid> _open;
     GridEntry _entry;
 
     [ObservableProperty] private string _tooltip = "";
@@ -207,16 +211,20 @@ public sealed partial class GridEntryViewModel : ObservableObject
     public bool OwnSettings => _entry.Boss.Alerts.OverridesDefaults;
     public bool CanSkip => State is CellState.Upcoming or CellState.Next or CellState.Skipped;
     public string SkipLabel => State == CellState.Skipped ? "Unskip" : "Skip this spawn";
-    public IRelayCommand OpenCommand { get; }
-    public IRelayCommand ToggleSkipCommand { get; }
 
     public GridEntryViewModel(GridEntry entry, Core.Storage.TimerStore store, Action<Guid> open)
     {
+        _store = store;
+        _open = open;
         _entry = entry;
         State = entry.State;
-        OpenCommand = new RelayCommand(() => open(entry.Boss.Id));
-        ToggleSkipCommand = new RelayCommand(() => store.ToggleMute(entry.Boss.Id, entry.AtUtc));
     }
+
+    [RelayCommand]
+    void Open() => _open(_entry.Boss.Id);
+
+    [RelayCommand]
+    void ToggleSkip() => _store.ToggleMute(_entry.Boss.Id, _entry.AtUtc);
 
     /// <summary>Whether <paramref name="entry"/> is this boss at this spawn and looks the same apart from its state.</summary>
     public bool Shows(GridEntry entry) =>

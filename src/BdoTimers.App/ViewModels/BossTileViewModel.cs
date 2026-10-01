@@ -10,6 +10,8 @@ namespace BdoTimers.App.ViewModels;
 /// <summary>A boss in the Bosses section under the table; clicking it opens the boss panel.</summary>
 public sealed partial class BossTileViewModel : ObservableObject
 {
+    readonly Action<Guid> _open;
+
     [ObservableProperty] private bool _isOff;
     [ObservableProperty] private bool _ownSettings;
     [ObservableProperty] private string _detail = "";
@@ -17,16 +19,18 @@ public sealed partial class BossTileViewModel : ObservableObject
     public Guid Id { get; }
     public string Name { get; }
     public IReadOnlyList<ArtPicture> Images { get; }
-    public IRelayCommand OpenCommand { get; }
 
     public BossTileViewModel(TimerDef boss, ArtPicture image, Action<Guid> open, DateTimeOffset now)
     {
+        _open = open;
         Id = boss.Id;
         Name = boss.Name;
         Images = [image];
-        OpenCommand = new RelayCommand(() => open(Id));
         Show(boss, now);
     }
+
+    [RelayCommand]
+    void Open() => _open(Id);
 
     /// <summary>"Next · Fri 03:00", or "Alerts off" for a boss that doesn't alert.</summary>
     public void Show(TimerDef boss, DateTimeOffset now)
