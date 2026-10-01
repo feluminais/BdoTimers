@@ -79,10 +79,10 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- Install location (also the Move page): where the BdoTimers folder goes -->
+                <!-- Install location: where the BdoTimers folder goes -->
                 <Grid Margin="32,26,32,24" Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Options}">
                     <StackPanel>
-                        <TextBlock Text="{Binding OptionsTitle}" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
+                        <TextBlock Text="Install location" Style="{StaticResource SectionText}" Margin="0,0,0,10" />
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Browse…" Margin="12,0,0,0" Command="{Binding BrowseCommand}" />
                             <Grid VerticalAlignment="Center">
@@ -101,7 +101,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                         <Button Style="{StaticResource GhostButton}" Content="Back" Command="{Binding BackCommand}" />
-                        <Button Style="{StaticResource OutlineButton}" Content="{Binding ConfirmText}" IsDefault="True" Margin="10,0,0,0" Command="{Binding InstallCommand}" />
+                        <Button Style="{StaticResource OutlineButton}" Content="Install" IsDefault="True" Margin="10,0,0,0" Command="{Binding InstallCommand}" />
                     </StackPanel>
                 </Grid>
 
@@ -155,11 +155,7 @@
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
                         <StackPanel Margin="0,8,0,22" Visibility="{Binding HasInstalledFolder, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding InstalledFolder}" Style="{StaticResource LabelText}" FontSize="12" TextWrapping="Wrap" />
-                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                <Button Style="{StaticResource LinkButton}" Content="Open folder" Command="{Binding OpenFolderCommand}" />
-                                <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
-                                <Button Style="{StaticResource LinkButton}" Content="Move to another folder…" Command="{Binding MoveCommand}" />
-                            </StackPanel>
+                            <Button Style="{StaticResource LinkButton}" Content="Open folder" HorizontalAlignment="Left" Margin="0,4,0,0" Command="{Binding OpenFolderCommand}" />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Style="{StaticResource GhostButton}" Content="Repair" Command="{Binding RepairCommand}" />
