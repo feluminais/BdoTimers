@@ -1,12 +1,11 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
 public class AlertPauseTests
 {
-    static readonly DateTimeOffset T0 = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
-
     [Fact]
     public void Timed_pause_expires_and_reports_remaining()
     {

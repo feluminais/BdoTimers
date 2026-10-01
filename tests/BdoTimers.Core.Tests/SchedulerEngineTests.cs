@@ -3,6 +3,7 @@ using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
@@ -10,8 +11,6 @@ namespace BdoTimers.Core.Tests;
 [Collection(nameof(Log))]
 public class SchedulerEngineTests : IDisposable
 {
-    static readonly DateTimeOffset T0 = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
-
     sealed class RecordingSink : IAlertSink
     {
         public List<AlertEvent> Alerts { get; } = [];

@@ -1,18 +1,12 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimes;
+using static BdoTimers.Core.Tests.TestTimers;
 
 namespace BdoTimers.Core.Tests;
 
 public class BossBoardCacheTests
 {
-    // 2026-09-22 is a Tuesday; Berlin is UTC+2 until 2026-10-25.
-    static readonly DateTimeOffset TuesdayNoonBerlin = new(2026, 9, 22, 10, 0, 0, TimeSpan.Zero);
-
-    static TimerDef Boss(string name, DayOfWeek day, int hour, int minute) =>
-        TestTimers.Scheduled(name, day, hour, minute, 0) with { IsBuiltIn = true };
-
-    static DateTimeOffset Utc(int d, int h, int m) => new(2026, 9, d, h, m, 0, TimeSpan.Zero);
-
     static readonly TimerDef Nouver = Boss("Nouver", DayOfWeek.Tuesday, 16, 0);
     static readonly TimerDef Kzarka = Boss("Kzarka", DayOfWeek.Tuesday, 19, 0);
     static readonly TimerDef Uturi = Boss("Uturi", DayOfWeek.Tuesday, 19, 0);
@@ -44,7 +38,7 @@ public class BossBoardCacheTests
     {
         var data = Data(timetable);
         var cache = new BossBoardCache();
-        var times = Enumerable.Range(0, 9 * 24 * 60 / 37).Select(i => TuesdayNoonBerlin.AddMinutes(37 * i))
+        var times = Enumerable.Range(0, 9 * 24 * 60 / 37).Select(i => BerlinNoon.AddMinutes(37 * i))
             .Concat([Utc(22, 17, 0).AddSeconds(-1), Utc(22, 17, 0), Utc(22, 17, 0).AddSeconds(1)])
             .Concat([Utc(28, 17, 0).AddSeconds(-1), Utc(28, 17, 0), Utc(28, 17, 0).AddSeconds(1)])
             .Order();
@@ -58,7 +52,7 @@ public class BossBoardCacheTests
         var data = Data("several");
         var cache = new BossBoardCache();
 
-        var board = cache.Get(data, TuesdayNoonBerlin);
+        var board = cache.Get(data, BerlinNoon);
         Assert.Same(board, cache.Get(data, Utc(22, 13, 59)));
 
         var moved = cache.Get(data, Utc(22, 14, 0));
@@ -72,11 +66,11 @@ public class BossBoardCacheTests
     {
         var data = new AppData { Timers = [Kzarka] };
         var cache = new BossBoardCache();
-        Assert.False(cache.Get(data, TuesdayNoonBerlin).Next!.Skipped);
+        Assert.False(cache.Get(data, BerlinNoon).Next!.Skipped);
 
         var skipped = data with { Muted = [new MutedOccurrence(Kzarka.Id, Utc(22, 17, 0))] };
 
-        Assert.True(cache.Get(skipped, TuesdayNoonBerlin).Next!.Skipped);
+        Assert.True(cache.Get(skipped, BerlinNoon).Next!.Skipped);
     }
 
     [Fact]
@@ -84,9 +78,9 @@ public class BossBoardCacheTests
     {
         var data = Data("several");
         var cache = new BossBoardCache();
-        cache.Get(data, TuesdayNoonBerlin.AddDays(3));
+        cache.Get(data, BerlinNoon.AddDays(3));
 
-        AssertSameBoard(BossBoard.Build(data, TuesdayNoonBerlin), cache.Get(data, TuesdayNoonBerlin));
+        AssertSameBoard(BossBoard.Build(data, BerlinNoon), cache.Get(data, BerlinNoon));
     }
 
     [Fact]
@@ -96,10 +90,10 @@ public class BossBoardCacheTests
         var cache = new BossBoardCache();
         var berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
 
-        var content = OverlayContent.Build(data, new OverlaySettings(), TuesdayNoonBerlin, cache);
-        var grid = WeekGrid.Build(data, TuesdayNoonBerlin, berlin, cache);
+        var content = OverlayContent.Build(data, new OverlaySettings(), BerlinNoon, cache);
+        var grid = WeekGrid.Build(data, BerlinNoon, berlin, cache);
 
-        Assert.Same(cache.Get(data, TuesdayNoonBerlin).Next, content.Next);
+        Assert.Same(cache.Get(data, BerlinNoon).Next, content.Next);
         Assert.Equal(Utc(22, 14, 0), grid.Rows.SelectMany(r => r.Days).SelectMany(d => d)
             .Single(e => e.State == CellState.Next).AtUtc);
     }
