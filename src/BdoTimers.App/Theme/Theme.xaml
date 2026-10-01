@@ -22,7 +22,7 @@
     <SolidColorBrush x:Key="DangerBrush" Color="#A0493B" />
     <SolidColorBrush x:Key="DimBrush" Color="#99000000" />
 
-    <!-- Cinzel is bundled under Theme/Fonts; Palatino Linotype stands in until it is. -->
+    <!-- Palatino Linotype if Cinzel can't load. -->
     <FontFamily x:Key="DisplayFont">./Fonts/#Cinzel, Palatino Linotype</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
     <FontFamily x:Key="ClockFont">Segoe UI</FontFamily>
@@ -206,9 +206,9 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Plain clickable content: boss names in the strip and the week grid, pictures, tiles. Not based on BareButton
-         so the colour is inherited from the surrounding text. The transparent background keeps the whole area
-         clickable over content that ignores the mouse, such as ArtImage. -->
+    <!-- Plain clickable content: boss names in the strip and the week grid, to-do names, the spawn times header. Not
+         based on BareButton so the colour is inherited from the surrounding text. The transparent background makes the
+         whole area clickable, not only the text. -->
     <Style x:Key="NameButton" TargetType="Button">
         <!-- Without this the default button theme would still force black text. -->
         <Setter Property="OverridesDefaultStyle" Value="True" />
