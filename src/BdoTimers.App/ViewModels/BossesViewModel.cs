@@ -42,7 +42,7 @@ public sealed partial class BossesViewModel : ObservableObject
     void Refresh(DateTimeOffset now)
     {
         var data = _services.Timers.Current;
-        var board = BossBoard.Build(data, now);
+        var board = _services.Boards.Get(data, now);
         Previous.Update(board.Previous, now, _services.Art, OpenBoss);
         Next.Update(board.Next, now, _services.Art, OpenBoss);
         FollowedBy.Update(board.FollowedBy, now, _services.Art, OpenBoss);
@@ -85,7 +85,7 @@ public sealed partial class BossesViewModel : ObservableObject
 
     void RebuildGrid(AppData data, DateTimeOffset now)
     {
-        var grid = WeekGrid.Build(data, now, TimeZoneInfo.Local);
+        var grid = WeekGrid.Build(data, now, TimeZoneInfo.Local, _services.Boards);
         var today = DateOnly.FromDateTime(now.LocalDateTime);
         Days.Clear();
         for (var i = 0; i < 7; i++)

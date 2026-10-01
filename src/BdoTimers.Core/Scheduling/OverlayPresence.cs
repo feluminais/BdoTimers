@@ -22,6 +22,13 @@ public sealed record OverlayPresence(DateTimeOffset? ShowUntilUtc = null)
     public OverlayPresence Settle(OverlaySettings settings) =>
         ShowUntilUtc is not null && !AllowsTimedShow(settings) ? new OverlayPresence() : this;
 
+    /// <summary>
+    /// False when the overlay stays hidden whatever its content, so the content needn't be built: it's off, or nothing
+    /// holds it up and no pop-up can be due (<see cref="OverlayPopUpGate"/>). <see cref="IsVisible"/> decides the rest.
+    /// </summary>
+    public bool MayShow(OverlaySettings settings, DateTimeOffset now, bool previewing, bool popUpMayBeDue) =>
+        settings.Enabled && (previewing || settings.AlwaysShow || IsShowing(now) || popUpMayBeDue);
+
     public bool IsVisible(OverlaySettings settings, DateTimeOffset now, OverlaySnapshot content, bool previewing) =>
         settings.Enabled
         && (previewing || (!content.IsEmpty && (settings.AlwaysShow || IsShowing(now) || content.HasDuePopUp)));

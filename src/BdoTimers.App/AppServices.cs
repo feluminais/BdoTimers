@@ -34,6 +34,8 @@ public sealed class AppServices : IDisposable
     public PersistentState<AppSettings> Settings { get; }
     public BossSeed Seed { get; }
     public UiClock UiClock { get; } = new();
+    /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
+    public BossBoardCache Boards { get; } = new();
     public AlertDispatcher Alerts { get; }
     public IClock Clock { get; } = new SystemClock();
     public TtsChannel Tts { get; }

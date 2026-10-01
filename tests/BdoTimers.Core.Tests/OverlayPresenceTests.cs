@@ -65,6 +65,32 @@ public class OverlayPresenceTests
     }
 
     [Fact]
+    public void Visible_only_where_it_may_show_judged_without_the_content()
+    {
+        foreach (var enabled in new[] { false, true })
+        foreach (var alwaysShow in new[] { false, true })
+        foreach (var presence in new[] { Idle, new OverlayPresence(Now.AddSeconds(5)) })
+        foreach (var previewing in new[] { false, true })
+        foreach (var content in new[] { Empty, Clock, PopUp })
+        {
+            var settings = TimedShow with { Enabled = enabled, AlwaysShow = alwaysShow };
+            if (presence.IsVisible(settings, Now, content, previewing))
+                Assert.True(presence.MayShow(settings, Now, previewing, content.HasDuePopUp));
+        }
+    }
+
+    [Fact]
+    public void May_show_is_ruled_out_when_off_or_when_nothing_holds_it_up_and_no_pop_up_can_be_due()
+    {
+        Assert.False(Idle.MayShow(Defaults, Now, previewing: false, popUpMayBeDue: false));
+        Assert.False(Idle.MayShow(Defaults with { Enabled = false, AlwaysShow = true }, Now, previewing: true, popUpMayBeDue: true));
+        Assert.True(Idle.MayShow(Defaults, Now, previewing: false, popUpMayBeDue: true));
+        Assert.True(Idle.MayShow(Defaults with { AlwaysShow = true }, Now, previewing: false, popUpMayBeDue: false));
+        Assert.True(Idle.MayShow(Defaults, Now, previewing: true, popUpMayBeDue: false));
+        Assert.True(Idle.PressShow(TimedShow, Now).MayShow(TimedShow, Now.AddSeconds(1), previewing: false, popUpMayBeDue: false));
+    }
+
+    [Fact]
     public void Always_show_ends_a_timed_show_so_it_doesnt_come_back_when_turned_off()
     {
         var settled = Idle.PressShow(TimedShow, Now).Settle(TimedShow with { AlwaysShow = true });
