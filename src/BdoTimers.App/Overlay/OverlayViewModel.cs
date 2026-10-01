@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Windows.Media;
 using BdoTimers.App.Art;
 using BdoTimers.App.Controls;
+using BdoTimers.App.ViewModels;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
@@ -120,26 +121,13 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         : sample ? row.Show(name, sampleTime, true)
         : null;
 
-    /// <summary>Brings <paramref name="rows"/> in line with <paramref name="wanted"/>, keeping the row of each key that is
-    /// still wanted, so the overlay only redraws its text rather than regenerating every row each second.</summary>
+    /// <summary>Keeps the row of each key that is still wanted, so the overlay only redraws its text rather than
+    /// regenerating every row each second.</summary>
     static void Sync(ObservableCollection<OverlayLine> rows,
-        IEnumerable<(object Key, string Name, string Time, bool IsSample)> wanted)
-    {
-        var i = 0;
-        foreach (var (key, name, time, isSample) in wanted)
-        {
-            var at = i;
-            while (at < rows.Count && !Equals(rows[at].Key, key)) at++;
-            if (at == rows.Count) rows.Insert(i, new OverlayLine(key).Show(name, time, isSample));
-            else
-            {
-                if (at != i) rows.Move(at, i);
-                rows[i].Show(name, time, isSample);
-            }
-            i++;
-        }
-        while (rows.Count > i) rows.RemoveAt(rows.Count - 1);
-    }
+        IEnumerable<(object Key, string Name, string Time, bool IsSample)> wanted) =>
+        rows.Sync(wanted, (row, line) => Equals(row.Key, line.Key),
+            line => new OverlayLine(line.Key).Show(line.Name, line.Time, line.IsSample),
+            (row, line) => row.Show(line.Name, line.Time, line.IsSample));
 
     /// <summary>The same list while the spawn stays the same, so the banner isn't reloaded every second.</summary>
     IReadOnlyList<ArtPicture> ImagesFor(SpawnGroup group)
