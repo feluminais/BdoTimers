@@ -46,14 +46,14 @@
             <StackPanel Margin="22,0,22,4">
                 <TextBlock Text="Show" Style="{StaticResource SectionText}" Margin="0,4,0,4" />
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Overlay">
-                    <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding Enabled}" ValueWidth="60"
+                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Enabled}" ValueWidth="60"
                                             AutomationProperties.Name="Overlay" />
                 </HeaderedContentControl>
 
                 <StackPanel Visibility="{Binding Enabled.IsOn, Converter={StaticResource BoolToVisibility}}">
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlwaysShow}"
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlwaysShow}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
                             <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Taken="{Binding TakenForAlwaysShow}"
                                                 Hotkeys="{Binding Hotkeys}" Action="AlwaysShow" AutomationProperties.Name="Always show hotkey" />
@@ -62,7 +62,7 @@
                     </Border>
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding ShowOnHotkey}"
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding ShowOnHotkey}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
                             <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Taken="{Binding TakenForShow}"
                                                 Hotkeys="{Binding Hotkeys}" Action="Show" AutomationProperties.Name="Show hotkey" />

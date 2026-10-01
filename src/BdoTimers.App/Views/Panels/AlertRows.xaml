@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
-             xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels">
+             xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
+             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels">
     <StackPanel>
         <Border Style="{StaticResource Row}">
             <StackPanel>
@@ -37,13 +38,13 @@
             </StackPanel>
         </Border>
         <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Windows notification">
-            <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding Toast}" ValueWidth="110"
+            <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Toast}" ValueWidth="110"
                                     AutomationProperties.Name="Windows notification" />
         </HeaderedContentControl>
         <Border Style="{StaticResource Row}">
             <StackPanel>
                 <DockPanel>
-                    <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Voice}" ValueWidth="110"
+                    <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Voice}" ValueWidth="110"
                                             AutomationProperties.Name="Voice" />
                     <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="Voice" Style="{StaticResource RowLabel}" />

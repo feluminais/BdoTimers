@@ -20,7 +20,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private string? _soundError;
     [ObservableProperty] private bool _hasDeletedTodoDefaults;
 
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> Voices { get; }
     public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
     public LeadChipsViewModel DefaultLeads { get; }

@@ -20,7 +20,6 @@ public sealed partial class BossPanelViewModel : ObservableObject
     public string NextText { get; }
     public string AppliesText { get; }
     public IReadOnlyList<ArtPicture> Images { get; }
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public AlertRowsViewModel Alerts { get; }
     public SlotListViewModel Slots { get; }
     public string TimeZoneNote { get; }
