@@ -49,13 +49,11 @@ public class JsonRoundTripTests
         {
             Timers = [scheduled, countdown, stopwatch],
             Muted = [new MutedOccurrence(scheduled.Id, new DateTimeOffset(2026, 9, 28, 22, 15, 0, TimeSpan.Zero))],
-            SeedApplied = true,
         };
 
         var json = JsonSerializer.Serialize(data, JsonDefaults.Options);
         var back = JsonSerializer.Deserialize<AppData>(json, JsonDefaults.Options)!;
 
-        Assert.True(back.SeedApplied);
         Assert.Equal(3, back.Timers.Count);
         // Alert lists compare by reference, so the alerts are checked apart from the rest.
         Assert.Equal(stopwatch, back.Timers[2] with { Alerts = stopwatch.Alerts });
@@ -89,6 +87,14 @@ public class JsonRoundTripTests
         Assert.Equal(BuiltInSounds.Default, s.AlertSound);
         Assert.False(s.Autostart);
         Assert.Equal(0.5f, s.Volume);
+    }
+
+    [Fact]
+    public void Retired_fields_are_ignored()
+    {
+        var data = JsonSerializer.Deserialize<AppData>("""{ "seedApplied": true, "dataVersion": 5 }""", JsonDefaults.Options)!;
+
+        Assert.Equal(5, data.DataVersion);
     }
 
     [Fact]

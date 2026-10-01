@@ -52,10 +52,12 @@ public sealed class AppServices : IDisposable
         Art = new ArtLibrary(Path.Combine(dataDir, "images"));
         Sounds = new UserSounds(Path.Combine(dataDir, "sounds"));
         _sound = new SoundChannel(Sounds);
+        _seed = SeedService.LoadEmbedded();
         var settingsFile = new JsonFileStore<AppSettings>(Path.Combine(dataDir, "settings.json"), () => new AppSettings());
-        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => new AppData());
+        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => SeedService.NewData(_seed));
         var settings = settingsFile.Load();
         var timers = timersFile.Load();
+        if (!File.Exists(timersFile.FilePath)) timersFile.Save(timers.Value);
 
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
         var todosFile = new JsonFileStore<TodoData>(Path.Combine(dataDir, "todos.json"),
@@ -71,11 +73,8 @@ public sealed class AppServices : IDisposable
             try { Todos.ApplyDefaultSchedules(Settings.Current); }
             catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); }
         };
-        // A built-in sound from an earlier version that the app no longer has.
-        if (!SoundKeys.IsKnown(Settings.Current.AlertSound)) Settings.Update(s => s with { AlertSound = BuiltInSounds.Default });
         Timers = new TimerStore(timersFile, timers.Value);
-        _seed = SeedService.LoadEmbedded();
-        Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), _seed, new AlertConfig())));
+        Timers.Update(d => Presets.Ensure(DataMigrations.Apply(d)));
 
         _toast = new ToastChannel(App.InstanceName, App.DisplayName);
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
