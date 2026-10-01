@@ -6,9 +6,6 @@ using NAudio.Wave;
 
 namespace BdoTimers.App.Alerts;
 
-/// <summary>A voice the user can pick in Settings.</summary>
-public sealed record VoiceOption(string Id, string Label);
-
 /// <summary>
 /// Turns alert text into speech audio with a Kokoro voice. Names are respelled first (see <see cref="Pronunciation"/>).
 /// The audio is returned rather than played, so it can be generated while the alert sound plays and then go through the
@@ -26,11 +23,6 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
     readonly HashSet<(string Text, string? VoiceId, int Rate)> _asked = [];
     bool _preparing;
     volatile bool _disposed;
-
-    public IReadOnlyList<VoiceOption> Voices() => KokoroEngine.Voices.Select(v => new VoiceOption(v.Id, v.Label)).ToList();
-
-    /// <summary>Speaks when no voice was chosen, or the chosen one is gone.</summary>
-    public string DefaultVoiceId => KokoroEngine.Default.Id;
 
     /// <summary>
     /// Speech audio for <paramref name="text"/>, from the cache or else synthesized and cached; <paramref name="rate"/>
