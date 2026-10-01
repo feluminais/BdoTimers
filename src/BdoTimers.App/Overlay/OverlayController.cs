@@ -14,6 +14,7 @@ public sealed class OverlayController(AppServices services) : IDisposable
 {
     OverlayWindow? _window;
     OverlayPresence _presence = new();
+    readonly OverlayPopUpGate _popUps = new();
     bool _previewing;
 
     public HotkeyService Hotkeys { get; } = new();
@@ -87,9 +88,13 @@ public sealed class OverlayController(AppServices services) : IDisposable
     void Refresh(DateTimeOffset now)
     {
         var settings = services.Settings.Current.Overlay;
+        var data = services.Timers.Current;
         _presence = _presence.Settle(settings);
-        var content = OverlayContent.Build(services.Timers.Current, settings, now);
-        if (!_presence.IsVisible(settings, now, content, _previewing))
+        // Building the content is most of a tick's work; skip it while nothing can bring the overlay up.
+        var content = _presence.MayShow(settings, now, _previewing, _popUps.MayBeDue(data, now))
+            ? OverlayContent.Build(data, settings, now, services.Boards)
+            : null;
+        if (content is null || !_presence.IsVisible(settings, now, content, _previewing))
         {
             _window?.Hide();
             return;

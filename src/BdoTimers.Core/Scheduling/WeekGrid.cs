@@ -14,13 +14,14 @@ public sealed record WeekGridState(DateOnly WeekStart, IReadOnlyList<GridRow> Ro
 /// <summary>The current local week (Monday to Sunday) of built-in boss spawns, one row per local spawn time.</summary>
 public static class WeekGrid
 {
-    public static WeekGridState Build(AppData data, DateTimeOffset now, TimeZoneInfo local)
+    /// <param name="boards">Shares the boss board with other callers; without it the board is built afresh.</param>
+    public static WeekGridState Build(AppData data, DateTimeOffset now, TimeZoneInfo local, BossBoardCache? boards = null)
     {
         var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, local).DateTime);
         var weekStart = today.AddDays(-(((int)today.DayOfWeek + 6) % 7));
         var fromUtc = ScheduleMath.LocalToUtc(weekStart.ToDateTime(TimeOnly.MinValue), local);
         var toUtc = ScheduleMath.LocalToUtc(weekStart.AddDays(7).ToDateTime(TimeOnly.MinValue), local);
-        var next = BossBoard.Build(data, now).Next?.AtUtc;
+        var next = (boards?.Get(data, now) ?? BossBoard.Build(data, now)).Next?.AtUtc;
         var muted = data.Muted.ToHashSet();
 
         var entries = BossBoard.Spawns(data, fromUtc, toUtc, followedOnly: false)

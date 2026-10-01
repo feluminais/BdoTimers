@@ -29,9 +29,10 @@ public sealed record HorseOverlayRun(string Name, DateTimeOffset EndsAtUtc);
 
 public static class OverlayContent
 {
-    public static OverlaySnapshot Build(AppData data, OverlaySettings settings, DateTimeOffset now)
+    /// <param name="boards">Shares the boss board with other callers; without it the board is built afresh.</param>
+    public static OverlaySnapshot Build(AppData data, OverlaySettings settings, DateTimeOffset now, BossBoardCache? boards = null)
     {
-        var board = settings.ShowPrevious || settings.ShowNext ? BossBoard.Build(data, now) : null;
+        var board = settings.ShowPrevious || settings.ShowNext ? boards?.Get(data, now) ?? BossBoard.Build(data, now) : null;
         var next = settings.ShowNext ? board?.Next : null;
         var farm = settings.ShowFarm ? FarmLeft(data, now) : null;
         var horse = settings.ShowHorseRegistrations
