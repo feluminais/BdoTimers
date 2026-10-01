@@ -26,17 +26,22 @@ public partial class MainWindow : Window
         {
             if (e.PropertyName == nameof(MainViewModel.Panel)) ShowPanel(viewModel.Panel);
         };
-        // A maximized frameless window overhangs the screen by the resize border.
         StateChanged += (_, _) =>
         {
+            // A maximized frameless window overhangs the screen by the resize border.
             Frame.Margin = new Thickness(WindowState == WindowState.Maximized ? 7 : 0);
             FollowShown();
         };
         IsVisibleChanged += (_, _) => FollowShown();
     }
 
-    /// <summary>Hidden to the tray or minimized, the window's screens stop ticking.</summary>
-    void FollowShown() => _vm.SetShown(IsVisible && WindowState != WindowState.Minimized);
+    /// <summary>Hidden to the tray or minimized, the window's screens stop ticking and the process runs with EcoQoS.</summary>
+    void FollowShown()
+    {
+        var shown = IsVisible && WindowState != WindowState.Minimized;
+        _vm.SetShown(shown);
+        EcoQos.Set(!shown);
+    }
 
     void ShowPanel(object? panel)
     {

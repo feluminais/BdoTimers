@@ -135,6 +135,7 @@ public sealed class AppServices : IDisposable
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
         if (showWindow) ShowMainWindow();
+        else EcoQos.Set(true);
     }
 
     public void ShowMainWindow()
