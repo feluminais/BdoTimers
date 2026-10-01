@@ -97,9 +97,7 @@ public sealed class OverlayController(AppServices services) : IDisposable
         var window = EnsureWindow();
         window.Model.Update(content, settings, now, _previewing);
         if (!window.IsVisible) window.Show();
-        // Re-assert z-order: a borderless game window can climb above other topmost windows.
-        window.Topmost = false;
-        window.Topmost = true;
+        window.KeepOnTop();
     }
 
     OverlayWindow EnsureWindow()
