@@ -41,7 +41,20 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
     Timer? _unload;
     int _warming;
 
-    public bool IsAvailable => File.Exists(Path.Combine(modelDir, "model.int8.onnx"));
+    /// <summary>
+    /// True when every file the model needs is there and voices.bin is whole: sherpa-onnx ends the process on a missing
+    /// file or a voices.bin that doesn't match the model, instead of throwing.
+    /// </summary>
+    public bool IsAvailable =>
+        File.Exists(ModelFile("model.int8.onnx")) && VoicesAreWhole(new FileInfo(ModelFile("voices.bin")))
+        && File.Exists(ModelFile("tokens.txt")) && Directory.Exists(ModelFile("espeak-ng-data"));
+
+    /// <summary>voices.bin holds a 510 x 256 float style table per speaker, and must reach the highest speaker used.</summary>
+    static bool VoicesAreWhole(FileInfo voices)
+    {
+        const long perSpeaker = 510 * 256 * sizeof(float);
+        return voices.Exists && voices.Length % perSpeaker == 0 && voices.Length / perSpeaker > Voices.Max(v => v.SpeakerId);
+    }
 
     public static KokoroVoice? Find(string? id) => Voices.FirstOrDefault(v => v.Id == id);
 
@@ -100,10 +113,10 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         _tts?.Dispose();
         var loading = Stopwatch.StartNew();
         var config = new OfflineTtsConfig();
-        config.Model.Kokoro.Model = Path.Combine(modelDir, "model.int8.onnx");
-        config.Model.Kokoro.Voices = Path.Combine(modelDir, "voices.bin");
-        config.Model.Kokoro.Tokens = Path.Combine(modelDir, "tokens.txt");
-        config.Model.Kokoro.DataDir = Path.Combine(modelDir, "espeak-ng-data");
+        config.Model.Kokoro.Model = ModelFile("model.int8.onnx");
+        config.Model.Kokoro.Voices = ModelFile("voices.bin");
+        config.Model.Kokoro.Tokens = ModelFile("tokens.txt");
+        config.Model.Kokoro.DataDir = ModelFile("espeak-ng-data");
         // espeak-ng's "en" is British English. English goes through espeak-ng in this model, so no lexicon is loaded.
         config.Model.Kokoro.Lang = british ? "en" : "en-us";
         // One thread runs inference on the calling thread, so the caller's priority applies and no worker pool spins.
@@ -116,6 +129,8 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         Log.Info($"Kokoro voice loaded ({(british ? "UK" : "US")} English) in {loading.ElapsedMilliseconds} ms");
         return _tts;
     }
+
+    string ModelFile(string name) => Path.Combine(modelDir, name);
 
     void ScheduleUnload()
     {
