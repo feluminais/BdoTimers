@@ -2,6 +2,7 @@ using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
@@ -9,8 +10,6 @@ namespace BdoTimers.Core.Tests;
 [Collection(nameof(Log))]
 public class UpcomingSpeechTests
 {
-    // Tuesday 14:00 Berlin.
-    static readonly DateTimeOffset T = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
     static readonly HashSet<MutedOccurrence> NoMutes = [];
     static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
@@ -21,13 +20,13 @@ public class UpcomingSpeechTests
     [Fact]
     public void Nothing_is_prepared_until_the_next_spoken_alert_is_within_the_window()
     {
-        Assert.Empty(new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, T.AddMinutes(-16.5), Window));
+        Assert.Empty(new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, T0.AddMinutes(-16.5), Window));
     }
 
     [Fact]
     public void The_first_alert_of_an_occurrence_prepares_all_of_its_speech()
     {
-        var speech = new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, T.AddMinutes(-15.5), Window);
+        var speech = new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, T0.AddMinutes(-15.5), Window);
 
         Assert.Equal(["Kzarka in 15 minutes", "Kzarka in 5 minutes", "Kzarka in 1 minute", "Kzarka now"], speech);
     }
@@ -38,9 +37,9 @@ public class UpcomingSpeechTests
         var kzarka = Boss("Kzarka", 15, 5, 1, 0);
         var planner = new AlertPlanner();
 
-        Assert.Empty(planner.UpcomingSpeech([kzarka], NoMutes, T.AddMinutes(-10), Window));
+        Assert.Empty(planner.UpcomingSpeech([kzarka], NoMutes, T0.AddMinutes(-10), Window));
         Assert.Equal(["Kzarka in 5 minutes", "Kzarka in 1 minute", "Kzarka now"],
-            planner.UpcomingSpeech([kzarka], NoMutes, T.AddMinutes(-5.5), Window));
+            planner.UpcomingSpeech([kzarka], NoMutes, T0.AddMinutes(-5.5), Window));
     }
 
     [Fact]
@@ -49,11 +48,11 @@ public class UpcomingSpeechTests
         // Each speaks at different times; Nouver's voice is off but its name joins the line they share.
         var timers = new[] { Boss("Kzarka", 15, 5, 1, 0), Silent(Boss("Nouver", 5, 0)), Boss("Karanda", 30, 0) };
         var planner = new AlertPlanner();
-        var start = T.AddMinutes(-30.5);
+        var start = T0.AddMinutes(-30.5);
 
         var prepared = new List<string>();
         var spoken = new List<string>();
-        for (var at = start; at <= T; at = at.AddSeconds(1))
+        for (var at = start; at <= T0; at = at.AddSeconds(1))
         {
             spoken.AddRange(AlertGrouping.Group(planner.Tick(timers, NoMutes, at))
                 .Where(a => a.Timers.Any(t => t.Alerts.Tts.Enabled))
@@ -74,9 +73,9 @@ public class UpcomingSpeechTests
         var silent = Silent(Boss("Kzarka", 0));
         var disabled = Boss("Nouver", 0) with { Enabled = false };
         var muted = Boss("Karanda", 0);
-        var mutes = new HashSet<MutedOccurrence> { new(muted.Id, T) };
+        var mutes = new HashSet<MutedOccurrence> { new(muted.Id, T0) };
 
-        Assert.Empty(new AlertPlanner().UpcomingSpeech([silent, disabled, muted], mutes, T.AddSeconds(-30), Window));
+        Assert.Empty(new AlertPlanner().UpcomingSpeech([silent, disabled, muted], mutes, T0.AddSeconds(-30), Window));
     }
 
     [Fact]
@@ -85,7 +84,7 @@ public class UpcomingSpeechTests
         var broken = Boss("Broken", 0);
         broken = broken with { Scheduled = broken.Scheduled! with { TimeZoneId = "Nowhere/Nothing" } };
 
-        var speech = new AlertPlanner().UpcomingSpeech([broken, Boss("Kzarka", 0)], NoMutes, T.AddSeconds(-30), Window);
+        var speech = new AlertPlanner().UpcomingSpeech([broken, Boss("Kzarka", 0)], NoMutes, T0.AddSeconds(-30), Window);
 
         Assert.Equal(["Kzarka now"], speech);
     }

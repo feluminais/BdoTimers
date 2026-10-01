@@ -1,13 +1,11 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
 public class OccurrenceSourceTests
 {
-    // 2026-09-22 is a Tuesday; Berlin is UTC+2 until 2026-10-25.
-    static readonly DateTimeOffset T0 = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
-
     [Fact]
     public void Next_is_the_first_occurrence_from_now_within_a_week()
     {

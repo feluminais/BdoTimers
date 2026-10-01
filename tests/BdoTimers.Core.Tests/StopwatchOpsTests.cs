@@ -1,11 +1,11 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
 public class StopwatchOpsTests
 {
-    static readonly DateTimeOffset T0 = new(2026, 9, 25, 12, 0, 0, TimeSpan.Zero);
     static readonly StopwatchSpec Idle = new();
 
     [Fact]
