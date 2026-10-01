@@ -13,7 +13,7 @@
                             Visibility="{Binding LeadsFollowDefault, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock DockPanel.Dock="Right" Text="Default" Style="{StaticResource LabelText}" VerticalAlignment="Center"
                                Visibility="{Binding LeadsFollowDefault, Converter={StaticResource BoolToVisibility}}" />
-                    <TextBlock Text="Alert before (minutes)" Style="{StaticResource RowLabel}" />
+                    <TextBlock Text="Alert times (minutes before)" Style="{StaticResource RowLabel}" />
                 </DockPanel>
                 <panels:LeadChips DataContext="{Binding Leads}" />
             </StackPanel>
@@ -22,7 +22,7 @@
             <StackPanel DataContext="{Binding Sound}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
-                            ToolTip="Test this sound" Command="{Binding TestCommand}" />
+                            ToolTip="Play" Command="{Binding TestCommand}" />
                     <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected}" ValueWidth="110"
                                             AutomationProperties.Name="Sound" />
                     <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="11" Margin="0,0,4,0"
@@ -67,7 +67,7 @@
                             <Button Style="{StaticResource GhostButton}" Content="+ Time left" Padding="10,3" FontSize="12" Margin="6,0,0,0"
                                     Focusable="False" Click="InsertTime_Click" />
                             <Button Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}" Margin="4,0,0,0"
-                                    ToolTip="Hear it" Command="{Binding HearVoiceLineCommand}" />
+                                    ToolTip="Play" Command="{Binding HearVoiceLineCommand}" />
                         </StackPanel>
                     </DockPanel>
                 </StackPanel>

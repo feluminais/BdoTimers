@@ -170,7 +170,7 @@ public sealed class AppServices : IDisposable
         if (result == HorseStartResult.Started && announce) _alerts.Say("Horse registration time started");
         else if (result == HorseStartResult.LimitReached)
         {
-            try { _toast.ShowInfo("Horse registrations", "Maximum 10 running."); }
+            try { _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}."); }
             catch (Exception ex) { Log.Error("Horse registration limit notice failed", ex); }
         }
         return result;
