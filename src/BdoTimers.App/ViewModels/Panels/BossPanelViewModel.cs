@@ -46,7 +46,7 @@ public sealed partial class BossPanelViewModel : ObservableObject
 
     internal static string NextSpawnText(TimerDef timer, DateTimeOffset now)
     {
-        var next = OccurrenceSource.Between(timer, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
+        var next = OccurrenceSource.Next(timer, now);
         return next is { } at
             ? $"Next · {Formats.DayTime(at)} · in {DurationFormat.Countdown(at - now)}"
             : "No upcoming spawns";

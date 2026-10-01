@@ -4,6 +4,9 @@ namespace BdoTimers.Core.Scheduling;
 
 public static class OccurrenceSource
 {
+    /// <summary>How far <see cref="Next"/> looks: a week and a day, so weekly times are always found.</summary>
+    static readonly TimeSpan Reach = TimeSpan.FromDays(8);
+
     /// <summary>Occurrences of <paramref name="timer"/> within [fromUtc, toUtc], ascending; stopwatches have none.</summary>
     public static IEnumerable<DateTimeOffset> Between(TimerDef timer, DateTimeOffset fromUtc, DateTimeOffset toUtc)
     {
@@ -17,4 +20,8 @@ public static class OccurrenceSource
 
         return [];
     }
+
+    /// <summary>The first occurrence at or after <paramref name="now"/>; null when there is none.</summary>
+    public static DateTimeOffset? Next(TimerDef timer, DateTimeOffset now) =>
+        Between(timer, now, now + Reach).Cast<DateTimeOffset?>().FirstOrDefault();
 }

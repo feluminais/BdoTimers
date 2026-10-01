@@ -125,7 +125,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
 
         // Weekly timers: recompute the next occurrence only once the cached one has passed.
         if (_nextOccurrence is not { } cached || cached <= now)
-            _nextOccurrence = OccurrenceSource.Between(_timer, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
+            _nextOccurrence = OccurrenceSource.Next(_timer, now);
         if (_nextOccurrence is not { } next)
         {
             (Digits, Detail, IsDimmed) = ("--:--:--", off + "No times set", true);
