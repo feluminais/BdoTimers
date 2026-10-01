@@ -169,13 +169,13 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
     {
         HasSpawn = group is not null;
         if (group is null) return;
-        var signature = $"{group.AtUtc:O}|{string.Join(",", group.Bosses.Select(b => b.Id))}";
+        var signature = Formats.SpawnKey(group);
         if (signature != _signature)
         {
             _signature = signature;
             Names = group.Bosses.Select(b => new BossLink(b.Id, b.Name, open)).ToList();
             Images = art.For(group.Bosses);
-            Label = $"{caption} · {group.AtUtc.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture)}";
+            Label = $"{caption} · {Formats.DayTime(group.AtUtc)}";
         }
         Skipped = group.Skipped;
         Clock = elapsed ? "−" + DurationFormat.Clock(now - group.AtUtc) : DurationFormat.Clock(group.AtUtc - now);
@@ -240,7 +240,7 @@ public sealed partial class GridEntryViewModel : ObservableObject
 
     public void RefreshTooltip(DateTimeOffset now)
     {
-        var when = _entry.AtUtc.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture);
+        var when = Formats.DayTime(_entry.AtUtc);
         var relative = _entry.AtUtc > now ? $"in {DurationFormat.Countdown(_entry.AtUtc - now)}" : "passed";
         var note = State switch
         {

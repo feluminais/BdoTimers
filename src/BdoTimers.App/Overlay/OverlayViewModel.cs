@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Windows.Media;
 using BdoTimers.App.Art;
 using BdoTimers.App.Controls;
@@ -92,7 +91,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         IsPreview = preview;
         UpdateBackground(settings);
 
-        Clock = content.Clock ? now.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture) : null;
+        Clock = content.Clock ? Formats.Time(now) : null;
         Previous = content.Previous is { } previous
             ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false)
             : preview && settings.ShowPrevious ? _previousRow.Show("Kzarka", "−00:12:05", false, NoImages, true) : null;
@@ -132,7 +131,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     /// <summary>The same list while the spawn stays the same, so the banner isn't reloaded every second.</summary>
     IReadOnlyList<ArtPicture> ImagesFor(SpawnGroup group)
     {
-        var key = $"{group.AtUtc:O}|{string.Join(",", group.Bosses.Select(b => b.Id))}";
+        var key = Formats.SpawnKey(group);
         if (key != _imagesKey)
         {
             _imagesKey = key;

@@ -210,6 +210,19 @@ public sealed class AppServices : IDisposable
         }
     }
 
+    /// <summary>Asks for a picture and copies it into the pictures folder; null when cancelled or it couldn't be copied.</summary>
+    public string? ChoosePicture()
+    {
+        var dialog = new OpenFileDialog { Filter = "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
+        if (dialog.ShowDialog() != true) return null;
+        try { return Art.Import(dialog.FileName); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Error($"Couldn't import picture {dialog.FileName}", ex);
+            return null;
+        }
+    }
+
     /// <summary>Asks for a WAV or MP3 and copies it into the user's sounds. Key is null when cancelled or refused.</summary>
     public (string? Key, string? Error) AddSound()
     {

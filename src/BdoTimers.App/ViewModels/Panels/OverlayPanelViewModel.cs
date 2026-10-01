@@ -1,13 +1,10 @@
-using System.IO;
 using System.Windows.Media;
 using System.Windows.Threading;
 using BdoTimers.App.Overlay;
-using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Seed;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
@@ -141,15 +138,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void ChoosePicture()
     {
-        var dialog = new OpenFileDialog { Filter = "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
-        if (dialog.ShowDialog() != true) return;
-        string file;
-        try { file = _services.Art.Import(dialog.FileName); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            Log.Error($"Couldn't import picture {dialog.FileName}", ex);
-            return;
-        }
+        if (_services.ChoosePicture() is not { } file) return;
         if (_services.Art.UserPicture(file) is null)
         {
             _services.Art.Delete(file);
