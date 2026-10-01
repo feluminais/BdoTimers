@@ -29,12 +29,20 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
         return new(createDefault(), backup);
     }
 
-    /// <summary>Writes a temp file then renames it over the target, so a crash mid-write keeps the old file.</summary>
+    /// <summary>
+    /// Writes a temp file, flushes it to disk, then renames it over the target, so a crash or power loss keeps either
+    /// the old file or the complete new one. Without the flush the rename can reach the disk before the data and leave
+    /// an empty file.
+    /// </summary>
     public void Save(T value)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
         var tmp = FilePath + ".tmp";
-        File.WriteAllText(tmp, JsonSerializer.Serialize(value, JsonDefaults.Options));
+        using (var stream = new FileStream(tmp, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            JsonSerializer.Serialize(stream, value, JsonDefaults.Options);
+            stream.Flush(flushToDisk: true);
+        }
         File.Move(tmp, FilePath, overwrite: true);
     }
 }
