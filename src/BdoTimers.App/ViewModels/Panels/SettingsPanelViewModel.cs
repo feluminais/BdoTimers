@@ -168,9 +168,13 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 }
 
 /// <summary>A line in Settings' "Your sounds": the sound's name with play and remove buttons.</summary>
-public sealed class UserSoundRow(string name, string key, Action<string> play, Action<string> remove)
+public sealed partial class UserSoundRow(string name, string key, Action<string> play, Action<string> remove)
 {
     public string Name => name;
-    public IRelayCommand PlayCommand { get; } = new RelayCommand(() => play(key));
-    public IRelayCommand RemoveCommand { get; } = new RelayCommand(() => remove(key));
+
+    [RelayCommand]
+    void Play() => play(key);
+
+    [RelayCommand]
+    void Remove() => remove(key);
 }

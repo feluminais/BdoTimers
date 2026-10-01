@@ -187,20 +187,24 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
 /// <summary>A background colour in the Overlay panel; the chosen one is ringed.</summary>
 public sealed partial class Swatch : ObservableObject
 {
+    readonly Action<Swatch> _pick;
+
     [ObservableProperty] private bool _isSelected;
 
     public Swatch(string hex, Action<Swatch> pick)
     {
+        _pick = pick;
         Hex = hex;
         RgbColor.TryParseHex(hex, out var c);
         Color = Color.FromRgb(c.R, c.G, c.B);
         Brush = new SolidColorBrush(Color);
         Brush.Freeze();
-        PickCommand = new RelayCommand(() => pick(this));
     }
 
     public string Hex { get; }
     public Color Color { get; }
     public SolidColorBrush Brush { get; }
-    public IRelayCommand PickCommand { get; }
+
+    [RelayCommand]
+    void Pick() => _pick(this);
 }
