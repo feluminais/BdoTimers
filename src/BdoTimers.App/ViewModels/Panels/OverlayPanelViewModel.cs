@@ -24,33 +24,17 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     readonly DispatcherTimer _colorSave = new() { Interval = TimeSpan.FromMilliseconds(150) };
     bool _syncing;
 
-    [ObservableProperty] private Choice _enabled = Choice.OnOff[0];
-    [ObservableProperty] private Choice _alwaysShow = Choice.OnOff[1];
-    [ObservableProperty] private Hotkey? _alwaysShowHotkey;
     [ObservableProperty] private bool _alwaysShowRefused;
     [ObservableProperty] private bool _listeningAlwaysShow;
-    [ObservableProperty] private Choice _showOnHotkey = Choice.OnOff[1];
-    [ObservableProperty] private Hotkey? _showHotkey;
     [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private bool _showRefused;
     [ObservableProperty] private bool _listeningShow;
-    [ObservableProperty] private Choice _showSeconds;
-    [ObservableProperty] private Choice _layout;
-    [ObservableProperty] private double _scale;
-    [ObservableProperty] private bool _showClock;
-    [ObservableProperty] private bool _showPrevious;
-    [ObservableProperty] private bool _showNext;
-    [ObservableProperty] private bool _showFarm;
-    [ObservableProperty] private bool _showFishing;
-    [ObservableProperty] private bool _showHorseRegistrations;
     [ObservableProperty] private bool _pickerOpen;
     [ObservableProperty] private Color _customColor;
     [ObservableProperty] private bool _isCustomColor;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPicture))]
     private ImageSource? _picture;
-    [ObservableProperty] private double _backgroundOpacity;
-    [ObservableProperty] private double _textOpacity;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> SecondsChoices { get; } = new[] { 5, 10, 15, 30, 60 }.Select(s => new Choice($"{s} s", s)).ToList();
@@ -63,48 +47,54 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         _services = services;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
         _horseHotkey = services.Timers.Current.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration)?.StartHotkey;
-        _showSeconds = SecondsChoices[1];
-        _layout = Layouts[0];
         _colorSave.Tick += (_, _) => SaveCustomColor();
-        Load(services.Settings.Current.Overlay);
+        var o = Current;
+        if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) _customColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
+        _picture = o.BackgroundImage is { } file ? services.Art.UserPicture(file) : null;
+        MarkColor(_picture is null ? o.BackgroundColor : null);
         LoadRefused();
         services.Settings.Changed += OnSettingsChanged;
         services.Overlay.Hotkeys.RefusedChanged += LoadRefused;
         services.Overlay.BeginPreview();
     }
 
-    void Load(OverlaySettings o)
-    {
-        _syncing = true;
-        Enabled = Choice.For(o.Enabled);
-        AlwaysShow = Choice.For(o.AlwaysShow);
-        AlwaysShowHotkey = o.AlwaysShowHotkey;
-        ShowOnHotkey = Choice.For(o.ShowOnHotkey);
-        ShowHotkey = o.ShowHotkey;
-        ShowSeconds = SecondsChoices.FirstOrDefault(c => (int)c.Value! == o.ShowSeconds) ?? SecondsChoices[1];
-        Layout = Layouts.First(c => (OverlayLayout)c.Value! == o.Layout);
-        Scale = o.Scale;
-        ShowClock = o.ShowClock;
-        ShowPrevious = o.ShowPrevious;
-        ShowNext = o.ShowNext;
-        ShowFarm = o.ShowFarm;
-        ShowFishing = o.ShowFishing;
-        ShowHorseRegistrations = o.ShowHorseRegistrations;
-        BackgroundOpacity = o.BackgroundOpacity;
-        TextOpacity = o.TextOpacity;
-        if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) CustomColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
-        Picture = o.BackgroundImage is { } file ? _services.Art.UserPicture(file) : null;
-        MarkColor(Picture is null ? o.BackgroundColor : null);
-        _syncing = false;
-    }
+    OverlaySettings Current => _services.Settings.Current.Overlay;
 
-    /// <summary>Only Always show changes from outside the panel, by its hotkey.</summary>
-    void OnSettingsChanged()
+    public Choice Enabled { get => Choice.For(Current.Enabled); set => Modify(o => o with { Enabled = value.IsOn }); }
+    public Choice AlwaysShow { get => Choice.For(Current.AlwaysShow); set => Modify(o => o with { AlwaysShow = value.IsOn }); }
+    public Hotkey? AlwaysShowHotkey { get => Current.AlwaysShowHotkey; set => Modify(o => o with { AlwaysShowHotkey = value }); }
+    public Choice ShowOnHotkey { get => Choice.For(Current.ShowOnHotkey); set => Modify(o => o with { ShowOnHotkey = value.IsOn }); }
+    public Hotkey? ShowHotkey { get => Current.ShowHotkey; set => Modify(o => o with { ShowHotkey = value }); }
+    public Choice ShowSeconds
     {
-        _syncing = true;
-        AlwaysShow = Choice.For(_services.Settings.Current.Overlay.AlwaysShow);
-        _syncing = false;
+        get => SecondsChoices.FirstOrDefault(c => (int)c.Value! == Current.ShowSeconds) ?? SecondsChoices[1];
+        set => Modify(o => o with { ShowSeconds = (int)value.Value! });
     }
+    public Choice Layout
+    {
+        get => Layouts.First(c => (OverlayLayout)c.Value! == Current.Layout);
+        set => Modify(o => o with { Layout = (OverlayLayout)value.Value! });
+    }
+    public double Scale { get => Current.Scale; set => Modify(o => o with { Scale = Math.Round(value, 2) }); }
+    public bool ShowClock { get => Current.ShowClock; set => Modify(o => o with { ShowClock = value }); }
+    public bool ShowPrevious { get => Current.ShowPrevious; set => Modify(o => o with { ShowPrevious = value }); }
+    public bool ShowNext { get => Current.ShowNext; set => Modify(o => o with { ShowNext = value }); }
+    public bool ShowFarm { get => Current.ShowFarm; set => Modify(o => o with { ShowFarm = value }); }
+    public bool ShowFishing { get => Current.ShowFishing; set => Modify(o => o with { ShowFishing = value }); }
+    public bool ShowHorseRegistrations
+    {
+        get => Current.ShowHorseRegistrations;
+        set => Modify(o => o with { ShowHorseRegistrations = value });
+    }
+    public double BackgroundOpacity
+    {
+        get => Current.BackgroundOpacity;
+        set => Modify(o => o with { BackgroundOpacity = Math.Round(value, 2) });
+    }
+    public double TextOpacity { get => Current.TextOpacity; set => Modify(o => o with { TextOpacity = Math.Round(value, 2) }); }
+
+    /// <summary>Settings also change from outside the panel: Always show by its hotkey.</summary>
+    void OnSettingsChanged() => OnPropertyChanged(string.Empty);
 
     void LoadRefused()
     {
@@ -113,28 +103,9 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         ShowRefused = refused.Contains(HotkeyAction.Show);
     }
 
-    void Modify(Func<OverlaySettings, OverlaySettings> change)
-    {
-        if (_syncing) return;
+    void Modify(Func<OverlaySettings, OverlaySettings> change) =>
         _services.Settings.Update(s => change(s.Overlay) is var next && next != s.Overlay ? s with { Overlay = next } : s);
-    }
 
-    partial void OnEnabledChanged(Choice value) => Modify(o => o with { Enabled = value.IsOn });
-    partial void OnAlwaysShowChanged(Choice value) => Modify(o => o with { AlwaysShow = value.IsOn });
-    partial void OnAlwaysShowHotkeyChanged(Hotkey? value) => Modify(o => o with { AlwaysShowHotkey = value });
-    partial void OnShowOnHotkeyChanged(Choice value) => Modify(o => o with { ShowOnHotkey = value.IsOn });
-    partial void OnShowHotkeyChanged(Hotkey? value) => Modify(o => o with { ShowHotkey = value });
-    partial void OnShowSecondsChanged(Choice value) => Modify(o => o with { ShowSeconds = (int)value.Value! });
-    partial void OnLayoutChanged(Choice value) => Modify(o => o with { Layout = (OverlayLayout)value.Value! });
-    partial void OnScaleChanged(double value) => Modify(o => o with { Scale = Math.Round(value, 2) });
-    partial void OnShowClockChanged(bool value) => Modify(o => o with { ShowClock = value });
-    partial void OnShowPreviousChanged(bool value) => Modify(o => o with { ShowPrevious = value });
-    partial void OnShowNextChanged(bool value) => Modify(o => o with { ShowNext = value });
-    partial void OnShowFarmChanged(bool value) => Modify(o => o with { ShowFarm = value });
-    partial void OnShowFishingChanged(bool value) => Modify(o => o with { ShowFishing = value });
-    partial void OnShowHorseRegistrationsChanged(bool value) => Modify(o => o with { ShowHorseRegistrations = value });
-    partial void OnBackgroundOpacityChanged(double value) => Modify(o => o with { BackgroundOpacity = Math.Round(value, 2) });
-    partial void OnTextOpacityChanged(double value) => Modify(o => o with { TextOpacity = Math.Round(value, 2) });
     partial void OnListeningAlwaysShowChanged(bool value) => Listen(value);
     partial void OnListeningShowChanged(bool value) => Listen(value);
 
