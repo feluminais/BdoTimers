@@ -3,6 +3,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <!-- Dev builds; publish.ps1 stamps 1.0.<number of commits>. -->
     <Version>1.0.0</Version>
   </PropertyGroup>
 

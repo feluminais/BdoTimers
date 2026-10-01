@@ -8,7 +8,8 @@
     <AppDir Condition="'$(AppDir)' == ''">$(MSBuildThisFileDirectory)..\..\obj\publish\app</AppDir>
     <DefineConstants>Version=$(Version);AppDir=$(AppDir)</DefineConstants>
     <!-- ICE38/ICE64/ICE91 assume per-machine layouts, and this is a per-user install into the profile.
-         ICE61 flags AllowSameVersionUpgrades, which is deliberate so a rebuilt 1.0.0 can be reinstalled. -->
+         ICE61 flags AllowSameVersionUpgrades, which is deliberate: a rebuild of the same commit has the same version
+         and must still replace the installed build. -->
     <SuppressIces>ICE38;ICE61;ICE64;ICE91</SuppressIces>
   </PropertyGroup>
 
