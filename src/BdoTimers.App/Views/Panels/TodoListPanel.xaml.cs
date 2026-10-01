@@ -5,8 +5,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels.Panels;
 
 namespace BdoTimers.App.Views.Panels;
@@ -78,33 +78,23 @@ public partial class TodoListPanel : UserControl
 
     void FocusRow(Guid id) => Dispatcher.BeginInvoke(() =>
     {
-        var box = FindRowBox(RowsControl, id);
+        var box = VisualTree.FindDescendant<TextBox>(RowsControl, b => b.Tag is Guid tag && tag == id);
         if (box is null) return;
         box.Focus();
         box.CaretIndex = box.Text.Length;
     }, DispatcherPriority.Loaded);
 
-    static TextBox? FindRowBox(DependencyObject root, Guid id)
-    {
-        if (root is TextBox { Tag: Guid tag } box && tag == id) return box;
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
-        {
-            var found = FindRowBox(VisualTreeHelper.GetChild(root, i), id);
-            if (found is not null) return found;
-        }
-        return null;
-    }
-
     void Row_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
+        var source = e.OriginalSource as DependencyObject;
         if (e.ChangedButton != MouseButton.Left || sender is not Grid { Tag: Guid id } row ||
-            HasAncestor<ButtonBase>(e.OriginalSource as DependencyObject, row)) return;
+            VisualTree.FindAncestor<ButtonBase>(source, row) is not null) return;
         ClearPress();
         _pressedRow = row;
         _pressedId = id;
         _pressedAt = e.GetPosition(this);
         _grabAt = e.GetPosition(row);
-        _dragArmed = !HasAncestor<TextBox>(e.OriginalSource as DependencyObject, row);
+        _dragArmed = VisualTree.FindAncestor<TextBox>(source, row) is null;
         if (!_dragArmed) _holdTimer.Start();
     }
 
@@ -250,30 +240,8 @@ public partial class TodoListPanel : UserControl
         UpdateDropTarget();
     }
 
-    Grid? RowAt(Point point) => FindRow(RowsControl.InputHitTest(point) as DependencyObject);
-
-    Grid? FindRow(DependencyObject? element)
-    {
-        while (element is not null && element != RowsControl)
-        {
-            if (element is Grid { Tag: Guid } row) return row;
-            element = ParentOf(element);
-        }
-        return null;
-    }
-
-    static bool HasAncestor<T>(DependencyObject? element, DependencyObject row) where T : DependencyObject
-    {
-        while (element is not null && element != row)
-        {
-            if (element is T) return true;
-            element = ParentOf(element);
-        }
-        return false;
-    }
-
-    static DependencyObject? ParentOf(DependencyObject element) =>
-        element is Visual or Visual3D ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element);
+    Grid? RowAt(Point point) =>
+        VisualTree.FindAncestor<Grid>(RowsControl.InputHitTest(point) as DependencyObject, RowsControl, row => row.Tag is Guid);
 
     sealed class DragPreviewAdorner : Adorner
     {
