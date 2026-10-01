@@ -186,9 +186,9 @@ internal sealed class SetupFlow
     }
 
     /// <summary>
-    /// Ends a copy of the app running from the installed folder and waits until it has exited. The package's own
-    /// CloseApplication ends it too, but carries on before Windows lets go of its files, so a locked file would be left
-    /// for deletion at the next restart. Copies running from anywhere else are left alone.
+    /// Ends a copy of the app running from the installed folder and waits until it has exited, before any action
+    /// (quiet ones too): a locked file would be left for replacement or deletion at the next restart. Copies running from
+    /// anywhere else, such as a dev build, are left alone.
     /// </summary>
     void CloseInstalledApp()
     {
