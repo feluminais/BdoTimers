@@ -14,14 +14,14 @@ public partial class MainWindow : Window
     static readonly Duration Fade = TimeSpan.FromMilliseconds(120);
 
     readonly MainViewModel _vm;
-    readonly PersistentState<AppSettings> _settings;
+    readonly AppServices _services;
 
-    public MainWindow(MainViewModel viewModel, PersistentState<AppSettings> settings)
+    public MainWindow(MainViewModel viewModel, AppServices services)
     {
         InitializeComponent();
         DataContext = _vm = viewModel;
-        _settings = settings;
-        RestorePlacement(settings.Current.Window);
+        _services = services;
+        RestorePlacement(services.Settings.Current.Window);
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Panel)) ShowPanel(viewModel.Panel);
@@ -87,7 +87,7 @@ public partial class MainWindow : Window
         if (bounds.IsEmpty) return;
         try
         {
-            _settings.Update(s => s with { Window = new WindowPlacement(bounds.Left, bounds.Top, bounds.Width, bounds.Height) });
+            _services.Settings.Update(s => s with { Window = new WindowPlacement(bounds.Left, bounds.Top, bounds.Width, bounds.Height) });
         }
         catch (StateSaveException ex)
         {
@@ -100,7 +100,7 @@ public partial class MainWindow : Window
     {
         SavePlacement();
         _vm.ClosePanel();
-        if (!((App)Application.Current).IsQuittingApp && _settings.Current.CloseToTray)
+        if (!_services.IsQuitting && _services.Settings.Current.CloseToTray)
         {
             e.Cancel = true;
             Hide();
@@ -111,7 +111,6 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
-        var app = (App)Application.Current;
-        if (!app.IsQuittingApp) app.Quit();
+        if (!_services.IsQuitting) _services.Quit();
     }
 }
