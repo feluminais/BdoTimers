@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using BdoTimers.Core.Diagnostics;
+using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Storage;
 
 namespace BdoTimers.App;
@@ -51,7 +52,7 @@ public partial class App : Application
             Shutdown(1);
             return;
         }
-        Log.Init(Path.Combine(dataDir, "logs"));
+        Log.Init(Path.Combine(dataDir, "logs"), new SystemClock());
         DispatcherUnhandledException += (_, args) =>
         {
             Log.Error("Unhandled UI exception", args.Exception);

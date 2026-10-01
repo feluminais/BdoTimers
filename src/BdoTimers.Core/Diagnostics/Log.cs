@@ -1,3 +1,5 @@
+using BdoTimers.Core.Scheduling;
+
 namespace BdoTimers.Core.Diagnostics;
 
 /// <summary>Daily rolling text log. Logging never throws.</summary>
@@ -6,11 +8,11 @@ public static class Log
     static readonly object Gate = new();
     static string? _dir;
 
-    public static void Init(string directory, int keepDays = 14)
+    public static void Init(string directory, IClock clock, int keepDays = 14)
     {
         Directory.CreateDirectory(directory);
         _dir = directory;
-        var cutoff = DateTime.UtcNow.AddDays(-keepDays);
+        var cutoff = clock.UtcNow.UtcDateTime.AddDays(-keepDays);
         foreach (var file in Directory.GetFiles(directory, "*.log").Where(f => File.GetLastWriteTimeUtc(f) < cutoff))
         {
             try { File.Delete(file); }
