@@ -29,7 +29,6 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     [ObservableProperty] private bool _leadsFollowDefault;
 
     public TimerSoundViewModel Sound { get; }
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> OverlayChoices { get; }
 
     public AlertRowsViewModel(AppServices services, TimerDef timer)

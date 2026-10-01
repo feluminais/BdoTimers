@@ -32,7 +32,6 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [NotifyPropertyChangedFor(nameof(HasPicture))]
     private ImageSource? _picture;
 
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> SecondsChoices { get; } = new[] { 5, 10, 15, 30, 60 }.Select(s => new Choice($"{s} s", s)).ToList();
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
     public IReadOnlyList<Swatch> Swatches { get; }

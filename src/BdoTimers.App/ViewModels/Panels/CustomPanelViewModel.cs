@@ -55,7 +55,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public bool HasAlerts => !IsStopwatch;
     public bool CanDelete { get; }
     public Confirmation Delete { get; }
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
     public SlotListViewModel? Slots { get; }

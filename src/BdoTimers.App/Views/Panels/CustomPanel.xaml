@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
+             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
              Width="440">
     <UserControl.Resources>
         <!-- The header picture: the whole area is clickable, and a labelled badge in its corner says so -->
@@ -58,10 +59,8 @@
                 <controls:ArtImage Sources="{Binding Images}" />
             </Button>
             <!-- Right-aligned in the black, clear of the close button; long names are trimmed before the picture -->
-            <StackPanel Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
-                        IsHitTestVisible="False">
-                <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
+            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis"
+                       Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" IsHitTestVisible="False" />
             <Button Style="{StaticResource PanelCloseButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0" />
         </Grid>
 
@@ -131,7 +130,7 @@
 
                 <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Alerts">
-                        <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
+                        <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
                                                 AutomationProperties.Name="Alerts" />
                     </HeaderedContentControl>
                     <panels:AlertRows DataContext="{Binding Alerts}" />

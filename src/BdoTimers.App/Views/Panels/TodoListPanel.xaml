@@ -88,7 +88,7 @@
         <ScrollViewer x:Name="RowsScrollViewer" MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Active" Margin="0,0,0,10">
-                    <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding Enabled}"
+                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Enabled}"
                                             ValueWidth="90" AutomationProperties.Name="Active" />
                 </HeaderedContentControl>
                 <ItemsControl x:Name="RowsControl" ItemsSource="{Binding Rows}" />
