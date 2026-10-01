@@ -35,7 +35,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     public SetupViewModel(SetupFlow flow)
     {
         _flow = flow;
-        _installRoot = flow.InitialInstallRoot.Trim().Trim('"');
+        _installRoot = flow.InitialInstallRoot;
         _access = CheckAccess(_installRoot);
         flow.Detected += status => OnUi(() =>
         {
