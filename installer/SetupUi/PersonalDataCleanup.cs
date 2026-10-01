@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 
 namespace BdoTimers.SetupUi;
 
-/// <summary>Removes only the app's data and its restore recovery folders, without following directory links.</summary>
+/// <summary>Removes only the app's data and its restore folders, without following directory links.</summary>
 internal static class PersonalDataCleanup
 {
-    static readonly Regex RecoveryName = new(@"^Data\.before-restore-\d{8}-\d{6}-[a-f0-9]{32}$", RegexOptions.IgnoreCase);
+    static readonly Regex RestoreName = new(@"^(?:Data\.before-restore-\d{8}-\d{6}-|\.restore-)[a-f0-9]{32}$", RegexOptions.IgnoreCase);
 
     public static void Delete(string appFolder)
     {
@@ -15,7 +15,7 @@ internal static class PersonalDataCleanup
         foreach (var directory in Directory.GetDirectories(root))
         {
             var name = Path.GetFileName(directory);
-            if (string.Equals(name, "Data", StringComparison.OrdinalIgnoreCase) || RecoveryName.IsMatch(name))
+            if (string.Equals(name, "Data", StringComparison.OrdinalIgnoreCase) || RestoreName.IsMatch(name))
                 DeleteTree(directory);
         }
     }
