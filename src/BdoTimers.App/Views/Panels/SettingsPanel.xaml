@@ -112,33 +112,33 @@
 
                 <TextBlock Text="Bosses" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
-                    <StackPanel>
+                    <StackPanel DataContext="{Binding AlertReset}">
                         <Button Style="{StaticResource LinkButton}" Content="Reset all boss alert settings" HorizontalAlignment="Left"
-                                Command="{Binding AskAlertResetCommand}"
-                                Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource InverseBoolToVisibility}}" />
-                        <StackPanel Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource BoolToVisibility}}">
+                                Command="{Binding AskCommand}"
+                                Visibility="{Binding IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <StackPanel Visibility="{Binding IsAsking, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="Reset all boss alert settings?" Style="{StaticResource LabelText}" FontSize="12" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmAlertResetCommand}"
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmCommand}"
                                         AutomationProperties.Name="Reset alert settings" />
                                 <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
-                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelAlertResetCommand}" />
+                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelCommand}" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </Border>
                 <Border Style="{StaticResource Row}">
-                    <StackPanel>
+                    <StackPanel DataContext="{Binding TimetableReset}">
                         <Button Style="{StaticResource LinkButton}" Content="Reset spawn times to the EU timetable" HorizontalAlignment="Left"
-                                Command="{Binding AskResetCommand}"
-                                Visibility="{Binding ConfirmingReset, Converter={StaticResource InverseBoolToVisibility}}" />
-                        <StackPanel Visibility="{Binding ConfirmingReset, Converter={StaticResource BoolToVisibility}}">
+                                Command="{Binding AskCommand}"
+                                Visibility="{Binding IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <StackPanel Visibility="{Binding IsAsking, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="Reset spawn times to the EU timetable?" Style="{StaticResource LabelText}" FontSize="12" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmResetCommand}"
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmCommand}"
                                         AutomationProperties.Name="Reset spawn times" />
                                 <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
-                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelResetCommand}" />
+                                <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelCommand}" />
                             </StackPanel>
                         </StackPanel>
                     </StackPanel>

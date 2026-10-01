@@ -32,7 +32,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private FarmGrowthOption _farmGrowth;
     [ObservableProperty] private string? _timeZoneId;
     [ObservableProperty] private Choice _alertsOn;
-    [ObservableProperty] private bool _confirmingDelete;
     [ObservableProperty] private Hotkey? _horseHotkey;
 
     public bool IsCountdown { get; }
@@ -55,6 +54,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
     public bool HasAlerts => !IsStopwatch;
     public bool CanDelete { get; }
+    public Confirmation Delete { get; }
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
@@ -80,6 +80,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         OverlayHotkeys = [services.Settings.Current.Overlay.AlwaysShowHotkey, services.Settings.Current.Overlay.ShowHotkey];
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
+        Delete = new Confirmation(DeleteTimer, hideAfter: false);
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
         _farmGrowth = GrowthOption(timer.Countdown?.Duration);
         if (timer.Scheduled is { } spec)
@@ -183,14 +184,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         HasPicture = file is not null;
     }
 
-    [RelayCommand]
-    void AskDelete() => ConfirmingDelete = true;
-
-    [RelayCommand]
-    void CancelDelete() => ConfirmingDelete = false;
-
-    [RelayCommand]
-    void ConfirmDelete()
+    void DeleteTimer()
     {
         var image = Timer.ImageFile;
         _services.Timers.Delete(_id);
