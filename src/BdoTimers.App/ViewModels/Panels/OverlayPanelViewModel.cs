@@ -22,13 +22,9 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     readonly AppServices _services;
     // Picking in the colour square changes the colour many times a second; it's saved once the picking pauses.
     readonly DispatcherTimer _colorSave = new() { Interval = TimeSpan.FromMilliseconds(150) };
+    readonly Hotkey? _horseHotkey;
     bool _syncing;
 
-    [ObservableProperty] private bool _alwaysShowRefused;
-    [ObservableProperty] private bool _listeningAlwaysShow;
-    [ObservableProperty] private Hotkey? _horseHotkey;
-    [ObservableProperty] private bool _showRefused;
-    [ObservableProperty] private bool _listeningShow;
     [ObservableProperty] private bool _pickerOpen;
     [ObservableProperty] private Color _customColor;
     [ObservableProperty] private bool _isCustomColor;
@@ -41,6 +37,10 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
     public IReadOnlyList<Swatch> Swatches { get; }
     public bool HasPicture => Picture is not null;
+    public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
+    /// <summary>The combos the other hotkeys hold, which each hotkey field may not repeat.</summary>
+    public IReadOnlyList<Hotkey?> TakenForAlwaysShow => [ShowHotkey, _horseHotkey];
+    public IReadOnlyList<Hotkey?> TakenForShow => [AlwaysShowHotkey, _horseHotkey];
 
     public OverlayPanelViewModel(AppServices services)
     {
@@ -52,9 +52,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) _customColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
         _picture = o.BackgroundImage is { } file ? services.Art.UserPicture(file) : null;
         MarkColor(_picture is null ? o.BackgroundColor : null);
-        LoadRefused();
         services.Settings.Changed += OnSettingsChanged;
-        services.Overlay.Hotkeys.RefusedChanged += LoadRefused;
         services.Overlay.BeginPreview();
     }
 
@@ -96,25 +94,8 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     /// <summary>Settings also change from outside the panel: Always show by its hotkey.</summary>
     void OnSettingsChanged() => OnPropertyChanged(string.Empty);
 
-    void LoadRefused()
-    {
-        var refused = _services.Overlay.Hotkeys.Refused;
-        AlwaysShowRefused = refused.Contains(HotkeyAction.AlwaysShow);
-        ShowRefused = refused.Contains(HotkeyAction.Show);
-    }
-
     void Modify(Func<OverlaySettings, OverlaySettings> change) =>
         _services.Settings.Update(s => change(s.Overlay) is var next && next != s.Overlay ? s with { Overlay = next } : s);
-
-    partial void OnListeningAlwaysShowChanged(bool value) => Listen(value);
-    partial void OnListeningShowChanged(bool value) => Listen(value);
-
-    /// <summary>While a hotkey field listens, the hotkeys are released so the combo reaches it.</summary>
-    void Listen(bool listening)
-    {
-        if (listening) _services.Overlay.Hotkeys.Suspend();
-        else _services.Overlay.Hotkeys.Resume();
-    }
 
     partial void OnCustomColorChanged(Color value)
     {
@@ -199,10 +180,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public void OnClosed()
     {
         if (_colorSave.IsEnabled) SaveCustomColor();
-        ListeningAlwaysShow = false;
-        ListeningShow = false;
         _services.Settings.Changed -= OnSettingsChanged;
-        _services.Overlay.Hotkeys.RefusedChanged -= LoadRefused;
         _services.Overlay.EndPreview();
     }
 }

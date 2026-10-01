@@ -57,9 +57,8 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlwaysShow}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Other="{Binding ShowHotkey}" Other2="{Binding HorseHotkey}"
-                                                IsRefused="{Binding AlwaysShowRefused}" IsListening="{Binding ListeningAlwaysShow}"
-                                                AutomationProperties.Name="Always show hotkey" />
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Taken="{Binding TakenForAlwaysShow}"
+                                                Hotkeys="{Binding Hotkeys}" Action="AlwaysShow" AutomationProperties.Name="Always show hotkey" />
                             <TextBlock Text="Always show" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>
@@ -67,9 +66,8 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding ShowOnHotkey}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Other="{Binding AlwaysShowHotkey}" Other2="{Binding HorseHotkey}"
-                                                IsRefused="{Binding ShowRefused}" IsListening="{Binding ListeningShow}"
-                                                AutomationProperties.Name="Show hotkey" />
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Taken="{Binding TakenForShow}"
+                                                Hotkeys="{Binding Hotkeys}" Action="Show" AutomationProperties.Name="Show hotkey" />
                             <TextBlock Text="Show on hotkey" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>

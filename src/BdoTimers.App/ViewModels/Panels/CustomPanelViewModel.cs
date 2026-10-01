@@ -34,16 +34,15 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private Choice _alertsOn;
     [ObservableProperty] private bool _confirmingDelete;
     [ObservableProperty] private Hotkey? _horseHotkey;
-    [ObservableProperty] private bool _horseHotkeyRefused;
-    [ObservableProperty] private bool _listeningHorseHotkey;
 
     public bool IsCountdown { get; }
     public bool IsFarm { get; }
     public bool IsHorseTemplate { get; }
     public bool IsHorseRun { get; }
     public bool CanChangePicture { get; }
-    public Hotkey? OverlayAlwaysHotkey { get; }
-    public Hotkey? OverlayShowHotkey { get; }
+    /// <summary>The overlay's hotkeys, which the horse registration hotkey may not repeat.</summary>
+    public IReadOnlyList<Hotkey?> OverlayHotkeys { get; }
+    public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
     public IReadOnlyList<FarmGrowthOption> FarmGrowthOptions { get; } =
     [
         new("20 h · Suitable", TimeSpan.FromHours(20)),
@@ -78,13 +77,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         IsHorseRun = timer.Preset == Presets.HorseRegistrationRun;
         CanChangePicture = timer.Preset != Presets.HorseRegistrationRun;
         _horseHotkey = timer.StartHotkey;
-        OverlayAlwaysHotkey = services.Settings.Current.Overlay.AlwaysShowHotkey;
-        OverlayShowHotkey = services.Settings.Current.Overlay.ShowHotkey;
-        if (IsHorseTemplate)
-        {
-            services.Overlay.Hotkeys.RefusedChanged += LoadHorseHotkeyRefused;
-            LoadHorseHotkeyRefused();
-        }
+        OverlayHotkeys = [services.Settings.Current.Overlay.AlwaysShowHotkey, services.Settings.Current.Overlay.ShowHotkey];
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
@@ -130,9 +123,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         CommitDuration();
         if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
-        if (!IsHorseTemplate) return;
-        ListeningHorseHotkey = false;
-        _services.Overlay.Hotkeys.RefusedChanged -= LoadHorseHotkeyRefused;
     }
 
     /// <summary>A finished run is removed by the scheduler; close its panel before another edit targets it.</summary>
@@ -141,19 +131,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         if (_host.IsOpen(this) && _services.Timers.Current.Timers.All(t => t.Id != _id)) _host.ClosePanel();
     }));
 
-    void LoadHorseHotkeyRefused() =>
-        HorseHotkeyRefused = _services.Overlay.Hotkeys.Refused.Contains(HotkeyAction.StartHorseRegistration);
-
     partial void OnHorseHotkeyChanged(Hotkey? value)
     {
         if (IsHorseTemplate) Modify(t => t with { StartHotkey = value });
-    }
-
-    partial void OnListeningHorseHotkeyChanged(bool value)
-    {
-        if (!IsHorseTemplate) return;
-        if (value) _services.Overlay.Hotkeys.Suspend();
-        else _services.Overlay.Hotkeys.Resume();
     }
 
     FarmGrowthOption GrowthOption(TimeSpan? duration) =>
