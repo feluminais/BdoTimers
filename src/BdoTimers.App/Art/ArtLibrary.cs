@@ -15,6 +15,9 @@ namespace BdoTimers.App.Art;
 /// </summary>
 public sealed class ArtLibrary(string imagesDir)
 {
+    /// <summary>Wide enough for the zoomed-in crops; wider pictures are decoded down to it.</summary>
+    const int MaxDecodeWidth = 960;
+
     /// <summary>Where each boss's head is in its bundled picture, as fractions of width and height.</summary>
     static readonly IReadOnlyDictionary<string, Point> BossHeads = new Dictionary<string, Point>
     {
@@ -100,23 +103,35 @@ public sealed class ArtLibrary(string imagesDir)
         ImageSource result;
         try
         {
+            var uri = new Uri(location, UriKind.Absolute);
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
-            bitmap.UriSource = new Uri(location, UriKind.Absolute);
-            // Wide enough for the zoomed-in crops; the bundled pictures are at most this wide anyway.
-            bitmap.DecodePixelWidth = 960;
+            bitmap.UriSource = uri;
+            // Only ever down: scaling a narrower picture up would just multiply its memory.
+            if (PixelWidth(uri) > MaxDecodeWidth) bitmap.DecodePixelWidth = MaxDecodeWidth;
             bitmap.CacheOption = BitmapCacheOption.OnLoad;
             bitmap.EndInit();
             bitmap.Freeze();
             result = bitmap;
         }
         catch (Exception ex) when (ex is IOException or NotSupportedException or UnauthorizedAccessException
-                                       or InvalidOperationException or ArgumentException)
+                                       or InvalidOperationException or ArgumentException or FormatException)
         {
             Log.Error($"Picture unavailable, using placeholder: {location}", ex);
             result = Placeholder;
         }
         _cache[location] = result;
         return result;
+    }
+
+    /// <summary>The picture's width from its header, without decoding it; the stream is closed again so a user's picture
+    /// can still be replaced or deleted.</summary>
+    static int PixelWidth(Uri uri)
+    {
+        using var stream = uri.IsFile
+            ? File.OpenRead(uri.LocalPath)
+            : Application.GetResourceStream(uri)?.Stream ?? throw new IOException($"No resource at {uri}");
+        return BitmapDecoder.Create(stream, BitmapCreateOptions.DelayCreation | BitmapCreateOptions.IgnoreColorProfile,
+            BitmapCacheOption.None).Frames[0].PixelWidth;
     }
 }
