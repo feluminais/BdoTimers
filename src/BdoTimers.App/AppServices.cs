@@ -85,9 +85,11 @@ public sealed class AppServices : IDisposable
         Overlay = new OverlayController(this);
     }
 
+    /// <summary>Optional steps log their failures and carry on, so none of them can stop the app from starting.</summary>
     public void Start(bool showWindow)
     {
-        _engine.ReconcileStartup();
+        try { _engine.ReconcileStartup(); }
+        catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); }
         try
         {
             Todos.ApplyDefaultSchedules(Settings.Current);
@@ -108,16 +110,28 @@ public sealed class AppServices : IDisposable
         UiClock.Start();
         Overlay.Start();
         foreach (var path in RecoveredFiles)
-            _toast.ShowInfo("A data file was damaged",
-                $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
+        {
+            try
+            {
+                _toast.ShowInfo("A data file was damaged",
+                    $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
+            }
+            catch (Exception ex) { Log.Error($"Damaged file notice failed for {path}", ex); }
+        }
         if (!Settings.Current.NotificationHintShown)
         {
-            _toast.ShowInfo("Let alerts through while gaming",
-                "Add BDO Timers to Settings → Notifications → Set priority notifications.",
-                withNotificationSettingsButton: true);
-            Settings.Update(s => s with { NotificationHintShown = true });
+            // Marked as shown only once it was, so a failure brings it back at the next start.
+            try
+            {
+                _toast.ShowInfo("Let alerts through while gaming",
+                    "Add BDO Timers to Settings → Notifications → Set priority notifications.",
+                    withNotificationSettingsButton: true);
+                Settings.Update(s => s with { NotificationHintShown = true });
+            }
+            catch (Exception ex) { Log.Error("Notification hint failed", ex); }
         }
-        Autostart.Apply(Settings.Current.Autostart);
+        try { Autostart.Apply(Settings.Current.Autostart); }
+        catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
         if (showWindow) ShowMainWindow();
     }
 
