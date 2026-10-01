@@ -106,24 +106,20 @@
                     </Border>
                 </StackPanel>
 
-                <Border Style="{StaticResource Row}" Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
-                    <DockPanel>
-                        <TextBox x:Name="DurationBox" DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
-                                 Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
-                                 PreviewKeyDown="DurationBox_PreviewKeyDown" LostKeyboardFocus="DurationBox_LostKeyboardFocus"
-                                 controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
-                        <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Duration"
+                                        Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
+                    <TextBox x:Name="DurationBox" Width="80" TextAlignment="Right" VerticalAlignment="Center"
+                             Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                             PreviewKeyDown="DurationBox_PreviewKeyDown" LostKeyboardFocus="DurationBox_LostKeyboardFocus"
+                             controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
+                </HeaderedContentControl>
 
-                <Border Style="{StaticResource Row}" Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
-                    <DockPanel>
-                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding HorseHotkey}" Other="{Binding OverlayAlwaysHotkey}"
-                                            Other2="{Binding OverlayShowHotkey}" IsRefused="{Binding HorseHotkeyRefused}"
-                                            IsListening="{Binding ListeningHorseHotkey}" AutomationProperties.Name="Start horse registration hotkey" />
-                        <TextBlock Text="Start hotkey" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Start hotkey"
+                                        Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
+                    <controls:HotkeyBox Combo="{Binding HorseHotkey}" Other="{Binding OverlayAlwaysHotkey}"
+                                        Other2="{Binding OverlayShowHotkey}" IsRefused="{Binding HorseHotkeyRefused}"
+                                        IsListening="{Binding ListeningHorseHotkey}" AutomationProperties.Name="Start horse registration hotkey" />
+                </HeaderedContentControl>
 
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Weekly times" Style="{StaticResource SectionText}" />
@@ -138,13 +134,10 @@
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
-                                                    AutomationProperties.Name="Alerts" />
-                            <TextBlock Text="Alerts" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Alerts">
+                        <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
+                                                AutomationProperties.Name="Alerts" />
+                    </HeaderedContentControl>
                     <panels:AlertRows DataContext="{Binding Alerts}" />
                 </StackPanel>
             </StackPanel>

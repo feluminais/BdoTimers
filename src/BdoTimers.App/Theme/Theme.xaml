@@ -66,6 +66,23 @@
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
     </Style>
+    <!-- A Row whose header is the label and whose content is the control on the right -->
+    <Style x:Key="SettingRow" TargetType="HeaderedContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="HeaderedContentControl">
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <ContentPresenter DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
     <!-- Buttons -->
     <Style x:Key="BareButton" TargetType="ButtonBase">

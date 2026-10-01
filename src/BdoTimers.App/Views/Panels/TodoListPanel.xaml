@@ -89,13 +89,10 @@
         </DockPanel>
         <ScrollViewer x:Name="RowsScrollViewer" MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
-                <Border Style="{StaticResource Row}" Margin="0,0,0,10">
-                    <DockPanel>
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Enabled}"
-                                                ValueWidth="90" AutomationProperties.Name="Active" />
-                        <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Active" Margin="0,0,0,10">
+                    <controls:CycleSelector ItemsSource="{Binding OnOff}" SelectedItem="{Binding Enabled}"
+                                            ValueWidth="90" AutomationProperties.Name="Active" />
+                </HeaderedContentControl>
                 <ItemsControl x:Name="RowsControl" ItemsSource="{Binding Rows}" />
                 <Button Style="{StaticResource LinkButton}" Content="+ Add item" Command="{Binding AddRowCommand}"
                         HorizontalAlignment="Left" Margin="14,10,0,6" />
