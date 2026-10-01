@@ -81,4 +81,66 @@ public sealed class TodoOutlineTests
         TodoOutline.MoveTo(rows, 2, 0);
         Assert.Equal(["A", "-A2", "-A1", "B", "C"], Shape(rows));
     }
+
+    [Fact]
+    public void Outline_keeps_checks_and_promotes_children_of_a_blank_parent()
+    {
+        var parent = new TodoRow { Text = "Group", Children = [new TodoRow { Text = "Child", Done = true }] };
+        var rows = TodoOutline.Flatten([parent]);
+        rows[0] = rows[0] with { Text = "" };
+        Assert.Equal("Child", TodoOutline.Build(rows).Single().Text);
+        Assert.True(TodoOutline.Build(rows).Single().Done);
+        rows[0] = rows[0] with { Text = "Group" };
+        Assert.True(TodoOutline.Build(rows).Single().Children.Single().Done);
+    }
+
+    [Fact]
+    public void Reset_check_merge_preserves_unfinished_parent_and_child_position()
+    {
+        var child = new TodoRow { Text = "Child", Done = true };
+        var blankParent = new TodoOutlineRow(Guid.NewGuid(), "", false, 0);
+        var staged = new List<TodoOutlineRow> { blankParent, new(child.Id, child.Text, child.Done, 1) };
+
+        var merged = TodoOutline.MergeChecks(staged, [child with { Done = false }]);
+
+        Assert.Equal(blankParent, merged[0]);
+        Assert.Equal(1, merged[1].Level);
+        Assert.False(merged[1].Done);
+        Assert.Equal("Child", TodoOutline.Build(merged).Single().Text);
+    }
+
+    [Fact]
+    public void Outline_indent_outdent_and_move_preserve_groups()
+    {
+        var rows = TodoOutline.Flatten([
+            new TodoRow { Text = "A" }, new TodoRow { Text = "B" }, new TodoRow { Text = "C" },
+        ]);
+        Assert.False(TodoOutline.TryIndent(rows, 0));
+        Assert.True(TodoOutline.TryIndent(rows, 1));
+        Assert.Equal(1, rows[1].Level);
+        Assert.True(TodoOutline.TryOutdent(rows, 1));
+        Assert.Equal(0, rows[1].Level);
+        Assert.True(TodoOutline.TryMove(rows, 0, 1));
+        Assert.Equal(["B", "A", "C"], rows.Select(r => r.Text));
+    }
+
+    [Fact]
+    public void Outline_enter_and_remove_keep_one_level_and_checks()
+    {
+        var parent = new TodoRow { Text = "Parent", Children = [new TodoRow { Text = "First", Done = true }] };
+        var rows = TodoOutline.Flatten([parent, new TodoRow { Text = "Second" }]);
+        var id = Guid.NewGuid();
+        TodoOutline.InsertAfter(rows, 0, id);
+        var first = rows.FindIndex(r => r.Id == id);
+        Assert.Equal(1, first);
+        Assert.Equal(1, rows[first].Level);
+        rows[first] = rows[first] with { Text = "New" };
+        Assert.Equal(["New", "First"], TodoOutline.Build(rows)[0].Children.Select(r => r.Text));
+        Assert.True(TodoOutline.Build(rows)[0].Children[1].Done);
+        Assert.False(TodoOutline.TryIndent(rows, 0));
+        Assert.True(TodoOutline.TryOutdent(rows, first));
+        Assert.Equal(["Parent", "New", "Second"], TodoOutline.Build(rows).Select(r => r.Text));
+        TodoOutline.Remove(rows, 0);
+        Assert.Equal(["New", "Second"], TodoOutline.Build(rows).Select(r => r.Text));
+    }
 }
