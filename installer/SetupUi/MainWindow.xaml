@@ -60,7 +60,7 @@
 
             <DockPanel Margin="16,0,0,0">
                 <Button DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}" Height="36" Content="&#xE8BB;" ToolTip="Close"
-                        Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
+                        Command="{Binding CloseCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                 <!-- The 128 px picture scaled down: the .ico's first frame is 16 px, which blurs when Windows scales it up -->
                 <Image Source="pack://application:,,,/SetupUi;component/Assets/app.png" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"
                        RenderOptions.BitmapScalingMode="HighQuality" />

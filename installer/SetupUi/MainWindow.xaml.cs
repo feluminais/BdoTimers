@@ -33,8 +33,6 @@ internal partial class MainWindow : Window
         _viewModel.WindowHandle = new WindowInteropHelper(this).Handle;
     }
 
-    void Close_Click(object sender, RoutedEventArgs e) => Close();
-
     /// <summary>Closing while installing cancels instead; the window closes once the engine has rolled back.</summary>
     protected override void OnClosing(CancelEventArgs e)
     {

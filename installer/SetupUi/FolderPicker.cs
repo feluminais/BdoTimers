@@ -13,7 +13,6 @@ internal static class FolderPicker
     const uint FosPickFolders = 0x20;
     const uint FosForceFileSystem = 0x40;
     const uint SigdnFileSysPath = 0x80058000;
-    const int ErrorCancelled = unchecked((int)0x800704C7);
 
     /// <summary>The chosen folder, or null when the user cancels.</summary>
     public static string? Pick(Window? owner, string initialFolder)
@@ -28,7 +27,7 @@ internal static class FolderPicker
                 dialog.SetFolder(start);
             var hwnd = owner is null ? IntPtr.Zero : new WindowInteropHelper(owner).Handle;
             var hr = dialog.Show(hwnd);
-            if (hr == ErrorCancelled) return null;
+            if (hr == SetupFlow.ErrorCancelled) return null;
             Marshal.ThrowExceptionForHR(hr);
             dialog.GetResult(out var item);
             item.GetDisplayName(SigdnFileSysPath, out var path);
