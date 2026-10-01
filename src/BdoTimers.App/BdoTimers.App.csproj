@@ -8,6 +8,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="H.NotifyIcon.Wpf" Version="2.3.2" />
     <PackageReference Include="NAudio" Version="3.1.0" />
+    <!-- NAudio.dll (AudioFileReader) uses Core, WinMM (which references Midi) and Wasapi. The package also pulls in its
+         ASIO, DMO and WinForms parts, and with WinForms the whole Windows Forms runtime. -->
+    <PrunePackageReference Include="NAudio.Asio;NAudio.Dmo;NAudio.WinForms" Version="3.1.0" />
     <!-- Offline neural speech. Only the Windows runtime package; the wrapper DLL is kept in lib/ (see its README). -->
     <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64" Version="1.13.8" />
     <Reference Include="sherpa-onnx" HintPath="..\..\lib\sherpa-onnx\sherpa-onnx.dll" />
