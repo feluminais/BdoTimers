@@ -39,15 +39,21 @@ public static class SeedService
             ? data
             : data with { Timers = [.. data.Timers, .. ToTimers(seed, alerts)], SeedApplied = true };
 
-    /// <summary>Replaces all built-in timers with the seed, keeping each boss's alert settings by name.</summary>
+    /// <summary>
+    /// Replaces all built-in timers with the seed's spawn times. A boss still in the seed keeps, by name, its id (which
+    /// fired alerts and skipped spawns refer to), its alerts on/off and its alert settings; skipped spawns of bosses no
+    /// longer in the seed are dropped.
+    /// </summary>
     public static AppData ResetBuiltIns(AppData data, BossSeed seed, AlertConfig alerts)
     {
-        var previousAlerts = data.Timers
+        var previous = data.Timers
             .Where(t => t.IsBuiltIn)
             .GroupBy(t => t.Name, StringComparer.OrdinalIgnoreCase)
-            .ToDictionary(g => g.Key, g => g.First().Alerts, StringComparer.OrdinalIgnoreCase);
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var fresh = ToTimers(seed, alerts)
-            .Select(t => previousAlerts.TryGetValue(t.Name, out var a) ? t with { Alerts = a } : t);
-        return data with { Timers = [.. data.Timers.Where(t => !t.IsBuiltIn), .. fresh], SeedApplied = true };
+            .Select(t => previous.TryGetValue(t.Name, out var old) ? t with { Id = old.Id, Enabled = old.Enabled, Alerts = old.Alerts } : t);
+        List<TimerDef> timers = [.. data.Timers.Where(t => !t.IsBuiltIn), .. fresh];
+        var ids = timers.Select(t => t.Id).ToHashSet();
+        return data with { Timers = timers, Muted = data.Muted.Where(m => ids.Contains(m.TimerId)).ToList(), SeedApplied = true };
     }
 }

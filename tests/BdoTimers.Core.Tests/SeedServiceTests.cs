@@ -63,4 +63,27 @@ public class SeedServiceTests
         Assert.Contains(reset.Timers, t => t.Name == "Nouver");
         Assert.Equal(3, reset.Timers.Count);
     }
+
+    [Fact]
+    public void Reset_keeps_each_boss_id_and_alerts_off_and_drops_mutes_of_removed_bosses()
+    {
+        var applied = SeedService.ApplyIfNeeded(new AppData(), Seed, Defaults);
+        var kzarka = applied.Timers.Single(t => t.Name == "Kzarka");
+        var retired = new TimerDef { Name = "Retired", Kind = TimerKind.Scheduled, IsBuiltIn = true, Scheduled = new ScheduledSpec() };
+        var at = new DateTimeOffset(2026, 10, 2, 17, 0, 0, TimeSpan.Zero);
+        var data = applied with
+        {
+            Timers = [.. applied.Timers.Select(t => t.Id == kzarka.Id ? t with { Name = "KZARKA", Enabled = false } : t), retired],
+            Muted = [new MutedOccurrence(kzarka.Id, at), new MutedOccurrence(retired.Id, at)],
+        };
+
+        var reset = SeedService.ResetBuiltIns(data, Seed, Defaults);
+
+        var kept = reset.Timers.Single(t => t.Name == "Kzarka");
+        Assert.Equal(kzarka.Id, kept.Id);
+        Assert.False(kept.Enabled);
+        Assert.Equal(applied.Timers.Single(t => t.Name == "Nouver").Id, reset.Timers.Single(t => t.Name == "Nouver").Id);
+        Assert.DoesNotContain(reset.Timers, t => t.Id == retired.Id);
+        Assert.Equal([new MutedOccurrence(kzarka.Id, at)], reset.Muted);
+    }
 }
