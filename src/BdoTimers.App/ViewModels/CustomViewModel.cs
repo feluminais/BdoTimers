@@ -19,10 +19,14 @@ public sealed partial class CustomViewModel
     {
         _services = services;
         _host = host;
-        services.UiClock.Tick += now => { foreach (var tile in Items.OfType<TimerTileViewModel>()) tile.Refresh(now); };
         // Changed can fire on the scheduler thread (countdown completion).
         services.Timers.Changed += () => Application.Current.Dispatcher.BeginInvoke(Sync);
         Sync();
+    }
+
+    public void Refresh(DateTimeOffset now)
+    {
+        foreach (var tile in Items.OfType<TimerTileViewModel>()) tile.Refresh(now);
     }
 
     [RelayCommand]
