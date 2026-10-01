@@ -40,7 +40,7 @@ Kokoro-82M v1.0 voice model, int8 ONNX export by sherpa-onnx (Voice\kokoro: mode
 APP
 ===
 
-.NET runtime, WPF
+.NET runtime, WPF, System.Numerics.Tensors (used by NAudio)
   MIT License; Copyright (c) .NET Foundation and Contributors
   Source: https://github.com/dotnet
 
@@ -55,7 +55,7 @@ CommunityToolkit.Mvvm 8.4.2
   MIT License; Copyright (c) .NET Foundation and Contributors
   Source: https://github.com/CommunityToolkit/dotnet
 
-H.NotifyIcon 2.3.2
+H.NotifyIcon 2.3.2 (H.NotifyIcon.dll, H.NotifyIcon.Wpf.dll, H.GeneratedIcons.System.Drawing.dll)
   MIT License; Copyright (c) havendv
   Source: https://github.com/HavenDV/H.NotifyIcon
 
@@ -68,6 +68,16 @@ Cinzel font
 
 Alert sounds
   CC0; sources in licenses\Sounds.txt
+
+
+SETUP
+=====
+
+In the setup program (BdoTimers-Setup-<version>.exe) rather than the install folder.
+
+WiX Toolset 5.0.2 (the Burn setup engine, WixToolset.BootstrapperApplicationApi.dll, mbanative.dll)
+  Microsoft Reciprocal License (MS-RL); Copyright (c) .NET Foundation and contributors
+  Source: https://github.com/wixtoolset/wix/tree/v5.0.2
 
 
 MIT LICENSE
