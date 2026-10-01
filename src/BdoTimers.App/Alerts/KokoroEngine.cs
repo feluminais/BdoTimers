@@ -13,7 +13,8 @@ public sealed record KokoroVoice(string Key, int SpeakerId, string Label, bool B
 
 /// <summary>
 /// Offline neural speech (Kokoro v1.0 through sherpa-onnx), from the model in <paramref name="modelDir"/>. The model
-/// holds about 300 MB while loaded, so it loads on first use and is released after a few idle minutes.
+/// holds about 300 MB while loaded, so it loads on first use and is released after a few idle minutes, or right after
+/// a batch of speech prepared ahead.
 /// </summary>
 public sealed class KokoroEngine(string modelDir) : IDisposable
 {
@@ -38,7 +39,12 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
     // Read without the lock by Warm, which only needs a hint.
     volatile OfflineTts? _tts;
     volatile bool _ttsBritish;
+    // Guards the idle timer, so Warm can keep the model loaded without waiting for speech being generated.
+    readonly object _keepLock = new();
     Timer? _unload;
+    // True while on-demand speech or a warm-up keeps the model loaded until the idle timer runs out.
+    volatile bool _kept;
+    volatile bool _disposed;
     int _warming;
 
     /// <summary>
@@ -66,8 +72,12 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
 
     public static KokoroVoice? Find(string? id) => Voices.FirstOrDefault(v => v.Id == id);
 
-    /// <summary>Mono samples at <paramref name="sampleRate"/>. Blocks while it loads the model and generates; call off the UI thread.</summary>
-    public float[] Generate(string text, KokoroVoice voice, float speed, out int sampleRate)
+    /// <summary>
+    /// Mono samples at <paramref name="sampleRate"/>. Blocks while it loads the model and generates; call off the UI
+    /// thread. The model then stays loaded a few idle minutes for speech that follows, except for speech generated
+    /// <paramref name="ahead"/> of its alert, which leaves it to <see cref="Release"/>.
+    /// </summary>
+    public float[] Generate(string text, KokoroVoice voice, float speed, out int sampleRate, bool ahead = false)
     {
         lock (_lock)
         {
@@ -81,8 +91,17 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
             finally
             {
                 audio.Dispose();
-                ScheduleUnload();
+                if (!ahead) Keep();
             }
+        }
+    }
+
+    /// <summary>Unloads the model after speech prepared ahead, unless on-demand speech or a warm-up is keeping it.</summary>
+    public void Release()
+    {
+        lock (_lock)
+        {
+            if (!_kept) Free();
         }
     }
 
@@ -95,7 +114,7 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
         if (!IsAvailable) return;
         if (_tts is not null && _ttsBritish == voice.British)
         {
-            _unload?.Change(IdleUnload, Timeout.InfiniteTimeSpan);
+            Keep();
             return;
         }
         if (Interlocked.Exchange(ref _warming, 1) == 1) return;
@@ -106,7 +125,7 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
                 lock (_lock)
                 {
                     Engine(voice.British);
-                    ScheduleUnload();
+                    Keep();
                 }
             }
             catch (Exception ex) { Log.Error("Couldn't load the voice model", ex); }
@@ -117,6 +136,7 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
     /// <summary>US and UK voices need espeak-ng's American or British English, which is fixed per engine.</summary>
     OfflineTts Engine(bool british)
     {
+        ObjectDisposedException.ThrowIf(_disposed, this);
         if (_tts is not null && _ttsBritish == british) return _tts;
         _tts?.Dispose();
         var loading = Stopwatch.StartNew();
@@ -140,24 +160,40 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
 
     string ModelFile(string name) => Path.Combine(modelDir, name);
 
-    void ScheduleUnload()
+    /// <summary>Keeps the model loaded until it has been idle for <see cref="IdleUnload"/>.</summary>
+    void Keep()
     {
-        _unload ??= new Timer(_ => Unload());
-        _unload.Change(IdleUnload, Timeout.InfiniteTimeSpan);
+        lock (_keepLock)
+        {
+            if (_disposed) return;
+            _kept = true;
+            _unload ??= new Timer(_ => Unload());
+            _unload.Change(IdleUnload, Timeout.InfiniteTimeSpan);
+        }
     }
 
     void Unload()
     {
         lock (_lock)
         {
-            _tts?.Dispose();
-            _tts = null;
+            _kept = false;
+            Free();
         }
+    }
+
+    void Free()
+    {
+        _tts?.Dispose();
+        _tts = null;
     }
 
     public void Dispose()
     {
-        _unload?.Dispose();
-        Unload();
+        lock (_keepLock)
+        {
+            _disposed = true;
+            _unload?.Dispose();
+        }
+        lock (_lock) Free();
     }
 }

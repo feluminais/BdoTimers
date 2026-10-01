@@ -1,3 +1,4 @@
+using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
@@ -5,6 +6,8 @@ using BdoTimers.Core.Storage;
 
 namespace BdoTimers.Core.Tests;
 
+// A timer that can't be scheduled is logged.
+[Collection(nameof(Log))]
 public class SchedulerEngineTests : IDisposable
 {
     static readonly DateTimeOffset T0 = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
@@ -15,8 +18,8 @@ public class SchedulerEngineTests : IDisposable
         public List<TimerDef> EndedWhileAway { get; } = [];
         public void Dispatch(AlertEvent alert) => Alerts.Add(alert);
         public void NotifyEndedWhileAway(TimerDef timer) => EndedWhileAway.Add(timer);
-        public int SpeechPrepared { get; private set; }
-        public void PrepareSpeech() => SpeechPrepared++;
+        public List<IReadOnlyCollection<string>> SpeechPrepared { get; } = [];
+        public void PrepareSpeech(IReadOnlyCollection<string> texts) => SpeechPrepared.Add(texts);
     }
 
     readonly TempDir _dir = new();
@@ -87,26 +90,37 @@ public class SchedulerEngineTests : IDisposable
     }
 
     [Fact]
-    public void The_voice_gets_ready_in_the_minute_before_a_spoken_alert()
+    public void Speech_is_prepared_in_the_minute_before_a_spoken_alert()
     {
         AddCountdown(); // alerts at 5 and 0 minutes left, so at T0 + 5 and T0 + 10 minutes
 
         TickAt(T0.AddMinutes(3));
-        Assert.Equal(0, _sink.SpeechPrepared);
+        Assert.Empty(_sink.SpeechPrepared);
 
         TickAt(T0.AddMinutes(4).AddSeconds(30));
-        Assert.Equal(1, _sink.SpeechPrepared);
+        Assert.Equal(["Farm in 5 minutes", "Farm now"], _sink.SpeechPrepared.Single());
     }
 
     [Fact]
-    public void Silent_timers_leave_the_voice_unloaded()
+    public void Silent_timers_prepare_no_speech()
     {
         var timer = AddCountdown();
         _timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = new TtsAlert { Enabled = false } } });
 
         TickAt(T0.AddMinutes(4).AddSeconds(30));
 
-        Assert.Equal(0, _sink.SpeechPrepared);
+        Assert.Empty(_sink.SpeechPrepared);
+    }
+
+    [Fact]
+    public void Paused_alerts_prepare_no_speech()
+    {
+        AddCountdown();
+        _settings.Update(s => s with { AlertsPausedUntilUtc = DateTimeOffset.MaxValue });
+
+        TickAt(T0.AddMinutes(4).AddSeconds(30));
+
+        Assert.Empty(_sink.SpeechPrepared);
     }
 
     [Fact]
