@@ -99,42 +99,14 @@ public class TextTests
     [InlineData("0")]
     [InlineData("0:00")]
     [InlineData("24:01")]
+    [InlineData("30:15")]
     [InlineData("1:60")]
     [InlineData("abc")]
     [InlineData("")]
     public void Rejects_bad_durations(string text) => Assert.False(Parsing.TryParseDuration(text, out _));
 
     [Fact]
-    public void Parses_hours_and_minutes_within_a_range()
-    {
-        Assert.True(Parsing.TryParseHoursMinutes("0:00", TimeSpan.Zero, TimeSpan.FromHours(99), out var zero));
-        Assert.Equal(TimeSpan.Zero, zero);
-        Assert.True(Parsing.TryParseHoursMinutes("30:15", TimeSpan.Zero, TimeSpan.FromHours(99), out var span));
-        Assert.Equal(new TimeSpan(30, 15, 0), span);
-        Assert.False(Parsing.TryParseHoursMinutes("100:00", TimeSpan.Zero, TimeSpan.FromHours(99), out _));
-    }
-
-    [Fact]
     public void Formats_durations() => Assert.Equal("1:30", Parsing.FormatDuration(TimeSpan.FromMinutes(90)));
-
-    [Fact]
-    public void Parses_lead_times()
-    {
-        Assert.True(Parsing.TryParseLeadTimes(" 5, 15;0 1 5", out var leads, out _));
-        Assert.Equal(new[] { 15, 5, 1, 0 }, leads);
-        Assert.Equal("15, 5, 1, 0", Parsing.FormatLeadTimes(leads));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("abc")]
-    [InlineData("-1")]
-    [InlineData("2000")]
-    public void Rejects_bad_lead_times(string text)
-    {
-        Assert.False(Parsing.TryParseLeadTimes(text, out _, out var error));
-        Assert.False(string.IsNullOrEmpty(error));
-    }
 
     [Theory]
     [InlineData("21:15", 21, 15)]

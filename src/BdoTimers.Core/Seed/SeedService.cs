@@ -7,7 +7,7 @@ namespace BdoTimers.Core.Seed;
 
 public static class SeedService
 {
-    public const string ResourceName = "BdoTimers.Core.Data.bosses.eu.json";
+    const string ResourceName = "BdoTimers.Core.Data.bosses.eu.json";
 
     public static BossSeed LoadEmbedded()
     {
