@@ -11,4 +11,9 @@
     <DefineConstants>Version=$(Version);MsiPath=$(MsiPath);SetupUiDir=$(SetupUiDir)</DefineConstants>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- For bal:Overridable, which the setup window's API reads. -->
+    <PackageReference Include="WixToolset.Bal.wixext" Version="5.0.2" />
+  </ItemGroup>
+
 </Project>

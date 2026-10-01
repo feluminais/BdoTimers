@@ -19,6 +19,9 @@ internal sealed class SetupFlow
     /// <summary>HRESULT_FROM_WIN32(ERROR_CANCELLED): a cancelled apply, and a cancelled folder picker.</summary>
     internal const int ErrorCancelled = unchecked((int)0x800704C7);
 
+    /// <summary>The bundle variable the MSI's INSTALLROOT comes from.</summary>
+    const string InstallRootVariable = "InstallRoot";
+
     readonly IEngine _engine;
     readonly IBootstrapperCommand _command;
     volatile bool _cancel;
@@ -59,6 +62,10 @@ internal sealed class SetupFlow
             }
             Finished?.Invoke(e.Status, _lastError);
         };
+
+        // Sets the variables the bundle marks overridable (InstallRoot) from the command line; the engine leaves that
+        // to the bootstrapper application.
+        command.ParseCommandLine().SetOverridableVariables(new BootstrapperApplicationData().Bundle.OverridableVariables, engine);
     }
 
     /// <summary>Raised with the detect status; <see cref="IsInstalled"/> is known by then.</summary>
@@ -84,12 +91,19 @@ internal sealed class SetupFlow
     public static bool IsCancelled(int status) => status == ErrorCancelled;
 
     /// <summary>InstallRoot from the command line if given, else the installed one, else %LocalAppData%\Programs.</summary>
-    public string InitialInstallRoot =>
-        _command.ParseCommandLine().Variables
-            .FirstOrDefault(v => string.Equals(v.Key, "InstallRoot", StringComparison.OrdinalIgnoreCase)).Value
-        is { Length: > 0 } fromCommandLine
-            ? fromCommandLine
-            : InstalledRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs");
+    public string InitialInstallRoot
+    {
+        get
+        {
+            // The quote goes: Windows reads "D:\My Games\" as D:\My Games" because \" escapes it.
+            var fromCommandLine = _engine.ContainsVariable(InstallRootVariable)
+                ? _engine.GetVariableString(InstallRootVariable).Trim().Trim('"')
+                : "";
+            return fromCommandLine.Length > 0
+                ? fromCommandLine
+                : InstalledRoot ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs");
+        }
+    }
 
     /// <summary>The folder holding the BdoTimers folder, as the package recorded it; null when not installed.</summary>
     public static string? InstalledRoot
@@ -122,8 +136,8 @@ internal sealed class SetupFlow
         _cancel = false;
         _lastError = null;
         UndeletedData = null;
-        if (installRoot is not null)
-            _engine.SetVariableString("InstallRoot", installRoot.TrimEnd('\\') + "\\", false);
+        // Repair and uninstall keep the recorded folder even when the command line names another.
+        _engine.SetVariableString(InstallRootVariable, installRoot is null ? "" : installRoot.TrimEnd('\\') + "\\", false);
         _engine.Plan(action);
     }
 

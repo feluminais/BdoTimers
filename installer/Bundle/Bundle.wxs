@@ -1,4 +1,5 @@
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal">
 
   <!-- Per-user like the MSI it chains, so setup never asks for admin rights. -->
   <Bundle Name="BDO Timers" Manufacturer="feluminais" Version="$(var.Version)"
@@ -10,9 +11,10 @@
       <Payload SourceFile="$(var.SetupUiDir)\mbanative.dll" />
     </BootstrapperApplication>
 
-    <!-- The folder that gets a BdoTimers folder inside it, set by the setup window (which also reads
-         InstallRoot=... from its command line). Empty lets the MSI reuse the remembered folder. -->
-    <Variable Name="InstallRoot" />
+    <!-- The folder that gets a BdoTimers folder inside it: InstallRoot=... on the command line (the name's case must
+         match), or the setup window's choice. Empty lets the MSI reuse the remembered folder. bal:CommandLineVariables
+         isn't used: WiX 5.0.2 writes it in a form its managed API can't read. -->
+    <Variable Name="InstallRoot" bal:Overridable="yes" />
 
     <Chain>
       <MsiPackage Id="BdoTimersMsi" SourceFile="$(var.MsiPath)">
