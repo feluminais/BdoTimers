@@ -230,6 +230,31 @@
         </Style.Triggers>
     </Style>
 
+    <!-- A tile that is one button: a dark field whose hairline brightens on hover and focus -->
+    <Style x:Key="TileButton" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{StaticResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" ClipToBounds="True">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="TabButton" TargetType="RadioButton">
         <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
         <Setter Property="FontSize" Value="13" />
@@ -303,7 +328,7 @@
         </Setter>
     </Style>
 
-    <!-- Thin scrollbars -->
+    <!-- Thin scrollbars; only vertical ones are ever shown -->
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">
             <Setter.Value>
@@ -343,25 +368,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Style.Triggers>
-            <Trigger Property="Orientation" Value="Horizontal">
-                <Setter Property="Width" Value="Auto" />
-                <Setter Property="MinWidth" Value="0" />
-                <Setter Property="Height" Value="4" />
-                <Setter Property="MinHeight" Value="4" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ScrollBar">
-                            <Track x:Name="PART_Track">
-                                <Track.DecreaseRepeatButton><RepeatButton Style="{StaticResource ScrollPage}" Command="ScrollBar.PageLeftCommand" /></Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton><RepeatButton Style="{StaticResource ScrollPage}" Command="ScrollBar.PageRightCommand" /></Track.IncreaseRepeatButton>
-                                <Track.Thumb><Thumb Style="{StaticResource ScrollThumb}" /></Track.Thumb>
-                            </Track>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <!-- Menus and tooltips -->
