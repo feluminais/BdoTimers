@@ -32,19 +32,33 @@ public sealed partial class CustomViewModel
     [RelayCommand]
     void NewTimer() => _host.OpenPanel(new NewTimerPanelViewModel(_services, _host));
 
-    /// <summary>Updates tiles in place when the set of timers is unchanged, so hover state and visuals survive.</summary>
+    /// <summary>
+    /// Inserts, moves and removes tiles to match the timers and updates the others in place, so a new or finished timer
+    /// doesn't rebuild every tile and hover state and visuals survive.
+    /// </summary>
     void Sync()
     {
         var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn).OrderBy(t => Presets.Rank(t.Preset)).ToList();
-        var tiles = Items.OfType<TimerTileViewModel>().ToList();
         var now = DateTimeOffset.UtcNow;
-        if (tiles.Select(t => t.Id).SequenceEqual(timers.Select(t => t.Id)))
+        if (Items.Count == 0) Items.Add(this);
+        for (var i = 0; i < timers.Count; i++)
         {
-            for (var i = 0; i < timers.Count; i++) tiles[i].SetTimer(timers[i], now);
-            return;
+            var at = IndexOfTile(timers[i].Id, from: i);
+            if (at < 0) Items.Insert(i, new TimerTileViewModel(timers[i], _services, _host, now));
+            else
+            {
+                if (at != i) Items.Move(at, i);
+                ((TimerTileViewModel)Items[i]).SetTimer(timers[i], now);
+            }
         }
-        Items.Clear();
-        foreach (var timer in timers) Items.Add(new TimerTileViewModel(timer, _services, _host, now));
-        Items.Add(this);
+        // Left between the tiles and the "+ New timer" tile: the tiles of deleted timers.
+        while (Items.Count > timers.Count + 1) Items.RemoveAt(timers.Count);
+    }
+
+    int IndexOfTile(Guid id, int from)
+    {
+        for (var i = from; i < Items.Count; i++)
+            if (Items[i] is TimerTileViewModel tile && tile.Id == id) return i;
+        return -1;
     }
 }

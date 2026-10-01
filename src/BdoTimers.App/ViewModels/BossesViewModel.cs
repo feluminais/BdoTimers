@@ -18,6 +18,10 @@ public sealed partial class BossesViewModel : ObservableObject
     readonly AppServices _services;
     readonly IPanelHost _host;
     object? _gridKey;
+    AppData? _gridData;
+    string _gridContent = "";
+    DateOnly _gridWeekStart;
+    DateOnly _gridToday;
     /// <summary>The data the tiles last showed; cleared each minute so their next-spawn times move on.</summary>
     AppData? _tilesData;
     int _tooltipMinute = -1;
@@ -46,12 +50,13 @@ public sealed partial class BossesViewModel : ObservableObject
         Next.Update(board.Next, now, _services.Art, OpenBoss);
         FollowedBy.Update(board.FollowedBy, now, _services.Art, OpenBoss);
 
-        // The grid only changes when the data, the next spawn or the local day does.
-        var key = (data, board.Next?.AtUtc, DateOnly.FromDateTime(now.LocalDateTime));
+        // The grid only changes with what it shows of the bosses, the next spawn or the local day; a countdown or a horse
+        // registration starting leaves it alone.
+        var key = (GridContent(data), board.Next?.AtUtc, DateOnly.FromDateTime(now.LocalDateTime));
         if (!key.Equals(_gridKey))
         {
             _gridKey = key;
-            RebuildGrid(data, now);
+            ShowGrid(data, now);
         }
         if (now.Minute != _tooltipMinute)
         {
@@ -82,10 +87,41 @@ public sealed partial class BossesViewModel : ObservableObject
         foreach (var boss in bosses) Tiles.Add(new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now));
     }
 
-    void RebuildGrid(AppData data, DateTimeOffset now)
+    /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
+    /// and own-settings marks, and their skipped spawns.</summary>
+    string GridContent(AppData data)
+    {
+        if (ReferenceEquals(data, _gridData)) return _gridContent;
+        var bosses = data.Timers.Where(t => t.IsBuiltIn && t.Scheduled is not null).ToList();
+        var ids = bosses.Select(b => b.Id).ToHashSet();
+        _gridData = data;
+        return _gridContent = string.Join('\n', bosses
+            .Select(b => $"{b.Id}|{b.Name}|{b.Enabled}|{b.Alerts.OverridesDefaults}|{b.Scheduled!.TimeZoneId}|"
+                + string.Join(",", b.Scheduled.Slots.Select(s => $"{s.Day} {s.Time.Ticks}")))
+            .Concat(data.Muted.Where(m => ids.Contains(m.TimerId)).Select(m => $"{m.TimerId}@{m.OccurrenceUtc.UtcTicks}")));
+    }
+
+    /// <summary>
+    /// A passed spawn, a skip or a boss's alerts turned on or off only change the cells' states, which are updated in
+    /// place; the grid's ~100 buttons and their menus are rebuilt only when its rows, bosses or days change.
+    /// </summary>
+    void ShowGrid(AppData data, DateTimeOffset now)
     {
         var grid = WeekGrid.Build(data, now, TimeZoneInfo.Local, _services.Boards);
         var today = DateOnly.FromDateTime(now.LocalDateTime);
+        _tooltipMinute = -1;
+        if (grid.WeekStart == _gridWeekStart && today == _gridToday && SameCells(grid))
+        {
+            foreach (var (row, rowModel) in grid.Rows.Zip(Rows))
+            foreach (var (entries, cell) in row.Days.Zip(rowModel.Cells))
+            {
+                cell.IsNext = entries.Any(e => e.State == CellState.Next);
+                foreach (var (entry, model) in entries.Zip(cell.Entries)) model.Show(entry);
+            }
+            return;
+        }
+        _gridWeekStart = grid.WeekStart;
+        _gridToday = today;
         Days.Clear();
         for (var i = 0; i < 7; i++)
         {
@@ -99,10 +135,18 @@ public sealed partial class BossesViewModel : ObservableObject
                 grid.WeekStart.AddDays(i) == today,
                 entries.Any(e => e.State == CellState.Next),
                 entries.Select(e => new GridEntryViewModel(e, _services.Timers, OpenBoss)).ToList())).ToList();
-            Rows.Add(new GridRowViewModel(row.Time.ToString("HH:mm", CultureInfo.InvariantCulture), cells));
+            Rows.Add(new GridRowViewModel(RowTime(row), cells));
         }
-        _tooltipMinute = -1;
     }
+
+    /// <summary>The same rows as shown, each cell with the same bosses at the same spawns.</summary>
+    bool SameCells(WeekGridState grid) =>
+        grid.Rows.Count == Rows.Count
+        && grid.Rows.Zip(Rows).All(r => RowTime(r.First) == r.Second.Time
+            && r.First.Days.Zip(r.Second.Cells).All(c => c.First.Count == c.Second.Entries.Count
+                && c.First.Zip(c.Second.Entries).All(e => e.Second.Shows(e.First))));
+
+    static string RowTime(GridRow row) => row.Time.ToString("HH:mm", CultureInfo.InvariantCulture);
 
     void OpenBoss(Guid id)
     {
@@ -150,35 +194,57 @@ public sealed record DayHeaderViewModel(string Label, bool IsToday);
 
 public sealed record GridRowViewModel(string Time, IReadOnlyList<GridCellViewModel> Cells);
 
-public sealed record GridCellViewModel(bool IsToday, bool IsNext, IReadOnlyList<GridEntryViewModel> Entries);
+public sealed partial class GridCellViewModel(bool isToday, bool isNext, IReadOnlyList<GridEntryViewModel> entries)
+    : ObservableObject
+{
+    [ObservableProperty] private bool _isNext = isNext;
+
+    public bool IsToday { get; } = isToday;
+    public IReadOnlyList<GridEntryViewModel> Entries { get; } = entries;
+}
 
 public sealed partial class GridEntryViewModel : ObservableObject
 {
-    readonly GridEntry _entry;
+    GridEntry _entry;
 
     [ObservableProperty] private string _tooltip = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSkip), nameof(SkipLabel))]
+    private CellState _state;
 
     public string Name => _entry.Boss.Name;
     /// <summary>Marks bosses with their own alert times or sound, which don't follow the defaults in Settings.</summary>
     public bool OwnSettings => _entry.Boss.Alerts.OverridesDefaults;
-    public CellState State => _entry.State;
-    public bool CanSkip => _entry.State is CellState.Upcoming or CellState.Next or CellState.Skipped;
-    public string SkipLabel => _entry.State == CellState.Skipped ? "Unskip" : "Skip this spawn";
+    public bool CanSkip => State is CellState.Upcoming or CellState.Next or CellState.Skipped;
+    public string SkipLabel => State == CellState.Skipped ? "Unskip" : "Skip this spawn";
     public IRelayCommand OpenCommand { get; }
     public IRelayCommand ToggleSkipCommand { get; }
 
     public GridEntryViewModel(GridEntry entry, Core.Storage.TimerStore store, Action<Guid> open)
     {
         _entry = entry;
+        State = entry.State;
         OpenCommand = new RelayCommand(() => open(entry.Boss.Id));
         ToggleSkipCommand = new RelayCommand(() => store.ToggleMute(entry.Boss.Id, entry.AtUtc));
+    }
+
+    /// <summary>Whether <paramref name="entry"/> is this boss at this spawn and looks the same apart from its state.</summary>
+    public bool Shows(GridEntry entry) =>
+        entry.Boss.Id == _entry.Boss.Id && entry.AtUtc == _entry.AtUtc
+        && entry.Boss.Name == Name && entry.Boss.Alerts.OverridesDefaults == OwnSettings;
+
+    /// <summary>Takes the new state of an entry it <see cref="Shows"/>.</summary>
+    public void Show(GridEntry entry)
+    {
+        _entry = entry;
+        State = entry.State;
     }
 
     public void RefreshTooltip(DateTimeOffset now)
     {
         var when = _entry.AtUtc.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture);
         var relative = _entry.AtUtc > now ? $"in {DurationFormat.Countdown(_entry.AtUtc - now)}" : "passed";
-        var note = _entry.State switch
+        var note = State switch
         {
             CellState.Skipped => " · skipped",
             CellState.Unfollowed => " · alerts off",
