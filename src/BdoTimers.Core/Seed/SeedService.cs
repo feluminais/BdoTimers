@@ -35,11 +35,15 @@ public static class SeedService
         }).ToList();
 
     /// <summary>A new install starts with the presets and the accepted EU timetable.</summary>
-    public static AppData NewData(BossSeed seed) => BossRegions.WithState(new AppData
+    public static AppData NewData(BossSeed seed)
     {
-        DataVersion = DataMigrations.Current,
-        Timers = [.. Presets.Create(), Presets.CreateHorseRegistration(), .. ToTimers(seed, new AlertConfig())],
-    }, new BossRegionState { SeedApplied = true, AcceptedBossTimetable = seed });
+        var presets = Presets.Create();
+        return BossRegions.WithState(new AppData
+        {
+            DataVersion = DataMigrations.Current,
+            Timers = [.. presets.Take(2), Presets.CreateHorseRegistration(), .. presets.Skip(2), .. ToTimers(seed, new AlertConfig())],
+        }, new BossRegionState { SeedApplied = true, AcceptedBossTimetable = seed });
+    }
 
     /// <summary>Copies the seed into the user's timers once; afterwards the user's copy is authoritative.</summary>
     public static AppData ApplyIfNeeded(AppData data, BossSeed seed, AlertConfig alerts, string? regionId = null)

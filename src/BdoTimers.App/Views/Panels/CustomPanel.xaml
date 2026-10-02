@@ -121,16 +121,16 @@
                 </Border>
 
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="Weekly times" Style="{StaticResource SectionText}" />
+                    <TextBlock Text="{Binding WeeklyHeading}" Style="{StaticResource SectionText}" />
                     <panels:SlotList DataContext="{Binding Slots}" />
-                    <Border Style="{StaticResource Row}">
+                    <Border Style="{StaticResource Row}" Visibility="{Binding HasWeeklyDateRange, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>
                             <TextBlock Text="Start date" Style="{StaticResource RowLabel}" Width="120" />
                             <controls:DateInput Text="{Binding StartDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
                                                 HasError="{Binding StartDateInvalid}" ToolTip="YYYY-MM-DD; blank for no limit" AutomationProperties.Name="Start date" />
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource Row}">
+                    <Border Style="{StaticResource Row}" Visibility="{Binding HasWeeklyDateRange, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>
                             <TextBlock Text="End date" Style="{StaticResource RowLabel}" Width="120" />
                             <controls:DateInput Text="{Binding EndDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"

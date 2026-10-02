@@ -29,6 +29,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
+    [ObservableProperty] private bool _hasNextOccurrence;
     [ObservableProperty] private bool _canStartHorse;
     [ObservableProperty] private string _horseStartTip = "Start registration";
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
@@ -132,10 +133,12 @@ public sealed partial class TimerTileViewModel : ObservableObject
         // Dated and weekly timers: keep the next occurrence until it passes or the saved schedule changes.
         if (_nextOccurrence is not { } cached || cached <= now)
             _nextOccurrence = OccurrenceSource.Next(_timer, now);
+        HasNextOccurrence = IsWeekly && _nextOccurrence is not null;
         if (_nextOccurrence is not { } next)
         {
             var state = _timer.Kind == TimerKind.OneTime ? "Finished"
-                : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired" : "No times set";
+                : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired"
+                : _timer.Preset is Presets.GuildBosses or Presets.GuildWar ? "Not set" : "No times set";
             (Digits, Detail, IsDimmed) = ("--:--:--", off + state, true);
             return;
         }
