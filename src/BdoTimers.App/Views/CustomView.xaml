@@ -37,7 +37,7 @@
         <DataTemplate DataType="{x:Type vm:TimerTileViewModel}">
             <Grid>
                 <Button Style="{StaticResource TileButton}" Height="100" Margin="0,0,10,10" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}"
-                        ContextMenuService.IsEnabled="{Binding IsWeekly}">
+                        ContextMenuService.IsEnabled="{Binding HasNextOccurrence}">
                     <Button.ContextMenu>
                         <ContextMenu>
                             <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipNextCommand}" />
