@@ -152,7 +152,7 @@
                         <DockPanel>
                             <TextBlock Text="Time" Style="{StaticResource RowLabel}" Width="120" />
                             <TextBox Text="{Binding EventTimeText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
-                                     controls:Ui.HasError="{Binding EventTimeInvalid}" ToolTip="HH:mm" AutomationProperties.Name="Event time" />
+                                     controls:Ui.HasError="{Binding EventTimeInvalid}" controls:Ui.TimeEntry="True" ToolTip="HH:mm" AutomationProperties.Name="Event time" />
                         </DockPanel>
                     </Border>
                 </StackPanel>

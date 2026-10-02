@@ -142,6 +142,21 @@ public class TextTests
     [InlineData("")]
     public void Rejects_bad_times(string text) => Assert.False(Parsing.TryParseTime(text, out _));
 
+    [Theory]
+    [InlineData("2200", "22:00")]
+    [InlineData("220", "22:0")]
+    [InlineData("0930", "09:30")]
+    [InlineData("930", "9:30")]
+    [InlineData("93", "9:3")]
+    [InlineData("22", "22")]
+    [InlineData("9", "9")]
+    [InlineData("", "")]
+    [InlineData("22:00", "22:00")]
+    [InlineData("9:3", "9:3")]
+    [InlineData("2a00", "2a00")]
+    public void Adds_the_colon_typed_digits_imply(string text, string expected) =>
+        Assert.Equal(expected, Parsing.AddTimeColon(text));
+
     [Fact]
     public void Parses_minutes_in_range()
     {
