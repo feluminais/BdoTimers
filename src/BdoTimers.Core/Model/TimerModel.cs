@@ -14,6 +14,8 @@ public sealed record ScheduledSpec
     /// <summary>Inclusive limits on the slot's date in this schedule's time zone.</summary>
     public DateOnly? StartDate { get; init; }
     public DateOnly? EndDate { get; init; }
+    /// <summary>A schedule that is off has no occurrences; it keeps its slots for when it is turned back on.</summary>
+    public bool Off { get; init; }
 }
 
 public sealed record OneTimeSpec

@@ -13,7 +13,7 @@ public static class OccurrenceSource
 
     public static IEnumerable<DateTimeOffset> From(TimerDef timer, DateTimeOffset fromUtc)
     {
-        if (timer.Kind == TimerKind.Scheduled && timer.Scheduled is { } spec)
+        if (timer.Kind == TimerKind.Scheduled && timer.Scheduled is { Off: false } spec)
             return ScheduleMath.From(spec, fromUtc);
 
         if (timer.Kind == TimerKind.OneTime && timer.OneTime is { Finished: false } oneTime)

@@ -36,7 +36,7 @@ public class JsonRoundTripTests
                 Scheduled = new ScheduledSpec
                 {
                     TimeZoneId = "Europe/Berlin", Slots = [new Slot(DayOfWeek.Monday, new TimeOnly(0, 15))],
-                    StartDate = new(2026, 9, 1), EndDate = new(2026, 12, 31),
+                    StartDate = new(2026, 9, 1), EndDate = new(2026, 12, 31), Off = true,
                 },
                 OneTime = new OneTimeSpec { Date = new(2026, 10, 3), Time = new(20, 0), TimeZoneId = "Europe/Berlin", Finished = true },
                 Countdown = new CountdownSpec

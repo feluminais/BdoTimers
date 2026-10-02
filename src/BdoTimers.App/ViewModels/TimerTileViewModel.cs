@@ -137,6 +137,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         if (_nextOccurrence is not { } next)
         {
             var state = _timer.Kind == TimerKind.OneTime ? "Finished"
+                : _timer.Scheduled is { Off: true } ? "Off"
                 : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired"
                 : _timer.Preset is Presets.GuildBosses or Presets.GuildWar ? "Not set" : "No times set";
             (Digits, Detail, IsDimmed) = ("--:--:--", off + state, true);

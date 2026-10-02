@@ -11,7 +11,8 @@
                     <Border Style="{StaticResource Row}" MinHeight="34" Padding="0,4">
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="10" ToolTip="Remove"
-                                    Command="{Binding DataContext.RemoveCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                                    Command="{Binding DataContext.RemoveCommand, ElementName=Root}" CommandParameter="{Binding}"
+                                    Visibility="{Binding DataContext.IsFixed, ElementName=Root, Converter={StaticResource InverseBoolToVisibility}}" />
                             <controls:CycleSelector ItemsSource="{Binding Days}" SelectedItem="{Binding Day}" ValueWidth="96" />
                             <TextBox Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}" Width="64" Margin="18,0,0,0"
                                      HorizontalAlignment="Left" VerticalAlignment="Center" controls:Ui.HasError="{Binding Invalid}"

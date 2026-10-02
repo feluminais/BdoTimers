@@ -84,6 +84,12 @@
                     </DockPanel>
                 </Border>
 
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Active"
+                                        Visibility="{Binding HasActive, Converter={StaticResource BoolToVisibility}}">
+                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Active}" ValueWidth="110"
+                                            AutomationProperties.Name="Active" />
+                </HeaderedContentControl>
+
                 <StackPanel Visibility="{Binding IsFarm, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Crop growth" Style="{StaticResource SectionText}"
                                ToolTip="Online growth estimate. Pause while offline; crop care can delay harvest." />
@@ -120,7 +126,7 @@
                     </DockPanel>
                 </Border>
 
-                <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Visibility="{Binding ShowsWeekly, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="{Binding WeeklyHeading}" Style="{StaticResource SectionText}" />
                     <panels:SlotList DataContext="{Binding Slots}" />
                     <Border Style="{StaticResource Row}" Visibility="{Binding HasWeeklyDateRange, Converter={StaticResource BoolToVisibility}}">

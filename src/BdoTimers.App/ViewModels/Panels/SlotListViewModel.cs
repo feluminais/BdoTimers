@@ -15,6 +15,8 @@ public sealed partial class SlotListViewModel : ObservableObject
 
     public ObservableCollection<SlotRowViewModel> Rows { get; } = [];
     public bool MayAddTime => _maximum is null || Rows.Count < _maximum;
+    /// <summary>Always the same number of times, so rows have no remove button.</summary>
+    public bool IsFixed => _minimum == _maximum;
 
     public SlotListViewModel(IEnumerable<Slot> slots, Action<IReadOnlyList<Slot>> apply, int minimum = 1, int? maximum = null)
     {

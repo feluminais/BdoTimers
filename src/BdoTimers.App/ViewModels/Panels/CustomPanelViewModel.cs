@@ -39,6 +39,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _endDateInvalid;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid))] private string _scheduleError = "";
     [ObservableProperty] private Choice _alertsOn;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ShowsWeekly), nameof(HasTimeZone))] private Choice _active;
     [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private Hotkey? _controlHotkey;
 
@@ -63,10 +64,13 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     ];
     public bool IsStopwatch { get; }
     public bool IsWeekly { get; }
+    /// <summary>Guild bosses is turned on and off instead of losing its one weekly time.</summary>
+    public bool HasActive { get; }
+    public bool ShowsWeekly => IsWeekly && Active.IsOn;
     public string WeeklyHeading => Timer.Preset == Presets.GuildBosses ? "Weekly time" : "Weekly times";
     public bool HasWeeklyDateRange => IsWeekly && Timer.Preset is not (Presets.GuildBosses or Presets.GuildWar);
     public bool IsOneTime { get; }
-    public bool HasTimeZone => IsWeekly || IsOneTime;
+    public bool HasTimeZone => ShowsWeekly || IsOneTime;
     public DateTime Today => TimeZoneInfo.ConvertTime(_services.Clock.UtcNow,
         TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId ?? "UTC")).Date;
     public Func<DateTime> TodayProvider => () => Today;
@@ -92,6 +96,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _alertsOn = Choice.For(timer.Enabled);
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsWeekly = timer.Kind == TimerKind.Scheduled;
+        HasActive = IsWeekly && timer.Preset == Presets.GuildBosses;
+        _active = Choice.For(timer.Scheduled is not { Off: true });
         IsOneTime = timer.Kind == TimerKind.OneTime;
         IsFarm = timer.Preset == Presets.Farm && IsCountdown;
         IsHorseTemplate = timer.Preset == Presets.HorseRegistration;
@@ -241,6 +247,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     }
 
     partial void OnAlertsOnChanged(Choice value) => Modify(t => t with { Enabled = value.IsOn });
+
+    partial void OnActiveChanged(Choice value) =>
+        Modify(t => t.Scheduled is { } spec ? t with { Scheduled = spec with { Off = !value.IsOn } } : t);
 
     [RelayCommand]
     void ChoosePicture()
