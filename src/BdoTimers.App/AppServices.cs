@@ -139,25 +139,16 @@ public sealed class AppServices : IDisposable
         UiClock.Start();
         Overlay.Start();
         foreach (var path in RecoveredFiles)
+            _toast.ShowInfo("A data file was damaged",
+                $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
+        // Marked as shown only once it was, so a failure brings it back at the next start.
+        if (!Settings.Current.NotificationHintShown
+            && _toast.ShowInfo("Let alerts through while gaming",
+                "Add BDO Timers to Settings → Notifications → Set priority notifications.",
+                withNotificationSettingsButton: true))
         {
-            try
-            {
-                _toast.ShowInfo("A data file was damaged",
-                    $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
-            }
-            catch (Exception ex) { Log.Error($"Damaged file notice failed for {path}", ex); }
-        }
-        if (!Settings.Current.NotificationHintShown)
-        {
-            // Marked as shown only once it was, so a failure brings it back at the next start.
-            try
-            {
-                _toast.ShowInfo("Let alerts through while gaming",
-                    "Add BDO Timers to Settings → Notifications → Set priority notifications.",
-                    withNotificationSettingsButton: true);
-                Settings.Update(s => s with { NotificationHintShown = true });
-            }
-            catch (Exception ex) { Log.Error("Notification hint failed", ex); }
+            try { Settings.Update(s => s with { NotificationHintShown = true }); }
+            catch (Exception ex) { Log.Error("Couldn't save that the notification hint was shown", ex); }
         }
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
@@ -174,14 +165,17 @@ public sealed class AppServices : IDisposable
         var data = Timers.Current;
         var seed = _seeds[data.SelectedBossRegion];
         var timetableRevision = TimetableUpdates.Revision(seed);
-        if (TimetableUpdates.Review(data, seed).NeedsReview && BossRegions.State(data).TimetableNoticeRevision != timetableRevision)
+        if (TimetableUpdates.Review(data, seed).NeedsReview
+            && BossRegions.State(data).TimetableNoticeRevision != timetableRevision
+            && _toast.ShowInfo($"Review the {BossRegions.Find(data.SelectedBossRegion).ShortLabel} timetable",
+                "Bundled spawn times can be reviewed in Settings → Bosses."))
         {
             try
             {
-                _toast.ShowInfo($"Review the {BossRegions.Find(data.SelectedBossRegion).ShortLabel} timetable", "Bundled spawn times can be reviewed in Settings → Bosses.");
-                Timers.Update(d => BossRegions.WithState(d, BossRegions.State(d, data.SelectedBossRegion) with { TimetableNoticeRevision = timetableRevision }));
+                Timers.Update(d => BossRegions.WithState(d,
+                    BossRegions.State(d, data.SelectedBossRegion) with { TimetableNoticeRevision = timetableRevision }));
             }
-            catch (Exception ex) { Log.Error("Timetable notice failed", ex); }
+            catch (Exception ex) { Log.Error("Couldn't save that the timetable notice was shown", ex); }
         }
     }
 
@@ -244,10 +238,7 @@ public sealed class AppServices : IDisposable
         var result = Timers.StartHorseRegistration(Clock.UtcNow);
         if (result == HorseStartResult.Started && announce) _alerts.Say("Horse registration time started");
         else if (result == HorseStartResult.LimitReached)
-        {
-            try { _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}."); }
-            catch (Exception ex) { Log.Error("Horse registration limit notice failed", ex); }
-        }
+            _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}.");
         return result;
     }
 
@@ -355,8 +346,7 @@ public sealed class AppServices : IDisposable
     public void NotifyRestore(string? previousDirectory)
     {
         Log.Info($"Backup restored; previous data: {previousDirectory ?? "none"}");
-        try { _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder."); }
-        catch (Exception ex) { Log.Error("Couldn't show the restore notice", ex); }
+        _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder.");
     }
 
     public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig()));
