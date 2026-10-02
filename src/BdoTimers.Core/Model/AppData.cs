@@ -5,6 +5,7 @@ namespace BdoTimers.Core.Model;
 
 public readonly record struct MutedOccurrence(Guid TimerId, DateTimeOffset OccurrenceUtc);
 
+[Storage.SavedVersion(nameof(AppData.DataVersion), Storage.DataMigrations.Current)]
 public sealed record AppData
 {
     public IReadOnlyList<TimerDef> Timers { get; init; } = [];

@@ -1,11 +1,22 @@
 using System.Globalization;
+using System.Reflection;
 using System.Text.Json;
 using BdoTimers.Core.Json;
-using BdoTimers.Core.Model;
 
 namespace BdoTimers.Core.Storage;
 
 public sealed record LoadResult<T>(T Value, string? RecoveredBackupPath);
+
+/// <summary>
+/// Names the saved model's version property and the newest version this build reads; <see cref="JsonFileStore{T}"/>
+/// refuses a file whose version is higher instead of loading it.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+public sealed class SavedVersionAttribute(string property, int current) : Attribute
+{
+    public string Property { get; } = property;
+    public int Current { get; } = current;
+}
 
 public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) where T : class
 {
@@ -13,7 +24,8 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
 
     /// <summary>
     /// Invalid JSON or saved models are renamed to "*.bad-&lt;timestamp&gt;" and replaced with defaults.
-    /// Newer saved formats and filesystem failures propagate without changing the file.
+    /// A file from a newer version (see <see cref="SavedVersionAttribute"/>) and filesystem failures propagate without
+    /// changing the file.
     /// </summary>
     public LoadResult<T> Load()
     {
@@ -44,12 +56,10 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
 
     void CheckVersion(JsonElement root)
     {
-        var version = typeof(T) == typeof(AppData) ? (Name: "dataVersion", Current: DataMigrations.Current)
-            : typeof(T) == typeof(TodoData) ? (Name: "defaultsVersion", Current: TodoData.CurrentDefaultsVersion)
-            : (Name: "", Current: 0);
-        if (version.Name.Length == 0 || root.ValueKind != JsonValueKind.Object) return;
+        if (typeof(T).GetCustomAttribute<SavedVersionAttribute>() is not { } version
+            || root.ValueKind != JsonValueKind.Object) return;
         foreach (var property in root.EnumerateObject())
-            if (property.Name.Equals(version.Name, StringComparison.OrdinalIgnoreCase)
+            if (property.Name.Equals(version.Property, StringComparison.OrdinalIgnoreCase)
                 && IsNewer(property.Value, version.Current))
                 throw new UnsupportedDataVersionException(FilePath);
     }
