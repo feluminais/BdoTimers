@@ -97,7 +97,9 @@
                         <StackPanel>
                             <TextBlock Text="Sections" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
                             <WrapPanel>
-                                <ToggleButton Style="{StaticResource Chip}" Content="Clock" IsChecked="{Binding ShowClock}" />
+                                <ToggleButton Style="{StaticResource Chip}" Content="Local time" IsChecked="{Binding ShowClock}" />
+                                <ToggleButton Style="{StaticResource Chip}" Content="Server time" IsChecked="{Binding ShowServerTime}" />
+                                <ToggleButton Style="{StaticResource Chip}" Content="In-game time" IsChecked="{Binding ShowGameTime}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Previous boss" IsChecked="{Binding ShowPrevious}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Next boss" IsChecked="{Binding ShowNext}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Farm" IsChecked="{Binding ShowFarm}" />
@@ -106,6 +108,14 @@
                                 <ToggleButton Style="{StaticResource Chip}" Content="Custom timers" IsChecked="{Binding ShowCustomTimers}" />
                             </WrapPanel>
                         </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Row}" Visibility="{Binding ShowServerTime, Converter={StaticResource BoolToVisibility}}">
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="{Binding ServerRegion}" VerticalAlignment="Center"
+                                    Command="{Binding OpenRegionSettingsCommand}" ToolTip="Change region in Settings"
+                                    AutomationProperties.Name="Server time region" />
+                            <TextBlock Text="Server time" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
                     </Border>
 
                     <TextBlock Text="Background" Style="{StaticResource SectionText}" />

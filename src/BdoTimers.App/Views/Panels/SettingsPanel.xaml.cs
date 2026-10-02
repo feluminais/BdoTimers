@@ -4,6 +4,8 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
+using BdoTimers.App.ViewModels.Panels;
 
 namespace BdoTimers.App.Views.Panels;
 
@@ -12,9 +14,18 @@ public partial class SettingsPanel : UserControl
     public SettingsPanel()
     {
         InitializeComponent();
-        Loaded += (_, _) => ApplySearch();
+        Loaded += (_, _) =>
+        {
+            ApplySearch();
+            if (DataContext is SettingsPanelViewModel { OpenAtRegion: true })
+                Dispatcher.BeginInvoke(DispatcherPriority.Loaded, ScrollToBosses);
+        };
         DataContextChanged += (_, _) => Dispatcher.BeginInvoke(ApplySearch);
     }
+
+    /// <summary>Puts the Bosses heading, with Region right under it, at the top of the list.</summary>
+    void ScrollToBosses() =>
+        Scroller.ScrollToVerticalOffset(BossesHeading.TransformToAncestor(SettingsItems).Transform(default).Y);
 
     void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {

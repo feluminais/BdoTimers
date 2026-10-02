@@ -47,7 +47,7 @@
             <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
         </DockPanel>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+        <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <TextBlock x:Name="NoResults" Text="No settings found" Foreground="{DynamicResource SubtleBrush}"
                            Margin="0,12,0,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
@@ -164,7 +164,7 @@
                             ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
                 </Border>
 
-                <TextBlock Text="Bosses" Style="{StaticResource SearchHeading}" />
+                <TextBlock x:Name="BossesHeading" Text="Bosses" Style="{StaticResource SearchHeading}" />
                 <Border Style="{StaticResource SearchRow}">
                     <StackPanel>
                         <DockPanel>

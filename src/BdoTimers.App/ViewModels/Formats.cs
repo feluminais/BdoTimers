@@ -13,6 +13,12 @@ public static class Formats
     /// <summary>A moment as a local time: "03:00".</summary>
     public static string Time(DateTimeOffset at) => at.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
 
+    /// <summary>A moment as a clock at its own offset shows it: "03:00".</summary>
+    public static string ZoneTime(DateTimeOffset at) => at.ToString("HH:mm", CultureInfo.InvariantCulture);
+
+    /// <summary>A time of day: "03:00".</summary>
+    public static string Time(TimeOnly at) => at.ToString("HH:mm", CultureInfo.InvariantCulture);
+
     /// <summary>Horse registrations against their limit: "3 of 10 active".</summary>
     public static string HorseRegistrations(int active) => $"{active} of {TimerStore.MaxHorseRegistrations} active";
 

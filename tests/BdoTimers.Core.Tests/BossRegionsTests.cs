@@ -28,6 +28,12 @@ public class BossRegionsTests
         """, JsonDefaults.Options)!;
 
     [Fact]
+    public void Server_time_zone_is_the_one_the_timetable_is_written_in()
+    {
+        Assert.All(BossRegions.All, r => Assert.Equal(SeedService.LoadEmbedded(r.Id).TimeZoneId, r.TimeZoneId));
+    }
+
+    [Fact]
     public void Board_and_week_grid_include_only_selected_region()
     {
         var data = Both("eu");

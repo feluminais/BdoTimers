@@ -7,6 +7,9 @@ namespace BdoTimers.Core.Scheduling;
 public sealed record OverlaySnapshot
 {
     public bool Clock { get; init; }
+    /// <summary>Now in the selected boss region's server time zone.</summary>
+    public DateTimeOffset? ServerTime { get; init; }
+    public GameTime? GameTime { get; init; }
     public SpawnGroup? Previous { get; init; }
     public SpawnGroup? Next { get; init; }
     public IReadOnlyList<UpcomingItem> PopUps { get; init; } = [];
@@ -20,10 +23,10 @@ public sealed record OverlaySnapshot
     public bool HasDuePopUp { get => _hasDuePopUp || PopUps.Count > 0; init => _hasDuePopUp = value; }
     readonly bool _hasDuePopUp;
 
-    /// <summary>True when there is nothing to draw, not even the clock.</summary>
+    /// <summary>True when there is nothing to draw, not even a clock.</summary>
     public bool IsEmpty =>
-        !Clock && Previous is null && Next is null && PopUps.Count == 0 && FarmLeft is null
-        && FishingElapsed is null && HorseRegistrations.Count == 0 && CustomTimers.Count == 0;
+        !Clock && ServerTime is null && GameTime is null && Previous is null && Next is null && PopUps.Count == 0
+        && FarmLeft is null && FishingElapsed is null && HorseRegistrations.Count == 0 && CustomTimers.Count == 0;
 }
 
 /// <summary>A running horse registration; <see cref="Id"/> is its timer's.</summary>
@@ -62,6 +65,8 @@ public static class OverlayContent
         return new OverlaySnapshot
         {
             Clock = settings.ShowClock,
+            ServerTime = settings.ShowServerTime ? BossRegions.Find(data.SelectedBossRegion).ServerTime(now) : null,
+            GameTime = settings.ShowGameTime ? GameClock.At(now) : null,
             Previous = settings.ShowPrevious ? board?.Previous : null,
             Next = next,
             PopUps = popUps,

@@ -19,17 +19,57 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
-    <Style x:Key="OverlayClock" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
-        <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="6,1" />
-        <Setter Property="HorizontalAlignment" Value="Left" />
-        <Setter Property="Visibility" Value="{Binding Clock, Converter={StaticResource NullToCollapsed}}" />
+    <Style x:Key="ClockIcon" TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+        <Setter Property="Margin" Value="10,0,4,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    <Style x:Key="OverlayClockText" TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
-        <Setter Property="Text" Value="{Binding Clock}" />
+    <Style x:Key="ClockTime" TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- Local, server and in-game time on one line in a faint box: a monitor, a globe, and a sun or by night a moon -->
+    <Style x:Key="OverlayClocks" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="Visibility" Value="{Binding HasClocks, Converter={StaticResource BoolToVisibility}}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ContentControl">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource HairlineStrongBrush}"
+                            BorderThickness="1" Padding="6,1">
+                        <!-- Each icon's left margin spaces it from the clock before; this takes back the first one's -->
+                        <StackPanel Orientation="Horizontal" Margin="-10,0,0,0">
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding Clock, Converter={StaticResource NullToCollapsed}}">
+                                <TextBlock Style="{StaticResource ClockIcon}" Text="&#xE7F4;" />
+                                <TextBlock Style="{StaticResource ClockTime}" Text="{Binding Clock}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding ServerClock, Converter={StaticResource NullToCollapsed}}">
+                                <TextBlock Style="{StaticResource ClockIcon}" Text="&#xE909;" />
+                                <TextBlock Style="{StaticResource ClockTime}" Text="{Binding ServerClock}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding GameClock, Converter={StaticResource NullToCollapsed}}">
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource ClockIcon}">
+                                            <Setter Property="Text" Value="&#xE706;" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsNight}" Value="True">
+                                                    <Setter Property="Text" Value="&#xE708;" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource ClockTime}" Text="{Binding GameClock}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
     <Style x:Key="PopUpList" TargetType="ItemsControl">
         <Setter Property="ItemsSource" Value="{Binding PopUps}" />
@@ -112,9 +152,7 @@
          binding on it would miss the view model and an empty section would keep its space. -->
     <DataTemplate x:Key="ListLayout" DataType="{x:Type overlay:OverlayViewModel}">
         <StackPanel Margin="12,8" MinWidth="200">
-            <Border Style="{StaticResource OverlayClock}" Margin="0,0,0,4">
-                <TextBlock Style="{StaticResource OverlayClockText}" />
-            </Border>
+            <ContentControl Style="{StaticResource OverlayClocks}" Margin="0,0,0,4" />
             <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
                             Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
             <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource NextRow}"
@@ -140,10 +178,8 @@
             <Grid>
                 <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource CardBanner}"
                                 Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
-                <Border Style="{StaticResource OverlayClock}" Background="#CC0B0B0C" HorizontalAlignment="Right" VerticalAlignment="Top"
-                        Margin="0,6,6,0">
-                    <TextBlock Style="{StaticResource OverlayClockText}" />
-                </Border>
+                <ContentControl Style="{StaticResource OverlayClocks}" Background="#CC0B0B0C" HorizontalAlignment="Right"
+                                VerticalAlignment="Top" Margin="0,6,6,0" />
             </Grid>
             <StackPanel Margin="10,4,10,8">
                 <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
@@ -167,9 +203,7 @@
 
     <DataTemplate x:Key="BarLayout" DataType="{x:Type overlay:OverlayViewModel}">
         <StackPanel Orientation="Horizontal" Margin="8,5">
-            <Border Style="{StaticResource OverlayClock}" Margin="0,0,12,0" VerticalAlignment="Center">
-                <TextBlock Style="{StaticResource OverlayClockText}" />
-            </Border>
+            <ContentControl Style="{StaticResource OverlayClocks}" Margin="0,0,12,0" VerticalAlignment="Center" />
             <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource BarPrevious}" VerticalAlignment="Center"
                             Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
             <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource BarNext}" VerticalAlignment="Center"

@@ -17,6 +17,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     static readonly string[] SwatchColors = ["#0B0B0C", "#2A2118", "#3A1417", "#141B2E", "#16261C", "#23272B", "#2B1E33", "#3B3222"];
 
     readonly AppServices _services;
+    readonly IPanelHost _host;
     // Picking in the colour square changes the colour many times a second; it's saved once the picking pauses.
     readonly DispatcherTimer _colorSave = new() { Interval = TimeSpan.FromMilliseconds(150) };
     bool _syncing;
@@ -39,10 +40,13 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public HotkeyTarget ShowTarget => new(HotkeyAction.Show);
     public IReadOnlyList<Hotkey> TakenForAlwaysShow => HotkeyCatalog.OtherKeys(_services.Timers.Current, Current, AlwaysShowTarget);
     public IReadOnlyList<Hotkey> TakenForShow => HotkeyCatalog.OtherKeys(_services.Timers.Current, Current, ShowTarget);
+    /// <summary>The boss region whose server time the overlay shows.</summary>
+    public string ServerRegion => _services.Region.Label;
 
-    public OverlayPanelViewModel(AppServices services)
+    public OverlayPanelViewModel(AppServices services, IPanelHost host)
     {
         _services = services;
+        _host = host;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
         GuildBossChoices = PopUpChoices.For(PopUpChoices.GuildBossMinutes, Current.GuildBosses);
         _colorSave.Tick += (_, _) => SaveCustomColor();
@@ -79,6 +83,8 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     }
     public double Scale { get => Current.Scale; set => Modify(o => o with { Scale = Math.Round(value, 2) }); }
     public bool ShowClock { get => Current.ShowClock; set => Modify(o => o with { ShowClock = value }); }
+    public bool ShowServerTime { get => Current.ShowServerTime; set => Modify(o => o with { ShowServerTime = value }); }
+    public bool ShowGameTime { get => Current.ShowGameTime; set => Modify(o => o with { ShowGameTime = value }); }
     public bool ShowPrevious { get => Current.ShowPrevious; set => Modify(o => o with { ShowPrevious = value }); }
     public bool ShowNext { get => Current.ShowNext; set => Modify(o => o with { ShowNext = value }); }
     public bool ShowFarm { get => Current.ShowFarm; set => Modify(o => o with { ShowFarm = value }); }
@@ -95,6 +101,10 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         set => Modify(o => o with { BackgroundOpacity = Math.Round(value, 2) });
     }
     public double TextOpacity { get => Current.TextOpacity; set => Modify(o => o with { TextOpacity = Math.Round(value, 2) }); }
+
+    /// <summary>Closes this panel for Settings, scrolled to the boss region that sets the server time.</summary>
+    [RelayCommand]
+    void OpenRegionSettings() => _host.OpenPanel(new SettingsPanelViewModel(_services) { OpenAtRegion = true });
 
     /// <summary>Settings also change from outside the panel: Always show by its hotkey.</summary>
     void OnSettingsChanged()

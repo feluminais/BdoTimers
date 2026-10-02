@@ -110,7 +110,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     public void OpenOverlaySettings()
     {
         ClosePanel();
-        Panel = new OverlayPanelViewModel(_services);
+        Panel = new OverlayPanelViewModel(_services, this);
     }
 
     [RelayCommand]

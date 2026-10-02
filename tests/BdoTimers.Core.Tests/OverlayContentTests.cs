@@ -142,6 +142,35 @@ public class OverlayContentTests
 
         Assert.False(OverlayContent.Build(new AppData(), clockOnly, BerlinNoon).IsEmpty);
         Assert.True(OverlayContent.Build(new AppData(), clockOnly with { ShowClock = false }, BerlinNoon).IsEmpty);
+        var noLocal = clockOnly with { ShowClock = false };
+        Assert.False(OverlayContent.Build(new AppData(), noLocal with { ShowServerTime = true }, BerlinNoon).IsEmpty);
+        Assert.False(OverlayContent.Build(new AppData(), noLocal with { ShowGameTime = true }, BerlinNoon).IsEmpty);
+    }
+
+    [Theory]
+    [InlineData(BossRegions.Europe, 12, 2)]
+    [InlineData(BossRegions.NorthAmerica, 3, -7)]
+    public void Server_time_follows_the_selected_region(string region, int hour, int offsetHours)
+    {
+        var data = new AppData { SelectedBossRegion = region };
+
+        var server = OverlayContent.Build(data, All with { ShowServerTime = true }, BerlinNoon).ServerTime!.Value;
+
+        Assert.Equal(BerlinNoon, server);
+        Assert.Equal(hour, server.Hour);
+        Assert.Equal(TimeSpan.FromHours(offsetHours), server.Offset);
+    }
+
+    [Fact]
+    public void Server_and_game_time_show_only_when_switched_on()
+    {
+        var off = OverlayContent.Build(new AppData(), All, BerlinNoon);
+        Assert.Null(off.ServerTime);
+        Assert.Null(off.GameTime);
+
+        // 10:00 UTC is 100 minutes into the day that broke at 08:20 UTC.
+        var on = OverlayContent.Build(new AppData(), All with { ShowGameTime = true }, BerlinNoon);
+        Assert.Equal(new GameTime(new TimeOnly(14, 30), false), on.GameTime);
     }
 
     [Theory]

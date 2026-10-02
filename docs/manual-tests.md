@@ -193,3 +193,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     changes the Overlay panel's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
     before, then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next
     on the tile, Alerts Off, or Guild bosses Off: no pop-up.
+60. [ ] Overlay → Sections → Local time, Server time and In-game time: all three share the top line with a monitor,
+    globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
+    moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
+    server time and the panel's link follow.
