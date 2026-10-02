@@ -31,7 +31,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
         Bosses = new BossesViewModel(services, this);
         Custom = new CustomViewModel(services, this);
         Todo = new TodoViewModel(services, this);
-        RefreshPaused(DateTimeOffset.UtcNow);
+        RefreshPaused(services.Clock.UtcNow);
         services.Updates.Changed += UpdatesChanged;
         RefreshUpdate();
     }
@@ -75,7 +75,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
             return;
         }
         _services.UiClock.Tick += Tick;
-        Tick(DateTimeOffset.UtcNow);
+        Tick(_services.Clock.UtcNow);
     }
 
     void Tick(DateTimeOffset now)

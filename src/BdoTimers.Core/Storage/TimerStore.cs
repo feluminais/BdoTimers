@@ -292,6 +292,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         var previous = d.Timers.FirstOrDefault(t => t.Id == id);
         if (previous is null) return d;
         var next = Validated(change(previous));
+        if (ReferenceEquals(next, previous)) return d;
         return d with
         {
             Timers = d.Timers.Select(t => t.Id == id ? next : t).ToList(),

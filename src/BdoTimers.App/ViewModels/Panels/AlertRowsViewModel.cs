@@ -9,14 +9,14 @@ namespace BdoTimers.App.ViewModels.Panels;
 /// <summary>The alert rows shared by the boss and custom panels. Every change is saved immediately.</summary>
 public sealed partial class AlertRowsViewModel : ObservableObject
 {
-    static readonly int[] OverlayMinutes = [1, 2, 3, 5, 10, 15, 30];
-
     /// <summary>The spoken sample uses this many minutes, like a typical early warning.</summary>
     const int SampleMinutes = 5;
 
     readonly AppServices _services;
     readonly TimerStore _store;
     readonly Guid _id;
+    /// <summary>A guild boss's overlay row shows and changes the pop-up all guild bosses share.</summary>
+    readonly bool _guildBoss;
 
     [ObservableProperty] private Choice _toast;
     [ObservableProperty] private Choice _voice;
@@ -30,12 +30,16 @@ public sealed partial class AlertRowsViewModel : ObservableObject
 
     public TimerSoundViewModel Sound { get; }
     public IReadOnlyList<Choice> OverlayChoices { get; }
+    public string OverlayTip => _guildBoss
+        ? "Shared by all guild bosses; shows in borderless window mode"
+        : "Shows in borderless window mode";
 
     public AlertRowsViewModel(AppServices services, TimerDef timer)
     {
         _services = services;
         _store = services.Timers;
         _id = timer.Id;
+        _guildBoss = timer.IsGuildBoss;
         var a = timer.Alerts;
         // So the voice line's ▶ speaks without first waiting for the model.
         if (a.Tts.Enabled) services.Tts.Warm(services.Settings.Current.TtsVoice);
@@ -44,9 +48,9 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         _voice = Choice.For(a.Tts.Enabled);
         _voiceLine = ToEditor(a.Tts.Template);
         UpdateVoiceSample();
-        OverlayChoices = [new Choice("Off", 0), .. OverlayMinutes.Union([a.Overlay.ShowMinutesBefore]).Order()
-            .Select(m => new Choice($"{m} min before", m))];
-        _overlay = a.Overlay.Enabled ? OverlayChoices.First(c => (int)c.Value! == a.Overlay.ShowMinutesBefore) : OverlayChoices[0];
+        var overlay = _guildBoss ? services.Settings.Current.Overlay.GuildBosses : a.Overlay;
+        OverlayChoices = PopUpChoices.For(_guildBoss ? PopUpChoices.GuildBossMinutes : PopUpChoices.TimerMinutes, overlay);
+        _overlay = PopUpChoices.Matching(OverlayChoices, overlay);
         _leadsFollowDefault = a.LeadTimesMinutes is null;
         _leads = NewLeads(a.LeadTimes(DefaultLeads));
     }
@@ -108,13 +112,10 @@ public sealed partial class AlertRowsViewModel : ObservableObject
 
     partial void OnOverlayChanged(Choice value)
     {
-        var minutes = (int)value.Value!;
-        Modify(a => a with
-        {
-            Overlay = minutes == 0
-                ? a.Overlay with { Enabled = false }
-                : a.Overlay with { Enabled = true, ShowMinutesBefore = minutes },
-        });
+        if (_guildBoss)
+            _services.Settings.Update(s => s with { Overlay = s.Overlay with { GuildBosses = PopUpChoices.Apply(s.Overlay.GuildBosses, value) } });
+        else
+            Modify(a => a with { Overlay = PopUpChoices.Apply(a.Overlay, value) });
     }
 
     void Modify(Func<AlertConfig, AlertConfig> change) => _store.Modify(_id, t => t with { Alerts = change(t.Alerts) });

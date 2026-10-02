@@ -29,7 +29,7 @@ public sealed class AppServices : IDisposable
     readonly ToastChannel _toast;
     readonly SoundChannel _sound;
     readonly AlertDispatcher _alerts;
-    readonly BossSeed _seed;
+    readonly IReadOnlyDictionary<string, BossSeed> _seeds;
     readonly string _dataDir;
     MainWindow? _main;
     MainViewModel? _mainViewModel;
@@ -46,8 +46,7 @@ public sealed class AppServices : IDisposable
     public PersistentState<AppSettings> Settings { get; }
     public BossRegion Region => BossRegions.Find(Timers.Current.SelectedBossRegion);
     public BossSeed Seed => _seeds[Timers.Current.SelectedBossRegion];
-    readonly IReadOnlyDictionary<string, BossSeed> _seeds;
-    public UiClock UiClock { get; } = new();
+    public UiClock UiClock { get; }
     /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
     public BossBoardCache Boards { get; } = new();
     public IClock Clock { get; } = new SystemClock();
@@ -67,12 +66,13 @@ public sealed class AppServices : IDisposable
         _app = app;
         _dataDir = dataDir;
         Health = new AppHealth(Clock, app.Dispatcher);
+        UiClock = new UiClock(Clock);
         Art = new ArtLibrary(Path.Combine(dataDir, "images"));
         Sounds = new UserSounds(Path.Combine(dataDir, "sounds"));
         _sound = new SoundChannel(Sounds);
-        _seed = SeedService.LoadEmbedded();
+        _seeds = BossRegions.All.ToDictionary(r => r.Id, r => SeedService.LoadEmbedded(r.Id));
         var settingsFile = new JsonFileStore<AppSettings>(Path.Combine(dataDir, "settings.json"), () => new AppSettings());
-        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => SeedService.NewData(_seed));
+        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => SeedService.NewData(_seeds[BossRegions.Europe]));
         var settings = settingsFile.Load();
         var timers = timersFile.Load();
         var todosFile = new JsonFileStore<TodoData>(Path.Combine(dataDir, "todos.json"),
@@ -96,7 +96,6 @@ public sealed class AppServices : IDisposable
         };
         Timers = new TimerStore(timersFile, timers.Value);
         Timers.Changed += () => Health.Saved(timersFile.FilePath);
-        _seeds = BossRegions.All.ToDictionary(r => r.Id, r => SeedService.LoadEmbedded(r.Id));
         Timers.Update(d =>
         {
             var migrated = DataMigrations.Apply(d, Settings.Current);
@@ -153,30 +152,23 @@ public sealed class AppServices : IDisposable
             }
             catch (StateSaveException ex) { todoResetErrors.Failed(ex); Health.Failed("To-do reset", ex); }
         };
+        // .NET caches the local time zone; without this a zone change would show old local times until a restart.
+        SystemEvents.TimeChanged += OnTimeChanged;
         _loop.Start();
         UiClock.Start();
         Overlay.Start();
         if (measuring) { EcoQos.Set(true); return; }
         foreach (var path in RecoveredFiles)
+            _toast.ShowInfo("A data file was damaged",
+                $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
+        // Marked as shown only once it was, so a failure brings it back at the next start.
+        if (!Settings.Current.NotificationHintShown
+            && _toast.ShowInfo("Let alerts through while gaming",
+                "Add BDO Timers to Settings → Notifications → Set priority notifications.",
+                withNotificationSettingsButton: true))
         {
-            try
-            {
-                _toast.ShowInfo("A data file was damaged",
-                    $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
-            }
-            catch (Exception ex) { Log.Error($"Damaged file notice failed for {path}", ex); }
-        }
-        if (!Settings.Current.NotificationHintShown)
-        {
-            // Marked as shown only once it was, so a failure brings it back at the next start.
-            try
-            {
-                _toast.ShowInfo("Let alerts through while gaming",
-                    "Add BDO Timers to Settings → Notifications → Set priority notifications.",
-                    withNotificationSettingsButton: true);
-                Settings.Update(s => s with { NotificationHintShown = true });
-            }
-            catch (Exception ex) { Log.Error("Notification hint failed", ex); }
+            try { Settings.Update(s => s with { NotificationHintShown = true }); }
+            catch (Exception ex) { Log.Error("Couldn't save that the notification hint was shown", ex); }
         }
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
@@ -188,19 +180,24 @@ public sealed class AppServices : IDisposable
 #endif
     }
 
+    static void OnTimeChanged(object? sender, EventArgs e) => TimeZoneInfo.ClearCachedData();
+
     void NotifyTimetableReview()
     {
         var data = Timers.Current;
         var seed = _seeds[data.SelectedBossRegion];
         var timetableRevision = TimetableUpdates.Revision(seed);
-        if (TimetableUpdates.Review(data, seed).NeedsReview && BossRegions.State(data).TimetableNoticeRevision != timetableRevision)
+        if (TimetableUpdates.Review(data, seed).NeedsReview
+            && BossRegions.State(data).TimetableNoticeRevision != timetableRevision
+            && _toast.ShowInfo($"Review the {BossRegions.Find(data.SelectedBossRegion).ShortLabel} timetable",
+                "Bundled spawn times can be reviewed in Settings → Bosses."))
         {
             try
             {
-                _toast.ShowInfo($"Review the {BossRegions.Find(data.SelectedBossRegion).ShortLabel} timetable", "Bundled spawn times can be reviewed in Settings → Bosses.");
-                Timers.Update(d => BossRegions.WithState(d, BossRegions.State(d, data.SelectedBossRegion) with { TimetableNoticeRevision = timetableRevision }));
+                Timers.Update(d => BossRegions.WithState(d,
+                    BossRegions.State(d, data.SelectedBossRegion) with { TimetableNoticeRevision = timetableRevision }));
             }
-            catch (Exception ex) { Log.Error("Timetable notice failed", ex); }
+            catch (Exception ex) { Log.Error("Couldn't save that the timetable notice was shown", ex); }
         }
     }
 
@@ -245,7 +242,7 @@ public sealed class AppServices : IDisposable
     }
 
     public void PauseAlerts(TimeSpan? duration) =>
-        Settings.Update(s => AlertPause.Pause(s, DateTimeOffset.UtcNow, duration));
+        Settings.Update(s => AlertPause.Pause(s, Clock.UtcNow, duration));
 
     /// <summary>Brings the window up with the Overlay panel open.</summary>
     public void ShowOverlaySettings()
@@ -263,10 +260,7 @@ public sealed class AppServices : IDisposable
         var result = Timers.StartHorseRegistration(Clock.UtcNow);
         if (result == HorseStartResult.Started && announce) _alerts.Say("Horse registration time started");
         else if (result == HorseStartResult.LimitReached)
-        {
-            try { _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}."); }
-            catch (Exception ex) { Log.Error("Horse registration limit notice failed", ex); }
-        }
+            _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}.");
         return result;
     }
 
@@ -429,8 +423,7 @@ public sealed class AppServices : IDisposable
     public void NotifyRestore(string? previousDirectory)
     {
         Log.Info($"Backup restored; previous data: {previousDirectory ?? "none"}");
-        try { _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder."); }
-        catch (Exception ex) { Log.Error("Couldn't show the restore notice", ex); }
+        _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder.");
     }
 
     public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig()));
@@ -463,6 +456,7 @@ public sealed class AppServices : IDisposable
 
     public void Dispose()
     {
+        SystemEvents.TimeChanged -= OnTimeChanged;
         _mainViewModel?.Dispose();
         Undo.Dispose();
         _theme.Dispose();

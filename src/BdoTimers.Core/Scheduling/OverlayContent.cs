@@ -52,7 +52,7 @@ public static class OverlayContent
                 .ToList()
             : [];
         // An occurrence the overlay already shows gets no second row.
-        var due = UpcomingQuery.ForOverlay(data, now);
+        var due = UpcomingQuery.ForOverlay(data, settings, now);
         var popUps = due
             .Where(i => !(next is not null && i.AtUtc == next.AtUtc && next.Bosses.Any(b => b.Id == i.Timer.Id)))
             .Where(i => !(farmLeft is not null && i.Timer.Preset == Presets.Farm))

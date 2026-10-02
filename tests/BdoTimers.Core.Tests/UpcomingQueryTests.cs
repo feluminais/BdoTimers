@@ -24,7 +24,7 @@ public class UpcomingQueryTests
             Muted = [new MutedOccurrence(muted.Id, BerlinNoon.AddMinutes(4))],
         };
 
-        var items = UpcomingQuery.ForOverlay(data, BerlinNoon);
+        var items = UpcomingQuery.ForOverlay(data, new OverlaySettings(), BerlinNoon);
 
         Assert.Equal(new[] { "Soon" }, items.Select(i => i.Timer.Name));
     }

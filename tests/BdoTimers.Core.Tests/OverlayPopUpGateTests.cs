@@ -7,6 +7,7 @@ public class OverlayPopUpGateTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 22, 10, 0, 0, TimeSpan.Zero); // Tue 12:00 Berlin
     static readonly DateTimeOffset KzarkaToday = new(2026, 9, 22, 17, 0, 0, TimeSpan.Zero);
+    static readonly OverlaySettings Settings = new();
 
     static TimerDef WithPopUp(TimerDef t, int minutes) =>
         t with { Alerts = t.Alerts with { Overlay = new OverlayAlert { Enabled = true, ShowMinutesBefore = minutes } } };
@@ -19,17 +20,17 @@ public class OverlayPopUpGateTests
     {
         var data = new AppData { Timers = [TestTimers.Countdown(Now.AddMinutes(3), 0)] };
 
-        Assert.Null(UpcomingQuery.OverlayStart(data, Now));
+        Assert.Null(UpcomingQuery.OverlayStart(data, Settings, Now));
     }
 
     [Fact]
     public void Starts_where_the_first_unmuted_occurrence_enters_its_window()
     {
         var data = new AppData { Timers = [Bread, Kzarka] };
-        Assert.Equal(Now.AddMinutes(15), UpcomingQuery.OverlayStart(data, Now));
+        Assert.Equal(Now.AddMinutes(15), UpcomingQuery.OverlayStart(data, Settings, Now));
 
         var breadMuted = data with { Muted = [new MutedOccurrence(Bread.Id, Now.AddMinutes(20))] };
-        Assert.Equal(KzarkaToday.AddMinutes(-10), UpcomingQuery.OverlayStart(breadMuted, Now));
+        Assert.Equal(KzarkaToday.AddMinutes(-10), UpcomingQuery.OverlayStart(breadMuted, Settings, Now));
     }
 
     [Fact]
@@ -37,7 +38,7 @@ public class OverlayPopUpGateTests
     {
         var data = new AppData { Timers = [WithPopUp(TestTimers.Countdown(Now.AddMinutes(3), 0), 5)] };
 
-        Assert.True(UpcomingQuery.OverlayStart(data, Now) <= Now);
+        Assert.True(UpcomingQuery.OverlayStart(data, Settings, Now) <= Now);
     }
 
     [Fact]
@@ -68,8 +69,8 @@ public class OverlayPopUpGateTests
 
         foreach (var (at, due) in cases)
         {
-            Assert.True(due == gate.MayBeDue(data, at), $"{at:O}: gate should be {due}");
-            Assert.True(due == (UpcomingQuery.ForOverlay(data, at).Count > 0), $"{at:O}: pop-up should be {due}");
+            Assert.True(due == gate.MayBeDue(data, Settings, at), $"{at:O}: gate should be {due}");
+            Assert.True(due == (UpcomingQuery.ForOverlay(data, Settings, at).Count > 0), $"{at:O}: pop-up should be {due}");
         }
     }
 
@@ -78,11 +79,11 @@ public class OverlayPopUpGateTests
     {
         var data = new AppData { Timers = [Bread] };
         var gate = new OverlayPopUpGate();
-        Assert.False(gate.MayBeDue(data, Now));
+        Assert.False(gate.MayBeDue(data, Settings, Now));
 
         var started = data with { Timers = [Bread, WithPopUp(TestTimers.Countdown(Now.AddMinutes(3), 0), 5)] };
 
-        Assert.True(gate.MayBeDue(started, Now));
+        Assert.True(gate.MayBeDue(started, Settings, Now));
     }
 
     [Fact]
@@ -90,8 +91,8 @@ public class OverlayPopUpGateTests
     {
         var data = new AppData { Timers = [WithPopUp(TestTimers.Countdown(Now.AddMinutes(3), 0), 5)] };
         var gate = new OverlayPopUpGate();
-        Assert.False(gate.MayBeDue(data, Now.AddMinutes(10)));
+        Assert.False(gate.MayBeDue(data, Settings, Now.AddMinutes(10)));
 
-        Assert.True(gate.MayBeDue(data, Now));
+        Assert.True(gate.MayBeDue(data, Settings, Now));
     }
 }
