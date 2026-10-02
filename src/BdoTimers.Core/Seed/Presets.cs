@@ -3,8 +3,7 @@ using BdoTimers.Core.Model;
 namespace BdoTimers.Core.Seed;
 
 /// <summary>
-/// Timers everyone starts with at the top of the Timers screen, in this order: crops growing, time spent fishing, and
-/// the wait before a horse registered on the Horse Market goes on sale.
+/// Timers everyone starts with at the top of the Timers screen: farm growth, fishing, horse registration, and guild events.
 /// </summary>
 public static class Presets
 {
@@ -12,6 +11,8 @@ public static class Presets
     public const string Fishing = "fishing";
     public const string HorseRegistration = "horse-registration";
     public const string HorseRegistrationRun = "horse-registration-run";
+    public const string GuildBosses = "guild-bosses";
+    public const string GuildWar = "guild-war";
 
     /// <summary>Default temperature estimate; offline time and crop care can delay the harvest.</summary>
     public static readonly TimeSpan CropGrowth = TimeSpan.FromHours(22);
@@ -35,6 +36,20 @@ public static class Presets
             Kind = TimerKind.Stopwatch,
             Preset = Fishing,
             Stopwatch = new StopwatchSpec(),
+        },
+        new TimerDef
+        {
+            Name = "Guild bosses",
+            Kind = TimerKind.Scheduled,
+            Preset = GuildBosses,
+            Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
+        },
+        new TimerDef
+        {
+            Name = "Guild war",
+            Kind = TimerKind.Scheduled,
+            Preset = GuildWar,
+            Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
         },
     ];
 
@@ -69,21 +84,29 @@ public static class Presets
     public static AppData Ensure(AppData data)
     {
         var missing = Create().Where(p => data.Timers.All(t => t.Preset != p.Preset)).ToList();
-        return missing.Count == 0 ? data : data with { Timers = [.. missing, .. data.Timers] };
+        return missing.Count == 0 ? data : data with { Timers = missing.Concat(data.Timers).OrderBy(t => Rank(t.Preset)).ToList() };
     }
 
     /// <summary>Farm crops keep growing after the harvest time, so its countdown runs on past zero until reset.</summary>
     public static bool Overgrows(string? preset) => preset == Farm;
 
-    /// <summary>Farm and Fishing can't be deleted; Horse registration and the user's own timers can.</summary>
+    /// <summary>Horse registration and the user's own timers can be deleted.</summary>
     public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun;
 
     /// <summary>Sort key that puts presets first, in their fixed order, and keeps other timers after them.</summary>
     public static int Rank(string? preset) => preset switch
     {
-        null => 3,
+        Farm => 0,
         Fishing => 1,
         HorseRegistration or HorseRegistrationRun => 2,
-        _ => 0, // Farm, and a preset from a newer version
+        GuildBosses => 3,
+        GuildWar => 4,
+        _ => 5,
     };
+
+    /// <summary>Guild presets may be unset; other weekly timers keep a time.</summary>
+    public static int MinimumSlots(string? preset) => preset is GuildBosses or GuildWar ? 0 : 1;
+
+    /// <summary>Guild bosses has one weekly event; Guild war may be scheduled more often.</summary>
+    public static int? MaximumSlots(string? preset) => preset == GuildBosses ? 1 : null;
 }

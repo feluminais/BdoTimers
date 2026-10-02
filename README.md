@@ -3,9 +3,10 @@
 Tray app for Black Desert Online (EU and North America) world-boss spawns and your own timers.
 
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
-- Timers screen: Farm (22-hour growth estimate that continues through overgrowth to 200%), Fishing (stopwatch) and
-  Horse registration (up to ten independent 10-minute waits from the game's registration notice to sale) on top,
-  then your own countdowns, weekly timers and dated one-time events
+- Timers screen: Farm (22-hour growth estimate that continues through overgrowth to 200%), Fishing (stopwatch),
+  Horse registration (up to ten independent 10-minute waits from the game's registration notice to sale),
+  Guild bosses (one weekly time) and Guild war (multiple weekly times), then your own countdowns, weekly timers and
+  dated one-time events. Set the guild times yourself.
 - To-do screen: daily and weekly checklists with child rows, shared reset times and your own lists
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
   voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, bosses, farm, fishing, horse registrations,
@@ -93,5 +94,5 @@ Manual test checklist: [docs/manual-tests.md](docs/manual-tests.md).
 
 ## License
 GPL-3.0 (see LICENSE). Bundled components and their licenses are listed in THIRD-PARTY-NOTICES.txt. BDO Timers is not
-affiliated with Pearl Abyss; the boss, farm, fishing and horse pictures are Black Desert game artwork © Pearl Abyss and
+affiliated with Pearl Abyss; the boss, farm, fishing, horse and guild pictures are Black Desert game artwork © Pearl Abyss and
 are not covered by the GPL.
