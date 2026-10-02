@@ -44,6 +44,7 @@
     <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     <AssemblyName>BdoTimers</AssemblyName>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <RootNamespace>BdoTimers.App</RootNamespace>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- The app is English only, so the runtime's translated messages are left out. -->

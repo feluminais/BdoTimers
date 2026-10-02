@@ -4,18 +4,15 @@
         xmlns:views="clr-namespace:BdoTimers.App.Views"
         xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
         xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
-        Title="BDO Timers" Width="960" Height="720" MinWidth="820" MinHeight="600"
+        Title="BDO Timers" Width="960" Height="720" MinWidth="640" MinHeight="360"
         WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
-        Background="{StaticResource BgBrush}" Foreground="{StaticResource TextBrush}"
+        Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
         FontFamily="Segoe UI" FontSize="13">
     <WindowChrome.WindowChrome>
         <!-- GlassFrameThickness 0,0,0,1 keeps the system drop shadow on a frameless window. -->
         <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0,0,0,1"
                       CornerRadius="0" UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
-    <Window.InputBindings>
-        <KeyBinding Key="Escape" Command="{Binding ClosePanelCommand}" />
-    </Window.InputBindings>
     <Window.Resources>
         <DataTemplate DataType="{x:Type pvm:OverlayPanelViewModel}"><panels:OverlayPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:SettingsPanelViewModel}"><panels:SettingsPanel /></DataTemplate>
@@ -26,8 +23,9 @@
         <DataTemplate DataType="{x:Type pvm:TodoListPanelViewModel}"><panels:TodoListPanel /></DataTemplate>
     </Window.Resources>
 
-    <Border x:Name="Frame" BorderBrush="{StaticResource HairlineBrush}" BorderThickness="1">
+    <Border x:Name="Frame" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1">
         <Grid>
+          <Grid x:Name="MainContent">
             <Grid.RowDefinitions>
                 <RowDefinition Height="40" />
                 <RowDefinition Height="*" />
@@ -46,43 +44,61 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
                                 Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding PausedText}" Foreground="{StaticResource AccentTextBrush}" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding PausedText}" Foreground="{DynamicResource AccentTextBrush}" FontSize="12" VerticalAlignment="Center" />
                         <Button Style="{StaticResource LinkButton}" Content="Resume" Margin="10,0,0,0" Command="{Binding ResumeCommand}"
                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                     </StackPanel>
-                    <Button Style="{StaticResource CaptionButton}" Content="&#xE895;" FontSize="15" Foreground="#78C99A"
-                            ToolTip="Update available, click to open GitHub" AutomationProperties.Name="Update available"
+                    <Button Style="{StaticResource CaptionButton}" Content="&#xE895;" FontSize="15" Foreground="{DynamicResource UpdateBrush}"
+                            ToolTip="Update available" AutomationProperties.Name="Update available"
                             Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}"
                             Command="{Binding OpenUpdateDetailsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE7F4;" FontSize="13" ToolTip="Overlay"
                             AutomationProperties.Name="Overlay"
                             Command="{Binding OpenOverlaySettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE713;" FontSize="13" ToolTip="Settings"
+                            AutomationProperties.Name="Settings"
                             Command="{Binding OpenSettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimize"
+                            AutomationProperties.Name="Minimize"
                             Click="Minimize_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button x:Name="MaximizeButton" Style="{StaticResource CaptionButton}" Content="&#xE922;" ToolTip="Maximize"
+                            AutomationProperties.Name="Maximize" Click="Maximize_Click"
+                            WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CloseCaptionButton}" Content="&#xE8BB;" ToolTip="Close"
+                            AutomationProperties.Name="Close"
                             Click="Close_Click" WindowChrome.IsHitTestVisibleInChrome="True" />
                 </StackPanel>
             </Grid>
-            <Border Height="1" VerticalAlignment="Bottom" Background="{StaticResource HairlineBrush}" />
+            <Border Height="1" VerticalAlignment="Bottom" Background="{DynamicResource HairlineBrush}" />
 
-            <Grid Grid.Row="1" Margin="22,18,22,20">
+            <Grid Grid.Row="1" x:Name="ScreenContent" LayoutTransform="{DynamicResource UiScaleTransform}">
+              <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False">
+               <Grid Margin="22,18,22,20" MinWidth="596">
                 <views:BossesView DataContext="{Binding Bosses}"
                                   Visibility="{Binding IsChecked, ElementName=BossesTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:CustomView DataContext="{Binding Custom}"
                                   Visibility="{Binding IsChecked, ElementName=CustomTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:TodoView DataContext="{Binding Todo}"
                                 Visibility="{Binding IsChecked, ElementName=TodoTab, Converter={StaticResource BoolToVisibility}}" />
+               </Grid>
+              </ScrollViewer>
+              <views:UndoStrip Grid.Row="1" DataContext="{Binding Undo}" />
             </Grid>
+          </Grid>
 
             <!-- Panel layer: dims the whole window and centres one panel; the panel itself can't be moved -->
-            <Grid x:Name="PanelLayer" Grid.RowSpan="2" Visibility="Collapsed" Opacity="0">
-                <Border Background="{StaticResource DimBrush}" MouseLeftButtonDown="Dim_MouseLeftButtonDown" />
-                <Border Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource AccentSoftBrush}" BorderThickness="1"
-                        HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,24">
-                    <ContentControl x:Name="PanelContent" Focusable="False" />
+            <Grid x:Name="PanelLayer" Visibility="Collapsed" Opacity="0" WindowChrome.IsHitTestVisibleInChrome="True">
+                <Border Background="{DynamicResource DimBrush}" MouseLeftButtonDown="Dim_MouseLeftButtonDown" />
+                <Grid x:Name="PanelViewport" Margin="16,24">
+                <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1"
+                        HorizontalAlignment="Center" VerticalAlignment="Center"
+                        MaxWidth="{Binding ActualWidth, ElementName=PanelViewport}" MaxHeight="{Binding ActualHeight, ElementName=PanelViewport}">
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False">
+                      <ContentControl x:Name="PanelContent" Focusable="False" LayoutTransform="{DynamicResource UiScaleTransform}" />
+                    </ScrollViewer>
                 </Border>
+                </Grid>
             </Grid>
         </Grid>
     </Border>

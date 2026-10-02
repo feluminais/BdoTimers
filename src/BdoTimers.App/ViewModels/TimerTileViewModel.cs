@@ -297,8 +297,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [RelayCommand]
     void Reset()
     {
-        if (_timer.Preset == Presets.HorseRegistrationRun) _services.Timers.Delete(_timer.Id);
-        else _services.Timers.Reset(_timer.Id);
+        _services.Undo.ResetTimer(_timer.Id);
     }
 
     [RelayCommand]

@@ -67,6 +67,7 @@ public class JsonRoundTripTests
     {
         Autostart = true,
         CloseToTray = true,
+        TextScale = 1.25,
         Volume = 0.5f,
         AlertSound = BuiltInSounds.Chimes,
         TtsVoice = "af_heart",

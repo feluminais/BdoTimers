@@ -1,0 +1,108 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework">
+    <Style x:Key="DateCalendarDay" TargetType="primitives:CalendarDayButton">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+        <Setter Property="MinWidth" Value="30" />
+        <Setter Property="MinHeight" Value="28" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="primitives:CalendarDayButton">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}" Margin="1" Padding="3">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsInactive" Value="True"><Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" /></Trigger>
+                        <Trigger Property="IsToday" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" /></Trigger>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource HoverTextBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource HoverTextBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource PastBrush}" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="DateCalendarMonth" TargetType="primitives:CalendarButton">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="primitives:CalendarButton">
+                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="1" Margin="1" Padding="6" MinHeight="42">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsInactive" Value="True"><Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" /></Trigger>
+                        <Trigger Property="HasSelectedDays" Value="True">
+                            <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource HoverTextBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter Property="Foreground" Value="{DynamicResource PastBrush}" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="DateCalendarItem" TargetType="primitives:CalendarItem">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="primitives:CalendarItem">
+                    <ControlTemplate.Resources>
+                        <DataTemplate x:Key="{x:Static primitives:CalendarItem.DayTitleTemplateResourceKey}">
+                            <TextBlock Text="{Binding}" Foreground="{DynamicResource SubtleBrush}" FontSize="11"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5" />
+                        </DataTemplate>
+                    </ControlTemplate.Resources>
+                    <Grid x:Name="PART_Root" Background="{DynamicResource PanelBrush}">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Button x:Name="PART_PreviousButton" Style="{StaticResource IconButton}" Content="&#xE76B;" ToolTip="Previous month" Width="30" Height="30" />
+                            <Button x:Name="PART_HeaderButton" Grid.Column="1" Style="{StaticResource BareButton}" Padding="4" />
+                            <Button x:Name="PART_NextButton" Grid.Column="2" Style="{StaticResource IconButton}" Content="&#xE76C;" ToolTip="Next month" Width="30" Height="30" />
+                        </Grid>
+                        <Grid x:Name="PART_MonthView" Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /><ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                        </Grid>
+                        <Grid x:Name="PART_YearView" Grid.Row="1" Visibility="Collapsed">
+                            <Grid.ColumnDefinitions><ColumnDefinition /><ColumnDefinition /><ColumnDefinition /></Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        </Grid>
+                        <Border x:Name="PART_DisabledVisual" Grid.RowSpan="2" Background="{DynamicResource DimBrush}" Visibility="Collapsed" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="PART_DisabledVisual" Property="Visibility" Value="Visible" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

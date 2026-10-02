@@ -18,7 +18,7 @@
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
             <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
-            <TextBlock Text="{Binding AppliesText}" Style="{StaticResource LabelText}" Foreground="{StaticResource PastBrush}"
+            <TextBlock Text="{Binding AppliesText}" Style="{StaticResource LabelText}" Foreground="{DynamicResource PastBrush}"
                        TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
         </DockPanel>
 
@@ -37,7 +37,7 @@
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
                                     <Setter Property="Text" Value="&#xE70D;" />
-                                    <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding ShowTimes}" Value="True">
                                             <Setter Property="Text" Value="&#xE70E;" />

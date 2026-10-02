@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:BdoTimers.App.Controls"
                     xmlns:overlay="clr-namespace:BdoTimers.App.Overlay">
-    <!-- The overlay's List, Card and Bar layouts (spec: docs/superpowers/specs/2026-09-28-overlay-design.md) -->
+    <!-- The overlay's List, Card and Bar layouts -->
 
     <Style x:Key="SampleDim" TargetType="FrameworkElement">
         <Style.Triggers>
@@ -20,7 +20,7 @@
         </Style.Triggers>
     </Style>
     <Style x:Key="OverlayClock" TargetType="Border">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="6,1" />
         <Setter Property="HorizontalAlignment" Value="Left" />
@@ -29,7 +29,7 @@
     <Style x:Key="OverlayClockText" TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
         <Setter Property="Text" Value="{Binding Clock}" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
     </Style>
     <Style x:Key="PopUpList" TargetType="ItemsControl">
         <Setter Property="ItemsSource" Value="{Binding PopUps}" />
@@ -40,33 +40,33 @@
     <DataTemplate x:Key="PreviousRow" DataType="{x:Type overlay:OverlaySpawn}">
         <DockPanel Style="{StaticResource SampleDim}" Margin="0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12"
-                       Foreground="{StaticResource SubtleBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="&#x2039;" Foreground="{StaticResource AccentSoftBrush}" FontSize="13" Width="12" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{StaticResource SubtleBrush}" />
+                       Foreground="{DynamicResource SubtleBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="&#x2039;" Foreground="{DynamicResource AccentSoftBrush}" FontSize="13" Width="12" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="NextRow" DataType="{x:Type overlay:OverlaySpawn}">
         <DockPanel Style="{StaticResource SampleDim}" Margin="0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="16"
-                       Foreground="{StaticResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="&#x203A;" Foreground="{StaticResource AccentBrush}" FontSize="17" Width="12" VerticalAlignment="Center" />
+                       Foreground="{DynamicResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
+            <TextBlock Text="&#x203A;" Foreground="{DynamicResource AccentBrush}" FontSize="17" Width="12" VerticalAlignment="Center" />
             <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="14" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="LineRow" DataType="{x:Type overlay:OverlayLine}">
         <DockPanel Style="{StaticResource SampleDim}" Margin="12,2,0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="13"
-                       Foreground="{StaticResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
+                       Foreground="{DynamicResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
             <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="ChipLine" DataType="{x:Type overlay:OverlayLine}">
-        <Border Style="{StaticResource SampleDim}" BorderBrush="{StaticResource HairlineStrongBrush}" BorderThickness="1"
+        <Border Style="{StaticResource SampleDim}" BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1"
                 Padding="6,1" Margin="0,0,6,0">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" VerticalAlignment="Center" />
-                <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{StaticResource AccentTextBrush}"
+                <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{DynamicResource AccentTextBrush}"
                            Margin="6,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
         </Border>
@@ -77,8 +77,8 @@
             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,5">
                 <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="15" HorizontalAlignment="Right" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <TextBlock Text="&#x203A;" Foreground="{StaticResource AccentBrush}" FontSize="18" Margin="0,0,6,0" VerticalAlignment="Center" />
-                    <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="17" Foreground="{StaticResource AccentTextBrush}"
+                    <TextBlock Text="&#x203A;" Foreground="{DynamicResource AccentBrush}" FontSize="18" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="17" Foreground="{DynamicResource AccentTextBrush}"
                                VerticalAlignment="Center" />
                 </StackPanel>
             </StackPanel>
@@ -86,24 +86,24 @@
     </DataTemplate>
     <DataTemplate x:Key="BarPrevious" DataType="{x:Type overlay:OverlaySpawn}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
-            <TextBlock Text="&#x2039;" Foreground="{StaticResource AccentSoftBrush}" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{StaticResource SubtleBrush}" />
-            <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{StaticResource SubtleBrush}"
+            <TextBlock Text="&#x2039;" Foreground="{DynamicResource AccentSoftBrush}" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
+            <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
     </DataTemplate>
     <DataTemplate x:Key="BarNext" DataType="{x:Type overlay:OverlaySpawn}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
-            <TextBlock Text="&#x203A;" Foreground="{StaticResource AccentBrush}" FontSize="16" Margin="0,0,4,0" VerticalAlignment="Center" />
+            <TextBlock Text="&#x203A;" Foreground="{DynamicResource AccentBrush}" FontSize="16" Margin="0,0,4,0" VerticalAlignment="Center" />
             <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="14" />
-            <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="15" Foreground="{StaticResource AccentTextBrush}"
+            <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
     </DataTemplate>
     <DataTemplate x:Key="BarLine" DataType="{x:Type overlay:OverlayLine}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
             <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="13" Foreground="{StaticResource AccentTextBrush}"
+            <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="13" Foreground="{DynamicResource AccentTextBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
     </DataTemplate>
@@ -120,7 +120,7 @@
             <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource NextRow}"
                             Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
             <ItemsControl Style="{StaticResource PopUpList}" ItemTemplate="{StaticResource LineRow}" />
-            <Border Height="1" Background="{StaticResource HairlineBrush}" Margin="0,5"
+            <Border Height="1" Background="{DynamicResource HairlineBrush}" Margin="0,5"
                     Visibility="{Binding ShowDivider, Converter={StaticResource BoolToVisibility}}" />
             <ContentControl Content="{Binding Farm}" ContentTemplate="{StaticResource LineRow}"
                             Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />

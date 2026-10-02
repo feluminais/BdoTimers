@@ -49,7 +49,7 @@ public class JsonFileStoreTests
     [InlineData("{\"timers\":null}")]
     [InlineData("{\"timers\":[null]}")]
     [InlineData("{\"bossRegions\":null}")]
-    [InlineData("{\"dataVersion\":999}")]
+    [InlineData("{\"dataVersion\":-1}")]
     public void Corrupt_file_is_backed_up_and_defaults_load(string content)
     {
         using var dir = new TempDir();
@@ -112,5 +112,57 @@ public class JsonFileStoreTests
         Assert.Equal(0, result.Value.DataVersion);
         Assert.Equal("My timer", Assert.Single(result.Value.Timers).Name);
         Assert.True(File.Exists(path));
+    }
+
+    [Theory]
+    [InlineData("{\"dataVersion\":999}")]
+    [InlineData("{\"dataVersion\":\"999\"}")]
+    [InlineData("{\"DataVersion\":999,\"timers\":[{\"kind\":\"FutureKind\"}]}")]
+    public void Newer_timer_format_stops_loading_and_leaves_the_file_untouched(string content)
+    {
+        using var dir = new TempDir();
+        var path = dir.File("timers.json");
+        File.WriteAllText(path, content);
+
+        var error = Assert.ThrowsAny<IOException>(() => new JsonFileStore<AppData>(path, () => new()).Load());
+
+        Assert.Contains("newer", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("timers.json", error.Message);
+        Assert.Equal(content, File.ReadAllText(path));
+        Assert.Equal(new[] { "timers.json" }, Directory.GetFiles(dir.Path).Select(Path.GetFileName));
+    }
+
+    [Theory]
+    [InlineData("{\"defaultsVersion\":999}")]
+    [InlineData("{\"defaultsVersion\":\"999\"}")]
+    [InlineData("{\"DefaultsVersion\":999,\"lists\":[{\"cadence\":\"FutureCadence\"}]}")]
+    public void Newer_todo_format_stops_loading_and_leaves_the_file_untouched(string content)
+    {
+        using var dir = new TempDir();
+        var path = dir.File("todos.json");
+        File.WriteAllText(path, content);
+
+        var error = Assert.ThrowsAny<IOException>(() => new JsonFileStore<TodoData>(path, () => new()).Load());
+
+        Assert.Contains("newer", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("todos.json", error.Message);
+        Assert.Equal(content, File.ReadAllText(path));
+        Assert.Equal(new[] { "todos.json" }, Directory.GetFiles(dir.Path).Select(Path.GetFileName));
+    }
+
+    [Theory]
+    [InlineData(0.9)]
+    [InlineData(1.6)]
+    public void Invalid_text_scale_is_recovered_as_damaged_settings(double scale)
+    {
+        using var dir = new TempDir();
+        var path = dir.File("settings.json");
+        var content = "{\"textScale\":" + scale.ToString(System.Globalization.CultureInfo.InvariantCulture) + "}";
+        File.WriteAllText(path, content);
+
+        var result = new JsonFileStore<AppSettings>(path, () => new()).Load();
+
+        Assert.NotNull(result.RecoveredBackupPath);
+        Assert.Equal(content, File.ReadAllText(result.RecoveredBackupPath!));
     }
 }

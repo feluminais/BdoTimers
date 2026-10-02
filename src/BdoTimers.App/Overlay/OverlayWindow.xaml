@@ -4,7 +4,7 @@
         Title="BDO Timers Overlay" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ShowActivated="False" ResizeMode="NoResize"
         SizeToContent="WidthAndHeight" WindowStartupLocation="Manual" UseLayoutRounding="True"
-        Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI" FontSize="13">
+        Foreground="{DynamicResource TextBrush}" FontFamily="Segoe UI" FontSize="13">
     <Window.Resources>
         <ResourceDictionary Source="OverlayLayouts.xaml" />
     </Window.Resources>
@@ -30,7 +30,7 @@
             </ContentControl.Style>
         </ContentControl>
         <!-- Preview: a faint frame over a near-invisible fill, so the overlay can be found and grabbed at any opacity -->
-        <Border BorderBrush="{StaticResource HairlineStrongBrush}" BorderThickness="1" Background="#01000000"
+        <Border BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1" Background="#01000000"
                 Visibility="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
     </Grid>
 </Window>

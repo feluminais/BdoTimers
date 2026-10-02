@@ -2,19 +2,28 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Threading;
 
 namespace BdoTimers.App.Overlay;
 
 public partial class OverlayWindow : Window
 {
     bool _clickThrough = true;
+    HwndSource? _source;
+    bool _screenCheckPending;
 
     public OverlayWindow(OverlayViewModel model)
     {
         InitializeComponent();
         DataContext = Model = model;
-        SourceInitialized += (_, _) => ApplyStyles();
+        SourceInitialized += (_, _) =>
+        {
+            ApplyStyles();
+            _source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            _source?.AddHook(ScreenMessages);
+        };
         SizeChanged += (_, _) => KeepOnScreen();
+        DpiChanged += (_, _) => QueueScreenCheck();
         MouseLeftButtonDown += (_, e) =>
         {
             if (_clickThrough || e.ButtonState != MouseButtonState.Pressed) return;
@@ -27,6 +36,30 @@ public partial class OverlayWindow : Window
 
     /// <summary>Raised when a drag ends.</summary>
     public event Action? Dropped;
+
+    IntPtr ScreenMessages(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (message is 0x007E or 0x001A) QueueScreenCheck(); // Display or work-area changes.
+        return IntPtr.Zero;
+    }
+
+    void QueueScreenCheck()
+    {
+        if (_screenCheckPending) return;
+        _screenCheckPending = true;
+        Dispatcher.BeginInvoke(DispatcherPriority.Background, () =>
+        {
+            _screenCheckPending = false;
+            if (_source is not null) KeepOnScreen();
+        });
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        _source?.RemoveHook(ScreenMessages);
+        _source = null;
+        base.OnClosed(e);
+    }
 
     /// <summary>Layouts and scale can grow past the screen edge; keep the measured window on its monitor.</summary>
     void KeepOnScreen()

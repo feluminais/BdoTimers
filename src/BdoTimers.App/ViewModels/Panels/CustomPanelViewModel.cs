@@ -65,6 +65,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public bool IsWeekly { get; }
     public bool IsOneTime { get; }
     public bool HasTimeZone => IsWeekly || IsOneTime;
+    public DateTime Today => TimeZoneInfo.ConvertTime(_services.Clock.UtcNow,
+        TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId ?? "UTC")).Date;
+    public Func<DateTime> TodayProvider => () => Today;
     public bool ScheduleValid => ScheduleError.Length == 0;
     /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
     public bool HasAlerts => !IsStopwatch;
@@ -198,6 +201,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
 
     partial void OnTimeZoneIdChanged(string? value)
     {
+        OnPropertyChanged(nameof(Today));
         if (value is null) return;
         if (IsOneTime) ApplyEvent();
         else if (IsWeekly) Modify(t => t with { Scheduled = (t.Scheduled ?? new ScheduledSpec()) with { TimeZoneId = value } });
@@ -248,16 +252,15 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         var old = Timer.ImageFile;
         Modify(t => t with { ImageFile = file });
-        _services.Art.Delete(old);
+        _services.Undo.ReleasePicture(old);
         Images = [_services.Art.For(Timer)];
         HasPicture = file is not null;
     }
 
     void DeleteTimer()
     {
-        var image = Timer.ImageFile;
-        _services.Timers.Delete(_id);
-        _services.Art.Delete(image);
+        CommitDuration();
+        _services.Undo.DeleteTimer(_id);
         _host.ClosePanel();
     }
 

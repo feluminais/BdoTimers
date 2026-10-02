@@ -43,6 +43,14 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     Uri? _releasePage;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
+    public IReadOnlyList<Choice> TextSizes { get; } = new[] { 1d, 1.1, 1.25, 1.5 }
+        .Select(scale => new Choice($"{scale:P0}", scale)).ToList();
+    public AppHealth Health => _services.Health;
+    public Choice TextSize
+    {
+        get => TextSizes.MinBy(choice => Math.Abs((double)choice.Value! - Current.TextScale))!;
+        set => _services.Settings.Update(settings => settings with { TextScale = (double)value.Value! });
+    }
     public IReadOnlyList<Choice> Regions { get; } = BossRegions.All.Select(r => new Choice(r.Label, r.Id)).ToList();
     public IReadOnlyList<Choice> Voices { get; } = KokoroEngine.Voices.Select(v => new Choice(v.Label, v.Id)).ToList();
     public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
@@ -371,6 +379,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     [RelayCommand]
     void OpenDataFolder() => _services.OpenDataFolder();
+
+    [RelayCommand]
+    void OpenLogs() => _services.OpenLogs();
+
+    [RelayCommand]
+    void CopyDiagnostics() => _services.CopyDiagnostics();
 
     /// <summary>The GPL asks that the source be offered to everyone who gets the app.</summary>
     [RelayCommand]

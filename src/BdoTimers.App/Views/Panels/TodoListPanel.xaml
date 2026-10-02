@@ -15,7 +15,7 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Grid Grid.Column="0" Width="14" Height="28" Background="Transparent" Cursor="SizeAll" ToolTip="Drag to move">
-                        <Ellipse Width="4" Height="4" Fill="{StaticResource AccentBrush}"
+                        <Ellipse Width="4" Height="4" Fill="{DynamicResource AccentBrush}"
                                  HorizontalAlignment="Center" VerticalAlignment="Center">
                             <Ellipse.RenderTransform><TranslateTransform Y="-4" /></Ellipse.RenderTransform>
                         </Ellipse>
@@ -48,7 +48,7 @@
             <DataTemplate.Triggers>
                 <Trigger SourceName="RowGrid" Property="IsMouseOver" Value="True">
                     <Setter TargetName="Actions" Property="Visibility" Value="Visible" />
-                    <Setter TargetName="RowText" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                    <Setter TargetName="RowText" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                 </Trigger>
                 <Trigger SourceName="RowGrid" Property="IsKeyboardFocusWithin" Value="True">
                     <Setter TargetName="Actions" Property="Visibility" Value="Visible" />
@@ -66,7 +66,7 @@
                         <Setter Property="BorderBrush" Value="Transparent" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="{StaticResource HairlineStrongBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource HairlineStrongBrush}" />
                             </Trigger>
                         </Style.Triggers>
                     </Style>

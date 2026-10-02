@@ -33,6 +33,7 @@ internal static class SavedDataValidation
 
     static void Settings(AppSettings settings)
     {
+        Require(double.IsFinite(settings.TextScale) && settings.TextScale is >= 1 and <= 1.5);
         Require(settings.DefaultLeadTimesMinutes is not null && settings.DefaultLeadTimesMinutes.All(m => m is >= 0 and <= 1440));
         Require(float.IsFinite(settings.Volume) && settings.Volume is >= 0 and <= 1 && settings.AlertSound is not null);
         Require(settings.Overlay is not null && Enum.IsDefined(settings.Overlay.Layout));

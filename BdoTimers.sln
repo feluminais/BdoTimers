@@ -15,6 +15,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "installer", "installer", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetupUi", "installer\SetupUi\SetupUi.csproj", "{7D4F3982-8358-4531-B44B-A076F0E6CC0C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BdoTimers.App.Tests", "tests\BdoTimers.App.Tests\BdoTimers.App.Tests.csproj", "{26C1A5A4-11BF-468C-A086-91370ACF2E70}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -37,6 +41,10 @@ Global
 		{7D4F3982-8358-4531-B44B-A076F0E6CC0C}.Debug|x64.Build.0 = Debug|Any CPU
 		{7D4F3982-8358-4531-B44B-A076F0E6CC0C}.Release|x64.ActiveCfg = Release|Any CPU
 		{7D4F3982-8358-4531-B44B-A076F0E6CC0C}.Release|x64.Build.0 = Release|Any CPU
+		{26C1A5A4-11BF-468C-A086-91370ACF2E70}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{26C1A5A4-11BF-468C-A086-91370ACF2E70}.Debug|x64.Build.0 = Debug|Any CPU
+		{26C1A5A4-11BF-468C-A086-91370ACF2E70}.Release|x64.ActiveCfg = Release|Any CPU
+		{26C1A5A4-11BF-468C-A086-91370ACF2E70}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,5 +54,6 @@ Global
 		{8BD54AF2-79DD-4EC0-8124-0720959E57FC} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{0436AE19-EB1D-4ED8-8BDD-D31248F8A95E} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{7D4F3982-8358-4531-B44B-A076F0E6CC0C} = {1860D2E4-5C43-71D5-59A5-599A4DE1DF67}
+		{26C1A5A4-11BF-468C-A086-91370ACF2E70} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

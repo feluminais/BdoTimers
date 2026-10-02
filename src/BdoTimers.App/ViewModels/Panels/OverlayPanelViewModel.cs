@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels.Panels;
 
 /// <summary>
-/// The Overlay panel (spec: docs/superpowers/specs/2026-09-28-overlay-design.md). While it's open the overlay is a
+/// The Overlay panel. While it's open the overlay is a
 /// draggable preview, and every change applies at once.
 /// </summary>
 public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
@@ -167,7 +167,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         var old = _services.Settings.Current.Overlay.BackgroundImage;
         if (file == old) return;
         Modify(o => o with { BackgroundImage = file });
-        _services.Art.Delete(old);
+        _services.Undo.ReleasePicture(old);
         Picture = file is null ? null : _services.Art.UserPicture(file);
     }
 

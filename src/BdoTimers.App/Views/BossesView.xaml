@@ -8,20 +8,20 @@
         <Style x:Key="OwnSettingsMark" TargetType="TextBlock" BasedOn="{StaticResource IconText}">
             <Setter Property="Text" Value="&#xE70F;" />
             <Setter Property="FontSize" Value="9" />
-            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="ToolTip" Value="Own alert settings" />
             <Setter Property="Visibility" Value="{Binding OwnSettings, Converter={StaticResource BoolToVisibility}}" />
         </Style>
         <!-- Strip tile. The ContentControl's Tag "Next" makes it the large, gold-outlined tile. -->
         <DataTemplate x:Key="StripTile" DataType="{x:Type vm:StripTileViewModel}">
-            <Border BorderThickness="1" Background="{StaticResource BgBrush}">
+            <Border BorderThickness="1" Background="{DynamicResource BgBrush}">
                 <Border.Style>
                     <Style TargetType="Border">
-                        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContentControl}}" Value="Next">
-                                <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
@@ -38,10 +38,10 @@
                         <TextBlock Text="{Binding Label}" FontSize="11">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContentControl}}" Value="Next">
-                                            <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
@@ -77,24 +77,24 @@
 
         <!-- A boss name in the week grid, coloured by its state -->
         <Style x:Key="GridEntryButton" TargetType="Button" BasedOn="{StaticResource NameButton}">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="ToolTip" Value="{Binding Tooltip}" />
             <Setter Property="ContextMenuService.IsEnabled" Value="{Binding CanSkip}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding State}" Value="Past">
-                    <Setter Property="Foreground" Value="{StaticResource PastBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource PastBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding State}" Value="Unfollowed">
-                    <Setter Property="Foreground" Value="{StaticResource PastBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource PastBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding State}" Value="Skipped">
-                    <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding State}" Value="Next">
-                    <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
                 </DataTrigger>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -107,17 +107,17 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{StaticResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
+                        <Border Background="{DynamicResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
                                 ClipToBounds="True">
                             <Grid>
                                 <ContentPresenter />
                                 <TextBlock x:Name="Gear" Style="{StaticResource IconText}" Text="&#xE713;" FontSize="11" Opacity="0.55"
-                                           Foreground="{StaticResource SubtleBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,7,0" />
+                                           Foreground="{DynamicResource SubtleBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,7,0" />
                             </Grid>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Gear" Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                                <Setter TargetName="Gear" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
                                 <Setter TargetName="Gear" Property="Opacity" Value="1" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -183,7 +183,7 @@
                                             <Setter Property="BorderBrush" Value="Transparent" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -191,10 +191,10 @@
                                     <TextBlock Text="{Binding Label}" HorizontalAlignment="Center" FontSize="12">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
-                                                <Setter Property="Foreground" Value="{StaticResource SubtleBrush}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                        <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -209,10 +209,10 @@
                 <ItemsControl ItemsSource="{Binding Rows}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:GridRowViewModel}">
-                            <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0">
+                            <Border BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0">
                                 <DockPanel>
                                     <TextBlock Text="{Binding Time}" Width="56" DockPanel.Dock="Left" Style="{StaticResource ClockText}"
-                                               FontWeight="Normal" FontSize="12" Foreground="{StaticResource SubtleBrush}" VerticalAlignment="Center" />
+                                               FontWeight="Normal" FontSize="12" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
                                     <ItemsControl ItemsSource="{Binding Cells}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><UniformGrid Rows="1" /></ItemsPanelTemplate>
@@ -226,10 +226,10 @@
                                                             <Setter Property="Background" Value="Transparent" />
                                                             <Style.Triggers>
                                                                 <DataTrigger Binding="{Binding IsToday}" Value="True">
-                                                                    <Setter Property="Background" Value="{StaticResource AccentFillBrush}" />
+                                                                    <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
                                                                 </DataTrigger>
                                                                 <DataTrigger Binding="{Binding IsNext}" Value="True">
-                                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                                                                 </DataTrigger>
                                                             </Style.Triggers>
                                                         </Style>
@@ -272,7 +272,7 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Border BorderBrush="{StaticResource HairlineBrush}" BorderThickness="0,1,0,0" />
+                <Border BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0" />
 
                 <!-- As many columns of 215 px or more as fit; the negative margin absorbs the last tile's gap -->
                 <ItemsControl ItemsSource="{Binding Tiles}" ItemTemplate="{StaticResource BossTile}" Margin="0,22,-8,0" Focusable="False">

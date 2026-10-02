@@ -1,0 +1,23 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:BdoTimers.App.Controls">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Theme.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+    <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <controls:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
+    <controls:NullToCollapsedConverter x:Key="NullToCollapsed" />
+    <controls:WidthToColumnsConverter x:Key="WidthToColumns" />
+    <!-- A panel's ✕ and Done both close it -->
+    <Style x:Key="PanelCloseButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
+        <Setter Property="Content" Value="&#xE8BB;" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="ToolTip" Value="Close" />
+        <Setter Property="Command" Value="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+    </Style>
+    <Style x:Key="PanelDoneButton" TargetType="Button" BasedOn="{StaticResource OutlineButton}">
+        <Setter Property="Content" Value="Done" />
+        <Setter Property="DockPanel.Dock" Value="Right" />
+        <Setter Property="Command" Value="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+    </Style>
+</ResourceDictionary>

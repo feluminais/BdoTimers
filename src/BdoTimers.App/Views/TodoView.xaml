@@ -3,47 +3,31 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="clr-namespace:BdoTimers.App.ViewModels">
     <UserControl.Resources>
-        <Style x:Key="TodoOpenButton" TargetType="Button" BasedOn="{StaticResource NameButton}">
-            <Setter Property="FocusVisualStyle">
-                <Setter.Value>
-                    <Style TargetType="Control">
-                        <Setter Property="Template">
-                            <Setter.Value>
-                                <ControlTemplate TargetType="Control">
-                                    <Border BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" />
-                                </ControlTemplate>
-                            </Setter.Value>
-                        </Setter>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <Style x:Key="TodoOpenButton" TargetType="Button" BasedOn="{StaticResource NameButton}" />
         <Style x:Key="TodoCheck" TargetType="CheckBox">
             <Setter Property="Width" Value="26" />
             <Setter Property="Height" Value="26" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <Border x:Name="Hit" Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
-                            <Border x:Name="Box" Width="14" Height="14" BorderBrush="{StaticResource SubtleBrush}"
+                            <Border x:Name="Box" Width="14" Height="14" BorderBrush="{DynamicResource SubtleBrush}"
                                     BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
                                 <TextBlock x:Name="Mark" FontSize="11" Text="" FontWeight="Bold"
-                                           Foreground="{StaticResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                           Foreground="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Mark" Property="Text" Value="✓" />
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="{x:Null}">
                                 <Setter TargetName="Mark" Property="Text" Value="−" />
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Hit" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Box" Property="Opacity" Value="0.45" />
@@ -54,11 +38,11 @@
             </Setter>
         </Style>
         <Style x:Key="TodoRowText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsStruck}" Value="True">
-                    <Setter Property="Foreground" Value="{StaticResource PastBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource PastBrush}" />
                     <Setter Property="TextDecorations" Value="Strikethrough" />
                 </DataTrigger>
             </Style.Triggers>
@@ -81,7 +65,7 @@
                               Command="{Binding ToggleCommand}" Tag="{Binding Id}"
                               AutomationProperties.Name="{Binding AutomationName}" />
                     <TextBlock DockPanel.Dock="Right" Text="{Binding PartialProgress}" FontSize="11" Margin="6,4,0,0"
-                               Foreground="{StaticResource SubtleBrush}" />
+                               Foreground="{DynamicResource SubtleBrush}" />
                     <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}" HorizontalContentAlignment="Left"
                             AutomationProperties.Name="{Binding AutomationName}">
                         <TextBlock Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
@@ -95,10 +79,10 @@
                     Padding="0,9,0,16" MouseLeftButtonUp="List_MouseLeftButtonUp" Cursor="Hand">
                 <Border.Style>
                     <Style TargetType="Border">
-                        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+                        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
                             </Trigger>
                         </Style.Triggers>
                     </Style>
@@ -106,7 +90,7 @@
                 <StackPanel>
                     <DockPanel Margin="0,0,0,6">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Summary}" Foreground="{StaticResource AccentBrush}" Margin="8,0,0,0"
+                            <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource AccentBrush}" Margin="8,0,0,0"
                                        VerticalAlignment="Center" Visibility="{Binding IsOn, Converter={StaticResource BoolToVisibility}}" />
                             <ToggleButton Style="{StaticResource TodoActiveToggle}" IsChecked="{Binding IsOn, Mode=TwoWay}"
                                           AutomationProperties.Name="{Binding Name, StringFormat='Active {0}'}" />

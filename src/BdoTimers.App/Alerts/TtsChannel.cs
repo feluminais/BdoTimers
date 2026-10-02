@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Diagnostics;
 using System.IO;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Text;
@@ -31,17 +32,27 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
     public Task<WaveStream> SynthesizeAsync(string text, string? voiceId, int rate) =>
         Task.Run<WaveStream>(() =>
         {
-            if (!kokoro.IsAvailable) throw new FileNotFoundException("The voice model is missing; scripts/get-voice.ps1 fetches it.");
+            var duration = Stopwatch.StartNew();
+            if (!kokoro.IsAvailable) throw new FileNotFoundException("Voice files are missing or incomplete. Repair the installation.");
             var line = Line.For(text, voiceId, rate);
             var key = line.Key(kokoro.ModelIdentity);
-            if (cache.Open(key) is { } cached) return cached;
+            if (cache.Open(key) is { } cached)
+            {
+                PerformanceMetrics.SpeechReady(duration.ElapsedMilliseconds, cached: true);
+                return cached;
+            }
             lock (_synthesis)
             {
-                if (cache.Open(key) is { } prepared) return prepared;
+                if (cache.Open(key) is { } prepared)
+                {
+                    PerformanceMetrics.SpeechReady(duration.ElapsedMilliseconds, cached: true);
+                    return prepared;
+                }
                 var samples = kokoro.Generate(line.Spoken, line.Voice, line.Speed, out var sampleRate);
                 Store(key, samples, sampleRate);
                 var bytes = new byte[samples.Length * sizeof(float)];
                 Buffer.BlockCopy(samples, 0, bytes, 0, bytes.Length);
+                PerformanceMetrics.SpeechReady(duration.ElapsedMilliseconds, cached: false);
                 return new RawSourceWaveStream(new MemoryStream(bytes), WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1));
             }
         });
