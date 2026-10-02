@@ -33,16 +33,9 @@ public static class HotkeyRules
     const HotkeyModifiers NonTyping = HotkeyModifiers.Ctrl | HotkeyModifiers.Alt | HotkeyModifiers.Win;
 
     /// <summary>
-    /// Why <paramref name="hotkey"/> can't be used beside the <paramref name="taken"/> ones, or null when it can. Windows
+    /// Why <paramref name="hotkey"/> can't be used beside the <paramref name="others"/>, or null when it can. Windows
     /// keeps a hotkey from the game, so a key that types in chat needs Ctrl or Alt; Shift+letter still types.
     /// </summary>
-    public static string? Check(Hotkey hotkey, Hotkey? other) => Check(hotkey, other, null);
-
-    public static string? Check(Hotkey hotkey, Hotkey? other, Hotkey? another)
-        => CheckAgainst(hotkey, new[] { other, another }.OfType<Hotkey>());
-
-    public static string? Check(Hotkey hotkey, IEnumerable<Hotkey?> taken) => CheckAgainst(hotkey, taken.OfType<Hotkey>());
-
     public static string? CheckAgainst(Hotkey hotkey, IEnumerable<Hotkey> others)
     {
         if (TypesText(hotkey.VirtualKey) && (hotkey.Modifiers & NonTyping) == 0) return NeedsModifier;

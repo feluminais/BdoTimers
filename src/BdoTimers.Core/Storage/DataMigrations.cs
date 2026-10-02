@@ -17,8 +17,6 @@ public static class DataMigrations
     /// <summary>Lists that earlier versions gave timers themselves: the built-in default, and 5 and 0 for countdowns.</summary>
     static readonly IReadOnlyList<IReadOnlyList<int>> AssignedLeadTimes = [AlertConfig.StandardLeadTimesMinutes, [5, 0]];
 
-    public static AppData Apply(AppData data) => Apply(data, new AppSettings());
-
     public static AppData Apply(AppData data, AppSettings settings)
     {
         if (data.DataVersion >= Current) return data;

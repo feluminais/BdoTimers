@@ -17,7 +17,7 @@ public class DataMigrationsTests
             Timers = [new TimerDef { Name = "Mine", Alerts = new AlertConfig { LeadTimesMinutes = [15, 5, 1, 0] } }],
         };
 
-        Assert.Same(data, DataMigrations.Apply(data));
+        Assert.Same(data, DataMigrations.Apply(data, new()));
     }
 
     [Fact]
@@ -27,7 +27,7 @@ public class DataMigrationsTests
         template = template with { Countdown = CountdownOps.Start(template.Countdown!, T0) };
         var data = new AppData { DataVersion = 4, Timers = [template] };
 
-        var migrated = DataMigrations.Apply(data);
+        var migrated = DataMigrations.Apply(data, new());
 
         Assert.Equal(CountdownStatus.Idle, migrated.Timers[0].Countdown!.Status);
         var run = migrated.Timers[1];

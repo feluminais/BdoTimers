@@ -50,7 +50,7 @@ public class SeedServiceTests
             data.Timers.Select(t => t.Preset));
         Assert.All(data.Timers.Skip(5), t => Assert.True(t.IsBuiltIn));
         Assert.Equal(DataMigrations.Current, data.DataVersion);
-        Assert.Same(data, Presets.Ensure(DataMigrations.Apply(data)));
+        Assert.Same(data, Presets.Ensure(DataMigrations.Apply(data, new())));
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public class SeedServiceTests
         var data = SeedService.NewData(Seed);
         var deleted = data with { Timers = data.Timers.Where(t => t.Preset != Presets.HorseRegistration).ToList() };
 
-        var restarted = Presets.Ensure(DataMigrations.Apply(deleted));
+        var restarted = Presets.Ensure(DataMigrations.Apply(deleted, new()));
 
         Assert.DoesNotContain(restarted.Timers, t => t.Preset == Presets.HorseRegistration);
     }
