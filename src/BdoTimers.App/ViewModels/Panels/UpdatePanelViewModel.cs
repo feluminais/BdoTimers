@@ -23,7 +23,7 @@ public sealed partial class UpdatePanelViewModel(ReleaseInfo release, IPanelHost
         catch (Exception ex)
         {
             Log.Error("Couldn't open the release page", ex);
-            Error = "Couldn’t open GitHub";
+            Error = "Couldn't open GitHub";
         }
     }
 }

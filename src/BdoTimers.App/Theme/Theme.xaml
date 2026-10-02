@@ -20,6 +20,7 @@
     <SolidColorBrush x:Key="AccentFillBrush" Color="#14B89A5E" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="#E8C98A" />
     <SolidColorBrush x:Key="DangerBrush" Color="#A0493B" />
+    <SolidColorBrush x:Key="UpdateBrush" Color="#78C99A" />
     <SolidColorBrush x:Key="DimBrush" Color="#99000000" />
 
     <!-- Palatino Linotype if Cinzel can't load. -->
