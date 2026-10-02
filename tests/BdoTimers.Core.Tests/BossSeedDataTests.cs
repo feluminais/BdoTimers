@@ -34,7 +34,7 @@ public class BossSeedDataTests
     public void Na_regular_noon_slot_uses_pacific_dst_not_european_dates(string from, string expected)
     {
         var garmoth = SeedService.ToTimers(SeedService.LoadEmbedded("na"), new(), "na").Single(t => t.Name == "Garmoth");
-        Assert.Equal(DateTimeOffset.Parse(expected), ScheduleMath.Next(garmoth.Scheduled!, DateTimeOffset.Parse(from), 1)[0]);
+        Assert.Equal(DateTimeOffset.Parse(expected), ScheduleMath.From(garmoth.Scheduled!, DateTimeOffset.Parse(from)).Take(1).ToList()[0]);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class BossSeedDataTests
     {
         var seed = SeedService.LoadEmbedded();
 
-        Assert.NotNull(TimeZones.Find(seed.TimeZoneId));
+        Assert.NotNull(TimeZoneInfo.FindSystemTimeZoneById(seed.TimeZoneId));
         Assert.True(seed.Bosses.Count >= 5, "EU has at least five scheduled world bosses");
         Assert.Contains(seed.Bosses, b => b.Name == "Kzarka");
         Assert.Contains(seed.Bosses, b => b.Name == "Nouver");
@@ -51,6 +51,6 @@ public class BossSeedDataTests
 
         var timers = SeedService.ToTimers(seed, new());
         var now = new FakeClock(new DateTimeOffset(2026, 10, 2, 0, 0, 0, TimeSpan.Zero));
-        Assert.All(timers, t => Assert.NotEmpty(ScheduleMath.Next(t.Scheduled!, now.UtcNow, 1)));
+        Assert.All(timers, t => Assert.NotEmpty(ScheduleMath.From(t.Scheduled!, now.UtcNow).Take(1).ToList()));
     }
 }

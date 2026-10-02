@@ -27,6 +27,8 @@ public sealed class AppServices : IDisposable
     readonly TrayIcon _tray;
     readonly ToastChannel _toast;
     readonly SoundChannel _sound;
+    readonly AlertDispatcher _alerts;
+    readonly BossSeed _seed;
     readonly string _dataDir;
     MainWindow? _main;
     MainViewModel? _mainViewModel;
@@ -47,7 +49,6 @@ public sealed class AppServices : IDisposable
     public UiClock UiClock { get; } = new();
     /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
     public BossBoardCache Boards { get; } = new();
-    public AlertDispatcher Alerts { get; }
     public IClock Clock { get; } = new SystemClock();
     public TtsChannel Tts { get; }
     public OverlayController Overlay { get; }
@@ -64,10 +65,12 @@ public sealed class AppServices : IDisposable
         Art = new ArtLibrary(Path.Combine(dataDir, "images"));
         Sounds = new UserSounds(Path.Combine(dataDir, "sounds"));
         _sound = new SoundChannel(Sounds);
+        _seed = SeedService.LoadEmbedded();
         var settingsFile = new JsonFileStore<AppSettings>(Path.Combine(dataDir, "settings.json"), () => new AppSettings());
-        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => new AppData());
+        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => SeedService.NewData(_seed));
         var settings = settingsFile.Load();
         var timers = timersFile.Load();
+        if (!File.Exists(timersFile.FilePath)) timersFile.Save(timers.Value);
 
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
         var todosFile = new JsonFileStore<TodoData>(Path.Combine(dataDir, "todos.json"),
@@ -80,11 +83,9 @@ public sealed class AppServices : IDisposable
         Todos.Update(TodoMigrations.Apply);
         Settings.Changed += () =>
         {
-            try { Todos.ApplyDefaultSchedules(Settings.Current); }
+            try { Todos.Reconcile(Settings.Current); }
             catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); }
         };
-        // A built-in sound from an earlier version that the app no longer has.
-        if (!SoundKeys.IsKnown(Settings.Current.AlertSound)) Settings.Update(s => s with { AlertSound = BuiltInSounds.Default });
         Timers = new TimerStore(timersFile, timers.Value);
         _seeds = BossRegions.All.ToDictionary(r => r.Id, r => SeedService.LoadEmbedded(r.Id));
         Timers.Update(d =>
@@ -98,8 +99,8 @@ public sealed class AppServices : IDisposable
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")),
             new SpeechCache(Path.Combine(dataDir, "speech")));
         Tts.CleanCacheInBackground();
-        Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds, Timers);
-        _engine = new SchedulerEngine(Timers, Settings, Alerts, Clock);
+        _alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds, Timers);
+        _engine = new SchedulerEngine(Timers, Settings, _alerts, Clock);
         _loop = new SchedulerLoop(_engine, Clock);
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
@@ -122,18 +123,14 @@ public sealed class AppServices : IDisposable
     {
         try { _engine.ReconcileStartup(); }
         catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); }
-        try
-        {
-            Todos.ApplyDefaultSchedules(Settings.Current);
-            Todos.Reconcile();
-        }
+        try { Todos.Reconcile(Settings.Current); }
         catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); }
         var todoResetErrors = new RepeatingErrorLog("To-do reset", Clock);
         UiClock.Tick += _ =>
         {
             try
             {
-                Todos.Reconcile();
+                Todos.Reconcile(Settings.Current);
                 todoResetErrors.Succeeded();
             }
             catch (StateSaveException ex) { todoResetErrors.Failed(ex); }
@@ -202,7 +199,7 @@ public sealed class AppServices : IDisposable
         if (_main is null)
         {
             _mainViewModel = new MainViewModel(this);
-            _main = new MainWindow(_mainViewModel, Settings);
+            _main = new MainWindow(_mainViewModel, this);
         }
         _main.Show();
         if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
@@ -226,16 +223,16 @@ public sealed class AppServices : IDisposable
     public HorseStartResult StartHorseRegistration(bool announce)
     {
         var result = Timers.StartHorseRegistration(Clock.UtcNow);
-        if (result == HorseStartResult.Started && announce) Alerts.Say("Horse registration time started");
+        if (result == HorseStartResult.Started && announce) _alerts.Say("Horse registration time started");
         else if (result == HorseStartResult.LimitReached)
         {
-            try { _toast.ShowInfo("Horse registrations", "Maximum 10 running."); }
+            try { _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}."); }
             catch (Exception ex) { Log.Error("Horse registration limit notice failed", ex); }
         }
         return result;
     }
 
-    public void SendTestAlert() => Alerts.Dispatch(new AlertEvent(
+    public void SendTestAlert() => _alerts.Dispatch(new AlertEvent(
         [new TimerDef { Name = "Test boss" }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
 
     /// <summary>The key that plays for a timer sound key; null means the app-wide alert sound.</summary>
@@ -266,6 +263,19 @@ public sealed class AppServices : IDisposable
         {
             if (_preview == preview) _preview = null;
             preview.Dispose();
+        }
+    }
+
+    /// <summary>Asks for a picture and copies it into the pictures folder; null when cancelled or it couldn't be copied.</summary>
+    public string? ChoosePicture()
+    {
+        var dialog = new OpenFileDialog { Filter = "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
+        if (dialog.ShowDialog() != true) return null;
+        try { return Art.Import(dialog.FileName); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Error($"Couldn't import picture {dialog.FileName}", ex);
+            return null;
         }
     }
 
@@ -340,13 +350,13 @@ public sealed class AppServices : IDisposable
             : previous with { WeeklyTodoReset = schedule };
         if (changed == previous) return;
         // Save list boundaries first: if that fails, Settings keeps the old reset.
-        Todos.ApplyDefaultSchedules(changed);
+        Todos.Reconcile(changed);
         try { Settings.Update(s => cadence == TodoCadence.Daily
             ? s with { DailyTodoReset = schedule }
             : s with { WeeklyTodoReset = schedule }); }
         catch (StateSaveException)
         {
-            try { Todos.ApplyDefaultSchedules(previous); }
+            try { Todos.Reconcile(previous); }
             catch (StateSaveException ex) { Log.Error("Couldn't restore to-do reset after settings save failed", ex); }
             throw;
         }

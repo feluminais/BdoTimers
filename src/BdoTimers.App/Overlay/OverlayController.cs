@@ -128,9 +128,7 @@ public sealed class OverlayController(AppServices services) : IDisposable
     /// the primary screen.</summary>
     static (double Left, double Top) Placement(double? left, double? top)
     {
-        var screen = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
-            SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
-        return left is { } l && top is { } t && screen.Contains(new Point(l + 20, t + 20))
+        return left is { } l && top is { } t && VirtualScreen.Contains(new Point(l + 20, t + 20))
             ? (l, t)
             : (SystemParameters.WorkArea.Right - 300, SystemParameters.WorkArea.Top + 40);
     }

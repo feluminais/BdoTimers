@@ -16,11 +16,7 @@ public static class Parsing
         DateOnly.TryParseExact(text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
 
     /// <summary>Countdown length as "H:MM" or a plain number of minutes, from 1 minute to 24 hours.</summary>
-    public static bool TryParseDuration(string text, out TimeSpan duration) =>
-        TryParseHoursMinutes(text, TimeSpan.FromMinutes(1), TimeSpan.FromHours(24), out duration);
-
-    /// <summary>"H:MM" or a plain number of minutes, from <paramref name="min"/> to <paramref name="max"/>.</summary>
-    public static bool TryParseHoursMinutes(string text, TimeSpan min, TimeSpan max, out TimeSpan duration)
+    public static bool TryParseDuration(string text, out TimeSpan duration)
     {
         duration = TimeSpan.Zero;
         var parts = text.Trim().Split(':');
@@ -37,7 +33,7 @@ public static class Parsing
             return false;
         }
         var totalMinutes = (long)hours * 60 + minutes;
-        if (totalMinutes < min.TotalMinutes || totalMinutes > max.TotalMinutes) return false;
+        if (totalMinutes < 1 || totalMinutes > 24 * 60) return false;
         duration = TimeSpan.FromMinutes(totalMinutes);
         return true;
     }

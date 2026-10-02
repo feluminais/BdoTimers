@@ -14,14 +14,14 @@ public partial class MainWindow : Window
     static readonly Duration Fade = TimeSpan.FromMilliseconds(120);
 
     readonly MainViewModel _vm;
-    readonly PersistentState<AppSettings> _settings;
+    readonly AppServices _services;
 
-    public MainWindow(MainViewModel viewModel, PersistentState<AppSettings> settings)
+    public MainWindow(MainViewModel viewModel, AppServices services)
     {
         InitializeComponent();
         DataContext = _vm = viewModel;
-        _settings = settings;
-        RestorePlacement(settings.Current.Window);
+        _services = services;
+        RestorePlacement(services.Settings.Current.Window);
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Panel)) ShowPanel(viewModel.Panel);
@@ -72,10 +72,8 @@ public partial class MainWindow : Window
     void RestorePlacement(WindowPlacement? placement)
     {
         if (placement is null) return;
-        var screen = new Rect(SystemParameters.VirtualScreenLeft, SystemParameters.VirtualScreenTop,
-            SystemParameters.VirtualScreenWidth, SystemParameters.VirtualScreenHeight);
         // The top bar must be reachable, or the window couldn't be dragged back from a disconnected screen.
-        if (!screen.Contains(new Point(placement.Left + 60, placement.Top + 20))) return;
+        if (!VirtualScreen.Contains(new Point(placement.Left + 60, placement.Top + 20))) return;
         WindowStartupLocation = WindowStartupLocation.Manual;
         Left = placement.Left;
         Top = placement.Top;
@@ -89,7 +87,7 @@ public partial class MainWindow : Window
         if (bounds.IsEmpty) return;
         try
         {
-            _settings.Update(s => s with { Window = new WindowPlacement(bounds.Left, bounds.Top, bounds.Width, bounds.Height) });
+            _services.Settings.Update(s => s with { Window = new WindowPlacement(bounds.Left, bounds.Top, bounds.Width, bounds.Height) });
         }
         catch (StateSaveException ex)
         {
@@ -102,7 +100,7 @@ public partial class MainWindow : Window
     {
         SavePlacement();
         _vm.ClosePanel();
-        if (!((App)Application.Current).IsQuittingApp && _settings.Current.CloseToTray)
+        if (!_services.IsQuitting && _services.Settings.Current.CloseToTray)
         {
             e.Cancel = true;
             Hide();
@@ -113,7 +111,6 @@ public partial class MainWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         base.OnClosed(e);
-        var app = (App)Application.Current;
-        if (!app.IsQuittingApp) app.Quit();
+        if (!_services.IsQuitting) _services.Quit();
     }
 }

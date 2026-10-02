@@ -136,7 +136,7 @@
                            VerticalAlignment="Center" Margin="4,0,6,0" />
                 <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="21" VerticalAlignment="Center" />
             </DockPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Weekly}" Margin="0,0,8,0" />
             </ScrollViewer>
         </DockPanel>
@@ -148,7 +148,7 @@
                            VerticalAlignment="Center" Margin="4,0,6,0" />
                 <TextBlock Text="Daily" Style="{StaticResource DisplayText}" FontSize="21" VerticalAlignment="Center" />
             </DockPanel>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <ItemsControl ItemsSource="{Binding Daily}" />
             </ScrollViewer>
         </DockPanel>

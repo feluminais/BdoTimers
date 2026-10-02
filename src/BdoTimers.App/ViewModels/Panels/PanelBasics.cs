@@ -1,3 +1,6 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
 namespace BdoTimers.App.ViewModels.Panels;
 
 /// <summary>Shows one panel at a time over the main window.</summary>
@@ -29,4 +32,24 @@ public sealed record Choice(string Label, object? Value)
     public bool IsOn => Value is true;
 
     public override string ToString() => Label;
+}
+
+/// <summary>An action that asks first: Ask shows the question, Confirm runs the action and Cancel drops it.</summary>
+/// <param name="hideAfter">False for an action that closes the panel, so the question stays as the panel fades out.</param>
+public sealed partial class Confirmation(Action action, bool hideAfter = true) : ObservableObject
+{
+    [ObservableProperty] private bool _isAsking;
+
+    [RelayCommand]
+    void Ask() => IsAsking = true;
+
+    [RelayCommand]
+    void Cancel() => IsAsking = false;
+
+    [RelayCommand]
+    void Confirm()
+    {
+        action();
+        if (hideAfter) IsAsking = false;
+    }
 }

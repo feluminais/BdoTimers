@@ -25,7 +25,7 @@ public class HotkeyCatalogTests
 
         foreach (var key in new[] { overlay.AlwaysShowHotkey!, overlay.ShowHotkey!, horse.StartHotkey! }
             .Concat(others.Select(t => t.ControlHotkey!)))
-            Assert.Equal(HotkeyRules.SameAsOther, HotkeyRules.CheckAgainst(key, conflicts));
+            Assert.Equal(HotkeyRules.UsedByAnother, HotkeyRules.CheckAgainst(key, conflicts));
         Assert.Null(HotkeyRules.CheckAgainst(Key, conflicts));
 
         Assert.Contains(Key, HotkeyCatalog.OtherKeys(data, overlay, new(HotkeyAction.AlwaysShow)));

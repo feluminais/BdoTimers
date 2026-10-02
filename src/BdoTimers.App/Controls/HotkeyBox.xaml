@@ -4,8 +4,7 @@
              Focusable="True" FocusVisualStyle="{x:Null}">
     <StackPanel Width="130">
         <Border x:Name="Field" BorderThickness="1" BorderBrush="{StaticResource HairlineStrongBrush}"
-                Background="{StaticResource HoverFillBrush}" Padding="5,1" Cursor="Hand"
-                ToolTip="Click to record a hotkey" MouseLeftButtonDown="Field_MouseLeftButtonDown">
+                Background="{StaticResource HoverFillBrush}" Padding="5,1" Cursor="Hand" MouseLeftButtonDown="Field_MouseLeftButtonDown">
             <DockPanel>
                 <Button x:Name="ClearButton" DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="8"
                         Width="20" Height="20" ToolTip="Clear" Click="Clear_Click" />

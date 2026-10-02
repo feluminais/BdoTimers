@@ -39,9 +39,9 @@ public class AlertEligibilityTests
         var store = new TimerStore(new(dir.File("timers.json"), () => new()), new() { Timers = [timer] });
         switch (edit)
         {
-            case "reset": store.ResetCountdown(timer.Id); break;
-            case "pause": store.PauseCountdown(timer.Id, Now.AddMinutes(-1)); break;
-            case "restart": store.StartCountdown(timer.Id, Now); break;
+            case "reset": store.Reset(timer.Id); break;
+            case "pause": store.Pause(timer.Id, Now.AddMinutes(-1)); break;
+            case "restart": store.Start(timer.Id, Now); break;
             case "duration": store.Modify(timer.Id, t => t with
                 { Countdown = CountdownOps.ChangeDuration(t.Countdown!, TimeSpan.FromHours(2)) }); break;
         }
@@ -65,7 +65,7 @@ public class AlertEligibilityTests
         Assert.Null(AlertEligibility.Filter(store.Current, Queued(timer, 5)));
         Assert.Equal(horse, store.Current.Timers.Count == 0);
         if (horse) store.Delete(timer.Id);
-        else store.ResetCountdown(timer.Id);
+        else store.Reset(timer.Id);
         Assert.Null(AlertEligibility.Filter(store.Current, alert));
     }
 

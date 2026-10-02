@@ -76,7 +76,7 @@ internal static class SavedDataValidation
             if (timer.Kind == TimerKind.Scheduled)
             {
                 Require(timer.Scheduled is not null && timer.Scheduled.Slots is not null);
-                TimeZones.Find(timer.Scheduled.TimeZoneId);
+                TimeZoneInfo.FindSystemTimeZoneById(timer.Scheduled.TimeZoneId);
                 Require(timer.Scheduled.Slots.All(s => Enum.IsDefined(s.Day)));
                 ScheduleMath.ValidateDateRange(timer.Scheduled.StartDate, timer.Scheduled.EndDate);
             }
@@ -111,21 +111,19 @@ internal static class SavedDataValidation
         foreach (var list in todos.Lists)
         {
             Require(list is not null && list.Id != Guid.Empty && list.Name is not null && Enum.IsDefined(list.Cadence));
-            Schedule(list.Schedule);
             var rowIds = new HashSet<Guid>();
             Rows(list.Rows, rowIds, 0);
         }
     }
 
-    static void Schedule(TodoSchedule schedule) => Require(schedule is not null && Enum.IsDefined(schedule.Cadence)
-        && Enum.IsDefined(schedule.Day) && schedule.Hour is >= 0 and <= 23 && schedule.Minute is >= 0 and <= 59);
+    static void Schedule(TodoSchedule schedule) => Require(schedule is not null && Enum.IsDefined(schedule.Day) && schedule.Hour is >= 0 and <= 23 && schedule.Minute is >= 0 and <= 59);
 
     static void Timetable(BossSeed seed)
     {
         Require(seed.Bosses is not null && seed.Bosses.All(b => b is not null && b.Name is not null && b.Slots is not null));
         Require(seed.Bosses.Select(b => b.Name).Distinct(StringComparer.OrdinalIgnoreCase).Count() == seed.Bosses.Count
             && seed.Bosses.All(b => b.Slots.All(s => Enum.IsDefined(s.Day))));
-        TimeZones.Find(seed.TimeZoneId);
+        TimeZoneInfo.FindSystemTimeZoneById(seed.TimeZoneId);
         TimetableUpdates.Revision(seed);
     }
 

@@ -34,44 +34,37 @@
     </UserControl.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="22,16,12,4">
-            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
             <TextBlock Text="Overlay" Style="{StaticResource DisplayText}" FontSize="18" VerticalAlignment="Center" />
         </DockPanel>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16" LastChildFill="False">
-            <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
         </DockPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <TextBlock Text="Show" Style="{StaticResource SectionText}" Margin="0,4,0,4" />
-                <Border Style="{StaticResource Row}">
-                    <DockPanel>
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Enabled}" ValueWidth="60"
-                                                AutomationProperties.Name="Overlay" />
-                        <TextBlock Text="Overlay" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Overlay">
+                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Enabled}" ValueWidth="60"
+                                            AutomationProperties.Name="Overlay" />
+                </HeaderedContentControl>
 
                 <StackPanel Visibility="{Binding Enabled.IsOn, Converter={StaticResource BoolToVisibility}}">
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlwaysShow}"
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlwaysShow}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" OtherKeys="{Binding OtherAlwaysKeys}"
-                                                IsRefused="{Binding AlwaysShowRefused}" IsListening="{Binding ListeningAlwaysShow}"
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Taken="{Binding TakenForAlwaysShow}" Hotkeys="{Binding Hotkeys}" Target="{Binding AlwaysShowTarget}"
                                                 AutomationProperties.Name="Always show hotkey" />
                             <TextBlock Text="Always show" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding ShowOnHotkey}"
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding ShowOnHotkey}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" OtherKeys="{Binding OtherShowKeys}"
-                                                IsRefused="{Binding ShowRefused}" IsListening="{Binding ListeningShow}"
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Taken="{Binding TakenForShow}" Hotkeys="{Binding Hotkeys}" Target="{Binding ShowTarget}"
                                                 AutomationProperties.Name="Show hotkey" />
                             <TextBlock Text="Show on hotkey" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
@@ -85,20 +78,14 @@
                     </Border>
 
                     <TextBlock Text="Look" Style="{StaticResource SectionText}" />
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Layouts}" SelectedItem="{Binding Layout}" ValueWidth="60"
-                                                    AutomationProperties.Name="Layout" />
-                            <TextBlock Text="Layout" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <Slider DockPanel.Dock="Right" Width="170" Minimum="0.6" Maximum="2" VerticalAlignment="Center"
-                                    Value="{Binding Scale, Delay=100}" AutomationProperties.Name="Size" />
-                            <TextBlock Text="Size" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Layout">
+                        <controls:CycleSelector ItemsSource="{Binding Layouts}" SelectedItem="{Binding Layout}" ValueWidth="60"
+                                                AutomationProperties.Name="Layout" />
+                    </HeaderedContentControl>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Size">
+                        <Slider Width="170" Minimum="0.6" Maximum="2" VerticalAlignment="Center"
+                                Value="{Binding Scale, Delay=100}" AutomationProperties.Name="Size" />
+                    </HeaderedContentControl>
                     <Border Style="{StaticResource Row}">
                         <StackPanel>
                             <TextBlock Text="Sections" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
@@ -163,20 +150,14 @@
                             <TextBlock Text="Picture" Style="{StaticResource RowLabel}" />
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <Slider DockPanel.Dock="Right" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center"
-                                    Value="{Binding BackgroundOpacity, Delay=100}" AutomationProperties.Name="Background opacity" />
-                            <TextBlock Text="Background opacity" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <Slider DockPanel.Dock="Right" Width="170" Minimum="0.2" Maximum="1" VerticalAlignment="Center"
-                                    Value="{Binding TextOpacity, Delay=100}" AutomationProperties.Name="Text opacity" />
-                            <TextBlock Text="Text opacity" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Background opacity">
+                        <Slider Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center"
+                                Value="{Binding BackgroundOpacity, Delay=100}" AutomationProperties.Name="Background opacity" />
+                    </HeaderedContentControl>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Text opacity">
+                        <Slider Width="170" Minimum="0.2" Maximum="1" VerticalAlignment="Center"
+                                Value="{Binding TextOpacity, Delay=100}" AutomationProperties.Name="Text opacity" />
+                    </HeaderedContentControl>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

@@ -8,6 +8,7 @@ public readonly record struct Slot(DayOfWeek Day, TimeOnly Time);
 
 public sealed record ScheduledSpec
 {
+    /// <summary>A Windows or IANA time zone id; .NET resolves IANA ids on Windows through ICU.</summary>
     public string TimeZoneId { get; init; } = "UTC";
     public IReadOnlyList<Slot> Slots { get; init; } = [];
     /// <summary>Inclusive limits on the slot's date in this schedule's time zone.</summary>

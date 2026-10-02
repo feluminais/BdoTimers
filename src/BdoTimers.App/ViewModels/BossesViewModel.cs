@@ -73,20 +73,13 @@ public sealed partial class BossesViewModel : ObservableObject
     }
 
     static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
-        data.Timers.Where(t => BossRegions.IsSelected(data, t)).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        data.Timers.Where(t => BossRegions.IsSelected(data, t));
 
-    /// <summary>Updates the tiles in place; rebuilds them only when the set of bosses changed (a timetable reset).</summary>
-    void SyncTiles(AppData data, DateTimeOffset now)
-    {
-        var bosses = BuiltInBosses(data).ToList();
-        if (bosses.Select(b => b.Id).SequenceEqual(Tiles.Select(t => t.Id)))
-        {
-            foreach (var (tile, boss) in Tiles.Zip(bosses)) tile.Show(boss, now);
-            return;
-        }
-        Tiles.Clear();
-        foreach (var boss in bosses) Tiles.Add(new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now));
-    }
+    /// <summary>Keeps each boss's tile, in name order, and updates it in place.</summary>
+    void SyncTiles(AppData data, DateTimeOffset now) =>
+        Tiles.Sync(BuiltInBosses(data).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase),
+            (tile, boss) => tile.Id == boss.Id, boss => new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now),
+            (tile, boss) => tile.Show(boss, now));
 
     /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
     /// and own-settings marks, and their skipped spawns.</summary>
@@ -158,10 +151,12 @@ public sealed partial class BossesViewModel : ObservableObject
 }
 
 /// <summary>A boss name that opens the boss panel when clicked.</summary>
-public sealed class BossLink(Guid id, string name, Action<Guid> open)
+public sealed partial class BossLink(Guid id, string name, Action<Guid> open)
 {
     public string Name => name;
-    public IRelayCommand OpenCommand { get; } = new RelayCommand(() => open(id));
+
+    [RelayCommand]
+    void Open() => open(id);
 }
 
 public sealed partial class StripTileViewModel(string caption, bool elapsed) : ObservableObject
@@ -179,13 +174,13 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
     {
         HasSpawn = group is not null;
         if (group is null) return;
-        var signature = $"{group.AtUtc:O}|{string.Join(",", group.Bosses.Select(b => b.Id))}";
+        var signature = Formats.SpawnKey(group);
         if (signature != _signature)
         {
             _signature = signature;
             Names = group.Bosses.Select(b => new BossLink(b.Id, b.Name, open)).ToList();
             Images = art.For(group.Bosses);
-            Label = $"{caption} · {group.AtUtc.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture)}";
+            Label = $"{caption} · {Formats.DayTime(group.AtUtc)}";
         }
         Skipped = group.Skipped;
         Clock = elapsed ? "−" + DurationFormat.Clock(now - group.AtUtc) : DurationFormat.Clock(group.AtUtc - now);
@@ -207,6 +202,8 @@ public sealed partial class GridCellViewModel(bool isToday, bool isNext, IReadOn
 
 public sealed partial class GridEntryViewModel : ObservableObject
 {
+    readonly Core.Storage.TimerStore _store;
+    readonly Action<Guid> _open;
     GridEntry _entry;
 
     [ObservableProperty] private string _tooltip = "";
@@ -219,16 +216,20 @@ public sealed partial class GridEntryViewModel : ObservableObject
     public bool OwnSettings => _entry.Boss.Alerts.OverridesDefaults;
     public bool CanSkip => State is CellState.Upcoming or CellState.Next or CellState.Skipped;
     public string SkipLabel => State == CellState.Skipped ? "Unskip" : "Skip this spawn";
-    public IRelayCommand OpenCommand { get; }
-    public IRelayCommand ToggleSkipCommand { get; }
 
     public GridEntryViewModel(GridEntry entry, Core.Storage.TimerStore store, Action<Guid> open)
     {
+        _store = store;
+        _open = open;
         _entry = entry;
         State = entry.State;
-        OpenCommand = new RelayCommand(() => open(entry.Boss.Id));
-        ToggleSkipCommand = new RelayCommand(() => store.ToggleMute(entry.Boss.Id, entry.AtUtc));
     }
+
+    [RelayCommand]
+    void Open() => _open(_entry.Boss.Id);
+
+    [RelayCommand]
+    void ToggleSkip() => _store.ToggleMute(_entry.Boss.Id, _entry.AtUtc);
 
     /// <summary>Whether <paramref name="entry"/> is this boss at this spawn and looks the same apart from its state.</summary>
     public bool Shows(GridEntry entry) =>
@@ -244,7 +245,7 @@ public sealed partial class GridEntryViewModel : ObservableObject
 
     public void RefreshTooltip(DateTimeOffset now)
     {
-        var when = _entry.AtUtc.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture);
+        var when = Formats.DayTime(_entry.AtUtc);
         var relative = _entry.AtUtc > now ? $"in {DurationFormat.Countdown(_entry.AtUtc - now)}" : "passed";
         var note = State switch
         {

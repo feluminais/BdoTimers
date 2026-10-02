@@ -1,18 +1,12 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimes;
+using static BdoTimers.Core.Tests.TestTimers;
 
 namespace BdoTimers.Core.Tests;
 
 public class BossBoardTests
 {
-    // 2026-09-22 is a Tuesday; Berlin is UTC+2 until 2026-10-25.
-    static readonly DateTimeOffset TuesdayNoonBerlin = new(2026, 9, 22, 10, 0, 0, TimeSpan.Zero);
-
-    static TimerDef Boss(string name, DayOfWeek day, int hour, int minute) =>
-        TestTimers.Scheduled(name, day, hour, minute, 0) with { IsBuiltIn = true };
-
-    static DateTimeOffset Utc(int d, int h, int m) => new(2026, 9, d, h, m, 0, TimeSpan.Zero);
-
     [Fact]
     public void Simultaneous_spawns_share_a_group()
     {
@@ -26,7 +20,7 @@ public class BossBoardTests
             ],
         };
 
-        var board = BossBoard.Build(data, TuesdayNoonBerlin);
+        var board = BossBoard.Build(data, BerlinNoon);
 
         Assert.Equal(Utc(22, 14, 0), board.Next!.AtUtc);
         Assert.Equal(new[] { "Nouver" }, board.Next.Bosses.Select(b => b.Name));
@@ -47,7 +41,7 @@ public class BossBoardTests
             ],
         };
 
-        var board = BossBoard.Build(data, TuesdayNoonBerlin);
+        var board = BossBoard.Build(data, BerlinNoon);
 
         Assert.Equal("Kzarka", board.Next!.Bosses.Single().Name);
         Assert.Equal("Kzarka", board.Previous!.Bosses.Single().Name);
@@ -77,9 +71,9 @@ public class BossBoardTests
         var uturi = Boss("Uturi", DayOfWeek.Tuesday, 19, 0);
         var at = Utc(22, 17, 0);
 
-        var one = BossBoard.Build(new AppData { Timers = [kzarka, uturi], Muted = [new(kzarka.Id, at)] }, TuesdayNoonBerlin);
+        var one = BossBoard.Build(new AppData { Timers = [kzarka, uturi], Muted = [new(kzarka.Id, at)] }, BerlinNoon);
         var both = BossBoard.Build(
-            new AppData { Timers = [kzarka, uturi], Muted = [new(kzarka.Id, at), new(uturi.Id, at)] }, TuesdayNoonBerlin);
+            new AppData { Timers = [kzarka, uturi], Muted = [new(kzarka.Id, at), new(uturi.Id, at)] }, BerlinNoon);
 
         Assert.False(one.Next!.Skipped);
         Assert.True(both.Next!.Skipped);
@@ -102,7 +96,7 @@ public class BossBoardTests
     [Fact]
     public void No_followed_bosses_gives_an_empty_board()
     {
-        var board = BossBoard.Build(new AppData(), TuesdayNoonBerlin);
+        var board = BossBoard.Build(new AppData(), BerlinNoon);
         Assert.Null(board.Previous);
         Assert.Null(board.Next);
         Assert.Null(board.FollowedBy);

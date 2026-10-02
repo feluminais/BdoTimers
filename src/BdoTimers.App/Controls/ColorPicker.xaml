@@ -46,7 +46,7 @@
             </Canvas>
         </Grid>
         <TextBox x:Name="Hex" Width="76" Margin="12,0,0,0" VerticalAlignment="Bottom" FontSize="12"
-                 AutomationProperties.Name="Hex colour"
+                 AutomationProperties.Name="Hex color"
                  PreviewKeyDown="Hex_PreviewKeyDown" LostKeyboardFocus="Hex_LostKeyboardFocus" TextChanged="Hex_TextChanged" />
     </StackPanel>
 </UserControl>

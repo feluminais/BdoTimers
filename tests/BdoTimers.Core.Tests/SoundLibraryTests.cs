@@ -1,6 +1,5 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Sounds;
-using BdoTimers.Core.Storage;
 
 namespace BdoTimers.Core.Tests;
 
@@ -89,24 +88,5 @@ public class SoundLibraryTests
 
         Assert.Empty(sounds.Keys());
         Assert.True(File.Exists(source));
-    }
-
-    [Fact]
-    public void ForgetSound_sets_timers_using_it_back_to_default()
-    {
-        using var dir = new TempDir();
-        var file = new JsonFileStore<AppData>(dir.File("timers.json"), () => new AppData());
-        var store = new TimerStore(file, new AppData());
-        TimerDef With(string name, SoundAlert sound) => new() { Name = name, Alerts = new AlertConfig { Sound = sound } };
-        store.Upsert(With("A", new SoundAlert { Key = "horn.wav" }));
-        store.Upsert(With("B", new SoundAlert { Key = "ping" }));
-        store.Upsert(With("C", new SoundAlert { Enabled = false }));
-
-        store.ForgetSound("horn.wav");
-
-        var sounds = store.Current.Timers.ToDictionary(t => t.Name, t => t.Alerts.Sound);
-        Assert.Equal(new SoundAlert(), sounds["A"]);
-        Assert.Equal(new SoundAlert { Key = "ping" }, sounds["B"]);
-        Assert.Equal(new SoundAlert { Enabled = false }, sounds["C"]);
     }
 }

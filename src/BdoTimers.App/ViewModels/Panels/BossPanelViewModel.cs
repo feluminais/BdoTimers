@@ -1,4 +1,3 @@
-using System.Globalization;
 using BdoTimers.App.Controls;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -20,7 +19,6 @@ public sealed partial class BossPanelViewModel : ObservableObject
     public string NextText { get; }
     public string AppliesText { get; }
     public IReadOnlyList<ArtPicture> Images { get; }
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public AlertRowsViewModel Alerts { get; }
     public SlotListViewModel Slots { get; }
     public string TimeZoneNote { get; }
@@ -38,7 +36,7 @@ public sealed partial class BossPanelViewModel : ObservableObject
         var spec = boss.Scheduled ?? new ScheduledSpec();
         Slots = new SlotListViewModel(spec.Slots,
             slots => services.Timers.Modify(_id, t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
-        TimeZoneNote = $"Server time ({TimeZones.Find(spec.TimeZoneId).StandardName})";
+        TimeZoneNote = $"Server time ({TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId).StandardName})";
     }
 
     partial void OnAlertsOnChanged(Choice value) => _services.Timers.SetEnabled(_id, value.IsOn);
@@ -48,9 +46,9 @@ public sealed partial class BossPanelViewModel : ObservableObject
 
     internal static string NextSpawnText(TimerDef timer, DateTimeOffset now)
     {
-        var next = OccurrenceSource.Between(timer, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
+        var next = OccurrenceSource.Next(timer, now);
         return next is { } at
-            ? $"Next · {at.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture)} · in {DurationFormat.Countdown(at - now)}"
+            ? $"Next · {Formats.DayTime(at)} · in {DurationFormat.Countdown(at - now)}"
             : "No upcoming spawns";
     }
 }

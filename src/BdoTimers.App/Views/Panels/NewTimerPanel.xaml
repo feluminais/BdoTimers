@@ -4,21 +4,16 @@
              Width="380">
     <StackPanel Margin="22,16,22,20">
         <DockPanel Margin="0,0,0,14">
-            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
             <TextBlock Text="New timer" Style="{StaticResource DisplayText}" FontSize="18" VerticalAlignment="Center" />
         </DockPanel>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Command="{Binding CountdownCommand}"
                 AutomationProperties.Name="Countdown">
-            <StackPanel>
-                <TextBlock Text="Countdown" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
-            </StackPanel>
+            <TextBlock Text="Countdown" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
         </Button>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding WeeklyCommand}"
                 AutomationProperties.Name="Weekly">
-            <StackPanel>
-                <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
-            </StackPanel>
+            <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
         </Button>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding OneTimeCommand}"
                 AutomationProperties.Name="One-time event">

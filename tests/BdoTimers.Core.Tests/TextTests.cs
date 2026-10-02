@@ -2,6 +2,7 @@ using System.Globalization;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
@@ -25,14 +26,13 @@ public class TextTests
     public void Builds_upcoming_and_now_messages()
     {
         var timer = new TimerDef { Name = "Nouver" };
-        var at = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
 
-        var soon = AlertMessage.Build(new AlertEvent([timer], at, 5, 5));
+        var soon = AlertMessage.Build(new AlertEvent([timer], T0, 5, 5));
         Assert.Equal("Nouver", soon.Title);
         Assert.Equal("Nouver in 5 minutes", soon.Speech);
         Assert.StartsWith("In 5 min", soon.Body);
 
-        var now = AlertMessage.Build(new AlertEvent([timer], at, 0, 0));
+        var now = AlertMessage.Build(new AlertEvent([timer], T0, 0, 0));
         Assert.Equal("Nouver now", now.Speech);
         Assert.StartsWith("Now", now.Body);
     }
@@ -40,12 +40,11 @@ public class TextTests
     [Fact]
     public void Shared_spawn_names_every_boss_once()
     {
-        var at = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
         TimerDef[] two = [new() { Name = "Kzarka" }, new() { Name = "Uturi" }];
         TimerDef[] three = [new() { Name = "Kzarka" }, new() { Name = "Nouver" }, new() { Name = "Uturi" }];
 
-        var soon = AlertMessage.Build(new AlertEvent(two, at, 5, 5));
-        var now = AlertMessage.Build(new AlertEvent(three, at, 0, 0));
+        var soon = AlertMessage.Build(new AlertEvent(two, T0, 5, 5));
+        var now = AlertMessage.Build(new AlertEvent(three, T0, 0, 0));
 
         Assert.Equal("Kzarka · Uturi", soon.Title);
         Assert.Equal("Kzarka and Uturi in 5 minutes", soon.Speech);
@@ -55,11 +54,10 @@ public class TextTests
     [Fact]
     public void Shared_spawn_speaks_with_the_first_voice_enabled_template()
     {
-        var at = new DateTimeOffset(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
         var quiet = new TimerDef { Name = "Kzarka", Alerts = new AlertConfig { Tts = new TtsAlert { Enabled = false, Template = "unused" } } };
         var loud = new TimerDef { Name = "Uturi", Alerts = new AlertConfig { Tts = new TtsAlert { Template = "{name} soon" } } };
 
-        Assert.Equal("Kzarka and Uturi soon", AlertMessage.Build(new AlertEvent([quiet, loud], at, 5, 5)).Speech);
+        Assert.Equal("Kzarka and Uturi soon", AlertMessage.Build(new AlertEvent([quiet, loud], T0, 5, 5)).Speech);
     }
 
     [Theory]
@@ -99,22 +97,13 @@ public class TextTests
     [InlineData("0")]
     [InlineData("0:00")]
     [InlineData("24:01")]
+    [InlineData("30:15")]
     [InlineData("1:60")]
     [InlineData("71582789:00")]
     [InlineData("2147483647:59")]
     [InlineData("abc")]
     [InlineData("")]
     public void Rejects_bad_durations(string text) => Assert.False(Parsing.TryParseDuration(text, out _));
-
-    [Fact]
-    public void Parses_hours_and_minutes_within_a_range()
-    {
-        Assert.True(Parsing.TryParseHoursMinutes("0:00", TimeSpan.Zero, TimeSpan.FromHours(99), out var zero));
-        Assert.Equal(TimeSpan.Zero, zero);
-        Assert.True(Parsing.TryParseHoursMinutes("30:15", TimeSpan.Zero, TimeSpan.FromHours(99), out var span));
-        Assert.Equal(new TimeSpan(30, 15, 0), span);
-        Assert.False(Parsing.TryParseHoursMinutes("100:00", TimeSpan.Zero, TimeSpan.FromHours(99), out _));
-    }
 
     [Fact]
     public void Formats_durations() => Assert.Equal("1:30", Parsing.FormatDuration(TimeSpan.FromMinutes(90)));

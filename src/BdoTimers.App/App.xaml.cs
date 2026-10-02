@@ -27,10 +27,6 @@ public partial class App : Application
     AppServices? _services;
     PreparedRestore? _restartRestore;
 
-    public bool IsQuittingApp => _services?.IsQuitting ?? true;
-
-    public void Quit() => _services?.Quit();
-
     internal void RestartForRestore(PreparedRestore restore)
     {
         _restartRestore = restore;
