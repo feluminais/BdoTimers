@@ -93,7 +93,7 @@ static partial class NativeMethods
     }
 #endif
 
-    [LibraryImport("user32.dll")]
+    [LibraryImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
 
