@@ -84,6 +84,7 @@ public class JsonRoundTripTests
             ShowHotkey = new Hotkey(HotkeyModifiers.Alt, 0x78),
             ShowSeconds = 30,
             Layout = OverlayLayout.Card,
+            ShowOutline = false,
             Scale = 1.5,
             ShowClock = false,
             ShowServerTime = true,

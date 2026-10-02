@@ -82,6 +82,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         set => Modify(o => o with { Layout = (OverlayLayout)value.Value! });
     }
     public double Scale { get => Current.Scale; set => Modify(o => o with { Scale = Math.Round(value, 2) }); }
+    public Choice Outline { get => Choice.For(Current.ShowOutline); set => Modify(o => o with { ShowOutline = value.IsOn }); }
     public bool ShowClock { get => Current.ShowClock; set => Modify(o => o with { ShowClock = value }); }
     public bool ShowServerTime { get => Current.ShowServerTime; set => Modify(o => o with { ShowServerTime = value }); }
     public bool ShowGameTime { get => Current.ShowGameTime; set => Modify(o => o with { ShowGameTime = value }); }

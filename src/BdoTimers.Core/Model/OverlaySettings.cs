@@ -17,6 +17,7 @@ public sealed record OverlaySettings
     public Hotkey? ShowHotkey { get; init; } = DefaultHotkeys.Show;
     public int ShowSeconds { get; init; } = 10;
     public OverlayLayout Layout { get; init; }
+    public bool ShowOutline { get; init; } = true;
     /// <summary>0.6 to 2.</summary>
     public double Scale { get; init; } = 1.0;
     /// <summary>The PC's local time.</summary>

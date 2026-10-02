@@ -198,3 +198,6 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
     moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
     server time and the panel's link follow.
+61. [ ] Overlay → Look → Outline: Off removes the clock box, timer chip borders and preview frame immediately;
+    On restores their faint neutral outlines in List, Card and Bar. With Off and background opacity at zero, the
+    preview remains draggable. Close the panel and restart: the selected outline setting remains saved.

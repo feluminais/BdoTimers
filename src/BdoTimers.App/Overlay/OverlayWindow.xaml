@@ -29,8 +29,8 @@
                 </Style>
             </ContentControl.Style>
         </ContentControl>
-        <!-- Preview: a faint frame over a near-invisible fill, so the overlay can be found and grabbed at any opacity -->
-        <Border BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1" Background="#01000000"
+        <!-- Preview: a near-invisible fill keeps the overlay draggable even with its outline off -->
+        <Border BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="{Binding OutlineThickness}" Background="#01000000"
                 Visibility="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
     </Grid>
 </Window>

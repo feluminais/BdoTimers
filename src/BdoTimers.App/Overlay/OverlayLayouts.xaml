@@ -30,7 +30,7 @@
         <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    <!-- Local, server and in-game time on one line in a faint box: a monitor, a globe, and a sun or by night a moon -->
+    <!-- Local, server and in-game time: a monitor, a globe, and a sun or by night a moon -->
     <Style x:Key="OverlayClocks" TargetType="ContentControl">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="HorizontalAlignment" Value="Left" />
@@ -39,7 +39,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
                     <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource HairlineStrongBrush}"
-                            BorderThickness="1" Padding="6,1">
+                            BorderThickness="{Binding OutlineThickness}" Padding="6,1">
                         <!-- Each icon's left margin spaces it from the clock before; this takes back the first one's -->
                         <StackPanel Orientation="Horizontal" Margin="-10,0,0,0">
                             <StackPanel Orientation="Horizontal" Visibility="{Binding Clock, Converter={StaticResource NullToCollapsed}}">
@@ -112,7 +112,8 @@
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="ChipLine" DataType="{x:Type overlay:OverlayLine}">
-        <Border Style="{StaticResource SampleDim}" BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1"
+        <Border Style="{StaticResource SampleDim}" BorderBrush="{DynamicResource HairlineStrongBrush}"
+                BorderThickness="{Binding DataContext.OutlineThickness, RelativeSource={RelativeSource AncestorType=Window}}"
                 Padding="6,1" Margin="0,0,6,0">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" VerticalAlignment="Center" />

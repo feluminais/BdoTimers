@@ -93,6 +93,10 @@
                         <Slider Width="170" Minimum="0.6" Maximum="2" VerticalAlignment="Center"
                                 Value="{Binding Scale, Delay=100}" AutomationProperties.Name="Size" />
                     </HeaderedContentControl>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Outline">
+                        <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Outline}" ValueWidth="60"
+                                                AutomationProperties.Name="Outline" />
+                    </HeaderedContentControl>
                     <Border Style="{StaticResource Row}">
                         <StackPanel>
                             <TextBlock Text="Sections" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />

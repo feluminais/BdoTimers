@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Media;
 using BdoTimers.App.Art;
 using BdoTimers.App.Controls;
@@ -68,6 +69,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
 
     [ObservableProperty] private OverlayLayout _layout;
     [ObservableProperty] private double _scale = 1;
+    [ObservableProperty] private Thickness _outlineThickness = new(1);
     [ObservableProperty] private Brush _background = Brushes.Black;
     [ObservableProperty] private double _backgroundOpacity = 0.85;
     [ObservableProperty] private double _textOpacity = 1;
@@ -93,6 +95,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     {
         Layout = settings.Layout;
         Scale = settings.Scale;
+        OutlineThickness = new Thickness(settings.ShowOutline ? 1 : 0);
         BackgroundOpacity = settings.BackgroundOpacity;
         TextOpacity = settings.TextOpacity;
         IsPreview = preview;
