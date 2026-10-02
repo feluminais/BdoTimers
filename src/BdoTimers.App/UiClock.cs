@@ -1,4 +1,5 @@
 using System.Windows.Threading;
+using BdoTimers.Core.Scheduling;
 
 namespace BdoTimers.App;
 
@@ -9,7 +10,7 @@ public sealed class UiClock
 
     public event Action<DateTimeOffset>? Tick;
 
-    public UiClock() => _timer.Tick += (_, _) => Tick?.Invoke(DateTimeOffset.UtcNow);
+    public UiClock(IClock clock) => _timer.Tick += (_, _) => Tick?.Invoke(clock.UtcNow);
 
     public void Start() => _timer.Start();
     public void Stop() => _timer.Stop();

@@ -37,20 +37,25 @@ public class BossSeedDataTests
         Assert.Equal(DateTimeOffset.Parse(expected), ScheduleMath.From(garmoth.Scheduled!, DateTimeOffset.Parse(from)).Take(1).ToList()[0]);
     }
 
-    [Fact]
-    public void Embedded_eu_seed_is_well_formed()
+    public static TheoryData<string> Regions => [.. BossRegions.All.Select(r => r.Id)];
+
+    [Theory]
+    [MemberData(nameof(Regions))]
+    public void Every_embedded_seed_is_well_formed(string region)
     {
-        var seed = SeedService.LoadEmbedded();
+        var seed = SeedService.LoadEmbedded(region);
 
         Assert.NotNull(TimeZoneInfo.FindSystemTimeZoneById(seed.TimeZoneId));
-        Assert.True(seed.Bosses.Count >= 5, "EU has at least five scheduled world bosses");
+        Assert.NotNull(seed.VerifiedOn);
+        Assert.NotEmpty(seed.SourceUrls!);
+        Assert.True(seed.Bosses.Count >= 5, "a region has at least five scheduled world bosses");
         Assert.Contains(seed.Bosses, b => b.Name == "Kzarka");
         Assert.Contains(seed.Bosses, b => b.Name == "Nouver");
         Assert.All(seed.Bosses, b => Assert.NotEmpty(b.Slots));
         Assert.Equal(seed.Bosses.Count, seed.Bosses.Select(b => b.Name).Distinct().Count());
 
-        var timers = SeedService.ToTimers(seed, new());
-        var now = new FakeClock(new DateTimeOffset(2026, 10, 2, 0, 0, 0, TimeSpan.Zero));
-        Assert.All(timers, t => Assert.NotEmpty(ScheduleMath.From(t.Scheduled!, now.UtcNow).Take(1).ToList()));
+        var timers = SeedService.ToTimers(seed, new(), region);
+        var now = new DateTimeOffset(2026, 10, 2, 0, 0, 0, TimeSpan.Zero);
+        Assert.All(timers, t => Assert.NotEmpty(ScheduleMath.From(t.Scheduled!, now).Take(1).ToList()));
     }
 }

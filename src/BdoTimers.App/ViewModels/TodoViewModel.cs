@@ -51,7 +51,7 @@ public sealed partial class TodoViewModel : ObservableObject
 
     public void UpdateResetLabels()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _services.Clock.UtcNow;
         var settings = _services.Settings.Current;
         WeeklyResetLabel = "Resets " + Formats.DayTime(TodoReset.Next(TodoCadence.Weekly, settings.WeeklyTodoReset, now));
         DailyResetLabel = "Resets " + Formats.Time(TodoReset.Next(TodoCadence.Daily, settings.DailyTodoReset, now));

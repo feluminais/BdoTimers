@@ -16,7 +16,8 @@ public sealed partial class ToastChannel
     const int UrgentScenarioBuild = 22621;
     const int KeptToasts = 20;
 
-    readonly ToastNotifier _notifier;
+    // Null when Windows refused the registration; alerts then keep their other channels.
+    readonly ToastNotifier? _notifier;
     // A click is reported through the toast's own object, so recent toasts are kept alive to report it.
     readonly Queue<ToastNotification> _recent = new();
 
@@ -29,8 +30,12 @@ public sealed partial class ToastChannel
             () => NotificationRegistration.RemoveLegacy(Environment.ProcessPath!));
         TryRegistry("Couldn't update the notification registration",
             () => NotificationRegistration.Register(appId, displayName, Path.Combine(AppContext.BaseDirectory, "app.png")));
-        Marshal.ThrowExceptionForHR(SetCurrentProcessExplicitAppUserModelID(appId));
-        _notifier = ToastNotificationManager.CreateToastNotifier(appId);
+        try
+        {
+            Marshal.ThrowExceptionForHR(SetCurrentProcessExplicitAppUserModelID(appId));
+            _notifier = ToastNotificationManager.CreateToastNotifier(appId);
+        }
+        catch (Exception ex) { Log.Error("Windows notifications are unavailable", ex); }
     }
 
     static void TryRegistry(string failure, Action change)
@@ -55,24 +60,34 @@ public sealed partial class ToastChannel
             """);
     }
 
-    public void ShowInfo(string title, string body, bool withNotificationSettingsButton = false)
+    /// <summary>A plain notice. Never throws: returns false, after logging any failure, when it wasn't shown.</summary>
+    public bool ShowInfo(string title, string body, bool withNotificationSettingsButton = false)
     {
         var actions = withNotificationSettingsButton
             ? """<actions><action content="Open notification settings" arguments="ms-settings:notifications" activationType="protocol"/></actions>"""
             : "";
-        Show($"""
-            <toast>
-              <visual><binding template="ToastGeneric"><text>{Escape(title)}</text><text>{Escape(body)}</text></binding></visual>
-              {actions}
-            </toast>
-            """);
+        try
+        {
+            return Show($"""
+                <toast>
+                  <visual><binding template="ToastGeneric"><text>{Escape(title)}</text><text>{Escape(body)}</text></binding></visual>
+                  {actions}
+                </toast>
+                """);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Couldn't show the notice \"{title}\"", ex);
+            return false;
+        }
     }
 
     public static void OpenWindowsNotificationSettings() =>
         Process.Start(new ProcessStartInfo("ms-settings:notifications") { UseShellExecute = true });
 
-    void Show(string xml)
+    bool Show(string xml)
     {
+        if (_notifier is null) return false;
         var doc = new XmlDocument();
         doc.LoadXml(xml);
         var toast = new ToastNotification(doc);
@@ -84,6 +99,7 @@ public sealed partial class ToastChannel
             if (_recent.Count > KeptToasts) _recent.Dequeue();
         }
         _notifier.Show(toast);
+        return true;
     }
 
     static string Escape(string text) => SecurityElement.Escape(text);

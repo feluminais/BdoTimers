@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows.Interop;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
@@ -47,19 +49,14 @@ public sealed class HotkeyService : IDisposable
     {
         public bool Register(int id, Hotkey key)
         {
-            try
-            {
-                if (NativeMethods.RegisterHotKey(window, id, (int)key.Modifiers | MOD_NOREPEAT, key.VirtualKey)) return true;
-                Log.Info($"Windows refused hotkey {key}");
-            }
-            catch (Exception ex) { Log.Error("Couldn't register hotkey", ex); }
+            if (NativeMethods.RegisterHotKey(window, id, (int)key.Modifiers | MOD_NOREPEAT, key.VirtualKey)) return true;
+            Log.Info($"Windows refused hotkey {key}: {new Win32Exception(Marshal.GetLastPInvokeError()).Message}");
             return false;
         }
 
         public void Unregister(int id)
         {
-            try { NativeMethods.UnregisterHotKey(window, id); }
-            catch (Exception ex) { Log.Error("Couldn't release hotkey", ex); }
+            NativeMethods.UnregisterHotKey(window, id);
         }
     }
 

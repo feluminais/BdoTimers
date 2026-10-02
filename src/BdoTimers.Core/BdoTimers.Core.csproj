@@ -5,8 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Data\bosses.eu.json" LogicalName="BdoTimers.Core.Data.bosses.eu.json" WithCulture="false" />
-    <EmbeddedResource Include="Data\bosses.na.json" LogicalName="BdoTimers.Core.Data.bosses.na.json" WithCulture="false" />
+    <!-- One timetable per region (Seed/BossRegions.cs). WithCulture="false" keeps "eu" (Basque) from moving a file
+         into a satellite assembly. -->
+    <EmbeddedResource Include="Data\bosses.*.json" LogicalName="BdoTimers.Core.Data.%(Filename)%(Extension)" WithCulture="false" />
   </ItemGroup>
 
 </Project>
