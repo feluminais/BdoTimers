@@ -70,6 +70,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public string ResetAlertConfirmation => $"{ResetAlertLabel}?";
     public ObservableCollection<TimetableChangeRow> TimetableChanges { get; } = [];
     public bool CanUseData => !DataBusy;
+    /// <summary>Opens scrolled to the Bosses section, whose Region sets the overlay's server time.</summary>
+    public bool OpenAtRegion { get; init; }
 
     public SettingsPanelViewModel(AppServices services)
     {

@@ -35,6 +35,8 @@ No. BDO Timers never opens the game's process, reads its memory, injects anythin
   get through while you play.
 - Overlay settings are behind the screen icon in the top bar or in the tray menu; drag the overlay while the panel is
   open.
+- Overlay → Sections: Local time, Server time and In-game time share the overlay's top line. Server time is the boss
+  region's (Settings → Bosses → Region); in-game time shows a sun by day and a moon by night.
 - Default shortcuts: Ctrl+Shift+F8 pins the overlay, Ctrl+Shift+F9 shows it for 10 seconds and Ctrl+Shift+F10 starts a
   Horse registration timer. Change or clear them in Overlay settings and on the Horse registration tile. A countdown can
   have its own start/pause hotkey, set in its panel.

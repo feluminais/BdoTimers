@@ -19,7 +19,12 @@ public sealed record OverlaySettings
     public OverlayLayout Layout { get; init; }
     /// <summary>0.6 to 2.</summary>
     public double Scale { get; init; } = 1.0;
+    /// <summary>The PC's local time.</summary>
     public bool ShowClock { get; init; } = true;
+    /// <summary>The selected boss region's server time, beside the local time.</summary>
+    public bool ShowServerTime { get; init; }
+    /// <summary>The game world's time of day, beside the local time.</summary>
+    public bool ShowGameTime { get; init; }
     public bool ShowPrevious { get; init; } = true;
     public bool ShowNext { get; init; } = true;
     public bool ShowFarm { get; init; } = true;

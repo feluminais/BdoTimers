@@ -86,6 +86,8 @@ public class JsonRoundTripTests
             Layout = OverlayLayout.Card,
             Scale = 1.5,
             ShowClock = false,
+            ShowServerTime = true,
+            ShowGameTime = true,
             ShowPrevious = false,
             ShowNext = false,
             ShowFarm = false,

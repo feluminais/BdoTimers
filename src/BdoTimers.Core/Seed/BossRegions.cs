@@ -2,7 +2,12 @@ using BdoTimers.Core.Model;
 
 namespace BdoTimers.Core.Seed;
 
-public sealed record BossRegion(string Id, string Label, string ShortLabel, string ResourceName);
+/// <param name="TimeZoneId">The region's server time, which its embedded timetable is written in.</param>
+public sealed record BossRegion(string Id, string Label, string ShortLabel, string ResourceName, string TimeZoneId)
+{
+    public DateTimeOffset ServerTime(DateTimeOffset now) =>
+        TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId));
+}
 
 /// <summary>Adding a verified region only requires its catalog entry and embedded timetable.</summary>
 public static class BossRegions
@@ -11,8 +16,8 @@ public static class BossRegions
     public const string NorthAmerica = "na";
     public static IReadOnlyList<BossRegion> All { get; } =
     [
-        new(Europe, "Europe", "EU", "BdoTimers.Core.Data.bosses.eu.json"),
-        new(NorthAmerica, "North America", "NA", "BdoTimers.Core.Data.bosses.na.json"),
+        new(Europe, "Europe", "EU", "BdoTimers.Core.Data.bosses.eu.json", "Europe/Berlin"),
+        new(NorthAmerica, "North America", "NA", "BdoTimers.Core.Data.bosses.na.json", "America/Los_Angeles"),
     ];
 
     public static BossRegion Find(string id) => All.FirstOrDefault(r => r.Id == id)

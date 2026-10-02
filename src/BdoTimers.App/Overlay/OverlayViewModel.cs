@@ -73,6 +73,10 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private double _textOpacity = 1;
     [ObservableProperty] private bool _isPreview;
     [ObservableProperty] private string? _clock;
+    [ObservableProperty] private string? _serverClock;
+    [ObservableProperty] private string? _gameClock;
+    [ObservableProperty] private bool _isNight;
+    [ObservableProperty] private bool _hasClocks;
     [ObservableProperty] private OverlaySpawn? _previous;
     [ObservableProperty] private OverlaySpawn? _next;
     [ObservableProperty] private OverlayLine? _farm;
@@ -95,6 +99,10 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         UpdateBackground(settings);
 
         Clock = content.Clock ? Formats.Time(now) : null;
+        ServerClock = content.ServerTime is { } server ? Formats.ZoneTime(server) : null;
+        GameClock = content.GameTime is { } game ? Formats.Time(game.Time) : null;
+        IsNight = content.GameTime?.IsNight == true;
+        HasClocks = Clock is not null || ServerClock is not null || GameClock is not null;
         Previous = content.Previous is { } previous
             ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false)
             : preview && settings.ShowPrevious ? _previousRow.Show("Kzarka", "−00:12:05", false, NoImages, true) : null;
