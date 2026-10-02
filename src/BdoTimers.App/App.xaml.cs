@@ -108,7 +108,10 @@ public partial class App : Application
         try
         {
             _services = new AppServices(this, dataDir);
-            _services.Start(showWindow: !e.Args.Contains("--minimized"));
+            _services.Start(showWindow: !e.Args.Contains("--minimized") && !e.Args.Contains("--behind"));
+#if DEBUG
+            if (e.Args.Contains("--behind")) _services.ShowMainWindowBehind();
+#endif
             if (restoring is not null) _services.NotifyRestore(restoredPrevious);
         }
         catch (Exception ex)

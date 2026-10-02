@@ -65,6 +65,34 @@ static partial class NativeMethods
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmGetWindowAttribute(IntPtr hwnd, int attribute, out int value, int size);
 
+#if DEBUG
+    static readonly IntPtr HWND_BOTTOM = new(1);
+    const int WM_WINDOWPOSCHANGING = 0x0046;
+    const uint SWP_NOZORDER = 0x0004;
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct WindowPos
+    {
+        public IntPtr Hwnd, InsertAfter;
+        public int X, Y, Width, Height;
+        public uint Flags;
+    }
+
+    /// <summary>An HwndSource hook that turns every z-order change of its window into a move to the bottom, without
+    /// activation.</summary>
+    public static IntPtr KeepAtBottom(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (msg == WM_WINDOWPOSCHANGING)
+        {
+            var pos = Marshal.PtrToStructure<WindowPos>(lParam);
+            pos.InsertAfter = HWND_BOTTOM;
+            pos.Flags = (pos.Flags & ~SWP_NOZORDER) | SWP_NOACTIVATE;
+            Marshal.StructureToPtr(pos, lParam, false);
+        }
+        return IntPtr.Zero;
+    }
+#endif
+
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vk);
