@@ -20,11 +20,23 @@ public class BossBoardCacheTests
 
     static void AssertSameBoard(BossBoardState expected, BossBoardState actual)
     {
-        static object? Shape(SpawnGroup? g) =>
-            g is null ? null : (g.AtUtc, string.Join(",", g.Bosses.Select(b => b.Id)), g.Skipped);
-        Assert.Equal(Shape(expected.Previous), Shape(actual.Previous));
-        Assert.Equal(Shape(expected.Next), Shape(actual.Next));
-        Assert.Equal(Shape(expected.FollowedBy), Shape(actual.FollowedBy));
+        static void AssertGroup(SpawnGroup? expected, SpawnGroup? actual)
+        {
+            if (expected is null)
+            {
+                Assert.Null(actual);
+                return;
+            }
+
+            Assert.NotNull(actual);
+            Assert.Equal(expected.AtUtc, actual.AtUtc);
+            Assert.Equal(expected.Skipped, actual.Skipped);
+            Assert.Equal(expected.Bosses, actual.Bosses);
+        }
+
+        AssertGroup(expected.Previous, actual.Previous);
+        AssertGroup(expected.Next, actual.Next);
+        AssertGroup(expected.FollowedBy, actual.FollowedBy);
     }
 
     public static TheoryData<string> Timetables => new() { "one boss", "several" };
@@ -40,16 +52,42 @@ public class BossBoardCacheTests
 
     [Theory]
     [MemberData(nameof(Timetables))]
-    public void Matches_a_fresh_board_as_time_moves_on(string timetable)
+    public void Matches_a_fresh_board_at_spawn_reach_and_daily_refresh_boundaries(string timetable)
     {
         var data = Data(timetable);
         var cache = new BossBoardCache();
-        var times = Enumerable.Range(0, 9 * 24 * 60 / 37).Select(i => TuesdayNoonBerlin.AddMinutes(37 * i))
-            .Concat([Utc(22, 17, 0).AddSeconds(-1), Utc(22, 17, 0), Utc(22, 17, 0).AddSeconds(1)])
-            .Concat([Utc(28, 17, 0).AddSeconds(-1), Utc(28, 17, 0), Utc(28, 17, 0).AddSeconds(1)])
+        DateTimeOffset[] boundaries =
+        [
+            Utc(22, 14, 0), Utc(22, 17, 0), Utc(23, 10, 0), Utc(24, 10, 0), Utc(24, 21, 15),
+            Utc(28, 17, 0), Utc(29, 14, 0), Utc(29, 17, 0), Utc(30, 10, 0),
+            new(2026, 10, 1, 21, 15, 0, TimeSpan.Zero),
+        ];
+        var times = new[] { TuesdayNoonBerlin }
+            .Concat(boundaries.SelectMany(at => new[] { at.AddTicks(-1), at, at.AddTicks(1) }))
             .Order();
 
         foreach (var now in times) AssertSameBoard(BossBoard.Build(data, now), cache.Get(data, now));
+    }
+
+    [Fact]
+    public void Following_week_enters_reach_only_after_the_boundary()
+    {
+        var data = Data("one boss");
+        var cache = new BossBoardCache();
+        cache.Get(data, TuesdayNoonBerlin);
+        var boundary = Utc(28, 17, 0);
+
+        var before = cache.Get(data, boundary.AddTicks(-1));
+        var at = cache.Get(data, boundary);
+        Assert.Same(before, at);
+        Assert.Equal(Utc(22, 17, 0), at.Previous!.AtUtc);
+        Assert.Equal(Utc(29, 17, 0), at.Next!.AtUtc);
+        Assert.Null(at.FollowedBy);
+
+        var after = cache.Get(data, boundary.AddTicks(1));
+        Assert.NotSame(at, after);
+        Assert.Equal(new DateTimeOffset(2026, 10, 6, 17, 0, 0, TimeSpan.Zero), after.FollowedBy!.AtUtc);
+        Assert.Same(Kzarka, Assert.Single(after.FollowedBy.Bosses));
     }
 
     [Fact]

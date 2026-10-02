@@ -11,7 +11,8 @@ public class LogTests
     public void Writes_errors_with_exception_to_daily_file()
     {
         using var dir = new TempDir();
-        Log.Init(dir.Path, new SystemClock());
+        var clock = new FakeClock(new DateTimeOffset(2026, 10, 1, 12, 0, 0, TimeSpan.Zero));
+        Log.Init(dir.Path, clock);
 
         Log.Error("sound failed", new InvalidOperationException("no device"));
 

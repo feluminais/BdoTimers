@@ -31,19 +31,26 @@ public sealed class TodoRefinementTests
         Assert.Contains(weekly, l => l.Id == customId);
     }
 
-    [Fact]
-    public void Reset_uses_shared_dst_rule_and_recovers_invalid_weekday()
+    [Theory]
+    [InlineData(3, 28, 1)]
+    [InlineData(10, 24, 0)]
+    public void Local_daily_reset_resolves_spring_gap_and_first_autumn_instance(int month, int day, int utcHour)
     {
-        var berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
-        var spring = new DateTimeOffset(2026, 3, 28, 12, 0, 0, TimeSpan.Zero);
+        var berlin = TimeZones.Find("Europe/Berlin");
+        var now = new DateTimeOffset(2026, month, day, 12, 0, 0, TimeSpan.Zero);
         var schedule = TodoSchedule.DailyDefault with { Hour = 2, Minute = 30, LocalTime = true };
-        Assert.Equal(ScheduleMath.LocalToUtc(new DateTime(2026, 3, 29, 2, 30, 0), berlin),
-            TodoReset.Next(schedule, spring, berlin));
 
+        Assert.Equal(new DateTimeOffset(2026, month, day + 1, utcHour, 30, 0, TimeSpan.Zero),
+            TodoReset.Next(schedule, now, berlin));
+    }
+
+    [Fact]
+    public void Invalid_reset_weekday_and_time_fall_back_to_thursday_and_midnight()
+    {
         var invalid = TodoSchedule.WeeklyDefault with { Day = (DayOfWeek)99 };
-        Assert.Equal(TodoReset.Next(TodoSchedule.WeeklyDefault, Now), TodoReset.Next(invalid, Now));
+        Assert.Equal(new DateTimeOffset(2026, 10, 1, 0, 0, 0, TimeSpan.Zero), TodoReset.Next(invalid, Now));
         var invalidTime = TodoSchedule.DailyDefault with { Hour = 99, Minute = -1 };
-        Assert.Equal(TodoReset.Next(TodoSchedule.DailyDefault, Now), TodoReset.Next(invalidTime, Now));
+        Assert.Equal(new DateTimeOffset(2026, 9, 29, 0, 0, 0, TimeSpan.Zero), TodoReset.Next(invalidTime, Now));
     }
 
     [Fact]

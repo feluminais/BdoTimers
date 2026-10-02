@@ -14,6 +14,7 @@ public class CountdownOpsTests
         var c = CountdownOps.Start(Hour, T0);
         Assert.Equal(CountdownStatus.Running, c.Status);
         Assert.Equal(T0.AddMinutes(60), c.EndsAtUtc);
+        Assert.Equal(T0, c.StartedAtUtc);
         Assert.Null(c.Remaining);
     }
 
@@ -23,11 +24,14 @@ public class CountdownOpsTests
         var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(20));
         Assert.Equal(CountdownStatus.Paused, paused.Status);
         Assert.Equal(TimeSpan.FromMinutes(40), paused.Remaining);
+        Assert.Equal(T0, paused.StartedAtUtc);
         Assert.Null(paused.EndsAtUtc);
 
         var resumed = CountdownOps.Resume(paused, T0.AddMinutes(30));
         Assert.Equal(CountdownStatus.Running, resumed.Status);
         Assert.Equal(T0.AddMinutes(70), resumed.EndsAtUtc);
+        Assert.Equal(T0, resumed.StartedAtUtc);
+        Assert.Null(resumed.Remaining);
     }
 
     [Fact]
@@ -60,38 +64,13 @@ public class CountdownOpsTests
     [Fact]
     public void Reset_returns_to_idle()
     {
-        var c = CountdownOps.Reset(CountdownOps.Start(Hour, T0));
-        Assert.Equal(CountdownStatus.Idle, c.Status);
-        Assert.Null(c.EndsAtUtc);
-        Assert.Null(c.Remaining);
+        Assert.Equal(Hour, CountdownOps.Reset(CountdownOps.Start(Hour, T0)));
     }
 
     [Fact]
     public void Complete_goes_idle()
     {
-        var c = CountdownOps.Complete(CountdownOps.Start(Hour, T0));
-        Assert.Equal(CountdownStatus.Idle, c.Status);
-    }
-
-    [Fact]
-    public void Start_records_start_time()
-    {
-        Assert.Equal(T0, CountdownOps.Start(Hour, T0).StartedAtUtc);
-    }
-
-    [Fact]
-    public void Pause_and_resume_keep_start_time()
-    {
-        var paused = CountdownOps.Pause(CountdownOps.Start(Hour, T0), T0.AddMinutes(20));
-        var resumed = CountdownOps.Resume(paused, T0.AddMinutes(30));
-        Assert.Equal(T0, paused.StartedAtUtc);
-        Assert.Equal(T0, resumed.StartedAtUtc);
-    }
-
-    [Fact]
-    public void Reset_clears_start_time()
-    {
-        Assert.Null(CountdownOps.Reset(CountdownOps.Start(Hour, T0)).StartedAtUtc);
+        Assert.Equal(Hour, CountdownOps.Complete(CountdownOps.Start(Hour, T0)));
     }
 
     [Theory]

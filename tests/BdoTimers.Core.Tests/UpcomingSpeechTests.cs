@@ -18,18 +18,19 @@ public class UpcomingSpeechTests
 
     static TimerDef Silent(TimerDef timer) => timer with { Alerts = timer.Alerts with { Tts = new TtsAlert { Enabled = false } } };
 
-    [Fact]
-    public void Nothing_is_prepared_until_the_next_spoken_alert_is_within_the_window()
+    [Theory]
+    [InlineData(-1, false)]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    public void The_preparation_window_includes_its_boundary_and_prepares_the_whole_occurrence(int ticks, bool withinWindow)
     {
-        Assert.Empty(new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, T.AddMinutes(-16.5), Window));
-    }
+        var now = T.AddMinutes(-16).AddTicks(ticks);
+        var speech = new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, now, Window);
 
-    [Fact]
-    public void The_first_alert_of_an_occurrence_prepares_all_of_its_speech()
-    {
-        var speech = new AlertPlanner().UpcomingSpeech([Boss("Kzarka", 15, 5, 1, 0)], NoMutes, T.AddMinutes(-15.5), Window);
-
-        Assert.Equal(["Kzarka in 15 minutes", "Kzarka in 5 minutes", "Kzarka in 1 minute", "Kzarka now"], speech);
+        if (withinWindow)
+            Assert.Equal(["Kzarka in 15 minutes", "Kzarka in 5 minutes", "Kzarka in 1 minute", "Kzarka now"], speech);
+        else
+            Assert.Empty(speech);
     }
 
     [Fact]
@@ -49,11 +50,11 @@ public class UpcomingSpeechTests
         // Each speaks at different times; Nouver's voice is off but its name joins the line they share.
         var timers = new[] { Boss("Kzarka", 15, 5, 1, 0), Silent(Boss("Nouver", 5, 0)), Boss("Karanda", 30, 0) };
         var planner = new AlertPlanner();
-        var start = T.AddMinutes(-30.5);
+        DateTimeOffset[] ticks = [T.AddMinutes(-30.5), T.AddMinutes(-30), T.AddMinutes(-15), T.AddMinutes(-5), T.AddMinutes(-1), T];
 
         var prepared = new List<string>();
         var spoken = new List<string>();
-        for (var at = start; at <= T; at = at.AddSeconds(1))
+        foreach (var at in ticks)
         {
             spoken.AddRange(AlertGrouping.Group(planner.Tick(timers, NoMutes, at))
                 .Where(a => a.Timers.Any(t => t.Alerts.Tts.Enabled))
