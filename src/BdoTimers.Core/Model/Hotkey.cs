@@ -14,10 +14,21 @@ public enum HotkeyModifiers
 /// <summary>A global key combo; <see cref="VirtualKey"/> is a Windows virtual-key code, so Core needs no UI types.</summary>
 public sealed record Hotkey(HotkeyModifiers Modifiers, int VirtualKey);
 
+/// <summary>Global shortcuts chosen away from BDO's unmodified function keys and common combat inputs.</summary>
+public static class DefaultHotkeys
+{
+    const HotkeyModifiers Modifiers = HotkeyModifiers.Ctrl | HotkeyModifiers.Shift;
+    const int F8 = 0x77, F9 = 0x78, F10 = 0x79;
+
+    public static readonly Hotkey AlwaysShow = new(Modifiers, F8);
+    public static readonly Hotkey Show = new(Modifiers, F9);
+    public static readonly Hotkey HorseRegistration = new(Modifiers, F10);
+}
+
 public static class HotkeyRules
 {
     public const string NeedsModifier = "Add Ctrl or Alt";
-    public const string SameAsOther = "Used by the other hotkey";
+    public const string SameAsOther = "Used by another hotkey";
 
     const HotkeyModifiers NonTyping = HotkeyModifiers.Ctrl | HotkeyModifiers.Alt | HotkeyModifiers.Win;
 
@@ -28,9 +39,12 @@ public static class HotkeyRules
     public static string? Check(Hotkey hotkey, Hotkey? other) => Check(hotkey, other, null);
 
     public static string? Check(Hotkey hotkey, Hotkey? other, Hotkey? another)
+        => CheckAgainst(hotkey, new[] { other, another }.OfType<Hotkey>());
+
+    public static string? CheckAgainst(Hotkey hotkey, IEnumerable<Hotkey> others)
     {
         if (TypesText(hotkey.VirtualKey) && (hotkey.Modifiers & NonTyping) == 0) return NeedsModifier;
-        return hotkey == other || hotkey == another ? SameAsOther : null;
+        return others.Contains(hotkey) ? SameAsOther : null;
     }
 
     /// <summary>Backspace, Tab, Enter, Space, 0-9, A-Z and the punctuation keys.</summary>

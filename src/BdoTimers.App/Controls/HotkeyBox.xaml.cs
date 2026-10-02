@@ -15,12 +15,9 @@ public partial class HotkeyBox : UserControl
         nameof(Combo), typeof(Hotkey), typeof(HotkeyBox),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, Changed));
 
-    /// <summary>The other hotkey field's combo, which this one may not repeat.</summary>
-    public static readonly DependencyProperty OtherProperty =
-        DependencyProperty.Register(nameof(Other), typeof(Hotkey), typeof(HotkeyBox));
-
-    public static readonly DependencyProperty Other2Property =
-        DependencyProperty.Register(nameof(Other2), typeof(Hotkey), typeof(HotkeyBox));
+    /// <summary>Every other configured shortcut, including shortcuts whose feature is off.</summary>
+    public static readonly DependencyProperty OtherKeysProperty = DependencyProperty.Register(
+        nameof(OtherKeys), typeof(IReadOnlyList<Hotkey>), typeof(HotkeyBox), new PropertyMetadata(null, Changed));
 
     /// <summary>Windows refused the combo.</summary>
     public static readonly DependencyProperty IsRefusedProperty =
@@ -35,6 +32,7 @@ public partial class HotkeyBox : UserControl
     public HotkeyBox()
     {
         InitializeComponent();
+        Unloaded += (_, _) => SetCurrentValue(IsListeningProperty, false);
         Refresh();
     }
 
@@ -44,16 +42,10 @@ public partial class HotkeyBox : UserControl
         set => SetValue(ComboProperty, value);
     }
 
-    public Hotkey? Other
+    public IReadOnlyList<Hotkey>? OtherKeys
     {
-        get => (Hotkey?)GetValue(OtherProperty);
-        set => SetValue(OtherProperty, value);
-    }
-
-    public Hotkey? Other2
-    {
-        get => (Hotkey?)GetValue(Other2Property);
-        set => SetValue(Other2Property, value);
+        get => (IReadOnlyList<Hotkey>?)GetValue(OtherKeysProperty);
+        set => SetValue(OtherKeysProperty, value);
     }
 
     public bool IsRefused
@@ -68,7 +60,12 @@ public partial class HotkeyBox : UserControl
         set => SetValue(IsListeningProperty, value);
     }
 
-    static void Changed(DependencyObject d, DependencyPropertyChangedEventArgs e) => ((HotkeyBox)d).Refresh();
+    static void Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var box = (HotkeyBox)d;
+        if (e.Property == ComboProperty || e.Property == OtherKeysProperty) box._error = null;
+        box.Refresh();
+    }
 
     void Field_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
@@ -81,8 +78,8 @@ public partial class HotkeyBox : UserControl
     void Clear_Click(object sender, RoutedEventArgs e)
     {
         _error = null;
-        SetCurrentValue(IsListeningProperty, false);
         SetCurrentValue(ComboProperty, null);
+        SetCurrentValue(IsListeningProperty, false);
     }
 
     protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
@@ -111,21 +108,30 @@ public partial class HotkeyBox : UserControl
             or Key.LWin or Key.RWin) return;
         var modifiers = (HotkeyModifiers)(int)Keyboard.Modifiers;
         _error = null;
-        SetCurrentValue(IsListeningProperty, false);
-        if (key == Key.Escape && modifiers == HotkeyModifiers.None) return;
-        var combo = new Hotkey(modifiers, KeyInterop.VirtualKeyFromKey(key));
-        _error = HotkeyRules.Check(combo, Other, Other2);
-        if (_error is null) SetCurrentValue(ComboProperty, combo);
-        Refresh();
+        try
+        {
+            if (key == Key.Escape && modifiers == HotkeyModifiers.None) return;
+            var combo = new Hotkey(modifiers, KeyInterop.VirtualKeyFromKey(key));
+            _error = HotkeyRules.CheckAgainst(combo, OtherKeys ?? []);
+            if (_error is null) SetCurrentValue(ComboProperty, combo);
+        }
+        finally
+        {
+            // Persist the chosen combo before registration resumes, so the old shortcut stays released.
+            SetCurrentValue(IsListeningProperty, false);
+            Refresh();
+        }
     }
 
     void Refresh()
     {
         KeyText.Text = IsListening ? "Press keys…" : Combo is { } combo ? HotkeyText.Format(combo) : "Set hotkey";
         KeyText.Foreground = Brush(IsListening || Combo is not null ? "AccentTextBrush" : "SubtleBrush");
-        Field.BorderBrush = Brush(IsListening ? "AccentBrush" : _error is not null ? "DangerBrush" : "HairlineStrongBrush");
         ClearButton.Visibility = Combo is not null && !IsListening ? Visibility.Visible : Visibility.Collapsed;
-        var message = _error ?? (IsRefused && Combo is not null && !IsListening ? RefusedText : null);
+        var message = IsListening ? null : _error
+            ?? (Combo is { } key ? HotkeyRules.CheckAgainst(key, OtherKeys ?? []) : null)
+            ?? (IsRefused && Combo is not null ? RefusedText : null);
+        Field.BorderBrush = Brush(IsListening ? "AccentBrush" : message is not null ? "DangerBrush" : "HairlineStrongBrush");
         Message.Text = message ?? "";
         Message.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
     }

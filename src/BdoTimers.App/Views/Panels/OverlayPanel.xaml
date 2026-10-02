@@ -60,7 +60,7 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlwaysShow}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Other="{Binding ShowHotkey}" Other2="{Binding HorseHotkey}"
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" OtherKeys="{Binding OtherAlwaysKeys}"
                                                 IsRefused="{Binding AlwaysShowRefused}" IsListening="{Binding ListeningAlwaysShow}"
                                                 AutomationProperties.Name="Always show hotkey" />
                             <TextBlock Text="Always show" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
@@ -70,13 +70,13 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding ShowOnHotkey}"
                                                     ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
-                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Other="{Binding AlwaysShowHotkey}" Other2="{Binding HorseHotkey}"
+                            <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" OtherKeys="{Binding OtherShowKeys}"
                                                 IsRefused="{Binding ShowRefused}" IsListening="{Binding ListeningShow}"
                                                 AutomationProperties.Name="Show hotkey" />
                             <TextBlock Text="Show on hotkey" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource Row}" Visibility="{Binding ShowOnHotkey.IsOn, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Row}" BorderThickness="0" Visibility="{Binding ShowOnHotkey.IsOn, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding SecondsChoices}" SelectedItem="{Binding ShowSeconds}"
                                                     ValueWidth="60" AutomationProperties.Name="Show for" />
@@ -109,6 +109,7 @@
                                 <ToggleButton Style="{StaticResource Chip}" Content="Farm" IsChecked="{Binding ShowFarm}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Fishing" IsChecked="{Binding ShowFishing}" />
                                 <ToggleButton Style="{StaticResource Chip}" Content="Horse registrations" IsChecked="{Binding ShowHorseRegistrations}" />
+                                <ToggleButton Style="{StaticResource Chip}" Content="Custom timers" IsChecked="{Binding ShowCustomTimers}" />
                             </WrapPanel>
                         </StackPanel>
                     </Border>

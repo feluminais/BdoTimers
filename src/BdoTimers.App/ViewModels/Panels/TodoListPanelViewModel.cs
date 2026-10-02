@@ -192,10 +192,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         {
             var index = rows.FindIndex(r => r.Id == id);
             if (index < 0) return;
-            var source = rows[index];
-            var child = source.Level == 1 || index + 1 < rows.Count && rows[index + 1].Level == 1;
-            rows.Insert(index + 1, new TodoOutlineRow(newId, "", false, child ? 1 : 0));
-            if (source.Level == 0 && child) rows[index] = source with { Done = false };
+            TodoOutline.InsertAfter(rows, index, newId);
         }, newId);
     }
 

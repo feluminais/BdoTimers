@@ -89,6 +89,9 @@ public class JsonRoundTripTests
         Assert.Equal(BuiltInSounds.Default, s.AlertSound);
         Assert.False(s.Autostart);
         Assert.Equal(0.5f, s.Volume);
+        Assert.Equal(DefaultHotkeys.AlwaysShow, s.Overlay.AlwaysShowHotkey);
+        Assert.Equal(DefaultHotkeys.Show, s.Overlay.ShowHotkey);
+        Assert.True(s.Overlay.ShowOnHotkey);
     }
 
     [Fact]
@@ -160,5 +163,16 @@ public class JsonRoundTripTests
         Assert.False(s.Overlay.AlwaysShow);
         Assert.Equal(100, s.OverlayLeft);
         Assert.Equal(40, s.OverlayTop);
+    }
+
+    [Fact]
+    public void Explicitly_cleared_hotkeys_stay_cleared()
+    {
+        const string json = """{ "overlay": { "alwaysShowHotkey": null, "showOnHotkey": false, "showHotkey": null } }""";
+        var settings = JsonSerializer.Deserialize<AppSettings>(json, JsonDefaults.Options)!;
+
+        Assert.Null(settings.Overlay.AlwaysShowHotkey);
+        Assert.Null(settings.Overlay.ShowHotkey);
+        Assert.False(settings.Overlay.ShowOnHotkey);
     }
 }

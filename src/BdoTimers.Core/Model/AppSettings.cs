@@ -23,7 +23,7 @@ public sealed record AppSettings
     /// <summary>Set once the priority notifications hint was shown for the app id notifications use now; the flag
     /// before it (priorityHintShown) was for the Windows App SDK's id, which Windows' priority list no longer matches.</summary>
     public bool NotificationHintShown { get; init; }
-    /// <summary>A timetable notice is shown once for each bundled schedule that needs review.</summary>
+    /// <summary>Legacy EU notice revision, copied into its region profile by migration.</summary>
     public string? TimetableNoticeRevision { get; init; }
     public WindowPlacement? Window { get; init; }
     public TodoSchedule DailyTodoReset { get; init; } = TodoSchedule.DailyDefault;

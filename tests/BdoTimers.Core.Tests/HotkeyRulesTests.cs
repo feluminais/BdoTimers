@@ -6,6 +6,15 @@ public class HotkeyRulesTests
 {
     const int A = 0x41, Five = 0x35, Space = 0x20, Comma = 0xBC, Enter = 0x0D, F9 = 0x78, NumPad5 = 0x65, Home = 0x24;
 
+    [Fact]
+    public void Default_hotkeys_are_distinct_and_accepted()
+    {
+        var keys = new[] { DefaultHotkeys.AlwaysShow, DefaultHotkeys.Show, DefaultHotkeys.HorseRegistration };
+        Assert.Equal(3, keys.Distinct().Count());
+        foreach (var key in keys)
+            Assert.Null(HotkeyRules.Check(key, keys.First(other => other != key)));
+    }
+
     [Theory]
     [InlineData(A)]
     [InlineData(Five)]

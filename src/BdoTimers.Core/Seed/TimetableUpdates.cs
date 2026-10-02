@@ -19,20 +19,24 @@ public static class TimetableUpdates
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('\n', lines))));
     }
 
-    public static AppData InitializeBaseline(AppData data, BossSeed seed)
+    public static AppData InitializeBaseline(AppData data, BossSeed seed, string? regionId = null)
     {
-        if (data.AcceptedBossTimetable is not null) return data;
-        var current = Bosses(data);
+        var id = regionId ?? data.SelectedBossRegion;
+        var state = BossRegions.State(data, id);
+        if (state.AcceptedBossTimetable is not null) return data;
+        var current = Bosses(data, id);
         var bundled = Bundled(seed);
         return current.Count == bundled.Count && bundled.All(b => current.TryGetValue(b.Key, out var timer)
-            && Same(timer.Scheduled, b.Value.Scheduled)) ? data with { AcceptedBossTimetable = seed } : data;
+            && Same(timer.Scheduled, b.Value.Scheduled))
+            ? BossRegions.WithState(data, state with { AcceptedBossTimetable = seed }) : data;
     }
 
-    public static TimetableReview Review(AppData data, BossSeed seed)
+    public static TimetableReview Review(AppData data, BossSeed seed, string? regionId = null)
     {
-        var baseline = data.AcceptedBossTimetable;
+        var id = regionId ?? data.SelectedBossRegion;
+        var baseline = BossRegions.State(data, id).AcceptedBossTimetable;
         if (baseline is not null && Revision(baseline) == Revision(seed)) return new(false, []);
-        var current = Bosses(data);
+        var current = Bosses(data, id);
         var target = Bundled(seed);
         var previous = baseline is null ? null : Bundled(baseline);
         var names = (previous?.Keys ?? current.Keys).Union(target.Keys, StringComparer.OrdinalIgnoreCase)
@@ -53,18 +57,21 @@ public static class TimetableUpdates
         return new(true, changes);
     }
 
-    public static AppData Apply(AppData data, BossSeed seed, IEnumerable<string> selectedNames)
+    public static AppData Apply(AppData data, BossSeed seed, IEnumerable<string> selectedNames, string? regionId = null)
     {
-        var review = Review(data, seed);
+        var id = regionId ?? data.SelectedBossRegion;
+        var review = Review(data, seed, id);
         var selected = selectedNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
         var changes = review.Changes.Where(c => selected.Contains(c.Name)).ToList();
         var timers = data.Timers.ToList();
         foreach (var change in changes)
         {
-            var existing = timers.FirstOrDefault(t => t.IsBuiltIn && string.Equals(t.Name, change.Name, StringComparison.OrdinalIgnoreCase));
+            var existing = timers.FirstOrDefault(t => t.IsBuiltIn && BossRegions.RegionOf(t) == id
+                && string.Equals(t.Name, change.Name, StringComparison.OrdinalIgnoreCase));
             if (change.Replacement is null)
             {
-                timers.RemoveAll(t => t.IsBuiltIn && string.Equals(t.Name, change.Name, StringComparison.OrdinalIgnoreCase));
+                timers.RemoveAll(t => t.IsBuiltIn && BossRegions.RegionOf(t) == id
+                    && string.Equals(t.Name, change.Name, StringComparison.OrdinalIgnoreCase));
             }
             else if (existing is not null)
             {
@@ -73,11 +80,13 @@ public static class TimetableUpdates
             }
             else
             {
-                timers.Add(new TimerDef { Name = change.Name, Kind = TimerKind.Scheduled, IsBuiltIn = true, Scheduled = change.Replacement });
+                timers.Add(new TimerDef { Name = change.Name, Kind = TimerKind.Scheduled, IsBuiltIn = true,
+                    BossRegionId = id, Scheduled = change.Replacement });
             }
         }
         var ids = timers.Select(t => t.Id).ToHashSet();
-        return data with { Timers = timers, Muted = data.Muted.Where(m => ids.Contains(m.TimerId)).ToList(), AcceptedBossTimetable = seed };
+        return BossRegions.WithState(data with { Timers = timers, Muted = data.Muted.Where(m => ids.Contains(m.TimerId)).ToList() },
+            BossRegions.State(data, id) with { SeedApplied = true, AcceptedBossTimetable = seed });
     }
 
     public static bool Same(ScheduledSpec? left, ScheduledSpec? right) => left is null || right is null
@@ -87,7 +96,8 @@ public static class TimetableUpdates
     static string SlotsKey(ScheduledSpec schedule) => string.Join(',', schedule.Slots.Distinct()
         .OrderBy(s => s.Day).ThenBy(s => s.Time).Select(s => $"{(int)s.Day}:{s.Time:HH:mm}"));
 
-    static Dictionary<string, TimerDef> Bosses(AppData data) => data.Timers.Where(t => t.IsBuiltIn)
+    static Dictionary<string, TimerDef> Bosses(AppData data, string regionId) => data.Timers
+        .Where(t => t.IsBuiltIn && BossRegions.RegionOf(t) == regionId)
         .GroupBy(t => t.Name, StringComparer.OrdinalIgnoreCase).ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
     static Dictionary<string, TimerDef> Bundled(BossSeed seed) => SeedService.ToTimers(seed, new AlertConfig())

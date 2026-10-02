@@ -13,7 +13,8 @@ namespace BdoTimers.App.Alerts;
 /// while the sound plays, so it follows without a gap.
 /// </summary>
 public sealed class AlertDispatcher(
-    ToastChannel toast, SoundChannel sound, TtsChannel tts, PersistentState<AppSettings> settings, UserSounds userSounds)
+    ToastChannel toast, SoundChannel sound, TtsChannel tts, PersistentState<AppSettings> settings, UserSounds userSounds,
+    TimerStore timers)
     : IAlertSink
 {
     readonly SemaphoreSlim _audio = new(1, 1);
@@ -42,12 +43,15 @@ public sealed class AlertDispatcher(
     });
 
     public void NotifyEndedWhileAway(TimerDef timer) =>
-        Try("toast", () => toast.ShowInfo(timer.Name, timer.Countdown?.EndsAtUtc is { } end
+        Try("toast", () => toast.ShowInfo(timer.Name, timer.OneTime is { } oneTime
+            ? $"Missed event at {OneTimeEvents.AtUtc(oneTime).ToLocalTime():MMM d, HH:mm}."
+            : timer.Countdown?.EndsAtUtc is { } end
             ? $"Countdown ended at {end.ToLocalTime():HH:mm}."
             : "Countdown ended."));
 
-    async Task RunAsync(AlertEvent alert)
+    async Task RunAsync(AlertEvent planned)
     {
+        if (AlertEligibility.Filter(timers.Current, planned) is not { } alert) return;
         var message = AlertMessage.Build(alert);
         // A shared spawn uses a channel if any of its timers wants it; the sound is the first enabled one's.
         var configs = alert.Timers.Select(t => t.Alerts).ToList();
@@ -56,6 +60,10 @@ public sealed class AlertDispatcher(
         await _audio.WaitAsync();
         try
         {
+            // Sound may have waited behind another alert while the player changed regions.
+            if (AlertEligibility.Filter(timers.Current, planned) is not { } current) return;
+            configs = current.Timers.Select(t => t.Alerts).ToList();
+            message = AlertMessage.Build(current);
             var s = settings.Current;
             var speech = configs.Any(c => c.Tts.Enabled)
                 ? tts.SynthesizeAsync(message.Speech, s.TtsVoice, s.TtsRate)
@@ -64,7 +72,25 @@ public sealed class AlertDispatcher(
                 await TryAsync("sound", () => sound.PlayAsync(
                     SoundKeys.Playable(withSound.Sound.Key, s.AlertSound, userSounds.Exists), s.Volume));
             if (speech is not null)
-                await TryAsync("tts", async () => await sound.PlayAsync(await speech, s.Volume));
+                await TryAsync("tts", async () =>
+                {
+                    var spoken = current;
+                    var pending = speech;
+                    // Recheck after every synthesis, keeping custom timers when a shared boss becomes inactive.
+                    while (true)
+                    {
+                        using var source = await pending;
+                        if (AlertEligibility.Filter(timers.Current, spoken) is not { } eligible
+                            || !eligible.Timers.Any(t => t.Alerts.Tts.Enabled)) return;
+                        if (ReferenceEquals(eligible, spoken))
+                        {
+                            await sound.PlayAsync(source, s.Volume);
+                            return;
+                        }
+                        spoken = eligible;
+                        pending = tts.SynthesizeAsync(AlertMessage.Build(spoken).Speech, s.TtsVoice, s.TtsRate);
+                    }
+                });
         }
         finally
         {

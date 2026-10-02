@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Data\bosses.eu.json" LogicalName="BdoTimers.Core.Data.bosses.eu.json" WithCulture="false" />
+    <EmbeddedResource Include="Data\bosses.na.json" LogicalName="BdoTimers.Core.Data.bosses.na.json" WithCulture="false" />
   </ItemGroup>
 
 </Project>

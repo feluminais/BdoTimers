@@ -14,13 +14,13 @@ public sealed class AlertPlanner
     /// </summary>
     public static readonly TimeSpan Memory = TimeSpan.FromHours(1);
 
-    readonly HashSet<(Guid TimerId, DateTimeOffset Occurrence, int Lead)> _fired = [];
+    readonly HashSet<(Guid TimerId, Guid ScheduleVersion, DateTimeOffset Occurrence, int Lead)> _fired = [];
     readonly HashSet<Guid> _failed = [];
 
     /// <param name="defaultLeads">The default alert times from Settings, for timers without their own.</param>
     public IReadOnlyList<AlertEvent> Tick(
         IEnumerable<TimerDef> timers, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now,
-        IReadOnlyList<int>? defaultLeads = null)
+        IReadOnlyList<int>? defaultLeads = null, DateTimeOffset? bossAlertsAfterUtc = null)
     {
         var events = new List<AlertEvent>();
         foreach (var timer in timers.Where(t => t.Enabled))
@@ -40,7 +40,10 @@ public sealed class AlertPlanner
                     foreach (var lead in leads)
                     {
                         if (now < occurrence - TimeSpan.FromMinutes(lead)) continue;
-                        if (_fired.Add((timer.Id, occurrence, lead)) && toFire is null) toFire = lead;
+                        var first = _fired.Add((timer.Id, EventVersion(timer), occurrence, lead));
+                        if (timer.IsBuiltIn && bossAlertsAfterUtc is { } boundary
+                            && occurrence - TimeSpan.FromMinutes(lead) <= boundary) continue;
+                        if (first && toFire is null) toFire = lead;
                     }
                     if (toFire is { } fired)
                         events.Add(new AlertEvent([timer], occurrence, fired, MinutesLeft(occurrence, now)));
@@ -59,7 +62,7 @@ public sealed class AlertPlanner
     /// </summary>
     public IReadOnlyList<string> UpcomingSpeech(
         IEnumerable<TimerDef> timers, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now, TimeSpan window,
-        IReadOnlyList<int>? defaultLeads = null)
+        IReadOnlyList<int>? defaultLeads = null, DateTimeOffset? bossAlertsAfterUtc = null)
     {
         var planned = timers.Where(t => t.Enabled).Select(t => (Timer: t, Leads: Leads(t, defaultLeads)))
             .Where(p => p.Leads.Length > 0).ToList();
@@ -76,7 +79,9 @@ public sealed class AlertPlanner
                 {
                     if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
                     foreach (var lead in leads)
-                        if (occurrence - TimeSpan.FromMinutes(lead) > now && !_fired.Contains((timer.Id, occurrence, lead)))
+                        if (occurrence - TimeSpan.FromMinutes(lead) > now
+                            && (!timer.IsBuiltIn || bossAlertsAfterUtc is null || occurrence - TimeSpan.FromMinutes(lead) > bossAlertsAfterUtc)
+                            && !_fired.Contains((timer.Id, EventVersion(timer), occurrence, lead)))
                             pending.Add(new AlertEvent([timer], occurrence, lead, lead));
                 }
             }
@@ -100,6 +105,8 @@ public sealed class AlertPlanner
     static int[] Leads(TimerDef timer, IReadOnlyList<int>? defaultLeads) =>
         timer.Alerts.LeadTimes(defaultLeads ?? AlertConfig.StandardLeadTimesMinutes)
             .Where(l => l >= 0).Distinct().Order().ToArray();
+
+    static Guid EventVersion(TimerDef timer) => timer.Kind == TimerKind.OneTime ? timer.OneTime?.ScheduleVersion ?? Guid.Empty : Guid.Empty;
 
     static int MinutesLeft(DateTimeOffset occurrence, DateTimeOffset now) =>
         Math.Max(0, (int)Math.Ceiling((occurrence - now).TotalMinutes));

@@ -6,6 +6,7 @@ using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -38,8 +39,8 @@ public sealed partial class BossesViewModel : ObservableObject
         _services = services;
         _host = host;
         // Changed can fire on the scheduler thread (countdown completion).
-        services.Timers.Changed += () => Application.Current.Dispatcher.BeginInvoke(() => Refresh(DateTimeOffset.UtcNow));
-        Refresh(DateTimeOffset.UtcNow);
+        services.Timers.Changed += () => Application.Current.Dispatcher.BeginInvoke(() => Refresh(services.Clock.UtcNow));
+        Refresh(services.Clock.UtcNow);
     }
 
     public void Refresh(DateTimeOffset now)
@@ -72,7 +73,7 @@ public sealed partial class BossesViewModel : ObservableObject
     }
 
     static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
-        data.Timers.Where(t => t.IsBuiltIn).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase);
+        data.Timers.Where(t => BossRegions.IsSelected(data, t)).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>Updates the tiles in place; rebuilds them only when the set of bosses changed (a timetable reset).</summary>
     void SyncTiles(AppData data, DateTimeOffset now)
@@ -92,7 +93,7 @@ public sealed partial class BossesViewModel : ObservableObject
     string GridContent(AppData data)
     {
         if (ReferenceEquals(data, _gridData)) return _gridContent;
-        var bosses = data.Timers.Where(t => t.IsBuiltIn && t.Scheduled is not null).ToList();
+        var bosses = data.Timers.Where(t => BossRegions.IsSelected(data, t) && t.Scheduled is not null).ToList();
         var ids = bosses.Select(b => b.Id).ToHashSet();
         _gridData = data;
         return _gridContent = string.Join('\n', bosses
@@ -150,7 +151,8 @@ public sealed partial class BossesViewModel : ObservableObject
 
     void OpenBoss(Guid id)
     {
-        if (_services.Timers.Current.Timers.FirstOrDefault(t => t.Id == id) is { } boss)
+        var data = _services.Timers.Current;
+        if (data.Timers.FirstOrDefault(t => t.Id == id && BossRegions.IsSelected(data, t)) is { } boss)
             _host.OpenPanel(new BossPanelViewModel(_services, boss));
     }
 }

@@ -8,7 +8,8 @@ namespace BdoTimers.Core.Storage;
 /// <summary>Brings timer data saved by older versions up to date; data that is already current comes back unchanged.</summary>
 public static class DataMigrations
 {
-    public const int Current = 5;
+    // Version 7 adds optional schedule dates and dated events; existing timers keep their values and unlimited dates.
+    public const int Current = 7;
 
     /// <summary>Lists that earlier versions gave timers themselves: the built-in default, and 5 and 0 for countdowns.</summary>
     static readonly IReadOnlyList<IReadOnlyList<int>> AssignedLeadTimes = [AlertConfig.StandardLeadTimesMinutes, [5, 0]];
@@ -21,7 +22,9 @@ public static class DataMigrations
         if (data.DataVersion < 3) timers = ForgetRetiredSounds(timers);
         if (data.DataVersion < 4) timers = AddHorseRegistration(timers);
         if (data.DataVersion < 5) timers = SeparateHorseRegistration(timers);
-        return data with { DataVersion = Current, Timers = timers };
+        var migrated = data with { Timers = timers };
+        if (data.DataVersion < 6) migrated = BossRegions.MigrateLegacy(migrated, settings);
+        return migrated with { DataVersion = Current };
     }
 
     /// <summary>

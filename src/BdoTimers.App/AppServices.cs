@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Windows;
 using BdoTimers.App.Alerts;
 using BdoTimers.App.Art;
@@ -12,6 +14,7 @@ using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Sounds;
 using BdoTimers.Core.Storage;
+using BdoTimers.Core.Updates;
 using Microsoft.Win32;
 
 namespace BdoTimers.App;
@@ -28,11 +31,19 @@ public sealed class AppServices : IDisposable
     MainWindow? _main;
     MainViewModel? _mainViewModel;
     CancellationTokenSource? _preview;
+    readonly CancellationTokenSource _updateShutdown = new();
+    readonly HttpClient _updateHttp = new(new HttpClientHandler
+    {
+        AllowAutoRedirect = false,
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+    }) { Timeout = Timeout.InfiniteTimeSpan };
 
     public TimerStore Timers { get; }
     public TodoStore Todos { get; }
     public PersistentState<AppSettings> Settings { get; }
-    public BossSeed Seed { get; }
+    public BossRegion Region => BossRegions.Find(Timers.Current.SelectedBossRegion);
+    public BossSeed Seed => _seeds[Timers.Current.SelectedBossRegion];
+    readonly IReadOnlyDictionary<string, BossSeed> _seeds;
     public UiClock UiClock { get; } = new();
     /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
     public BossBoardCache Boards { get; } = new();
@@ -42,6 +53,7 @@ public sealed class AppServices : IDisposable
     public OverlayController Overlay { get; }
     public ArtLibrary Art { get; }
     public UserSounds Sounds { get; }
+    public UpdateChecker Updates { get; }
     public bool IsQuitting { get; private set; }
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -59,12 +71,12 @@ public sealed class AppServices : IDisposable
 
         Settings = new PersistentState<AppSettings>(settingsFile, settings.Value);
         var todosFile = new JsonFileStore<TodoData>(Path.Combine(dataDir, "todos.json"),
-            () => TodoSeed.Create(DateTimeOffset.UtcNow, Settings.Current));
+            () => TodoSeed.Create(Clock.UtcNow, Settings.Current));
         var todos = todosFile.Load();
         if (!File.Exists(todosFile.FilePath)) todosFile.Save(todos.Value);
         RecoveredFiles = new[] { settings.RecoveredBackupPath, timers.RecoveredBackupPath, todos.RecoveredBackupPath }
             .OfType<string>().ToList();
-        Todos = new TodoStore(todosFile, todos.Value, new SystemClock());
+        Todos = new TodoStore(todosFile, todos.Value, Clock);
         Todos.Update(TodoMigrations.Apply);
         Settings.Changed += () =>
         {
@@ -74,19 +86,35 @@ public sealed class AppServices : IDisposable
         // A built-in sound from an earlier version that the app no longer has.
         if (!SoundKeys.IsKnown(Settings.Current.AlertSound)) Settings.Update(s => s with { AlertSound = BuiltInSounds.Default });
         Timers = new TimerStore(timersFile, timers.Value);
-        Seed = SeedService.LoadEmbedded();
-        Timers.Update(d => Presets.Ensure(SeedService.ApplyIfNeeded(DataMigrations.Apply(d, Settings.Current), Seed, new AlertConfig())));
+        _seeds = BossRegions.All.ToDictionary(r => r.Id, r => SeedService.LoadEmbedded(r.Id));
+        Timers.Update(d =>
+        {
+            var migrated = DataMigrations.Apply(d, Settings.Current);
+            return Presets.Ensure(SeedService.ApplyIfNeeded(migrated, _seeds[migrated.SelectedBossRegion], new AlertConfig()));
+        });
 
         _toast = new ToastChannel(App.InstanceName, App.DisplayName);
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")),
             new SpeechCache(Path.Combine(dataDir, "speech")));
         Tts.CleanCacheInBackground();
-        Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds);
+        Alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds, Timers);
         _engine = new SchedulerEngine(Timers, Settings, Alerts, Clock);
         _loop = new SchedulerLoop(_engine, Clock);
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
+
+        var updateFile = new JsonFileStore<UpdateCheckState>(Path.Combine(dataDir, "update-check.json"), () => new());
+        UpdateCheckState updateState;
+        try { updateState = updateFile.Load().Value; }
+        catch (Exception ex)
+        {
+            Log.Error("Couldn't load update check timing", ex);
+            updateState = new();
+        }
+        Updates = new UpdateChecker(new GitHubReleaseSource(_updateHttp), ProductVersion.Number, Clock,
+            new PersistentState<UpdateCheckState>(updateFile, updateState), App.AutomaticUpdateChecks,
+            shutdown: _updateShutdown.Token);
     }
 
     /// <summary>Optional steps log their failures and carry on, so none of them can stop the app from starting.</summary>
@@ -136,18 +164,37 @@ public sealed class AppServices : IDisposable
         }
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
-        var timetableRevision = TimetableUpdates.Revision(Seed);
-        if (TimetableUpdates.Review(Timers.Current, Seed).NeedsReview && Settings.Current.TimetableNoticeRevision != timetableRevision)
+        NotifyTimetableReview();
+        if (showWindow) ShowMainWindow();
+        else EcoQos.Set(true);
+#if !DEBUG
+        _ = Task.Run(CheckForUpdatesOnStartup);
+#endif
+    }
+
+    void NotifyTimetableReview()
+    {
+        var data = Timers.Current;
+        var seed = _seeds[data.SelectedBossRegion];
+        var timetableRevision = TimetableUpdates.Revision(seed);
+        if (TimetableUpdates.Review(data, seed).NeedsReview && BossRegions.State(data).TimetableNoticeRevision != timetableRevision)
         {
             try
             {
-                _toast.ShowInfo("Review the EU timetable", "Bundled spawn times can be reviewed in Settings → Bosses.");
-                Settings.Update(s => s with { TimetableNoticeRevision = timetableRevision });
+                _toast.ShowInfo($"Review the {BossRegions.Find(data.SelectedBossRegion).ShortLabel} timetable", "Bundled spawn times can be reviewed in Settings → Bosses.");
+                Timers.Update(d => BossRegions.WithState(d, BossRegions.State(d, data.SelectedBossRegion) with { TimetableNoticeRevision = timetableRevision }));
             }
             catch (Exception ex) { Log.Error("Timetable notice failed", ex); }
         }
-        if (showWindow) ShowMainWindow();
-        else EcoQos.Set(true);
+    }
+
+    async Task CheckForUpdatesOnStartup()
+    {
+        try
+        {
+            await Updates.CheckAutomaticallyAsync();
+        }
+        catch (Exception ex) { Log.Error("Startup update check failed", ex); }
     }
 
     public void ShowMainWindow()
@@ -173,6 +220,8 @@ public sealed class AppServices : IDisposable
     }
 
     public void ResumeAlerts() => Settings.Update(AlertPause.Resume);
+
+    public void ControlCustomCountdown(Guid id) => Timers.ControlCustomCountdown(id, Clock);
 
     public HorseStartResult StartHorseRegistration(bool announce)
     {
@@ -265,7 +314,14 @@ public sealed class AppServices : IDisposable
 
     public void RestartForRestore(PreparedRestore restore) => ((App)_app).RestartForRestore(restore);
 
-    public void ApplyTimetable(IEnumerable<string> names) => Timers.Update(data => TimetableUpdates.Apply(data, Seed, names));
+    public void SelectBossRegion(string regionId)
+    {
+        Timers.SelectBossRegion(regionId, Clock);
+        NotifyTimetableReview();
+    }
+
+    public void ApplyTimetable(IEnumerable<string> names) =>
+        Timers.Update(data => TimetableUpdates.Apply(data, _seeds[data.SelectedBossRegion], names));
 
     public void NotifyRestore(string? previousDirectory)
     {
@@ -274,7 +330,7 @@ public sealed class AppServices : IDisposable
         catch (Exception ex) { Log.Error("Couldn't show the restore notice", ex); }
     }
 
-    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, Seed, new AlertConfig()));
+    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig()));
 
     public void SetTodoReset(TodoCadence cadence, TodoSchedule schedule)
     {
@@ -304,6 +360,10 @@ public sealed class AppServices : IDisposable
 
     public void Dispose()
     {
+        _mainViewModel?.Dispose();
+        _updateShutdown.Cancel();
+        _updateHttp.Dispose();
+        _updateShutdown.Dispose();
         UiClock.Stop();
         _loop.Dispose();
         Tts.Dispose();

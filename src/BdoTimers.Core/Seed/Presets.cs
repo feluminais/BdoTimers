@@ -49,6 +49,7 @@ public static class Presets
         Name = "Horse registration",
         Kind = TimerKind.Countdown,
         Preset = HorseRegistration,
+        StartHotkey = DefaultHotkeys.HorseRegistration,
         Countdown = new CountdownSpec { Duration = HorseMarketWait },
         // Its own alert times: the default's 15 minutes would alert the moment a 10-minute countdown starts.
         Alerts = new AlertConfig { LeadTimesMinutes = [1, 0] },

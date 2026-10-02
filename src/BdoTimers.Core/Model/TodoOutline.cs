@@ -75,22 +75,14 @@ public static class TodoOutline
         return true;
     }
 
-    public static int InsertAfter(List<TodoOutlineRow> rows, int index)
+    public static int InsertAfter(List<TodoOutlineRow> rows, int index, Guid? newId = null)
     {
         var source = rows[index];
         var hasChildren = source.Level == 0 && index + 1 < rows.Count && rows[index + 1].Level == 1;
         var target = index + 1;
-        if (source.Level == 1)
-        {
-            rows.Insert(target, new TodoOutlineRow(Guid.NewGuid(), "", false, 1));
-            return target;
-        }
-        if (hasChildren)
-        {
-            rows.Insert(target, new TodoOutlineRow(Guid.NewGuid(), "", false, 1));
-            return target;
-        }
-        rows.Insert(target, new TodoOutlineRow(Guid.NewGuid(), "", false, 0));
+        var child = source.Level == 1 || hasChildren;
+        rows.Insert(target, new TodoOutlineRow(newId ?? Guid.NewGuid(), "", false, child ? 1 : 0));
+        if (hasChildren) rows[index] = source with { Done = false };
         return target;
     }
 

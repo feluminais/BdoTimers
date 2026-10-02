@@ -2,6 +2,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using BdoTimers.Core.Diagnostics;
+using BdoTimers.Core.Scheduling;
 using H.NotifyIcon;
 
 namespace BdoTimers.App;
@@ -52,6 +53,18 @@ public sealed class TrayIcon : IDisposable
         var menu = new ContextMenu();
         menu.Items.Add(Item("Open", s.ShowMainWindow));
         menu.Items.Add(Item("Overlay settings", s.ShowOverlaySettings));
+        var custom = new MenuItem { Header = "Custom timers" };
+        menu.Items.Add(custom);
+        menu.Opened += (_, _) =>
+        {
+            custom.Items.Clear();
+            foreach (var timer in s.Timers.Current.Timers.Where(CustomCountdowns.Includes))
+            {
+                var action = CustomCountdowns.ActionName(timer.Countdown!.Status);
+                custom.Items.Add(Item($"{action} · {timer.Name}", () => s.ControlCustomCountdown(timer.Id)));
+            }
+            custom.IsEnabled = custom.Items.Count > 0;
+        };
         menu.Items.Add(new Separator());
         menu.Items.Add(Item("Pause alerts for 1 hour", () => s.PauseAlerts(TimeSpan.FromHours(1))));
         menu.Items.Add(Item("Pause alerts until resumed", () => s.PauseAlerts(null)));

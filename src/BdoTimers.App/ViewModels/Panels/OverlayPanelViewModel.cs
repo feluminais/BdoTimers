@@ -1,10 +1,10 @@
 using System.IO;
+using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
-using BdoTimers.App.Overlay;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
-using BdoTimers.Core.Seed;
+using BdoTimers.Core.Scheduling;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -31,7 +31,6 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _listeningAlwaysShow;
     [ObservableProperty] private Choice _showOnHotkey = Choice.OnOff[1];
     [ObservableProperty] private Hotkey? _showHotkey;
-    [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private bool _showRefused;
     [ObservableProperty] private bool _listeningShow;
     [ObservableProperty] private Choice _showSeconds;
@@ -43,6 +42,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _showFarm;
     [ObservableProperty] private bool _showFishing;
     [ObservableProperty] private bool _showHorseRegistrations;
+    [ObservableProperty] private bool _showCustomTimers;
     [ObservableProperty] private bool _pickerOpen;
     [ObservableProperty] private Color _customColor;
     [ObservableProperty] private bool _isCustomColor;
@@ -57,18 +57,22 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
     public IReadOnlyList<Swatch> Swatches { get; }
     public bool HasPicture => Picture is not null;
+    public IReadOnlyList<Hotkey> OtherAlwaysKeys => HotkeyCatalog.OtherKeys(
+        _services.Timers.Current, _services.Settings.Current.Overlay, new(HotkeyAction.AlwaysShow));
+    public IReadOnlyList<Hotkey> OtherShowKeys => HotkeyCatalog.OtherKeys(
+        _services.Timers.Current, _services.Settings.Current.Overlay, new(HotkeyAction.Show));
 
     public OverlayPanelViewModel(AppServices services)
     {
         _services = services;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
-        _horseHotkey = services.Timers.Current.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration)?.StartHotkey;
         _showSeconds = SecondsChoices[1];
         _layout = Layouts[0];
         _colorSave.Tick += (_, _) => SaveCustomColor();
         Load(services.Settings.Current.Overlay);
         LoadRefused();
         services.Settings.Changed += OnSettingsChanged;
+        services.Timers.Changed += OnHotkeyConfigChanged;
         services.Overlay.Hotkeys.RefusedChanged += LoadRefused;
         services.Overlay.BeginPreview();
     }
@@ -90,6 +94,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         ShowFarm = o.ShowFarm;
         ShowFishing = o.ShowFishing;
         ShowHorseRegistrations = o.ShowHorseRegistrations;
+        ShowCustomTimers = o.ShowCustomTimers;
         BackgroundOpacity = o.BackgroundOpacity;
         TextOpacity = o.TextOpacity;
         if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) CustomColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
@@ -104,13 +109,25 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         _syncing = true;
         AlwaysShow = Choice.For(_services.Settings.Current.Overlay.AlwaysShow);
         _syncing = false;
+        OnHotkeyConfigChanged();
+    }
+
+    void OnHotkeyConfigChanged()
+    {
+        if (!Application.Current.Dispatcher.CheckAccess())
+        {
+            Application.Current.Dispatcher.BeginInvoke(OnHotkeyConfigChanged);
+            return;
+        }
+        OnPropertyChanged(nameof(OtherAlwaysKeys));
+        OnPropertyChanged(nameof(OtherShowKeys));
     }
 
     void LoadRefused()
     {
         var refused = _services.Overlay.Hotkeys.Refused;
-        AlwaysShowRefused = refused.Contains(HotkeyAction.AlwaysShow);
-        ShowRefused = refused.Contains(HotkeyAction.Show);
+        AlwaysShowRefused = refused.Contains(new(HotkeyAction.AlwaysShow));
+        ShowRefused = refused.Contains(new(HotkeyAction.Show));
     }
 
     void Modify(Func<OverlaySettings, OverlaySettings> change)
@@ -133,6 +150,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     partial void OnShowFarmChanged(bool value) => Modify(o => o with { ShowFarm = value });
     partial void OnShowFishingChanged(bool value) => Modify(o => o with { ShowFishing = value });
     partial void OnShowHorseRegistrationsChanged(bool value) => Modify(o => o with { ShowHorseRegistrations = value });
+    partial void OnShowCustomTimersChanged(bool value) => Modify(o => o with { ShowCustomTimers = value });
     partial void OnBackgroundOpacityChanged(double value) => Modify(o => o with { BackgroundOpacity = Math.Round(value, 2) });
     partial void OnTextOpacityChanged(double value) => Modify(o => o with { TextOpacity = Math.Round(value, 2) });
     partial void OnListeningAlwaysShowChanged(bool value) => Listen(value);
@@ -231,6 +249,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         ListeningAlwaysShow = false;
         ListeningShow = false;
         _services.Settings.Changed -= OnSettingsChanged;
+        _services.Timers.Changed -= OnHotkeyConfigChanged;
         _services.Overlay.Hotkeys.RefusedChanged -= LoadRefused;
         _services.Overlay.EndPreview();
     }

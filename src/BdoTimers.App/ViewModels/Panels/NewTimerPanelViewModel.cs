@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
@@ -24,6 +25,13 @@ public sealed partial class NewTimerPanelViewModel(AppServices services, IPanelH
             TimeZoneId = TimeZoneInfo.Local.Id,
             Slots = [new Slot(DayOfWeek.Monday, new TimeOnly(20, 0))],
         },
+    });
+
+    [RelayCommand]
+    void OneTime() => Create(new TimerDef
+    {
+        Name = "New event", Kind = TimerKind.OneTime,
+        OneTime = OneTimeEvents.Create(services.Clock, TimeZoneInfo.Local.Id),
     });
 
     void Create(TimerDef timer)

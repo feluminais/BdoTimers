@@ -104,7 +104,7 @@ public class OverlayContentTests
         var soon = WithPopUp(TestTimers.Countdown(Now.AddMinutes(4), 0) with { Name = "Bread" }, 5);
         var later = WithPopUp(TestTimers.Countdown(Now.AddMinutes(9), 0) with { Name = "Later" }, 5);
 
-        var s = OverlayContent.Build(new AppData { Timers = [soon, later] }, All, Now);
+        var s = OverlayContent.Build(new AppData { Timers = [soon, later] }, All with { ShowCustomTimers = false }, Now);
 
         Assert.Equal(new[] { "Bread" }, s.PopUps.Select(p => p.Timer.Name));
     }

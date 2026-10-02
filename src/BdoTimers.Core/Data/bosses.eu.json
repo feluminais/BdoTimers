@@ -1,6 +1,10 @@
 {
   "source": "Pearl Abyss NA/EU wiki 'World Bosses' EU schedule (image dated 2025-12-24, page edited 2026-04-15), cross-checked slot-by-slot against bdocodex.com EU boss timer",
   "verifiedOn": "2026-09-23",
+  "sourceUrls": [
+    "https://www.naeu.playblackdesert.com/en-US/Wiki?wikiNo=83",
+    "https://s1.pearlcdn.com/NAEU/Upload/WIKI/8dc7628e14e20251224150012814.png"
+  ],
   "timeZoneId": "Europe/Berlin",
   "bosses": [
     { "name": "Kzarka", "slots": [ { "day": "Monday", "time": "22:15" }, { "day": "Tuesday", "time": "19:00" }, { "day": "Wednesday", "time": "00:15" }, { "day": "Thursday", "time": "02:00" }, { "day": "Friday", "time": "16:00" }, { "day": "Saturday", "time": "00:15" }, { "day": "Sunday", "time": "12:00" } ] },

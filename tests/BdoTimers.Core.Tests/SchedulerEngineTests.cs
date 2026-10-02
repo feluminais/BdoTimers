@@ -68,6 +68,22 @@ public class SchedulerEngineTests : IDisposable
 
         Assert.Equal(new[] { 5, 0 }, _sink.Alerts.Select(a => a.LeadMinutes));
         Assert.Equal(CountdownStatus.Idle, _timers.Current.Timers.Single(t => t.Id == timer.Id).Countdown!.Status);
+        Assert.Null(AlertEligibility.Filter(_timers.Current, _sink.Alerts[0]));
+        Assert.Same(_sink.Alerts[1], AlertEligibility.Filter(_timers.Current, _sink.Alerts[1]));
+    }
+
+    [Fact]
+    public void Horse_end_alert_remains_eligible_after_the_tick_removes_the_run()
+    {
+        _timers.Upsert(Presets.CreateHorseRegistration());
+        Assert.Equal(HorseStartResult.Started, _timers.StartHorseRegistration(T0));
+
+        TickAt(T0.AddMinutes(10));
+
+        var end = Assert.Single(_sink.Alerts);
+        Assert.Equal(0, end.LeadMinutes);
+        Assert.DoesNotContain(_timers.Current.Timers, t => t.Preset == Presets.HorseRegistrationRun);
+        Assert.Same(end, AlertEligibility.Filter(_timers.Current, end));
     }
 
     [Fact]

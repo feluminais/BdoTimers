@@ -129,6 +129,21 @@ public sealed class TodoRefinementTests
     }
 
     [Fact]
+    public void Enter_uses_the_requested_focus_id_and_clears_a_parents_leaf_completion()
+    {
+        var rows = TodoOutline.Flatten([new TodoRow { Text = "Parent", Done = true,
+            Children = [new TodoRow { Text = "Child", Done = true }] }]);
+        var newId = Guid.NewGuid();
+
+        var index = TodoOutline.InsertAfter(rows, 0, newId);
+
+        Assert.Equal(newId, rows[index].Id);
+        Assert.Equal(1, rows[index].Level);
+        Assert.False(rows[0].Done);
+        Assert.True(rows[2].Done);
+    }
+
+    [Fact]
     public void Lists_checks_children_and_shared_schedule_survive_reload()
     {
         using var dir = new TempDir();

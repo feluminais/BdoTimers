@@ -46,6 +46,7 @@ public class PresetsTests
         Assert.Equal(Presets.HorseRegistration, horse.Preset);
         Assert.Equal(TimerKind.Countdown, horse.Kind);
         Assert.Equal(TimeSpan.FromMinutes(10), horse.Countdown!.Duration);
+        Assert.Equal(DefaultHotkeys.HorseRegistration, horse.StartHotkey);
         Assert.DoesNotContain(Presets.Ensure(new AppData()).Timers, t => t.Preset == Presets.HorseRegistration);
     }
 
