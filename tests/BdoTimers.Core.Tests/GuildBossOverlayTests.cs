@@ -1,5 +1,6 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Seed;
 using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
@@ -13,7 +14,7 @@ public class GuildBossOverlayTests
     static readonly OverlaySettings On = Off with { GuildBosses = new OverlayAlert { Enabled = true, ShowMinutesBefore = 15 } };
 
     /// <summary>Tuesday 12:20 in Berlin, 20 minutes after <see cref="BerlinNoon"/>.</summary>
-    static readonly TimerDef GuildBoss = TestTimers.Scheduled("Guild boss", DayOfWeek.Tuesday, 12, 20) with { IsGuildBoss = true };
+    static readonly TimerDef GuildBoss = TestTimers.Scheduled("Guild bosses", DayOfWeek.Tuesday, 12, 20) with { Preset = Presets.GuildBosses };
     static readonly DateTimeOffset Spawn = BerlinNoon.AddMinutes(20);
 
     [Fact]

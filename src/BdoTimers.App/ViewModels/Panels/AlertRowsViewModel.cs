@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -15,7 +16,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     readonly AppServices _services;
     readonly TimerStore _store;
     readonly Guid _id;
-    /// <summary>A guild boss's overlay row shows and changes the pop-up all guild bosses share.</summary>
+    /// <summary>The Guild bosses timer's overlay row shows and changes the Overlay panel's Guild bosses setting.</summary>
     readonly bool _guildBoss;
 
     [ObservableProperty] private Choice _toast;
@@ -31,7 +32,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     public TimerSoundViewModel Sound { get; }
     public IReadOnlyList<Choice> OverlayChoices { get; }
     public string OverlayTip => _guildBoss
-        ? "Shared by all guild bosses; shows in borderless window mode"
+        ? "Also in Overlay settings; shows in borderless window mode"
         : "Shows in borderless window mode";
 
     public AlertRowsViewModel(AppServices services, TimerDef timer)
@@ -39,7 +40,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         _services = services;
         _store = services.Timers;
         _id = timer.Id;
-        _guildBoss = timer.IsGuildBoss;
+        _guildBoss = timer.Preset == Presets.GuildBosses;
         var a = timer.Alerts;
         // So the voice line's ▶ speaks without first waiting for the model.
         if (a.Tts.Enabled) services.Tts.Warm(services.Settings.Current.TtsVoice);

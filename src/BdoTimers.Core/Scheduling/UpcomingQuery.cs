@@ -55,12 +55,12 @@ public static class UpcomingQuery
         return earliest;
     }
 
-    /// <summary>Timers with alerts on and an overlay pop-up, with how long before an occurrence it shows. Guild bosses
-    /// share the Overlay panel's setting; other timers have their own.</summary>
+    /// <summary>Timers with alerts on and an overlay pop-up, with how long before an occurrence it shows. The Guild
+    /// bosses timer follows the Overlay panel's setting; other timers have their own.</summary>
     static IEnumerable<(TimerDef Timer, TimeSpan Window)> PopUpTimers(AppData data, OverlaySettings settings) =>
         data.Timers
             .Where(t => BossRegions.IsEligible(data, t) && t.Enabled)
-            .Select(t => (Timer: t, PopUp: t.IsGuildBoss ? settings.GuildBosses : t.Alerts.Overlay))
+            .Select(t => (Timer: t, PopUp: t.Preset == Presets.GuildBosses ? settings.GuildBosses : t.Alerts.Overlay))
             .Where(p => p.PopUp.Enabled)
             .Select(p => (p.Timer, TimeSpan.FromMinutes(p.PopUp.ShowMinutesBefore)));
 

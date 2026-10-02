@@ -188,3 +188,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Not set. Add it again, restart, and check that its next weekly occurrence remains. Guild war accepts several
     day/time rows; check that the tile advances through them and each occurrence alerts at its configured lead times.
     Remove all rows to return to Not set.
+59. [ ] Timers → Guild bosses: set its time 20 minutes ahead. Overlay → Guild bosses → 15 min before: the preview shows
+    a dimmed Guild bosses row; the timer panel's Overlay over the game shows the same value, and changing it there
+    changes the Overlay panel's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
+    before, then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next
+    on the tile, Alerts Off, or Guild bosses Off: no pop-up.
