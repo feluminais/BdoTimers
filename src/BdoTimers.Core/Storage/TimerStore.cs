@@ -83,12 +83,93 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         });
     }
 
-    public void Delete(Guid id) => Update(d => d with
+    public void Delete(Guid id) => Update(d =>
+        !d.Timers.Any(t => t.Id == id) && !d.Muted.Any(m => m.TimerId == id) && !d.CompletedCountdowns.Any(t => t.Id == id)
+            ? d : d with
+            {
+                Timers = d.Timers.Where(t => t.Id != id).ToList(),
+                Muted = d.Muted.Where(m => m.TimerId != id).ToList(),
+                CompletedCountdowns = d.CompletedCountdowns.Where(t => t.Id != id).ToList(),
+            });
+
+    internal DeletedTimer? DeleteForUndo(Guid id)
     {
-        Timers = d.Timers.Where(t => t.Id != id).ToList(),
-        Muted = d.Muted.Where(m => m.TimerId != id).ToList(),
-        CompletedCountdowns = d.CompletedCountdowns.Where(t => t.Id != id).ToList(),
-    });
+        DeletedTimer? deleted = null;
+        Update(d =>
+        {
+            var index = d.Timers.ToList().FindIndex(t => t.Id == id);
+            if (index < 0) return d;
+            deleted = new(d.Timers[index], index, d.Muted.Where(m => m.TimerId == id).ToList(),
+                d.CompletedCountdowns.Where(t => t.Id == id).ToList());
+            return d with
+            {
+                Timers = d.Timers.Where(t => t.Id != id).ToList(),
+                Muted = d.Muted.Where(m => m.TimerId != id).ToList(),
+                CompletedCountdowns = d.CompletedCountdowns.Where(t => t.Id != id).ToList(),
+            };
+        });
+        return deleted;
+    }
+
+    internal bool RestoreDeleted(DeletedTimer deleted)
+    {
+        var restored = false;
+        Update(d =>
+        {
+            var timer = deleted.Timer;
+            if (d.Timers.Any(t => t.Id == timer.Id)) return d;
+            if (Presets.IsActiveHorseRun(timer) && (d.Timers.Count(Presets.IsActiveHorseRun) >= MaxHorseRegistrations
+                || d.Timers.Any(t => Presets.IsActiveHorseRun(t) && t.HorseRunNumber == timer.HorseRunNumber))) return d;
+            var timers = d.Timers.ToList();
+            timers.Insert(Math.Min(deleted.Index, timers.Count), timer);
+            restored = true;
+            return d with
+            {
+                Timers = timers,
+                Muted = [.. d.Muted.Where(m => m.TimerId != timer.Id), .. deleted.Muted],
+                CompletedCountdowns = [.. d.CompletedCountdowns.Where(t => t.Id != timer.Id), .. deleted.Completed],
+            };
+        });
+        return restored;
+    }
+
+    internal ResetTimer? ResetForUndo(Guid id)
+    {
+        ResetTimer? reset = null;
+        Update(d =>
+        {
+            var timer = d.Timers.FirstOrDefault(t => t.Id == id);
+            if (timer is null) return d;
+            var next = ResetRun(timer);
+            if (next == timer && !d.CompletedCountdowns.Any(t => t.Id == id)) return d;
+            reset = new(timer, next, d.CompletedCountdowns.Where(t => t.Id == id).ToList());
+            return d with
+            {
+                Timers = d.Timers.Select(t => t.Id == id ? next : t).ToList(),
+                CompletedCountdowns = d.CompletedCountdowns.Where(t => t.Id != id).ToList(),
+            };
+        });
+        return reset;
+    }
+
+    internal bool RestoreReset(ResetTimer reset)
+    {
+        var restored = false;
+        Update(d =>
+        {
+            var current = d.Timers.FirstOrDefault(t => t.Id == reset.Before.Id);
+            if (current is null || current.Kind != reset.After.Kind || current.Preset != reset.After.Preset
+                || current.Countdown != reset.After.Countdown || current.Stopwatch != reset.After.Stopwatch) return d;
+            restored = true;
+            var next = current with { Countdown = reset.Before.Countdown, Stopwatch = reset.Before.Stopwatch };
+            return d with
+            {
+                Timers = d.Timers.Select(t => t.Id == current.Id ? next : t).ToList(),
+                CompletedCountdowns = [.. d.CompletedCountdowns.Where(t => t.Id != current.Id), .. reset.Completed],
+            };
+        });
+        return restored;
+    }
 
     public void SetEnabled(Guid id, bool enabled) => Modify(id, t => t with { Enabled = enabled });
 
@@ -113,7 +194,13 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         ModifyRun(id, (t, c) => CountdownOps.Pause(c, now, Presets.Overgrows(t.Preset)), s => StopwatchOps.Pause(s, now));
     public void Resume(Guid id, DateTimeOffset now) =>
         ModifyRun(id, (_, c) => CountdownOps.Resume(c, now), s => StopwatchOps.Resume(s, now));
-    public void Reset(Guid id) => ModifyRun(id, (_, c) => CountdownOps.Reset(c), StopwatchOps.Reset);
+    public void Reset(Guid id) => Modify(id, ResetRun);
+
+    static TimerDef ResetRun(TimerDef timer) => timer with
+    {
+        Countdown = timer.Countdown is { } c ? CountdownOps.Reset(c) : null,
+        Stopwatch = timer.Stopwatch is { } s ? StopwatchOps.Reset(s) : null,
+    };
 
     /// <summary>Controls the current state atomically, independently of alert settings.</summary>
     public void ControlCustomCountdown(Guid id, IClock clock) => Update(data =>

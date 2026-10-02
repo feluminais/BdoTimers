@@ -40,4 +40,7 @@ public class PersistentState<T>(JsonFileStore<T> file, T initial) where T : clas
 }
 
 public sealed class StateSaveException(string filePath, Exception inner)
-    : IOException($"Couldn't save {Path.GetFileName(filePath)}: {inner.Message}", inner);
+    : IOException($"Couldn't save {Path.GetFileName(filePath)}: {inner.Message}", inner)
+{
+    public string FilePath { get; } = filePath;
+}

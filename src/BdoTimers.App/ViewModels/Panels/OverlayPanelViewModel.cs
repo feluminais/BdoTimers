@@ -167,7 +167,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         var old = _services.Settings.Current.Overlay.BackgroundImage;
         if (file == old) return;
         Modify(o => o with { BackgroundImage = file });
-        _services.Art.Delete(old);
+        _services.Undo.ReleasePicture(old);
         Picture = file is null ? null : _services.Art.UserPicture(file);
     }
 

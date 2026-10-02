@@ -22,7 +22,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
         <Grid Width="52" Margin="0,0,0,5" VerticalAlignment="Top" ToolTip="Type minutes and press Enter">
-            <TextBlock Text="+ Add" Foreground="{StaticResource PastBrush}" FontSize="12" Margin="3,3,0,0" IsHitTestVisible="False">
+            <TextBlock Text="+ Add" Foreground="{DynamicResource PastBrush}" FontSize="12" Margin="3,3,0,0" IsHitTestVisible="False">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed" />

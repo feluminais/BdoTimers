@@ -133,26 +133,30 @@ public partial class HotkeyBox : UserControl
     protected override void OnPreviewKeyDown(KeyEventArgs e)
     {
         base.OnPreviewKeyDown(e);
+        var key = e.Key switch { Key.System => e.SystemKey, Key.ImeProcessed => e.ImeProcessedKey, _ => e.Key };
+        if (HandleKeyDown(key, Keyboard.Modifiers)) e.Handled = true;
+    }
+
+    internal bool HandleKeyDown(Key key, ModifierKeys pressedModifiers)
+    {
         if (!_listening)
         {
-            if (!ClearButton.IsKeyboardFocusWithin && (e.Key is Key.Enter or Key.Space))
+            if (!ClearButton.IsKeyboardFocusWithin && (key is Key.Enter or Key.Space))
             {
                 _error = null;
                 Listen(true);
-                e.Handled = true;
+                return true;
             }
-            return;
+            return false;
         }
-        e.Handled = true;
-        var key = e.Key switch { Key.System => e.SystemKey, Key.ImeProcessed => e.ImeProcessedKey, _ => e.Key };
         // Wait for the key the modifiers go with.
         if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift
-            or Key.LWin or Key.RWin) return;
-        var modifiers = (HotkeyModifiers)(int)Keyboard.Modifiers;
+            or Key.LWin or Key.RWin) return true;
+        var modifiers = (HotkeyModifiers)(int)pressedModifiers;
         _error = null;
         try
         {
-            if (key == Key.Escape && modifiers == HotkeyModifiers.None) return;
+            if (key == Key.Escape && modifiers == HotkeyModifiers.None) return true;
             var combo = new Hotkey(modifiers, KeyInterop.VirtualKeyFromKey(key));
             _error = HotkeyRules.CheckAgainst(combo, (Taken ?? []).OfType<Hotkey>());
             if (_error is null) SetCurrentValue(ComboProperty, combo);
@@ -162,21 +166,21 @@ public partial class HotkeyBox : UserControl
             // Save the chosen combo before registration resumes, so the old shortcut stays released.
             Listen(false);
         }
+        return true;
     }
 
     void Refresh()
     {
         KeyText.Text = _listening ? "Press keys…" : Combo is { } combo ? HotkeyText.Format(combo) : "Set hotkey";
-        KeyText.Foreground = Brush(_listening || Combo is not null ? "AccentTextBrush" : "SubtleBrush");
+        KeyText.SetResourceReference(TextBlock.ForegroundProperty, _listening || Combo is not null ? "AccentTextBrush" : "SubtleBrush");
         ClearButton.Visibility = Combo is not null && !_listening ? Visibility.Visible : Visibility.Collapsed;
         var refused = Hotkeys?.Refused.Contains(Target) == true;
         var message = _listening ? null : _error
             ?? (Combo is { } key ? HotkeyRules.CheckAgainst(key, (Taken ?? []).OfType<Hotkey>()) : null)
             ?? (refused && Combo is not null ? RefusedText : null);
-        Field.BorderBrush = Brush(_listening ? "AccentBrush" : message is not null ? "DangerBrush" : "HairlineStrongBrush");
+        Field.SetResourceReference(Border.BorderBrushProperty, _listening ? "AccentBrush" : message is not null ? "DangerBrush" : "HairlineStrongBrush");
         Message.Text = message ?? "";
         Message.Visibility = message is null ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    Brush Brush(string key) => (Brush)FindResource(key);
 }

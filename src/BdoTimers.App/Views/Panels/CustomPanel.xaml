@@ -4,37 +4,33 @@
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
              xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
-             Width="440">
+             MaxWidth="440" HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <!-- The header picture: the whole area is clickable, and a labelled badge in its corner says so -->
         <Style x:Key="PictureButton" TargetType="Button">
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid Background="Transparent">
                             <ContentPresenter />
                             <Border x:Name="Badge" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,10" Padding="6,4"
-                                    Background="#D90B0B0C" BorderBrush="{StaticResource HairlineStrongBrush}" BorderThickness="1">
+                                    Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock x:Name="Icon" Style="{StaticResource IconText}" Text="&#xEB9F;" FontSize="12"
-                                               Foreground="{StaticResource SubtleBrush}" VerticalAlignment="Center" />
+                                               Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
                                     <TextBlock x:Name="Label" Text="Change picture" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"
-                                               Foreground="{StaticResource SubtleBrush}" />
+                                               Foreground="{DynamicResource SubtleBrush}" />
                                 </StackPanel>
                             </Border>
                         </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Badge" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                <Setter TargetName="Icon" Property="Foreground" Value="{StaticResource AccentTextBrush}" />
-                                <Setter TargetName="Label" Property="Foreground" Value="{StaticResource AccentTextBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Badge" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
-                                <Setter TargetName="Label" Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+                                <Setter TargetName="Badge" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                                <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Badge" Property="Visibility" Value="Collapsed" />
@@ -70,9 +66,9 @@
                 <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding Delete.AskCommand}"
                         Visibility="{Binding Delete.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
                 <StackPanel Orientation="Horizontal" Visibility="{Binding Delete.IsAsking, Converter={StaticResource BoolToVisibility}}">
-                    <TextBlock Text="Delete?" Foreground="{StaticResource SubtleBrush}" FontSize="12" VerticalAlignment="Center" />
+                    <TextBlock Text="Delete?" Foreground="{DynamicResource SubtleBrush}" FontSize="12" VerticalAlignment="Center" />
                     <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding Delete.ConfirmCommand}" />
-                    <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                    <TextBlock Text="·" Foreground="{DynamicResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
                     <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding Delete.CancelCommand}" />
                 </StackPanel>
             </StackPanel>
@@ -130,15 +126,15 @@
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
                             <TextBlock Text="Start date" Style="{StaticResource RowLabel}" Width="120" />
-                            <TextBox Text="{Binding StartDateText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
-                                     controls:Ui.HasError="{Binding StartDateInvalid}" ToolTip="YYYY-MM-DD; blank for no limit" AutomationProperties.Name="Start date" />
+                            <controls:DateInput Text="{Binding StartDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
+                                                HasError="{Binding StartDateInvalid}" ToolTip="YYYY-MM-DD; blank for no limit" AutomationProperties.Name="Start date" />
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
                             <TextBlock Text="End date" Style="{StaticResource RowLabel}" Width="120" />
-                            <TextBox Text="{Binding EndDateText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
-                                     controls:Ui.HasError="{Binding EndDateInvalid}" ToolTip="YYYY-MM-DD, inclusive; blank for no limit" AutomationProperties.Name="End date" />
+                            <controls:DateInput Text="{Binding EndDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
+                                                HasError="{Binding EndDateInvalid}" ToolTip="YYYY-MM-DD, inclusive; blank for no limit" AutomationProperties.Name="End date" />
                         </DockPanel>
                     </Border>
                 </StackPanel>
@@ -148,8 +144,8 @@
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
                             <TextBlock Text="Date" Style="{StaticResource RowLabel}" Width="120" />
-                            <TextBox Text="{Binding EventDateText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
-                                     controls:Ui.HasError="{Binding EventDateInvalid}" ToolTip="YYYY-MM-DD" AutomationProperties.Name="Event date" />
+                            <controls:DateInput Text="{Binding EventDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
+                                                HasError="{Binding EventDateInvalid}" ToolTip="YYYY-MM-DD" AutomationProperties.Name="Event date" />
                         </DockPanel>
                     </Border>
                     <Border Style="{StaticResource Row}">
@@ -166,10 +162,11 @@
                         <DockPanel>
                             <TextBlock Text="Time zone" Style="{StaticResource RowLabel}" Width="120" />
                             <ComboBox ItemsSource="{Binding TimeZones}" DisplayMemberPath="DisplayName" SelectedValuePath="Id"
-                                      SelectedValue="{Binding TimeZoneId}" MaxDropDownHeight="260" VerticalAlignment="Center" />
+                                      SelectedValue="{Binding TimeZoneId}" MaxDropDownHeight="260" VerticalAlignment="Center"
+                                      AutomationProperties.Name="Event time zone" />
                         </DockPanel>
                     </Border>
-                    <TextBlock Text="{Binding ScheduleError}" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,4,0,6"
+                    <TextBlock Text="{Binding ScheduleError}" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,4,0,6"
                                Visibility="{Binding ScheduleValid, Converter={StaticResource InverseBoolToVisibility}}" />
                 </StackPanel>
 

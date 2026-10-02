@@ -247,7 +247,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     void DeleteList()
     {
         Flush();
-        _services.Todos.Delete(_id);
+        _services.Undo.DeleteTodoList(_id);
         _host.ClosePanel();
     }
 

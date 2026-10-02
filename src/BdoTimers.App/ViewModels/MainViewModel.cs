@@ -23,6 +23,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     public BossesViewModel Bosses { get; }
     public CustomViewModel Custom { get; }
     public TodoViewModel Todo { get; }
+    public UndoService Undo => _services.Undo;
 
     public MainViewModel(AppServices services)
     {

@@ -1,5 +1,7 @@
+using System.Globalization;
 using System.Text.Json;
 using BdoTimers.Core.Json;
+using BdoTimers.Core.Model;
 
 namespace BdoTimers.Core.Storage;
 
@@ -11,14 +13,17 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
 
     /// <summary>
     /// Invalid JSON or saved models are renamed to "*.bad-&lt;timestamp&gt;" and replaced with defaults.
-    /// Filesystem failures propagate to the caller.
+    /// Newer saved formats and filesystem failures propagate without changing the file.
     /// </summary>
     public LoadResult<T> Load()
     {
         if (!File.Exists(FilePath)) return new(createDefault(), null);
         try
         {
-            var value = JsonSerializer.Deserialize<T>(File.ReadAllText(FilePath), JsonDefaults.Options);
+            var json = File.ReadAllText(FilePath);
+            using var document = JsonDocument.Parse(json);
+            CheckVersion(document.RootElement);
+            var value = JsonSerializer.Deserialize<T>(json, JsonDefaults.Options);
             if (value is not null)
             {
                 SavedDataValidation.Check(value);
@@ -33,6 +38,26 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
         File.Move(FilePath, backup, overwrite: true);
         return new(createDefault(), backup);
     }
+
+    void CheckVersion(JsonElement root)
+    {
+        var version = typeof(T) == typeof(AppData) ? (Name: "dataVersion", Current: DataMigrations.Current)
+            : typeof(T) == typeof(TodoData) ? (Name: "defaultsVersion", Current: TodoData.CurrentDefaultsVersion)
+            : (Name: "", Current: 0);
+        if (version.Name.Length == 0 || root.ValueKind != JsonValueKind.Object) return;
+        foreach (var property in root.EnumerateObject())
+            if (property.Name.Equals(version.Name, StringComparison.OrdinalIgnoreCase)
+                && IsNewer(property.Value, version.Current))
+                throw new UnsupportedDataVersionException(FilePath);
+    }
+
+    static bool IsNewer(JsonElement version, int current) => version.ValueKind switch
+    {
+        JsonValueKind.Number => version.GetDouble() > current,
+        JsonValueKind.String => long.TryParse(version.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var number)
+            && number > current,
+        _ => false,
+    };
 
     /// <summary>
     /// Writes a temp file, flushes it to disk, then renames it over the target, so a crash or power loss keeps either
@@ -50,4 +75,10 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
         }
         File.Move(tmp, FilePath, overwrite: true);
     }
+}
+
+public sealed class UnsupportedDataVersionException(string filePath)
+    : IOException($"{Path.GetFileName(filePath)} needs a newer version of BDO Timers. Install the latest version to open it. Your saved file was left unchanged.")
+{
+    public string FilePath { get; } = filePath;
 }

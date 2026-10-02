@@ -21,7 +21,7 @@
         <Border Style="{StaticResource Row}">
             <StackPanel DataContext="{Binding Sound}">
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}"
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{DynamicResource AccentBrush}"
                             ToolTip="Play" Command="{Binding TestCommand}" />
                     <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected}" ValueWidth="110"
                                             AutomationProperties.Name="Sound" />
@@ -66,7 +66,7 @@
                             <Button Style="{StaticResource GhostButton}" Content="+ Name" Padding="10,3" FontSize="12" Focusable="False" Click="InsertName_Click" />
                             <Button Style="{StaticResource GhostButton}" Content="+ Time left" Padding="10,3" FontSize="12" Margin="6,0,0,0"
                                     Focusable="False" Click="InsertTime_Click" />
-                            <Button Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{StaticResource AccentBrush}" Margin="4,0,0,0"
+                            <Button Style="{StaticResource IconButton}" Content="&#xE768;" Foreground="{DynamicResource AccentBrush}" Margin="4,0,0,0"
                                     ToolTip="Play" Command="{Binding HearVoiceLineCommand}" />
                         </StackPanel>
                     </DockPanel>

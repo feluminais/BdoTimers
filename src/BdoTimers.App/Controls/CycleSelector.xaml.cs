@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation.Peers;
+using System.Windows.Input;
 
 namespace BdoTimers.App.Controls;
 
@@ -12,7 +14,7 @@ public partial class CycleSelector : UserControl
 
     public static readonly DependencyProperty SelectedItemProperty = DependencyProperty.Register(
         nameof(SelectedItem), typeof(object), typeof(CycleSelector),
-        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, SelectedItemChanged));
 
     public static readonly DependencyProperty ValueWidthProperty =
         DependencyProperty.Register(nameof(ValueWidth), typeof(double), typeof(CycleSelector), new PropertyMetadata(96.0));
@@ -37,8 +39,38 @@ public partial class CycleSelector : UserControl
         set => SetValue(ValueWidthProperty, value);
     }
 
-    void Previous_Click(object sender, RoutedEventArgs e) => Step(-1);
-    void Next_Click(object sender, RoutedEventArgs e) => Step(1);
+    protected override AutomationPeer OnCreateAutomationPeer() => new CycleSelectorAutomationPeer(this);
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        switch (e.Key)
+        {
+            case Key.Left:
+            case Key.Down: Step(-1); break;
+            case Key.Right:
+            case Key.Up: Step(1); break;
+            case Key.Home: SelectIndex(0); break;
+            case Key.End: SelectIndex((ItemsSource?.Count ?? 0) - 1); break;
+            default: return;
+        }
+        e.Handled = true;
+    }
+
+    void SelectIndex(int index)
+    {
+        if (ItemsSource is { } items && index >= 0 && index < items.Count)
+            SetCurrentValue(SelectedItemProperty, items[index]);
+    }
+
+    static void SelectedItemChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (UIElementAutomationPeer.FromElement((CycleSelector)d) is CycleSelectorAutomationPeer peer)
+            peer.RaiseValueChanged(e.OldValue?.ToString() ?? "", e.NewValue?.ToString() ?? "");
+    }
+
+    void Previous_Click(object sender, RoutedEventArgs e) { Focus(); Step(-1); }
+    void Next_Click(object sender, RoutedEventArgs e) { Focus(); Step(1); }
 
     void Step(int delta)
     {

@@ -65,8 +65,36 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
         Modify(id, list => list with { Name = trimmed });
     }
 
-    public void Delete(Guid id) => UpdateLists(lists => lists.Where(list => list.Id != id || list.IsBuiltIn)
-        .Select(list => list.Id == id ? list with { Deleted = true } : list).ToList());
+    public void Delete(Guid id) => DeleteForUndo(id);
+
+    internal DeletedTodoList? DeleteForUndo(Guid id)
+    {
+        DeletedTodoList? deleted = null;
+        UpdateLists(lists =>
+        {
+            var index = lists.ToList().FindIndex(l => l.Id == id && !l.Deleted);
+            if (index < 0) return lists;
+            deleted = new(lists[index], index);
+            return lists.Where(list => list.Id != id || list.IsBuiltIn)
+                .Select(list => list.Id == id ? list with { Deleted = true } : list).ToList();
+        });
+        return deleted;
+    }
+
+    internal bool RestoreDeleted(DeletedTodoList deleted)
+    {
+        var restored = false;
+        UpdateLists(lists =>
+        {
+            var existing = lists.FirstOrDefault(l => l.Id == deleted.List.Id);
+            if (existing is not null && (!deleted.List.IsBuiltIn || !existing.IsBuiltIn || !existing.Deleted)) return lists;
+            var next = lists.Where(l => l.Id != deleted.List.Id).ToList();
+            next.Insert(Math.Min(deleted.Index, next.Count), deleted.List);
+            restored = true;
+            return next;
+        });
+        return restored;
+    }
 
     public void RestoreDefaults(AppSettings settings) => UpdateLists(current =>
     {

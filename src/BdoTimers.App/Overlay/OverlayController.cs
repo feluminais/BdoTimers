@@ -7,8 +7,8 @@ using BdoTimers.Core.Storage;
 namespace BdoTimers.App.Overlay;
 
 /// <summary>
-/// Shows the overlay while it's pinned, summoned by hotkey, due for a pop-up or previewed in the Overlay panel
-///. UI thread only.
+/// Shows the overlay while it's pinned, summoned by hotkey, due for a pop-up or previewed in the Overlay panel.
+/// UI thread only.
 /// </summary>
 public sealed class OverlayController(AppServices services) : IDisposable
 {

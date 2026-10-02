@@ -9,15 +9,15 @@
         </DockPanel>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Command="{Binding CountdownCommand}"
                 AutomationProperties.Name="Countdown">
-            <TextBlock Text="Countdown" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="Countdown" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{DynamicResource TextBrush}" />
         </Button>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding WeeklyCommand}"
                 AutomationProperties.Name="Weekly">
-            <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{DynamicResource TextBrush}" />
         </Button>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding OneTimeCommand}"
                 AutomationProperties.Name="One-time event">
-            <TextBlock Text="One-time event" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
+            <TextBlock Text="One-time event" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{DynamicResource TextBrush}" />
         </Button>
     </StackPanel>
 </UserControl>
