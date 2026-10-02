@@ -24,6 +24,16 @@ public sealed class NullToCollapsedConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+/// <summary>A size, but never less than <c>parameter</c> pixels.</summary>
+public sealed class AtLeastConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        Math.Max(value is double size ? size : 0, double.Parse((string)parameter, CultureInfo.InvariantCulture));
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
 /// <summary>How many columns of at least <c>parameter</c> pixels fit in a width; never fewer than two.</summary>
 public sealed class WidthToColumnsConverter : IValueConverter
 {
