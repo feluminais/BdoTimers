@@ -26,7 +26,8 @@ public sealed record OverlaySettings
     public bool ShowFishing { get; init; } = true;
     public bool ShowHorseRegistrations { get; init; }
     public bool ShowCustomTimers { get; init; } = true;
-    /// <summary>When guild bosses (<see cref="TimerDef.IsGuildBoss"/>) pop up on the overlay; off until turned on.</summary>
+    /// <summary>When the Guild bosses timer pops up on the overlay, in place of its own overlay alert; off until turned
+    /// on.</summary>
     public OverlayAlert GuildBosses { get; init; } = new();
     /// <summary>"#RRGGBB"; also used when the picture can't be read.</summary>
     public string BackgroundColor { get; init; } = DefaultBackgroundColor;

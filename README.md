@@ -41,8 +41,8 @@ No. BDO Timers never opens the game's process, reads its memory, injects anythin
 - Settings → Bosses → Region switches between Europe (`Europe/Berlin`, the default) and North America
   (`America/Los_Angeles`). Each region keeps its own alert settings and edited spawn times.
   [Timetable sources](docs/boss-region-sources.md).
-- Timers → New timer → Guild boss adds a weekly timer for your guild's summons. Overlay → Guild bosses sets how long
-  before each one the overlay pops up (Off, or 5 to 60 minutes).
+- Set your guild's times on the Guild bosses and Guild war tiles. Overlay → Guild bosses sets how long before a guild
+  boss the overlay pops up (Off, or 5 to 60 minutes).
 - When a release changes spawn times, Settings → Bosses lets you review the changes before they apply.
 - Settings → Data exports or restores a backup ZIP of your timers, lists, settings, sounds and pictures.
 - Settings → About → Check for updates. Release builds also check once a day at startup and show a green icon in the

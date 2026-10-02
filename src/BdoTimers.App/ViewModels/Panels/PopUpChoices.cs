@@ -8,7 +8,7 @@ public static class PopUpChoices
     /// <summary>For a timer's own pop-up.</summary>
     public static readonly IReadOnlyList<int> TimerMinutes = [1, 2, 3, 5, 10, 15, 30];
 
-    /// <summary>For the pop-up all guild bosses share; a guild boss takes longer to get ready for.</summary>
+    /// <summary>For the Guild bosses pop-up; a guild boss takes longer to get ready for.</summary>
     public static readonly IReadOnlyList<int> GuildBossMinutes = [5, 10, 15, 30, 60];
 
     /// <summary>Off and <paramref name="minutes"/>, plus the saved minutes when they aren't among them.</summary>

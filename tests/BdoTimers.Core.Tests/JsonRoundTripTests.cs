@@ -33,7 +33,6 @@ public class JsonRoundTripTests
                 Enabled = false,
                 IsBuiltIn = true,
                 BossRegionId = BossRegions.NorthAmerica,
-                IsGuildBoss = true,
                 Scheduled = new ScheduledSpec
                 {
                     TimeZoneId = "Europe/Berlin", Slots = [new Slot(DayOfWeek.Monday, new TimeOnly(0, 15))],
@@ -145,7 +144,6 @@ public class JsonRoundTripTests
 
         Assert.Null(data.Timers.Single().Countdown!.StartedAtUtc);
         Assert.Null(data.Timers.Single().ImageFile);
-        Assert.False(data.Timers.Single().IsGuildBoss);
         Assert.Null(s.Window);
         Assert.Equal(BuiltInSounds.Default, s.AlertSound);
         Assert.False(s.Autostart);

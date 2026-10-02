@@ -80,7 +80,7 @@
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding GuildBossChoices}" SelectedItem="{Binding GuildBosses}"
                                                     ValueWidth="110" AutomationProperties.Name="Guild bosses" />
-                            <TextBlock Text="Guild bosses" Style="{StaticResource RowLabel}" ToolTip="Timers → New timer → Guild boss" />
+                            <TextBlock Text="Guild bosses" Style="{StaticResource RowLabel}" />
                         </DockPanel>
                     </Border>
 
