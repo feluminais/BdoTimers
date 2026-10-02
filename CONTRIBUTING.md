@@ -9,22 +9,25 @@
 - `src/BdoTimers.Core`: models, schedule maths, scheduler, saved data, boss timetables (`Data/`), update check.
   No UI dependencies.
 - `src/BdoTimers.App`: the WPF app: screens, view models, alert channels (sound, toast, speech), overlay, tray.
-- `tests/BdoTimers.Core.Tests`: xUnit tests for Core, with a fake clock.
+- `tests/BdoTimers.Core.Tests`: xUnit tests for Core, with a fake clock. `tests/BdoTimers.App.Tests`: WPF smoke tests.
 - `installer/`: `Msi` (WiX package), `SetupUi` (the setup window, .NET Framework 4.8), `Bundle` (the setup exe).
-- `docs/manual-tests.md`: checks unit tests can't reach (overlay, hotkeys,
-  sound, setup).
-- `lib/sherpa-onnx`: the speech wrapper DLL (see its README). `scripts/`: publish and voice download.
+- `docs/manual-tests.md`: checks unit tests can't reach (overlay, hotkeys, sound, setup). `docs/releasing.md`: release
+  gates and signing.
+- `lib/sherpa-onnx`: the speech wrapper DLL (see its README). `scripts/`: publish, signing, voice download, Windows UI
+  tests and performance measurement.
 
 ## Commands (repo root)
 - `dotnet test tests/BdoTimers.Core.Tests`: Core tests.
+- `pwsh scripts/test-windows.ps1`: the WPF smoke tests, on a separate desktop so their windows never take focus.
 - `dotnet build src/BdoTimers.App`: the app. It keeps its data in `Data\` beside its exe (dev build:
   `src\BdoTimers.App\bin\Debug\Data`), never in `%AppData%`. Debug builds have their own single-instance names, so
   they run beside an installed copy.
 - `pwsh scripts/get-voice.ps1`: fetches the Kokoro voice model (132 MB, git-ignored, checked by SHA-256). Without it
   the app runs but doesn't speak.
 - `pwsh scripts/publish.ps1`: tests, then builds `publish/BdoTimers-Setup-<version>.exe`: app → `installer/Msi` →
-  `installer/SetupUi` → `installer/Bundle`. The version is `1.0.<number of commits>`, so it needs full Git history
-  (`git fetch --unshallow` in a shallow clone).
+  `installer/SetupUi` → `installer/Bundle`. It signs with the certificate whose thumbprint is in
+  `BDOTIMERS_SIGNING_THUMBPRINT`; `-AllowUnsigned` makes an unsigned test setup (see `docs/releasing.md`). The version
+  is `1.0.<number of commits>`, so it needs full Git history (`git fetch --unshallow` in a shallow clone).
 
 ## Code rules
 - Core has no UI dependencies; all time maths goes through `IClock` and is unit-tested.
@@ -43,9 +46,9 @@
 - Commit messages: conventional style (`feat:`, `fix:`, `docs:` …), with a body that says why when it isn't obvious.
 
 ## Pull requests
-- CI runs the Core tests and builds the app on Windows.
+- Branch names follow the commit types: `feat/<topic>`, `fix/<topic>`, `docs/<topic>`, `chore/<topic>` …
+- CI runs the Core tests, builds the app and runs the WPF smoke tests on Windows.
 - For overlay, hotkey, sound or setup changes, run the matching steps in `docs/manual-tests.md` and add steps for new
   behaviour.
 - Timetable changes: edit the region's JSON in `src/BdoTimers.Core/Data/`, its `verifiedOn` and sources, and
   `docs/boss-region-sources.md`. A new region is a JSON file there plus its entry in `Seed/BossRegions.cs`.
-
