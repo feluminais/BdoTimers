@@ -428,6 +428,10 @@ public sealed class AppServices : IDisposable
 
     public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig()));
 
+    /// <summary>The spawn times this version ships for a boss, or null when its region's timetable no longer has it.</summary>
+    public ScheduledSpec? BundledSchedule(TimerDef boss) =>
+        _seeds.TryGetValue(BossRegions.RegionOf(boss), out var seed) ? SeedService.Schedule(seed, boss.Name) : null;
+
     public void SetTodoReset(TodoCadence cadence, TodoSchedule schedule)
     {
         var previous = Settings.Current;

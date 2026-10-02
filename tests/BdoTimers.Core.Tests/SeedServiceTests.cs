@@ -31,6 +31,16 @@ public class SeedServiceTests
     }
 
     [Fact]
+    public void Finds_a_boss_schedule_by_name_ignoring_case()
+    {
+        var kzarka = SeedService.Schedule(Seed, "KZARKA");
+
+        Assert.Equal("Europe/Berlin", kzarka!.TimeZoneId);
+        Assert.Equal([new Slot(DayOfWeek.Monday, new TimeOnly(0, 15)), new Slot(DayOfWeek.Friday, new TimeOnly(19, 0))], kzarka.Slots);
+        Assert.Null(SeedService.Schedule(Seed, "Karanda"));
+    }
+
+    [Fact]
     public void New_data_starts_with_the_presets_then_the_bosses()
     {
         var data = SeedService.NewData(Seed);

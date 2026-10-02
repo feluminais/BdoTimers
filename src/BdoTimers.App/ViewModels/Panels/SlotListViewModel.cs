@@ -6,21 +6,35 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-/// <summary>Editable weekly times, with preset-specific limits. Saves whenever every row is valid.</summary>
+/// <summary>
+/// Editable weekly times, with preset-specific limits. Saves whenever every row is valid. Given default times, offers to
+/// return to them while the rows differ.
+/// </summary>
 public sealed partial class SlotListViewModel : ObservableObject
 {
     readonly Action<IReadOnlyList<Slot>> _apply;
     readonly int _minimum;
     readonly int? _maximum;
+    readonly IReadOnlyList<Slot>? _defaults;
+
+    [ObservableProperty] private bool _mayReset;
 
     public ObservableCollection<SlotRowViewModel> Rows { get; } = [];
     public bool MayAddTime => _maximum is null || Rows.Count < _maximum;
 
-    public SlotListViewModel(IEnumerable<Slot> slots, Action<IReadOnlyList<Slot>> apply, int minimum = 1, int? maximum = null)
+    public SlotListViewModel(IEnumerable<Slot> slots, Action<IReadOnlyList<Slot>> apply, int minimum = 1, int? maximum = null,
+        IReadOnlyList<Slot>? defaults = null)
     {
         _apply = apply;
         _minimum = minimum;
         _maximum = maximum;
+        _defaults = defaults;
+        Load(slots);
+        Validate();
+    }
+
+    void Load(IEnumerable<Slot> slots)
+    {
         foreach (var slot in slots.OrderBy(s => ((int)s.Day + 6) % 7).ThenBy(s => s.Time))
             Add(new SlotRowViewModel(slot));
     }
@@ -62,6 +76,16 @@ public sealed partial class SlotListViewModel : ObservableObject
 
     bool CanRemove(SlotRowViewModel row) => Rows.Count > _minimum && Rows.Contains(row);
 
+    [RelayCommand]
+    void Reset()
+    {
+        if (_defaults is null) return;
+        Rows.Clear();
+        Load(_defaults);
+        LimitsChanged();
+        TryApply();
+    }
+
     void LimitsChanged()
     {
         OnPropertyChanged(nameof(MayAddTime));
@@ -77,6 +101,13 @@ public sealed partial class SlotListViewModel : ObservableObject
 
     void TryApply()
     {
+        var slots = Validate();
+        if (slots.Count == Rows.Count) _apply(slots);
+    }
+
+    /// <summary>Marks unreadable and repeated rows and returns the valid times.</summary>
+    List<Slot> Validate()
+    {
         var slots = new List<Slot>();
         HashSet<Slot> seen = [];
         foreach (var row in Rows)
@@ -90,7 +121,8 @@ public sealed partial class SlotListViewModel : ObservableObject
             row.Invalid = !seen.Add(slot);
             if (!row.Invalid) slots.Add(slot);
         }
-        if (slots.Count == Rows.Count) _apply(slots);
+        MayReset = _defaults is not null && (slots.Count != Rows.Count || !seen.SetEquals(_defaults));
+        return slots;
     }
 }
 

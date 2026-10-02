@@ -34,6 +34,10 @@ public static class SeedService
             },
         }).ToList();
 
+    /// <summary>The seed's spawn times for the named boss, or null when the seed has no such boss.</summary>
+    public static ScheduledSpec? Schedule(BossSeed seed, string name) => ToTimers(seed, new AlertConfig())
+        .FirstOrDefault(t => string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase))?.Scheduled;
+
     /// <summary>A new install starts with the presets and the accepted EU timetable.</summary>
     public static AppData NewData(BossSeed seed)
     {
