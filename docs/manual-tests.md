@@ -146,3 +146,8 @@
     2026-10-25 02:30: the spring occurrence is 01:30 UTC and the autumn occurrence is 00:30 UTC, firing once. Check a
     weekly Pacific Friday 23:30 with the same start/end Friday: its Saturday occurrence in Europe is included. Upgrade
     existing JSON without date fields: countdowns, presets, boss profiles, weekly slots and alerts are retained.
+49. Timers → New timer → Guild boss: a weekly tile named Guild boss opens its panel. Set its time 20 minutes ahead.
+    Overlay → Guild bosses → 15 min before: the preview shows a dimmed Guild boss row; the timer panel's Overlay over
+    the game shows the same value, and changing it there changes the Overlay panel's. With Always show off and BDO in
+    borderless, the overlay stays hidden until 15 minutes before, then pops up with Guild boss and its time left in
+    List, Card and Bar, and hides after the spawn. Skip next on the tile, Alerts Off, or Guild bosses Off: no pop-up.

@@ -100,7 +100,11 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         Next = content.Next is { } next
             ? _nextRow.Show(Names(next), DurationFormat.Clock(next.AtUtc - now), next.Skipped, ImagesFor(next), false)
             : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true) : null;
-        Sync(PopUps, content.PopUps.Select(i => ((object)(i.Timer.Id, i.AtUtc), i.Timer.Name, DurationFormat.Clock(i.AtUtc - now), false)));
+        var popUps = content.PopUps
+            .Select(i => ((object)(i.Timer.Id, i.AtUtc), i.Timer.Name, DurationFormat.Clock(i.AtUtc - now), false)).ToList();
+        if (preview && settings.GuildBosses.Enabled && !content.PopUps.Any(i => i.Timer.IsGuildBoss))
+            popUps.Add((SampleKey, "Guild boss", DurationFormat.Clock(TimeSpan.FromMinutes(settings.GuildBosses.ShowMinutesBefore)), true));
+        Sync(PopUps, popUps);
         Farm = content.FarmLeft is { } farmLeft
             ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
             : preview && settings.ShowFarm ? _farmRow.Show("Farm", "21:59:59 · 0%", true) : null;

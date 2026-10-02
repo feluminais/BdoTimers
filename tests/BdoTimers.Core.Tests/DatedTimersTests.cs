@@ -180,7 +180,7 @@ public sealed class DatedTimersTests : IDisposable
         Assert.Single(OverlayContent.Build(data, settings with { ShowCustomTimers = false }, Now.AddMinutes(5)).PopUps);
         var finished = data with { Timers = [timer with { OneTime = timer.OneTime! with { Finished = true } }] };
         Assert.True(OverlayContent.Build(finished, settings, Now.AddMinutes(5)).IsEmpty);
-        Assert.Null(UpcomingQuery.OverlayStart(finished, Now.AddMinutes(5)));
+        Assert.Null(UpcomingQuery.OverlayStart(finished, settings, Now.AddMinutes(5)));
     }
 
     [Fact]
@@ -245,14 +245,14 @@ public sealed class DatedTimersTests : IDisposable
         _store.Upsert(timer);
         Tick(Now);
         Assert.Empty(_sink.Alerts);
-        Assert.Empty(UpcomingQuery.ForOverlay(_store.Current, Now));
+        Assert.Empty(UpcomingQuery.ForOverlay(_store.Current, new OverlaySettings(), Now));
         var next = Now.AddDays(35);
         Assert.Equal(next, OccurrenceSource.Next(timer, Now));
-        Assert.Equal(next.AddMinutes(-5), UpcomingQuery.OverlayStart(_store.Current, Now));
+        Assert.Equal(next.AddMinutes(-5), UpcomingQuery.OverlayStart(_store.Current, new OverlaySettings(), Now));
         Tick(next);
         Tick(next.AddDays(7));
         Assert.Single(_sink.Alerts);
-        Assert.Null(UpcomingQuery.OverlayStart(_store.Current, next.AddSeconds(1)));
+        Assert.Null(UpcomingQuery.OverlayStart(_store.Current, new OverlaySettings(), next.AddSeconds(1)));
     }
 
     [Fact]
@@ -272,10 +272,10 @@ public sealed class DatedTimersTests : IDisposable
     {
         var timer = new TimerDef { Kind = TimerKind.Scheduled, Scheduled = Weekly() with { EndDate = new(2026, 10, 9) }, Alerts = Event().Alerts };
         var data = new AppData { Timers = [timer], Muted = [new(timer.Id, Now)] };
-        Assert.Equal(Now.AddDays(7).AddMinutes(-5), UpcomingQuery.OverlayStart(data, Now));
-        Assert.Null(UpcomingQuery.OverlayStart(data with { Muted = [.. data.Muted, new(timer.Id, Now.AddDays(7))] }, Now));
+        Assert.Equal(Now.AddDays(7).AddMinutes(-5), UpcomingQuery.OverlayStart(data, new OverlaySettings(), Now));
+        Assert.Null(UpcomingQuery.OverlayStart(data with { Muted = [.. data.Muted, new(timer.Id, Now.AddDays(7))] }, new OverlaySettings(), Now));
         var oneTime = Event();
-        Assert.Null(UpcomingQuery.OverlayStart(new() { Timers = [oneTime], Muted = [new(oneTime.Id, Now.AddMinutes(10))] }, Now));
+        Assert.Null(UpcomingQuery.OverlayStart(new() { Timers = [oneTime], Muted = [new(oneTime.Id, Now.AddMinutes(10))] }, new OverlaySettings(), Now));
     }
 
     [Fact]

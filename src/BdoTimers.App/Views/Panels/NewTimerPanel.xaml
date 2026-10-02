@@ -19,5 +19,9 @@
                 AutomationProperties.Name="One-time event">
             <TextBlock Text="One-time event" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
         </Button>
+        <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding GuildBossCommand}"
+                AutomationProperties.Name="Guild boss">
+            <TextBlock Text="Guild boss" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{StaticResource TextBrush}" />
+        </Button>
     </StackPanel>
 </UserControl>

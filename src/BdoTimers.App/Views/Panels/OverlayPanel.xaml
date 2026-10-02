@@ -76,6 +76,13 @@
                             <TextBlock Text="For" Style="{StaticResource RowLabel}" Margin="14,0,0,0" />
                         </DockPanel>
                     </Border>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding GuildBossChoices}" SelectedItem="{Binding GuildBosses}"
+                                                    ValueWidth="110" AutomationProperties.Name="Guild bosses" />
+                            <TextBlock Text="Guild bosses" Style="{StaticResource RowLabel}" ToolTip="Timers → New timer → Guild boss" />
+                        </DockPanel>
+                    </Border>
 
                     <TextBlock Text="Look" Style="{StaticResource SectionText}" />
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Layout">

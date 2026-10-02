@@ -56,6 +56,9 @@ public sealed record TimerDef
     public bool IsBuiltIn { get; init; }
     /// <summary>Built-in boss region; null in legacy files means EU. Custom schedules ignore this field.</summary>
     public string? BossRegionId { get; init; }
+    /// <summary>A guild boss: it pops up on the overlay as <see cref="OverlaySettings.GuildBosses"/> says, which all
+    /// guild bosses share, instead of by its own overlay alert.</summary>
+    public bool IsGuildBoss { get; init; }
     public ScheduledSpec? Scheduled { get; init; }
     public CountdownSpec? Countdown { get; init; }
     public StopwatchSpec? Stopwatch { get; init; }
