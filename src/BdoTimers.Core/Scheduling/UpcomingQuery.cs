@@ -64,9 +64,8 @@ public static class UpcomingQuery
             .Where(p => p.PopUp.Enabled)
             .Select(p => (p.Timer, TimeSpan.FromMinutes(p.PopUp.ShowMinutesBefore)));
 
-    static bool NewWindow(AppData data, TimerDef timer, DateTimeOffset at, TimeSpan window) => !timer.IsBuiltIn
-        || data.BossAlertsAfterUtc is null
-        || at - window > data.BossAlertsAfterUtc;
+    static bool NewWindow(AppData data, TimerDef timer, DateTimeOffset at, TimeSpan window) =>
+        !AlertPlanner.SuppressedAfterRegionSwitch(timer, at - window, data.BossAlertsAfterUtc);
 }
 
 /// <summary>

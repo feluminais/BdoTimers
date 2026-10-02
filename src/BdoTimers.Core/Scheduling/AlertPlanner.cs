@@ -41,8 +41,7 @@ public sealed class AlertPlanner
                     {
                         if (now < occurrence - TimeSpan.FromMinutes(lead)) continue;
                         var first = _fired.Add((timer.Id, EventVersion(timer), occurrence, lead));
-                        if (timer.IsBuiltIn && bossAlertsAfterUtc is { } boundary
-                            && occurrence - TimeSpan.FromMinutes(lead) <= boundary) continue;
+                        if (SuppressedAfterRegionSwitch(timer, occurrence - TimeSpan.FromMinutes(lead), bossAlertsAfterUtc)) continue;
                         if (first && toFire is null) toFire = lead;
                     }
                     if (toFire is { } fired)
@@ -80,7 +79,7 @@ public sealed class AlertPlanner
                     if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
                     foreach (var lead in leads)
                         if (occurrence - TimeSpan.FromMinutes(lead) > now
-                            && (!timer.IsBuiltIn || bossAlertsAfterUtc is null || occurrence - TimeSpan.FromMinutes(lead) > bossAlertsAfterUtc)
+                            && !SuppressedAfterRegionSwitch(timer, occurrence - TimeSpan.FromMinutes(lead), bossAlertsAfterUtc)
                             && !_fired.Contains((timer.Id, EventVersion(timer), occurrence, lead)))
                             pending.Add(new AlertEvent([timer], occurrence, lead, lead));
                 }
@@ -101,6 +100,13 @@ public sealed class AlertPlanner
 
         static DateTimeOffset Due(AlertEvent a) => a.OccurrenceUtc - TimeSpan.FromMinutes(a.LeadMinutes);
     }
+
+    /// <summary>
+    /// A boss alert that came due at or before <paramref name="bossAlertsAfterUtc"/>, the moment a region was selected,
+    /// stays silent, so switching regions doesn't replay leads that were already due. Custom timers are unaffected.
+    /// </summary>
+    internal static bool SuppressedAfterRegionSwitch(TimerDef timer, DateTimeOffset dueUtc, DateTimeOffset? bossAlertsAfterUtc) =>
+        timer.IsBuiltIn && bossAlertsAfterUtc is { } boundary && dueUtc <= boundary;
 
     static int[] Leads(TimerDef timer, IReadOnlyList<int>? defaultLeads) =>
         timer.Alerts.LeadTimes(defaultLeads ?? AlertConfig.StandardLeadTimesMinutes)
