@@ -83,24 +83,22 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         });
     }
 
-    public void Delete(Guid id) => Update(d =>
-        !d.Timers.Any(t => t.Id == id) && !d.Muted.Any(m => m.TimerId == id) && !d.CompletedCountdowns.Any(t => t.Id == id)
-            ? d : d with
-            {
-                Timers = d.Timers.Where(t => t.Id != id).ToList(),
-                Muted = d.Muted.Where(m => m.TimerId != id).ToList(),
-                CompletedCountdowns = d.CompletedCountdowns.Where(t => t.Id != id).ToList(),
-            });
+    public void Delete(Guid id) => DeleteForUndo(id);
 
+    /// <summary>
+    /// Removes the timer with its skipped spawns and end-alert snapshot, and returns what undo needs; null when the timer
+    /// was already gone, such as a finished horse registration, whose leftovers are still removed.
+    /// </summary>
     internal DeletedTimer? DeleteForUndo(Guid id)
     {
         DeletedTimer? deleted = null;
         Update(d =>
         {
             var index = d.Timers.ToList().FindIndex(t => t.Id == id);
-            if (index < 0) return d;
-            deleted = new(d.Timers[index], index, d.Muted.Where(m => m.TimerId == id).ToList(),
-                d.CompletedCountdowns.Where(t => t.Id == id).ToList());
+            if (index < 0 && !d.Muted.Any(m => m.TimerId == id) && !d.CompletedCountdowns.Any(t => t.Id == id)) return d;
+            if (index >= 0)
+                deleted = new(d.Timers[index], index, d.Muted.Where(m => m.TimerId == id).ToList(),
+                    d.CompletedCountdowns.Where(t => t.Id == id).ToList());
             return d with
             {
                 Timers = d.Timers.Where(t => t.Id != id).ToList(),
