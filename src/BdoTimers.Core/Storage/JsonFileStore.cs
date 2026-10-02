@@ -29,8 +29,11 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
         catch (NotSupportedException) { }
         catch (InvalidDataException) { }
 
-        var backup = $"{FilePath}.bad-{DateTime.Now:yyyyMMdd-HHmmss}";
-        File.Move(FilePath, backup, overwrite: true);
+        // Numbered when one from the same second exists (or the autumn clock change repeats an hour), so none is lost.
+        var stamped = $"{FilePath}.bad-{DateTime.Now:yyyyMMdd-HHmmss}";
+        var backup = stamped;
+        for (var n = 2; File.Exists(backup); n++) backup = $"{stamped}-{n}";
+        File.Move(FilePath, backup);
         return new(createDefault(), backup);
     }
 

@@ -65,6 +65,23 @@ public class JsonFileStoreTests
         Assert.False(File.Exists(path));
     }
 
+    [Fact]
+    public void Each_corrupt_file_keeps_its_own_backup()
+    {
+        using var dir = new TempDir();
+        var path = dir.File("timers.json");
+        var store = new JsonFileStore<AppData>(path, () => new AppData());
+
+        File.WriteAllText(path, "first");
+        var first = store.Load().RecoveredBackupPath!;
+        File.WriteAllText(path, "second");
+        var second = store.Load().RecoveredBackupPath!;
+
+        Assert.NotEqual(first, second);
+        Assert.Equal("first", File.ReadAllText(first));
+        Assert.Equal("second", File.ReadAllText(second));
+    }
+
     [Theory]
     [InlineData("{\"overlay\":null}")]
     [InlineData("{\"dailyTodoReset\":null}")]
