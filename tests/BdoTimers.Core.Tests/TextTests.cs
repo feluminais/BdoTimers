@@ -150,4 +150,31 @@ public class TextTests
         Assert.False(Parsing.TryParseMinutes("0", 1, 1440, out _));
         Assert.False(Parsing.TryParseMinutes("x", 1, 1440, out _));
     }
+
+    static readonly string[] Zones =
+    [
+        "(UTC+09:00) Osaka, Sapporo, Tokyo",
+        "(UTC+01:00) Sarajevo, Skopje, Warsaw, Zagreb",
+        "(UTC+02:00) Helsinki, Kyiv, Riga, Sofia, Tallinn, Vilnius",
+        "(UTC+02:00) Kaliningrad",
+        "(UTC) Coordinated Universal Time",
+        "(UTC+00:00) São Tomé",
+    ];
+
+    [Theory]
+    [InlineData("kyiv", 2)]
+    [InlineData("ky", 2)]
+    [InlineData("KA", 3)]
+    [InlineData("sa", 0)]
+    [InlineData("rsaw", 1)]
+    [InlineData("(utc)", 4)]
+    [InlineData("+09", 0)]
+    [InlineData("sao tome", 5)]
+    public void List_search_prefers_a_prefix_then_a_word_start_then_any_match(string query, int expected) =>
+        Assert.Equal(expected, ListSearch.Find(Zones, query));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("berlin")]
+    public void List_search_finds_nothing_for_no_match(string query) => Assert.Equal(-1, ListSearch.Find(Zones, query));
 }

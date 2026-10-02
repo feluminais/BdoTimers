@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using BdoTimers.Core.Text;
 
 namespace BdoTimers.App.Controls;
 
@@ -47,5 +48,97 @@ public static class Ui
             RoutedEvent = UIElement.MouseLeftButtonDownEvent,
             Source = thumb,
         });
+    }
+
+    /// <summary>
+    /// Typing on a combo box selects an item through <see cref="ListSearch"/>, so "kyiv" reaches
+    /// "(UTC+02:00) Helsinki, Kyiv, …"; nothing shows the typed text, and an open list follows the selection. Backspace
+    /// edits the text, a pause or opening/closing the list starts over, and Escape on an open list puts back the item
+    /// chosen before typing.
+    /// </summary>
+    public static readonly DependencyProperty TypeToSearchProperty = DependencyProperty.RegisterAttached(
+        "TypeToSearch", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(false, OnTypeToSearchChanged));
+
+    public static bool GetTypeToSearch(DependencyObject d) => (bool)d.GetValue(TypeToSearchProperty);
+    public static void SetTypeToSearch(DependencyObject d, bool value) => d.SetValue(TypeToSearchProperty, value);
+
+    static readonly DependencyProperty TypedTextProperty = DependencyProperty.RegisterAttached(
+        "TypedText", typeof(TypedText), typeof(Ui));
+
+    /// <summary>The same pause Windows lists allow between the letters of one search.</summary>
+    static readonly TimeSpan TypingPause = TimeSpan.FromSeconds(1);
+
+    sealed class TypedText
+    {
+        public string Text = "";
+        public DateTime At;
+        /// <summary>The selection when the open list was first searched, for Escape to restore.</summary>
+        public int? Before;
+    }
+
+    static void OnTypeToSearchChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not ComboBox box) return;
+        box.PreviewTextInput -= SearchTyped;
+        box.PreviewKeyDown -= SearchKey;
+        box.DropDownOpened -= ForgetTyped;
+        box.DropDownClosed -= ForgetTyped;
+        if (!(bool)e.NewValue) return;
+        box.PreviewTextInput += SearchTyped;
+        box.PreviewKeyDown += SearchKey;
+        box.DropDownOpened += ForgetTyped;
+        box.DropDownClosed += ForgetTyped;
+    }
+
+    static void SearchTyped(object sender, TextCompositionEventArgs e)
+    {
+        var box = (ComboBox)sender;
+        var typed = Typed(box);
+        if (typed.Text.Length == 0 && string.IsNullOrWhiteSpace(e.Text)) return;
+        typed.Text += e.Text;
+        Search(box, typed);
+        e.Handled = true;
+    }
+
+    static void SearchKey(object sender, KeyEventArgs e)
+    {
+        var box = (ComboBox)sender;
+        var typed = Typed(box);
+        if (e.Key == Key.Back && typed.Text.Length > 0)
+        {
+            typed.Text = typed.Text.Substring(0, typed.Text.Length - 1);
+            Search(box, typed);
+            e.Handled = true;
+        }
+        // The list then closes as usual.
+        else if (e.Key == Key.Escape && box.IsDropDownOpen && typed.Before is { } before) box.SelectedIndex = before;
+    }
+
+    static void ForgetTyped(object? sender, EventArgs e) => ((ComboBox)sender!).ClearValue(TypedTextProperty);
+
+    /// <summary>What has been typed on <paramref name="box"/> since the last pause.</summary>
+    static TypedText Typed(ComboBox box)
+    {
+        if (box.GetValue(TypedTextProperty) is not TypedText typed) box.SetValue(TypedTextProperty, typed = new TypedText());
+        else if (DateTime.UtcNow - typed.At > TypingPause) typed.Text = "";
+        return typed;
+    }
+
+    static void Search(ComboBox box, TypedText typed)
+    {
+        typed.At = DateTime.UtcNow;
+        var index = ListSearch.Find(box.Items.Cast<object?>().Select(item => DisplayText(box, item)).ToList(), typed.Text);
+        if (index < 0) return;
+        if (box.IsDropDownOpen) typed.Before ??= box.SelectedIndex;
+        box.SelectedIndex = index;
+    }
+
+    /// <summary>The item's text as the list shows it, following a plain <see cref="ItemsControl.DisplayMemberPath"/>.</summary>
+    static string DisplayText(ItemsControl box, object? item)
+    {
+        if (!string.IsNullOrEmpty(box.DisplayMemberPath))
+            foreach (var name in box.DisplayMemberPath.Split('.'))
+                item = item?.GetType().GetProperty(name)?.GetValue(item);
+        return item?.ToString() ?? "";
     }
 }

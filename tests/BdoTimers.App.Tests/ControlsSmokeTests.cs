@@ -120,6 +120,49 @@ public sealed class ControlsSmokeTests
     }
 
     [Fact]
+    public void Combo_box_typing_selects_items_by_any_word_and_Escape_restores_an_open_list()
+    {
+        WpfTest.Run(() =>
+        {
+            Zone[] zones = [new("(UTC+01:00) Warsaw"), new("(UTC+02:00) Helsinki, Kyiv"), new("(UTC+02:00) Kaliningrad"), new("(UTC+09:00) Tokyo")];
+            var box = new ComboBox { ItemsSource = zones, DisplayMemberPath = nameof(Zone.DisplayName), SelectedIndex = 0 };
+            var window = new Window { Content = box, Width = 300, Height = 100, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                Assert.True(box.Focus());
+                Type(box, "ka");
+                Assert.Equal(2, box.SelectedIndex);
+                Type(box, "x");
+                Assert.Equal(2, box.SelectedIndex);
+                Key(box, window, System.Windows.Input.Key.Back, Keyboard.PreviewKeyDownEvent);
+                Key(box, window, System.Windows.Input.Key.Back, Keyboard.PreviewKeyDownEvent);
+                Assert.Equal(1, box.SelectedIndex);
+
+                box.IsDropDownOpen = true;
+                WpfTest.Drain();
+                Type((UIElement)Keyboard.FocusedElement, "tok");
+                var tokyo = (ComboBoxItem)box.ItemContainerGenerator.ContainerFromIndex(3);
+                Assert.Equal(3, box.SelectedIndex);
+                Assert.True(tokyo.IsKeyboardFocused);
+                Assert.True(box.IsDropDownOpen);
+                Key(tokyo, window, System.Windows.Input.Key.Escape, Keyboard.PreviewKeyDownEvent);
+                Assert.Equal(1, box.SelectedIndex);
+
+                box.IsDropDownOpen = false;
+                box.IsDropDownOpen = true;
+                WpfTest.Drain();
+                Type((UIElement)Keyboard.FocusedElement, "war");
+                Key((UIElement)Keyboard.FocusedElement, window, System.Windows.Input.Key.Enter);
+                Assert.False(box.IsDropDownOpen);
+                Assert.Equal(0, box.SelectedIndex);
+            }
+            finally { box.IsDropDownOpen = false; window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Settings_search_filters_rows_and_headers_and_handles_no_matches()
     {
         WpfTest.Run(() =>
@@ -181,8 +224,15 @@ public sealed class ControlsSmokeTests
         });
     }
 
-    static void Key(UIElement selector, Window window, Key key) => selector.RaiseEvent(new KeyEventArgs(
-        Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), 0, key) { RoutedEvent = Keyboard.KeyDownEvent });
+    static void Key(UIElement selector, Window window, Key key, RoutedEvent? routedEvent = null) => selector.RaiseEvent(new KeyEventArgs(
+        Keyboard.PrimaryDevice, PresentationSource.FromVisual(window), 0, key) { RoutedEvent = routedEvent ?? Keyboard.KeyDownEvent });
+
+    static void Type(UIElement target, string text)
+    {
+        foreach (var letter in text)
+            target.RaiseEvent(new TextCompositionEventArgs(Keyboard.PrimaryDevice, new TextComposition(InputManager.Current, target, letter.ToString()))
+                { RoutedEvent = UIElement.PreviewTextInputEvent });
+    }
 
     static IEnumerable<DependencyObject> Descendants(DependencyObject root)
     {
@@ -202,4 +252,5 @@ public sealed class ControlsSmokeTests
 
     sealed class SelectionModel { public object? Value { get; set; } }
     sealed class DateModel { public string Text { get; set; } = ""; }
+    sealed record Zone(string DisplayName);
 }

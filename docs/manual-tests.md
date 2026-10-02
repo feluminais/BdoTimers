@@ -120,11 +120,12 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     March 7 → 20:00 UTC, March 8 → 19:00 UTC, October 25 → 19:00 UTC, November 1 → 20:00 UTC. EU switches on
     March 29/October 25. For edited times in a spring gap, the app shifts forward; an autumn repeated time alerts once
     at its first instance. Check the [source notes](boss-region-sources.md) for separate maintenance exceptions.
-43. [ ] Timers → New timer → One-time event: name it, set a date/time a few minutes ahead and choose its zone. Set own
-    leads to 1 minute and At spawn, enable all channels and pin the overlay. Verify the timer counts down, sound,
-    urgent toast and speech arrive at each lead, and the event appears once in List, Card and Bar. Turn Custom timers
-    off: its Overlay alert still pops up within its configured window. After the occurrence, its tile stays Finished,
-    it leaves the overlay, and no alerts repeat. Restart and confirm it remains Finished.
+43. [ ] Timers → New timer → One-time event: name it, set a date/time a few minutes ahead and choose its zone by typing
+    a city ("kyiv") on the open and the closed list; Backspace edits the search and Escape on the open list restores
+    the earlier zone. Set own leads to 1 minute and At spawn, enable all channels and pin the overlay. Verify the timer
+    counts down, sound, urgent toast and speech arrive at each lead, and the event appears once in List, Card and Bar.
+    Turn Custom timers off: its Overlay alert still pops up within its configured window. After the occurrence, its
+    tile stays Finished, it leaves the overlay, and no alerts repeat. Restart and confirm it remains Finished.
 44. [ ] Edit that finished event's name or alert settings: it stays Finished. Edit its date/time into the future (also try
     changing the zone so its occurrence is future): it counts down and alerts once again. Delete it and restart:
     it stays deleted. Turn Alerts off or pause all alerts across another event: it still becomes Finished at its end.

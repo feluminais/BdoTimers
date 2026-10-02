@@ -516,6 +516,7 @@
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+        <Setter Property="controls:Ui.TypeToSearch" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
