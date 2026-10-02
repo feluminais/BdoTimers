@@ -41,16 +41,35 @@ public class OverlayPopUpGateTests
     }
 
     [Fact]
-    public void Gate_agrees_with_the_due_pop_ups_as_time_moves_on()
+    public void Gate_opens_and_closes_at_window_boundaries_and_skips_muted_and_disabled_occurrences()
     {
         var off = WithPopUp(TestTimers.Countdown(Now.AddMinutes(40), 0), 5) with { Enabled = false };
         var data = new AppData { Timers = [Bread, Kzarka, off], Muted = [new MutedOccurrence(Kzarka.Id, KzarkaToday)] };
         var gate = new OverlayPopUpGate();
+        var nextWeek = KzarkaToday.AddDays(7);
+        (DateTimeOffset At, bool Due)[] cases =
+        [
+            (Now, false),
+            (Now.AddMinutes(15).AddTicks(-1), false),
+            (Now.AddMinutes(15), true),
+            (Now.AddMinutes(20).AddTicks(-1), true),
+            (Now.AddMinutes(20), true),
+            (Now.AddMinutes(20).AddTicks(1), false),
+            (Now.AddMinutes(35), false),
+            (Now.AddMinutes(40), false),
+            (KzarkaToday.AddMinutes(-10), false),
+            (KzarkaToday, false),
+            (KzarkaToday.AddTicks(1), false),
+            (nextWeek.AddMinutes(-10).AddTicks(-1), false),
+            (nextWeek.AddMinutes(-10), true),
+            (nextWeek, true),
+            (nextWeek.AddTicks(1), false),
+        ];
 
-        for (var t = Now; t < Now.AddDays(8); t = t.AddSeconds(30))
+        foreach (var (at, due) in cases)
         {
-            var due = UpcomingQuery.ForOverlay(data, t).Count > 0;
-            Assert.True(due == gate.MayBeDue(data, t), $"{t:O}: due {due}");
+            Assert.True(due == gate.MayBeDue(data, at), $"{at:O}: gate should be {due}");
+            Assert.True(due == (UpcomingQuery.ForOverlay(data, at).Count > 0), $"{at:O}: pop-up should be {due}");
         }
     }
 

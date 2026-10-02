@@ -70,8 +70,23 @@ public sealed class TodoTests
         clock.UtcNow = now.AddDays(3);
         store.Reconcile();
         var result = store.Current.Lists.Single(l => l.Id == daily.Id);
+        Assert.False(result.Enabled);
         Assert.False(result.Rows[0].Done);
-        Assert.True(result.NextResetUtc > clock.UtcNow);
+        Assert.Equal(new DateTimeOffset(2026, 10, 4, 0, 0, 0, TimeSpan.Zero), result.NextResetUtc);
+        Assert.False(file.Load().Value.Lists.Single(l => l.Id == daily.Id).Rows[0].Done);
+
+        store.SetEnabled(daily.Id, true);
+        store.Toggle(daily.Id, row.Id);
+        var checkedAgain = store.Current;
+        var changes = 0;
+        store.Changed += () => changes++;
+        clock.UtcNow = clock.UtcNow.AddSeconds(1);
+
+        store.Reconcile();
+
+        Assert.Same(checkedAgain, store.Current);
+        Assert.True(store.Current.Lists.Single(l => l.Id == daily.Id).Rows[0].Done);
+        Assert.Equal(0, changes);
     }
 
     [Fact]

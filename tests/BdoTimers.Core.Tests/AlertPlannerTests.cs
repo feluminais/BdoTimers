@@ -47,19 +47,24 @@ public class AlertPlannerTests
         Assert.Equal(1, planner.Tick([timer], NoMutes, T.AddMinutes(-1)).Single().LeadMinutes);
     }
 
-    [Fact]
-    public void Occurrence_older_than_grace_is_skipped()
+    [Theory]
+    [InlineData(-1, true)]
+    [InlineData(0, true)]
+    [InlineData(1, false)]
+    public void Now_alert_includes_the_grace_boundary_but_not_an_instant_after_it(int ticks, bool withinGrace)
     {
         var timer = TestTimers.Countdown(T, 5, 0);
-        Assert.Empty(new AlertPlanner().Tick([timer], NoMutes, T.AddMinutes(2)));
-    }
+        var alerts = new AlertPlanner().Tick([timer], NoMutes, T.AddMinutes(1).AddTicks(ticks));
 
-    [Fact]
-    public void Occurrence_within_grace_still_fires_now_alert()
-    {
-        var timer = TestTimers.Countdown(T, 5, 0);
-        var alert = new AlertPlanner().Tick([timer], NoMutes, T.AddSeconds(30)).Single();
-        Assert.Equal(0, alert.LeadMinutes);
+        if (withinGrace)
+        {
+            var alert = Assert.Single(alerts);
+            Assert.Equal(0, alert.LeadMinutes);
+            Assert.Equal(0, alert.MinutesLeft);
+            Assert.Equal(T, alert.OccurrenceUtc);
+        }
+        else
+            Assert.Empty(alerts);
     }
 
     [Fact]
@@ -94,21 +99,16 @@ public class AlertPlannerTests
         Assert.Empty(new AlertPlanner().Tick([timer], NoMutes, T));
     }
 
-    static List<AlertEvent> Run(AlertPlanner planner, TimerDef timer, DateTimeOffset from, DateTimeOffset to)
-    {
-        var events = new List<AlertEvent>();
-        for (var at = from; at <= to; at = at.AddSeconds(10)) events.AddRange(planner.Tick([timer], NoMutes, at));
-        return events;
-    }
-
     [Fact]
     public void Setting_the_clock_back_doesnt_replay_alerts()
     {
         var timer = TestTimers.Countdown(T, 5, 1, 0);
         var planner = new AlertPlanner();
-        Assert.Equal(new[] { 5, 1, 0 }, Run(planner, timer, T.AddMinutes(-6), T.AddMinutes(30)).Select(a => a.LeadMinutes));
+        DateTimeOffset[] firstPass = [T.AddMinutes(-6), T.AddMinutes(-5), T.AddMinutes(-1), T, T.AddMinutes(30)];
+        Assert.Equal([5, 1, 0], firstPass.SelectMany(at => planner.Tick([timer], NoMutes, at)).Select(a => a.LeadMinutes));
 
-        Assert.Empty(Run(planner, timer, T.AddMinutes(-6), T.AddMinutes(1)));
+        DateTimeOffset[] afterClockChange = [T.AddMinutes(-6), T.AddMinutes(-5), T.AddMinutes(-1), T, T.AddMinutes(1)];
+        Assert.Empty(afterClockChange.SelectMany(at => planner.Tick([timer], NoMutes, at)));
     }
 
     [Fact]
@@ -116,10 +116,23 @@ public class AlertPlannerTests
     {
         var timer = TestTimers.Countdown(T, 0);
         var planner = new AlertPlanner();
-        Run(planner, timer, T, T);
-        Run(planner, timer, T + AlertPlanner.Memory + AlertPlanner.Grace, T + AlertPlanner.Memory + AlertPlanner.Grace);
+        Assert.Single(planner.Tick([timer], NoMutes, T));
+        Assert.Empty(planner.Tick([timer], NoMutes, T + AlertPlanner.Memory + AlertPlanner.Grace));
 
-        Assert.Single(Run(planner, timer, T, T));
+        Assert.Single(planner.Tick([timer], NoMutes, T));
+    }
+
+    [Fact]
+    public void Unsorted_duplicate_and_negative_leads_do_not_duplicate_or_delay_alerts()
+    {
+        var timer = TestTimers.Countdown(T, 5, 15, -1, 5, 0);
+        var planner = new AlertPlanner();
+
+        Assert.Equal(15, Assert.Single(planner.Tick([timer], NoMutes, T.AddMinutes(-15))).LeadMinutes);
+        Assert.Empty(planner.Tick([timer], NoMutes, T.AddMinutes(-15).AddTicks(1)));
+        Assert.Equal(5, Assert.Single(planner.Tick([timer], NoMutes, T.AddMinutes(-5))).LeadMinutes);
+        Assert.Equal(0, Assert.Single(planner.Tick([timer], NoMutes, T)).LeadMinutes);
+        Assert.Empty(planner.Tick([timer], NoMutes, T.AddTicks(1)));
     }
 
     [Fact]
