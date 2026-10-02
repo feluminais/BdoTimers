@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.Core.Scheduling;
 
@@ -14,10 +15,11 @@ public static class UpcomingQuery
     {
         var muted = data.Muted.ToHashSet();
         return data.Timers
-            .Where(t => t.Enabled && t.Alerts.Overlay.Enabled)
+            .Where(t => BossRegions.IsEligible(data, t) && t.Enabled && t.Alerts.Overlay.Enabled)
             .SelectMany(t => OccurrenceSource.Between(t, now, now + TimeSpan.FromMinutes(t.Alerts.Overlay.ShowMinutesBefore))
                 .Select(at => new UpcomingItem(t, at)))
             .Where(i => !muted.Contains(new MutedOccurrence(i.Timer.Id, i.AtUtc)))
+            .Where(i => NewWindow(data, i.Timer, i.AtUtc))
             .OrderBy(i => i.AtUtc)
             .ToList();
     }
@@ -31,10 +33,21 @@ public static class UpcomingQuery
     {
         var muted = data.Muted.ToHashSet();
         DateTimeOffset? earliest = null;
-        foreach (var t in data.Timers.Where(t => t.Enabled && t.Alerts.Overlay.Enabled))
+        foreach (var t in data.Timers.Where(t => BossRegions.IsEligible(data, t) && t.Enabled && t.Alerts.Overlay.Enabled))
         {
+            if (t.Kind == TimerKind.OneTime || t.Scheduled is { StartDate: not null } or { EndDate: not null })
+            {
+                var next = OccurrenceSource.From(t, now)
+                    .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)) && NewWindow(data, t, at))
+                    .Cast<DateTimeOffset?>().FirstOrDefault();
+                if (next is null) continue;
+                var boundedStart = next.Value - TimeSpan.FromMinutes(t.Alerts.Overlay.ShowMinutesBefore);
+                if (earliest is null || boundedStart < earliest) earliest = boundedStart;
+                continue;
+            }
             var first = OccurrenceSource.Between(t, now, now + Reach)
                 .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)))
+                .Where(at => NewWindow(data, t, at))
                 .Cast<DateTimeOffset?>()
                 .FirstOrDefault();
             var start = (first ?? now + Reach) - TimeSpan.FromMinutes(t.Alerts.Overlay.ShowMinutesBefore);
@@ -42,6 +55,10 @@ public static class UpcomingQuery
         }
         return earliest;
     }
+
+    static bool NewWindow(AppData data, TimerDef timer, DateTimeOffset at) => !timer.IsBuiltIn
+        || data.BossAlertsAfterUtc is null
+        || at - TimeSpan.FromMinutes(timer.Alerts.Overlay.ShowMinutesBefore) > data.BossAlertsAfterUtc;
 }
 
 /// <summary>

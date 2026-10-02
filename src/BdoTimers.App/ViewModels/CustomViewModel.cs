@@ -39,7 +39,7 @@ public sealed partial class CustomViewModel
     void Sync()
     {
         var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn).OrderBy(t => Presets.Rank(t.Preset)).ToList();
-        var now = DateTimeOffset.UtcNow;
+        var now = _services.Clock.UtcNow;
         if (Items.Count == 0) Items.Add(this);
         for (var i = 0; i < timers.Count; i++)
         {

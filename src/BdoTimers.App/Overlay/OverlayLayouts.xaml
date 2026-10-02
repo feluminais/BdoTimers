@@ -57,7 +57,8 @@
         <DockPanel Style="{StaticResource SampleDim}" Margin="12,2,0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="13"
                        Foreground="{StaticResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="ChipLine" DataType="{x:Type overlay:OverlayLine}">
@@ -128,6 +129,9 @@
             <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
             <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
                        Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
+            <TextBlock Text="Custom timers" Style="{StaticResource LabelText}" Margin="12,6,0,2"
+                       Visibility="{Binding HasCustomTimers, Converter={StaticResource BoolToVisibility}}" />
+            <ItemsControl ItemsSource="{Binding CustomTimers}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
         </StackPanel>
     </DataTemplate>
 
@@ -154,6 +158,9 @@
                 <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
                 <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
                            Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
+                <TextBlock Text="Custom timers" Style="{StaticResource LabelText}" Margin="12,6,0,2"
+                           Visibility="{Binding HasCustomTimers, Converter={StaticResource BoolToVisibility}}" />
+                <ItemsControl ItemsSource="{Binding CustomTimers}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
             </StackPanel>
         </StackPanel>
     </DataTemplate>
@@ -183,6 +190,13 @@
             </ItemsControl>
             <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="4,0,0,0"
                        Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
+            <TextBlock Text="Custom timers" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,10,0"
+                       Visibility="{Binding HasCustomTimers, Converter={StaticResource BoolToVisibility}}" />
+            <ItemsControl ItemsSource="{Binding CustomTimers}" ItemTemplate="{StaticResource BarLine}" VerticalAlignment="Center" Focusable="False">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
         </StackPanel>
     </DataTemplate>
 </ResourceDictionary>

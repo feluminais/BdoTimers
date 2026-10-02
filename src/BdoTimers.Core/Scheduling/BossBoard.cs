@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.Core.Scheduling;
 
@@ -32,7 +33,7 @@ public static class BossBoard
     {
         var muted = data.Muted.ToHashSet();
         return data.Timers
-            .Where(t => t.IsBuiltIn && t.Scheduled is not null && (t.Enabled || !followedOnly))
+            .Where(t => BossRegions.IsSelected(data, t) && t.Scheduled is not null && (t.Enabled || !followedOnly))
             .SelectMany(t => ScheduleMath.From(t.Scheduled!, fromUtc).TakeWhile(at => at < toUtc).Select(at => (Boss: t, At: at)))
             .GroupBy(s => s.At)
             .OrderBy(g => g.Key)

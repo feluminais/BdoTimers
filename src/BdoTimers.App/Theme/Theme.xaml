@@ -22,7 +22,7 @@
     <SolidColorBrush x:Key="DangerBrush" Color="#A0493B" />
     <SolidColorBrush x:Key="DimBrush" Color="#99000000" />
 
-    <!-- Cinzel is bundled under Theme/Fonts; Palatino Linotype stands in until it is. -->
+    <!-- Bundled Cinzel, with Palatino Linotype as fallback. -->
     <FontFamily x:Key="DisplayFont">./Fonts/#Cinzel, Palatino Linotype</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
     <FontFamily x:Key="ClockFont">Segoe UI</FontFamily>

@@ -19,12 +19,12 @@ public static class BackupArchive
     const int MaximumEntries = 10000;
     const string ManifestName = "backup.json";
     static readonly string[] Required = [ManifestName, "settings.json", "timers.json", "todos.json"];
-    static readonly string[] ImageExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".tif", ".tiff"];
 
     public static void Export(string dataDirectory, string destination, BackupSnapshot snapshot, IClock clock, string appVersion)
     {
         if (Within(destination, dataDirectory)) throw new InvalidDataException("Save the backup outside the Data folder.");
-        BackupValidation.Check(snapshot);
+        SavedDataValidation.Check(snapshot);
+        CheckImages(dataDirectory, snapshot);
         var temporary = Path.GetFullPath(destination) + $".{Guid.NewGuid():N}.tmp";
         try
         {
@@ -150,7 +150,8 @@ public static class BackupArchive
             if (manifest.FormatVersion != FormatVersion) throw new InvalidDataException("This backup needs a different app version.");
             var snapshot = new BackupSnapshot(ReadJson<AppSettings>(directory, "settings.json"),
                 ReadJson<AppData>(directory, "timers.json"), ReadJson<TodoData>(directory, "todos.json"));
-            BackupValidation.Check(snapshot);
+            SavedDataValidation.Check(snapshot);
+            CheckImages(directory, snapshot);
             return manifest;
         }
         catch (Exception ex) when (ex is JsonException or NotSupportedException)
@@ -196,10 +197,20 @@ public static class BackupArchive
         var parts = name.Split('/');
         return parts.Length == 2 && SafeFileName(parts[1]) && (parts[0] switch
         {
-            "images" => ImageExtensions.Contains(Path.GetExtension(parts[1]), StringComparer.OrdinalIgnoreCase),
+            // WPF decodes pictures by content; imported files retain their original extension, including none.
+            "images" => true,
             "sounds" => new[] { ".wav", ".mp3" }.Contains(Path.GetExtension(parts[1]), StringComparer.OrdinalIgnoreCase),
             _ => false,
         });
+    }
+
+    static void CheckImages(string directory, BackupSnapshot snapshot)
+    {
+        var referenced = snapshot.Timers.Timers.Select(t => t.ImageFile).Append(snapshot.Settings.Overlay.BackgroundImage)
+            .OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase);
+        foreach (var name in referenced)
+            if (!File.Exists(Path.Combine(directory, "images", name)))
+                throw new InvalidDataException($"The saved picture {name} is missing.");
     }
 
     internal static bool SafeFileName(string name)

@@ -1,14 +1,13 @@
 using System.Windows.Interop;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 
 namespace BdoTimers.App.Overlay;
 
-public enum HotkeyAction { AlwaysShow = 1, Show = 2, StartHorseRegistration = 3 }
-
 /// <summary>
-/// Holds the app's hotkeys with Windows' RegisterHotKey, which keeps working while a game running as administrator
-/// has focus (a low-level keyboard hook gets no input then). Windows keeps the combo from the game. UI thread only.
+/// Holds global shortcuts with RegisterHotKey, which receives input while an administrator game has focus.
+/// Windows keeps the combo from the game. UI thread only.
 /// </summary>
 public sealed class HotkeyService : IDisposable
 {
@@ -16,82 +15,57 @@ public sealed class HotkeyService : IDisposable
     const int MOD_NOREPEAT = 0x4000;
     static readonly IntPtr HWND_MESSAGE = new(-3);
 
-    // A message-only window: it only receives the hotkey messages, never broadcasts, and isn't a top-level window.
     readonly HwndSource _window = new(0, 0, 0, 0, 0, "BdoTimers hotkeys", HWND_MESSAGE);
-    readonly Dictionary<HotkeyAction, Hotkey> _wanted = [];
-    readonly HashSet<HotkeyAction> _held = [];
-    HashSet<HotkeyAction> _refused = [];
-    int _suspended;
+    readonly HotkeyRegistry _registry;
 
-    public event Action<HotkeyAction>? Pressed;
-    /// <summary>Raised when the hotkeys Windows refused change.</summary>
+    public event Action<HotkeyTarget>? Pressed;
     public event Action? RefusedChanged;
+    public IReadOnlySet<HotkeyTarget> Refused => _registry.Refused;
 
-    public HotkeyService() => _window.AddHook(WndProc);
-
-    public IReadOnlySet<HotkeyAction> Refused => _refused;
-
-    /// <summary>Holds exactly these hotkeys; null releases one. Horse registration is independent of the overlay switch.</summary>
-    public void Set(Hotkey? alwaysShow, Hotkey? show, Hotkey? horseRegistration)
+    public HotkeyService()
     {
-        var wanted = new Dictionary<HotkeyAction, Hotkey>();
-        if (alwaysShow is not null) wanted[HotkeyAction.AlwaysShow] = alwaysShow;
-        if (show is not null) wanted[HotkeyAction.Show] = show;
-        if (horseRegistration is not null) wanted[HotkeyAction.StartHorseRegistration] = horseRegistration;
-        if (wanted.Count == _wanted.Count && wanted.All(w => _wanted.TryGetValue(w.Key, out var k) && k == w.Value)) return;
-        _wanted.Clear();
-        foreach (var (action, key) in wanted) _wanted[action] = key;
-        Apply();
+        _registry = new HotkeyRegistry(new Registration(_window.Handle));
+        _registry.RefusedChanged += () => RefusedChanged?.Invoke();
+        _window.AddHook(WndProc);
     }
 
-    /// <summary>Releases every hotkey while a hotkey field listens, so the combo reaches the field.</summary>
-    public void Suspend()
-    {
-        _suspended++;
-        Apply();
-    }
-
-    public void Resume()
-    {
-        _suspended = Math.Max(0, _suspended - 1);
-        Apply();
-    }
-
-    void Apply()
-    {
-        foreach (var action in _held) NativeMethods.UnregisterHotKey(_window.Handle, (int)action);
-        _held.Clear();
-        if (_suspended > 0) return;
-        var refused = new HashSet<HotkeyAction>();
-        foreach (var (action, key) in _wanted)
-        {
-            if (NativeMethods.RegisterHotKey(_window.Handle, (int)action, (int)key.Modifiers | MOD_NOREPEAT, key.VirtualKey))
-                _held.Add(action);
-            else
-            {
-                refused.Add(action);
-                Log.Info($"Windows refused the {action} hotkey {key}");
-            }
-        }
-        if (refused.SetEquals(_refused)) return;
-        _refused = refused;
-        RefusedChanged?.Invoke();
-    }
+    public void Set(IReadOnlyDictionary<HotkeyTarget, Hotkey> bindings) => _registry.Set(bindings);
+    public void Suspend() => _registry.Suspend();
+    public void Resume() => _registry.Resume();
 
     IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == WM_HOTKEY && Enum.IsDefined((HotkeyAction)wParam.ToInt32()))
+        if (msg == WM_HOTKEY && _registry.TargetFor(wParam.ToInt32()) is { } target)
         {
             handled = true;
-            Pressed?.Invoke((HotkeyAction)wParam.ToInt32());
+            Pressed?.Invoke(target);
         }
         return IntPtr.Zero;
     }
 
+    sealed class Registration(IntPtr window) : IHotkeyRegistration
+    {
+        public bool Register(int id, Hotkey key)
+        {
+            try
+            {
+                if (NativeMethods.RegisterHotKey(window, id, (int)key.Modifiers | MOD_NOREPEAT, key.VirtualKey)) return true;
+                Log.Info($"Windows refused hotkey {key}");
+            }
+            catch (Exception ex) { Log.Error("Couldn't register hotkey", ex); }
+            return false;
+        }
+
+        public void Unregister(int id)
+        {
+            try { NativeMethods.UnregisterHotKey(window, id); }
+            catch (Exception ex) { Log.Error("Couldn't release hotkey", ex); }
+        }
+    }
+
     public void Dispose()
     {
-        foreach (var action in _held) NativeMethods.UnregisterHotKey(_window.Handle, (int)action);
-        _held.Clear();
+        _registry.Dispose();
         _window.Dispose();
     }
 }

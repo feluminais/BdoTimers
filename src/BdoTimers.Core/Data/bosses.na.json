@@ -1,0 +1,414 @@
+{
+  "source": "Pearl Abyss PC NA World Bosses timetable (PT, image uploaded 2025-12-24), corroborated by Black Desert Foundry",
+  "verifiedOn": "2026-10-02",
+  "sourceUrls": [
+    "https://www.naeu.playblackdesert.com/en-US/Wiki?wikiNo=83",
+    "https://s1.pearlcdn.com/NAEU/Upload/WIKI/f8e0383561920251224145958103.png",
+    "https://www.naeu.playblackdesert.com/en-US/News/Detail?groupContentNo=9799",
+    "https://www.blackdesertfoundry.com/world-bosses-dungeons-guide/"
+  ],
+  "timeZoneId": "America/Los_Angeles",
+  "bosses": [
+    {
+      "name": "Kzarka",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "00:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "17:00"
+        },
+        {
+          "day": "Wednesday",
+          "time": "22:15"
+        },
+        {
+          "day": "Thursday",
+          "time": "10:00"
+        },
+        {
+          "day": "Friday",
+          "time": "00:00"
+        },
+        {
+          "day": "Friday",
+          "time": "20:15"
+        },
+        {
+          "day": "Saturday",
+          "time": "10:00"
+        }
+      ]
+    },
+    {
+      "name": "Nouver",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "10:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "00:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "20:15"
+        },
+        {
+          "day": "Wednesday",
+          "time": "10:00"
+        },
+        {
+          "day": "Thursday",
+          "time": "22:15"
+        },
+        {
+          "day": "Friday",
+          "time": "17:00"
+        },
+        {
+          "day": "Saturday",
+          "time": "00:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "22:15"
+        }
+      ]
+    },
+    {
+      "name": "Karanda",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "17:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "22:15"
+        },
+        {
+          "day": "Wednesday",
+          "time": "20:15"
+        },
+        {
+          "day": "Thursday",
+          "time": "00:00"
+        },
+        {
+          "day": "Friday",
+          "time": "10:00"
+        },
+        {
+          "day": "Friday",
+          "time": "22:15"
+        },
+        {
+          "day": "Sunday",
+          "time": "20:15"
+        }
+      ]
+    },
+    {
+      "name": "Kutum",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "20:15"
+        },
+        {
+          "day": "Tuesday",
+          "time": "10:00"
+        },
+        {
+          "day": "Wednesday",
+          "time": "00:00"
+        },
+        {
+          "day": "Thursday",
+          "time": "20:15"
+        },
+        {
+          "day": "Friday",
+          "time": "14:00"
+        },
+        {
+          "day": "Saturday",
+          "time": "22:15"
+        },
+        {
+          "day": "Sunday",
+          "time": "10:00"
+        }
+      ]
+    },
+    {
+      "name": "Offin",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "22:15"
+        },
+        {
+          "day": "Thursday",
+          "time": "17:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "00:00"
+        }
+      ]
+    },
+    {
+      "name": "Garmoth",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "12:00"
+        },
+        {
+          "day": "Monday",
+          "time": "21:15"
+        },
+        {
+          "day": "Tuesday",
+          "time": "12:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "21:15"
+        },
+        {
+          "day": "Wednesday",
+          "time": "12:00"
+        },
+        {
+          "day": "Wednesday",
+          "time": "21:15"
+        },
+        {
+          "day": "Thursday",
+          "time": "12:00"
+        },
+        {
+          "day": "Thursday",
+          "time": "21:15"
+        },
+        {
+          "day": "Friday",
+          "time": "12:00"
+        },
+        {
+          "day": "Friday",
+          "time": "21:15"
+        },
+        {
+          "day": "Saturday",
+          "time": "12:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "12:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "17:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "21:15"
+        }
+      ]
+    },
+    {
+      "name": "Vell",
+      "slots": [
+        {
+          "day": "Wednesday",
+          "time": "17:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "14:00"
+        }
+      ]
+    },
+    {
+      "name": "Quint",
+      "slots": [
+        {
+          "day": "Thursday",
+          "time": "14:00"
+        },
+        {
+          "day": "Saturday",
+          "time": "17:00"
+        }
+      ]
+    },
+    {
+      "name": "Muraka",
+      "slots": [
+        {
+          "day": "Thursday",
+          "time": "14:00"
+        },
+        {
+          "day": "Saturday",
+          "time": "17:00"
+        }
+      ]
+    },
+    {
+      "name": "Golden Pig King",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "00:00"
+        },
+        {
+          "day": "Monday",
+          "time": "20:15"
+        },
+        {
+          "day": "Tuesday",
+          "time": "10:00"
+        },
+        {
+          "day": "Wednesday",
+          "time": "00:00"
+        },
+        {
+          "day": "Thursday",
+          "time": "22:15"
+        },
+        {
+          "day": "Friday",
+          "time": "17:00"
+        },
+        {
+          "day": "Saturday",
+          "time": "22:15"
+        },
+        {
+          "day": "Sunday",
+          "time": "10:00"
+        }
+      ]
+    },
+    {
+      "name": "Sangoon",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "17:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "00:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "20:15"
+        },
+        {
+          "day": "Wednesday",
+          "time": "20:15"
+        },
+        {
+          "day": "Thursday",
+          "time": "10:00"
+        },
+        {
+          "day": "Friday",
+          "time": "14:00"
+        },
+        {
+          "day": "Friday",
+          "time": "22:15"
+        },
+        {
+          "day": "Sunday",
+          "time": "00:00"
+        }
+      ]
+    },
+    {
+      "name": "Bulgasal",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "22:15"
+        },
+        {
+          "day": "Tuesday",
+          "time": "17:00"
+        },
+        {
+          "day": "Wednesday",
+          "time": "10:00"
+        },
+        {
+          "day": "Thursday",
+          "time": "00:00"
+        },
+        {
+          "day": "Thursday",
+          "time": "20:15"
+        },
+        {
+          "day": "Friday",
+          "time": "10:00"
+        },
+        {
+          "day": "Saturday",
+          "time": "00:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "22:15"
+        }
+      ]
+    },
+    {
+      "name": "Uturi",
+      "slots": [
+        {
+          "day": "Monday",
+          "time": "10:00"
+        },
+        {
+          "day": "Tuesday",
+          "time": "22:15"
+        },
+        {
+          "day": "Wednesday",
+          "time": "22:15"
+        },
+        {
+          "day": "Thursday",
+          "time": "17:00"
+        },
+        {
+          "day": "Friday",
+          "time": "00:00"
+        },
+        {
+          "day": "Friday",
+          "time": "20:15"
+        },
+        {
+          "day": "Saturday",
+          "time": "10:00"
+        },
+        {
+          "day": "Sunday",
+          "time": "20:15"
+        }
+      ]
+    }
+  ]
+}

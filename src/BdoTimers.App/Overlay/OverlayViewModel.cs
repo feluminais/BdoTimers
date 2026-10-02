@@ -31,7 +31,7 @@ public sealed partial class OverlaySpawn : ObservableObject
     }
 }
 
-/// <summary>A named time on the overlay: a pop-up timer, Farm, Fishing or a horse registration. <see cref="Key"/> is
+/// <summary>A named time on the overlay: a pop-up or an active timer. <see cref="Key"/> is
 /// what it stands for, so a list keeps the row from tick to tick and only its text changes.</summary>
 public sealed partial class OverlayLine(object key) : ObservableObject
 {
@@ -77,10 +77,12 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private OverlayLine? _farm;
     [ObservableProperty] private OverlayLine? _fishing;
     [ObservableProperty] private string? _moreHorseRegistrations;
+    [ObservableProperty] private bool _hasCustomTimers;
     [ObservableProperty] private bool _showDivider;
 
     public ObservableCollection<OverlayLine> PopUps { get; } = [];
     public ObservableCollection<OverlayLine> HorseRegistrations { get; } = [];
+    public ObservableCollection<OverlayLine> CustomTimers { get; } = [];
 
     public void Update(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
     {
@@ -109,8 +111,14 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
             horse.Add((SampleKey, "Horse 1", "00:08:30", true));
         Sync(HorseRegistrations, horse);
         MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
+        var custom = content.CustomTimers.Select(t =>
+            ((object)t.Id, t.Name, DurationFormat.Clock(t.Remaining) + (t.Paused ? " · Paused" : ""), false)).ToList();
+        if (custom.Count == 0 && preview && settings.ShowCustomTimers)
+            custom.Add((SampleKey, "Custom timer", "00:15:00", true));
+        Sync(CustomTimers, custom);
+        HasCustomTimers = CustomTimers.Count > 0;
         ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
-            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0);
+            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
     }
 
     static string Names(SpawnGroup group) => string.Join(" · ", group.Bosses.Select(b => b.Name));

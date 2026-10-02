@@ -5,4 +5,4 @@
 - **Overlay Farm and Fishing visibility** - hide either timer from the overlay while that timer is switched Off, even when its overlay section is selected.
 - **Discord webhook / phone push (ntfy.sh)** alert channels.
 - **Online boss timetable refresh** from a community source, with the embedded seed as fallback.
-- **Other regions** (NA, SEA, …) - seed files per region + region picker.
+- **Other regions** (SEA, …) - add seed files to the existing region picker.

@@ -10,8 +10,8 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
     public string FilePath { get; } = filePath;
 
     /// <summary>
-    /// Loads the file. An unreadable file is renamed to "*.bad-&lt;timestamp&gt;" and defaults are
-    /// returned, so a damaged file never stops the app from starting.
+    /// Invalid JSON or saved models are renamed to "*.bad-&lt;timestamp&gt;" and replaced with defaults.
+    /// Filesystem failures propagate to the caller.
     /// </summary>
     public LoadResult<T> Load()
     {
@@ -19,10 +19,15 @@ public sealed class JsonFileStore<T>(string filePath, Func<T> createDefault) whe
         try
         {
             var value = JsonSerializer.Deserialize<T>(File.ReadAllText(FilePath), JsonDefaults.Options);
-            if (value is not null) return new(value, null);
+            if (value is not null)
+            {
+                SavedDataValidation.Check(value);
+                return new(value, null);
+            }
         }
         catch (JsonException) { }
         catch (NotSupportedException) { }
+        catch (InvalidDataException) { }
 
         var backup = $"{FilePath}.bad-{DateTime.Now:yyyyMMdd-HHmmss}";
         File.Move(FilePath, backup, overwrite: true);

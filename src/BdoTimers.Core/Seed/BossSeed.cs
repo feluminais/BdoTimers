@@ -4,7 +4,8 @@ public sealed record BossSeed(
     string TimeZoneId,
     IReadOnlyList<BossSeedEntry> Bosses,
     string? Source = null,
-    string? VerifiedOn = null);
+    string? VerifiedOn = null,
+    IReadOnlyList<string>? SourceUrls = null);
 
 public sealed record BossSeedEntry(string Name, IReadOnlyList<BossSeedSlot> Slots);
 

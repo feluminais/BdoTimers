@@ -1,6 +1,8 @@
+using System.Windows;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Text;
+using BdoTimers.Core.Updates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -8,7 +10,7 @@ namespace BdoTimers.App.ViewModels;
 
 public enum Section { Bosses, Custom, Todo }
 
-public sealed partial class MainViewModel : ObservableObject, IPanelHost
+public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDisposable
 {
     readonly AppServices _services;
     bool _shown;
@@ -20,6 +22,9 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
     [ObservableProperty] private object? _panel;
     [ObservableProperty] private bool _isPaused;
     [ObservableProperty] private string _pausedText = "";
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(OpenUpdateDetailsCommand))]
+    private bool _hasUpdate;
 
     public BossesViewModel Bosses { get; }
     public CustomViewModel Custom { get; }
@@ -50,6 +55,33 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost
         Custom = new CustomViewModel(services, this);
         Todo = new TodoViewModel(services, this);
         RefreshPaused(DateTimeOffset.UtcNow);
+        services.Updates.Changed += UpdatesChanged;
+        RefreshUpdate();
+    }
+
+    void UpdatesChanged()
+    {
+        if (_services.IsQuitting) return;
+        Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            if (!_services.IsQuitting) RefreshUpdate();
+        });
+    }
+
+    void RefreshUpdate() => HasUpdate = _services.Updates.Current.Status == UpdateStatus.UpdateAvailable;
+
+    [RelayCommand(CanExecute = nameof(HasUpdate))]
+    void OpenUpdateDetails()
+    {
+        if (_services.Updates.Current.Release is { } release)
+            OpenPanel(new UpdatePanelViewModel(release, this));
+    }
+
+    public void Dispose()
+    {
+        _services.Updates.Changed -= UpdatesChanged;
+        SetShown(false);
+        ClosePanel();
     }
 
     /// <summary>

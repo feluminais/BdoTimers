@@ -1,13 +1,15 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
+using System.Windows;
 using Microsoft.Win32;
 using BdoTimers.App.Alerts;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
+using BdoTimers.Core.Updates;
+using CheckStatus = BdoTimers.Core.Updates.UpdateStatus;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -17,11 +19,14 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 {
     readonly AppServices _services;
     bool _syncingSound;
+    bool _syncingRegion;
     bool _closed;
     PreparedRestore? _preparedRestore;
 
     [ObservableProperty] private Choice _autostart;
     [ObservableProperty] private Choice _closeToTray;
+    [ObservableProperty] private Choice _region;
+    [ObservableProperty] private string? _regionError;
     [ObservableProperty] private IReadOnlyList<Choice> _alertSounds = [];
     [ObservableProperty] private Choice? _alertSound;
     [ObservableProperty] private string? _soundError;
@@ -39,26 +44,41 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExportBackupCommand), nameof(ChooseRestoreCommand), nameof(ConfirmRestoreCommand))]
     private bool _dataBusy;
+    [ObservableProperty] private string? _updateStatus;
+    [ObservableProperty] private string? _availableVersion;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CheckForUpdatesCommand))]
+    private bool _updateChecking;
+    Uri? _releasePage;
 
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
+    public IReadOnlyList<Choice> Regions { get; } = BossRegions.All.Select(r => new Choice(r.Label, r.Id)).ToList();
     public IReadOnlyList<Choice> Voices { get; }
     public ObservableCollection<UserSoundRow> UserSounds { get; } = [];
     public LeadChipsViewModel DefaultLeads { get; }
     public TodoScheduleEditorViewModel DailyTodoReset { get; }
     public TodoScheduleEditorViewModel WeeklyTodoReset { get; }
-    public string Version { get; } = AppVersion();
-    public string TimetableVerified => $"EU · Verified {_services.Seed.VerifiedOn ?? "unknown"}";
-    public string? TimetableSource => _services.Seed.Source;
+    public string Version { get; } = ProductVersion.Number;
+    public string TimetableVerified => $"{_services.Region.ShortLabel} · Verified {_services.Seed.VerifiedOn ?? "unknown"}";
+    public string? TimetableSource => string.Join('\n', new[] { _services.Seed.Source }
+        .Concat(_services.Seed.SourceUrls ?? []).Where(s => s is not null));
     public string TimetableZone => $"Times in {_services.Seed.TimeZoneId}";
+    public string ResetTimetableLabel => $"Reset spawn times to the {_services.Region.ShortLabel} timetable";
+    public string ResetTimetableConfirmation => $"{ResetTimetableLabel}?";
+    public string ResetAlertLabel => $"Reset {_services.Region.ShortLabel} boss alert settings";
+    public string ResetAlertConfirmation => $"{ResetAlertLabel}?";
     public ObservableCollection<TimetableChangeRow> TimetableChanges { get; } = [];
     public bool CanUseData => !DataBusy;
 
     public SettingsPanelViewModel(AppServices services)
     {
         _services = services;
+        services.Updates.Changed += UpdateCheckChanged;
+        RefreshUpdateCheck();
         var s = services.Settings.Current;
         _autostart = Choice.For(s.Autostart);
         _closeToTray = Choice.For(s.CloseToTray);
+        _region = Regions.Single(r => (string)r.Value! == services.Timers.Current.SelectedBossRegion);
         _volume = s.Volume;
         ReloadSounds();
         Voices = services.Tts.Voices().Select(v => new Choice(v.Label, v.Id)).ToList();
@@ -88,6 +108,33 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     partial void OnCloseToTrayChanged(Choice value) =>
         _services.Settings.Update(s => s with { CloseToTray = value.IsOn });
+
+    partial void OnRegionChanged(Choice value)
+    {
+        if (_syncingRegion) return;
+        try
+        {
+            _services.SelectBossRegion((string)value.Value!);
+            RegionError = null;
+            ReviewingTimetable = ConfirmingReset = ConfirmingAlertReset = false;
+            OnPropertyChanged(nameof(TimetableVerified));
+            OnPropertyChanged(nameof(TimetableSource));
+            OnPropertyChanged(nameof(TimetableZone));
+            OnPropertyChanged(nameof(ResetTimetableLabel));
+            OnPropertyChanged(nameof(ResetTimetableConfirmation));
+            OnPropertyChanged(nameof(ResetAlertLabel));
+            OnPropertyChanged(nameof(ResetAlertConfirmation));
+            RefreshTimetable();
+        }
+        catch (StateSaveException ex)
+        {
+            Log.Error("Couldn't save boss region", ex);
+            RegionError = "Couldn't save region";
+            _syncingRegion = true;
+            Region = Regions.Single(r => (string)r.Value! == _services.Timers.Current.SelectedBossRegion);
+            _syncingRegion = false;
+        }
+    }
 
     partial void OnAlertSoundChanged(Choice? value)
     {
@@ -288,7 +335,54 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public void OnClosed()
     {
         _closed = true;
+        _services.Updates.Changed -= UpdateCheckChanged;
         CancelRestore();
+    }
+
+    void UpdateCheckChanged() => Application.Current.Dispatcher.BeginInvoke(() =>
+    {
+        if (!_closed) RefreshUpdateCheck();
+    });
+
+    void RefreshUpdateCheck()
+    {
+        var result = _services.Updates.Current;
+        UpdateChecking = result.Status == CheckStatus.Checking;
+        UpdateStatus = result.Status switch
+        {
+            CheckStatus.Checking => "Checking",
+            CheckStatus.UpToDate => "Up to date",
+            CheckStatus.UpdateAvailable => "Update available",
+            CheckStatus.CouldNotCheck => "Couldn’t check",
+            _ => null,
+        };
+        AvailableVersion = result.Release?.Number;
+        _releasePage = result.Release?.Page;
+    }
+
+    bool CanCheckForUpdates() => !UpdateChecking;
+
+    [RelayCommand(CanExecute = nameof(CanCheckForUpdates))]
+    async Task CheckForUpdates()
+    {
+        UpdateChecking = true;
+        UpdateStatus = "Checking";
+        AvailableVersion = null;
+        _releasePage = null;
+        await Task.Run(() => _services.Updates.CheckAsync());
+        if (!_closed) RefreshUpdateCheck();
+    }
+
+    [RelayCommand]
+    void OpenRelease()
+    {
+        if (_releasePage is not { } page) return;
+        try { Open(page.AbsoluteUri); }
+        catch (Exception ex)
+        {
+            Log.Error("Couldn't open the release page", ex);
+            UpdateStatus = "Couldn’t open release";
+        }
     }
 
     [RelayCommand]
@@ -296,18 +390,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     /// <summary>The GPL asks that the source be offered to everyone who gets the app.</summary>
     [RelayCommand]
-    void OpenSource() => Open("https://github.com/feluminais/BdoTimers");
+    void OpenSource() => Open(GitHubReleaseSource.Repository);
 
     [RelayCommand]
     void OpenLicenses() => Open(Path.Combine(AppContext.BaseDirectory, "licenses"));
 
     static void Open(string target) => Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
-
-    static string AppVersion()
-    {
-        var info = typeof(SettingsPanelViewModel).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-        return info?.Split('+')[0] ?? "";
-    }
 }
 
 /// <summary>A line in Settings' "Your sounds": the sound's name with play and remove buttons.</summary>

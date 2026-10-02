@@ -11,10 +11,10 @@ public sealed record OverlaySettings
     public bool Enabled { get; init; } = true;
     public bool AlwaysShow { get; init; }
     /// <summary>Flips <see cref="AlwaysShow"/>.</summary>
-    public Hotkey? AlwaysShowHotkey { get; init; }
-    public bool ShowOnHotkey { get; init; }
+    public Hotkey? AlwaysShowHotkey { get; init; } = DefaultHotkeys.AlwaysShow;
+    public bool ShowOnHotkey { get; init; } = true;
     /// <summary>Shows the overlay for <see cref="ShowSeconds"/>; held only while <see cref="ShowOnHotkey"/> is on.</summary>
-    public Hotkey? ShowHotkey { get; init; }
+    public Hotkey? ShowHotkey { get; init; } = DefaultHotkeys.Show;
     public int ShowSeconds { get; init; } = 10;
     public OverlayLayout Layout { get; init; }
     /// <summary>0.6 to 2.</summary>
@@ -25,6 +25,7 @@ public sealed record OverlaySettings
     public bool ShowFarm { get; init; } = true;
     public bool ShowFishing { get; init; } = true;
     public bool ShowHorseRegistrations { get; init; }
+    public bool ShowCustomTimers { get; init; } = true;
     /// <summary>"#RRGGBB"; also used when the picture can't be read.</summary>
     public string BackgroundColor { get; init; } = DefaultBackgroundColor;
     /// <summary>A picture's file name inside the app's images folder; it replaces the colour.</summary>

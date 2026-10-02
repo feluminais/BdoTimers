@@ -14,10 +14,12 @@ public partial class App : Application
 #if DEBUG
     internal const string InstanceName = "BdoTimers-Dev";
     internal const string DisplayName = "BDO Timers (dev)";
+    internal const bool AutomaticUpdateChecks = false;
 #else
     /// <remarks>The setup window removes the notification registration by this name (<see cref="Alerts.NotificationRegistration.InstalledAppId"/>).</remarks>
     internal const string InstanceName = "BdoTimers";
     internal const string DisplayName = "BDO Timers";
+    internal const bool AutomaticUpdateChecks = true;
 #endif
 
     Mutex? _singleInstance;
@@ -67,12 +69,11 @@ public partial class App : Application
         ThreadPool.RegisterWaitForSingleObject(_activateSignal,
             (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
 
-        // Beside the exe, so everything the app keeps is in the folder it was installed to. Setup carries this folder
-        // along when the app moves; uninstall keeps it unless the player opts in to deletion.
+        // Data stays beside the exe. Relocating an installation requires copying Data or restoring a backup.
         var dataDir = Path.Combine(AppContext.BaseDirectory, "Data");
         if (!CanWrite(dataDir))
         {
-            MessageBox.Show($"BDO Timers can't save to {dataDir}.\n\nRun BDO Timers setup and move it to a folder you can write to.",
+            MessageBox.Show($"BDO Timers can't save to {dataDir}.\n\nInstall in a writable folder, then copy your existing Data folder into the new BdoTimers folder.",
                 "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
             Shutdown(1);
             return;

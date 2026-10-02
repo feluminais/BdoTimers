@@ -35,7 +35,7 @@ public class SeedServiceTests
         var once = SeedService.ApplyIfNeeded(new AppData(), Seed, Defaults);
         var twice = SeedService.ApplyIfNeeded(once, Seed, Defaults);
 
-        Assert.True(once.SeedApplied);
+        Assert.True(BossRegions.State(once).SeedApplied);
         Assert.Equal(2, once.Timers.Count);
         Assert.Same(once, twice);
     }

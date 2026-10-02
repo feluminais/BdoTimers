@@ -197,7 +197,7 @@ internal sealed class SetupViewModel : INotifyPropertyChanged
     {
         ExitCode = status;
         ErrorText = SetupFlow.IsCancelled(status)
-            ? "Setup was cancelled. Nothing was changed."
+            ? "Setup was cancelled."
             : (message ?? "Something went wrong.") + $" (error 0x{status:X8})";
         Page = SetupPage.Error;
     }

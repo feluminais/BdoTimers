@@ -124,17 +124,26 @@ public sealed partial class TimerTileViewModel : ObservableObject
             return;
         }
 
-        // Weekly timers: recompute the next occurrence only once the cached one has passed.
+        if (_timer.OneTime is { Finished: true })
+        {
+            (Digits, Detail, IsDimmed) = ("--:--:--", "Finished", true);
+            return;
+        }
+
+        // Dated and weekly timers: keep the next occurrence until it passes or the saved schedule changes.
         if (_nextOccurrence is not { } cached || cached <= now)
-            _nextOccurrence = OccurrenceSource.Between(_timer, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
+            _nextOccurrence = OccurrenceSource.Next(_timer, now);
         if (_nextOccurrence is not { } next)
         {
-            (Digits, Detail, IsDimmed) = ("--:--:--", off + "No times set", true);
+            var state = _timer.Kind == TimerKind.OneTime ? "Finished"
+                : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired" : "No times set";
+            (Digits, Detail, IsDimmed) = ("--:--:--", off + state, true);
             return;
         }
         var skipped = _services.Timers.Current.Muted.Contains(new MutedOccurrence(_timer.Id, next));
         Digits = DurationFormat.Clock(next - now);
-        Detail = $"{off}Next {next.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture)}{(skipped ? " · skipped" : "")}";
+        var format = _timer.Kind == TimerKind.OneTime ? "MMM d, yyyy HH:mm" : "ddd HH:mm";
+        Detail = $"{off}Next {next.ToLocalTime().ToString(format, CultureInfo.InvariantCulture)}{(skipped ? " · skipped" : "")}";
         IsDimmed = !_timer.Enabled || skipped;
         SkipLabel = skipped ? "Unskip next" : "Skip next";
     }
@@ -160,7 +169,12 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [RelayCommand]
     void StartPause()
     {
-        var now = DateTimeOffset.UtcNow;
+        if (CustomCountdowns.Includes(_timer))
+        {
+            _services.ControlCustomCountdown(_timer.Id);
+            return;
+        }
+        var now = _services.Clock.UtcNow;
         var timers = _services.Timers;
         if (_timer.Stopwatch is { } s)
         {

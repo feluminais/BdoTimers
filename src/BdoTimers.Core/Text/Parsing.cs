@@ -4,39 +4,16 @@ namespace BdoTimers.Core.Text;
 
 public static class Parsing
 {
-    const int MaxLeadMinutes = 1440;
-
-    public static bool TryParseLeadTimes(string text, out IReadOnlyList<int> leads, out string? error)
-    {
-        leads = [];
-        var parts = text.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (parts.Length == 0)
-        {
-            error = "Enter at least one number of minutes, e.g. 15, 5, 1, 0.";
-            return false;
-        }
-        var values = new List<int>();
-        foreach (var part in parts)
-        {
-            if (!int.TryParse(part, NumberStyles.None, CultureInfo.InvariantCulture, out var v) || v > MaxLeadMinutes)
-            {
-                error = $"\"{part}\" isn't a number of minutes between 0 and {MaxLeadMinutes}.";
-                return false;
-            }
-            values.Add(v);
-        }
-        leads = values.Distinct().OrderDescending().ToList();
-        error = null;
-        return true;
-    }
-
-    public static string FormatLeadTimes(IEnumerable<int> leads) => string.Join(", ", leads.OrderDescending());
-
     /// <summary>Invariant "HH:mm"; the current culture may use another separator that <see cref="TryParseTime"/> rejects.</summary>
     public static string FormatTime(TimeOnly time) => time.ToString("HH:mm", CultureInfo.InvariantCulture);
 
     public static bool TryParseTime(string text, out TimeOnly time) =>
         TimeOnly.TryParseExact(text.Trim(), ["H:mm", "HH:mm"], CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
+
+    public static string FormatDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+    public static bool TryParseDate(string text, out DateOnly date) =>
+        DateOnly.TryParseExact(text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
 
     /// <summary>Countdown length as "H:MM" or a plain number of minutes, from 1 minute to 24 hours.</summary>
     public static bool TryParseDuration(string text, out TimeSpan duration) =>
@@ -59,9 +36,9 @@ public static class Parsing
         {
             return false;
         }
-        var total = TimeSpan.FromMinutes(hours * 60 + minutes);
-        if (total < min || total > max) return false;
-        duration = total;
+        var totalMinutes = (long)hours * 60 + minutes;
+        if (totalMinutes < min.TotalMinutes || totalMinutes > max.TotalMinutes) return false;
+        duration = TimeSpan.FromMinutes(totalMinutes);
         return true;
     }
 

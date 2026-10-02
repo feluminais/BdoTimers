@@ -69,6 +69,7 @@
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
             <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
+                    IsEnabled="{Binding ScheduleValid}"
                     Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}">
@@ -118,16 +119,60 @@
 
                 <Border Style="{StaticResource Row}" Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel>
-                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding HorseHotkey}" Other="{Binding OverlayAlwaysHotkey}"
-                                            Other2="{Binding OverlayShowHotkey}" IsRefused="{Binding HorseHotkeyRefused}"
+                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding HorseHotkey}" OtherKeys="{Binding OtherHotkeys}"
+                                            IsRefused="{Binding HorseHotkeyRefused}"
                                             IsListening="{Binding ListeningHorseHotkey}" AutomationProperties.Name="Start horse registration hotkey" />
                         <TextBlock Text="Start hotkey" Style="{StaticResource RowLabel}" />
+                    </DockPanel>
+                </Border>
+
+                <Border Style="{StaticResource Row}" Visibility="{Binding IsCustomCountdown, Converter={StaticResource BoolToVisibility}}">
+                    <DockPanel>
+                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding ControlHotkey}" OtherKeys="{Binding OtherHotkeys}"
+                                            IsRefused="{Binding ControlHotkeyRefused}" IsListening="{Binding ListeningControlHotkey}"
+                                            AutomationProperties.Name="Countdown hotkey" />
+                        <TextBlock Text="Hotkey" Style="{StaticResource RowLabel}" ToolTip="Start, pause or resume" />
                     </DockPanel>
                 </Border>
 
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Weekly times" Style="{StaticResource SectionText}" />
                     <panels:SlotList DataContext="{Binding Slots}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="Start date" Style="{StaticResource RowLabel}" Width="120" />
+                            <TextBox Text="{Binding StartDateText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
+                                     controls:Ui.HasError="{Binding StartDateInvalid}" ToolTip="YYYY-MM-DD; blank for no limit" AutomationProperties.Name="Start date" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="End date" Style="{StaticResource RowLabel}" Width="120" />
+                            <TextBox Text="{Binding EndDateText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
+                                     controls:Ui.HasError="{Binding EndDateInvalid}" ToolTip="YYYY-MM-DD, inclusive; blank for no limit" AutomationProperties.Name="End date" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsOneTime, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="One-time event" Style="{StaticResource SectionText}" />
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="Date" Style="{StaticResource RowLabel}" Width="120" />
+                            <TextBox Text="{Binding EventDateText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
+                                     controls:Ui.HasError="{Binding EventDateInvalid}" ToolTip="YYYY-MM-DD" AutomationProperties.Name="Event date" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="Time" Style="{StaticResource RowLabel}" Width="120" />
+                            <TextBox Text="{Binding EventTimeText, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
+                                     controls:Ui.HasError="{Binding EventTimeInvalid}" ToolTip="HH:mm" AutomationProperties.Name="Event time" />
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding HasTimeZone, Converter={StaticResource BoolToVisibility}}">
                     <Border Style="{StaticResource Row}" Margin="0,6,0,0">
                         <DockPanel>
                             <TextBlock Text="Time zone" Style="{StaticResource RowLabel}" Width="120" />
@@ -135,6 +180,8 @@
                                       SelectedValue="{Binding TimeZoneId}" MaxDropDownHeight="260" VerticalAlignment="Center" />
                         </DockPanel>
                     </Border>
+                    <TextBlock Text="{Binding ScheduleError}" Foreground="{StaticResource DangerBrush}" FontSize="12" Margin="0,4,0,6"
+                               Visibility="{Binding ScheduleValid, Converter={StaticResource InverseBoolToVisibility}}" />
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">

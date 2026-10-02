@@ -100,6 +100,8 @@ public class TextTests
     [InlineData("0:00")]
     [InlineData("24:01")]
     [InlineData("1:60")]
+    [InlineData("71582789:00")]
+    [InlineData("2147483647:59")]
     [InlineData("abc")]
     [InlineData("")]
     public void Rejects_bad_durations(string text) => Assert.False(Parsing.TryParseDuration(text, out _));
@@ -116,25 +118,6 @@ public class TextTests
 
     [Fact]
     public void Formats_durations() => Assert.Equal("1:30", Parsing.FormatDuration(TimeSpan.FromMinutes(90)));
-
-    [Fact]
-    public void Parses_lead_times()
-    {
-        Assert.True(Parsing.TryParseLeadTimes(" 5, 15;0 1 5", out var leads, out _));
-        Assert.Equal(new[] { 15, 5, 1, 0 }, leads);
-        Assert.Equal("15, 5, 1, 0", Parsing.FormatLeadTimes(leads));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("abc")]
-    [InlineData("-1")]
-    [InlineData("2000")]
-    public void Rejects_bad_lead_times(string text)
-    {
-        Assert.False(Parsing.TryParseLeadTimes(text, out _, out var error));
-        Assert.False(string.IsNullOrEmpty(error));
-    }
 
     [Theory]
     [InlineData("21:15", 21, 15)]

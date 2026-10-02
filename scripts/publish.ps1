@@ -3,6 +3,9 @@ $ErrorActionPreference = 'Stop'
 $PSNativeCommandUseErrorActionPreference = $true
 Push-Location (Join-Path $PSScriptRoot '..')
 try {
+    if ((git rev-parse --is-shallow-repository) -eq 'true') {
+        throw 'Publishing needs full Git history. Run git fetch --unshallow first.'
+    }
     # 1.0.<number of commits>: rebuilding a commit keeps its version, and each later commit gets a higher one.
     $version = "1.0.$(git rev-list --count HEAD)"
     dotnet test tests/BdoTimers.Core.Tests -c Release

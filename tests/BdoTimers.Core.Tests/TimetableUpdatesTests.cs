@@ -75,18 +75,18 @@ public class TimetableUpdatesTests
         var data = Initial;
         var kept = TimetableUpdates.Apply(data, New, []);
         Assert.Equal(data.Timers, kept.Timers);
-        Assert.Equal(New, kept.AcceptedBossTimetable);
+        Assert.Equal(New, BossRegions.State(kept).AcceptedBossTimetable);
         Assert.False(TimetableUpdates.Review(kept, New).NeedsReview);
     }
 
     [Fact]
     public void Legacy_installations_get_a_baseline_only_when_all_times_match()
     {
-        var legacy = Initial with { AcceptedBossTimetable = null };
+        var legacy = Initial with { BossRegions = [], SeedApplied = true, AcceptedBossTimetable = null };
         var matched = TimetableUpdates.InitializeBaseline(legacy, Old);
-        Assert.Equal(Old, matched.AcceptedBossTimetable);
+        Assert.Equal(Old, BossRegions.State(matched).AcceptedBossTimetable);
         var uncertain = TimetableUpdates.InitializeBaseline(legacy, New);
-        Assert.Null(uncertain.AcceptedBossTimetable);
+        Assert.Null(BossRegions.State(uncertain).AcceptedBossTimetable);
         var review = TimetableUpdates.Review(uncertain, New);
         Assert.All(review.Changes.Where(c => c.Current is not null), c => Assert.True(c.HasCustomTimes));
     }
@@ -114,7 +114,7 @@ public class TimetableUpdatesTests
     {
         var data = Initial;
         var loaded = JsonSerializer.Deserialize<AppData>(JsonSerializer.Serialize(data, JsonDefaults.Options), JsonDefaults.Options)!;
-        Assert.Equal(TimetableUpdates.Revision(Old), TimetableUpdates.Revision(loaded.AcceptedBossTimetable!));
+        Assert.Equal(TimetableUpdates.Revision(Old), TimetableUpdates.Revision(BossRegions.State(loaded).AcceptedBossTimetable!));
         Assert.False(TimetableUpdates.Review(loaded, Old).NeedsReview);
     }
 }

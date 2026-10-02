@@ -1,7 +1,6 @@
 using System.IO;
 using System.Windows;
 using BdoTimers.App.Controls;
-using BdoTimers.App.Overlay;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -19,9 +18,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     readonly IPanelHost _host;
     readonly Guid _id;
     bool _syncingDuration;
-    // A duration typed for a running or paused Farm waits until typing is done: applied per keystroke, a half-typed
+    // An active countdown waits until typing is done: applied per keystroke, a half-typed
     // "2" would move the countdown's end into the past and the scheduler would end it.
-    TimeSpan? _typedFarmDuration;
+    TimeSpan? _typedDuration;
 
     [ObservableProperty] private string _name;
     [ObservableProperty] private bool _nameInvalid;
@@ -31,19 +30,35 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _durationInvalid;
     [ObservableProperty] private FarmGrowthOption _farmGrowth;
     [ObservableProperty] private string? _timeZoneId;
+    [ObservableProperty] private string _eventDateText = "";
+    [ObservableProperty] private string _eventTimeText = "";
+    [ObservableProperty] private bool _eventDateInvalid;
+    [ObservableProperty] private bool _eventTimeInvalid;
+    [ObservableProperty] private string _startDateText = "";
+    [ObservableProperty] private string _endDateText = "";
+    [ObservableProperty] private bool _startDateInvalid;
+    [ObservableProperty] private bool _endDateInvalid;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid))] private string _scheduleError = "";
     [ObservableProperty] private Choice _alertsOn;
     [ObservableProperty] private bool _confirmingDelete;
     [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private bool _horseHotkeyRefused;
     [ObservableProperty] private bool _listeningHorseHotkey;
+    [ObservableProperty] private Hotkey? _controlHotkey;
+    [ObservableProperty] private bool _controlHotkeyRefused;
+    [ObservableProperty] private bool _listeningControlHotkey;
 
     public bool IsCountdown { get; }
     public bool IsFarm { get; }
     public bool IsHorseTemplate { get; }
     public bool IsHorseRun { get; }
+    public bool IsCustomCountdown { get; }
     public bool CanChangePicture { get; }
-    public Hotkey? OverlayAlwaysHotkey { get; }
-    public Hotkey? OverlayShowHotkey { get; }
+    bool HasHotkey => IsHorseTemplate || IsCustomCountdown;
+    HotkeyTarget HotkeyTarget => IsHorseTemplate ? new(HotkeyAction.StartHorseRegistration)
+        : new(HotkeyAction.ControlCountdown, _id);
+    public IReadOnlyList<Hotkey> OtherHotkeys =>
+        HotkeyCatalog.OtherKeys(_services.Timers.Current, _services.Settings.Current.Overlay, HotkeyTarget);
     public IReadOnlyList<FarmGrowthOption> FarmGrowthOptions { get; } =
     [
         new("20 h · Suitable", TimeSpan.FromHours(20)),
@@ -52,7 +67,10 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         new("Custom duration", null),
     ];
     public bool IsStopwatch { get; }
-    public bool IsWeekly => !IsCountdown && !IsStopwatch;
+    public bool IsWeekly { get; }
+    public bool IsOneTime { get; }
+    public bool HasTimeZone => IsWeekly || IsOneTime;
+    public bool ScheduleValid => ScheduleError.Length == 0;
     /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
     public bool HasAlerts => !IsStopwatch;
     public bool CanDelete { get; }
@@ -73,17 +91,21 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _hasPicture = timer.ImageFile is not null;
         _alertsOn = Choice.For(timer.Enabled);
         IsCountdown = timer.Kind == TimerKind.Countdown;
+        IsWeekly = timer.Kind == TimerKind.Scheduled;
+        IsOneTime = timer.Kind == TimerKind.OneTime;
         IsFarm = timer.Preset == Presets.Farm && IsCountdown;
         IsHorseTemplate = timer.Preset == Presets.HorseRegistration;
         IsHorseRun = timer.Preset == Presets.HorseRegistrationRun;
+        IsCustomCountdown = CustomCountdowns.Includes(timer);
         CanChangePicture = timer.Preset != Presets.HorseRegistrationRun;
         _horseHotkey = timer.StartHotkey;
-        OverlayAlwaysHotkey = services.Settings.Current.Overlay.AlwaysShowHotkey;
-        OverlayShowHotkey = services.Settings.Current.Overlay.ShowHotkey;
-        if (IsHorseTemplate)
+        _controlHotkey = timer.ControlHotkey;
+        if (HasHotkey)
         {
-            services.Overlay.Hotkeys.RefusedChanged += LoadHorseHotkeyRefused;
-            LoadHorseHotkeyRefused();
+            services.Overlay.Hotkeys.RefusedChanged += LoadHotkeyRefused;
+            services.Timers.Changed += OnHotkeyConfigChanged;
+            services.Settings.Changed += OnHotkeyConfigChanged;
+            LoadHotkeyRefused();
         }
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
@@ -92,8 +114,16 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         if (timer.Scheduled is { } spec)
         {
             _timeZoneId = TimeZoneInfo.TryConvertIanaIdToWindowsId(spec.TimeZoneId, out var windowsId) ? windowsId : spec.TimeZoneId;
+            _startDateText = spec.StartDate is { } start ? Parsing.FormatDate(start) : "";
+            _endDateText = spec.EndDate is { } end ? Parsing.FormatDate(end) : "";
             Slots = new SlotListViewModel(spec.Slots,
                 slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
+        }
+        if (timer.OneTime is { } oneTime)
+        {
+            _timeZoneId = TimeZoneInfo.TryConvertIanaIdToWindowsId(oneTime.TimeZoneId, out var windowsId) ? windowsId : oneTime.TimeZoneId;
+            _eventDateText = Parsing.FormatDate(oneTime.Date);
+            _eventTimeText = Parsing.FormatTime(oneTime.Time);
         }
         Alerts = new AlertRowsViewModel(services, timer);
         if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
@@ -108,9 +138,11 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     partial void OnDurationTextChanged(string value)
     {
         DurationInvalid = !Parsing.TryParseDuration(value, out var duration);
-        if (DurationInvalid || _syncingDuration) return;
-        if (IsFarm && Timer.Countdown is { Status: not CountdownStatus.Idle })
-            _typedFarmDuration = duration;
+        if (_syncingDuration) return;
+        _typedDuration = null;
+        if (DurationInvalid) return;
+        if (Timer.Countdown is { Status: not CountdownStatus.Idle })
+            _typedDuration = duration;
         else
             Modify(t => t with { Countdown = (t.Countdown ?? new CountdownSpec()) with { Duration = duration } });
         _syncingDuration = true;
@@ -118,11 +150,11 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _syncingDuration = false;
     }
 
-    /// <summary>Applies a duration typed for a running or paused Farm; the panel calls it when typing is done.</summary>
+    /// <summary>Applies an active countdown's duration when typing is done.</summary>
     public void CommitDuration()
     {
-        if (_typedFarmDuration is not { } duration) return;
-        _typedFarmDuration = null;
+        if (_typedDuration is not { } duration) return;
+        _typedDuration = null;
         Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) });
     }
 
@@ -130,9 +162,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         CommitDuration();
         if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
-        if (!IsHorseTemplate) return;
+        if (!HasHotkey) return;
         ListeningHorseHotkey = false;
-        _services.Overlay.Hotkeys.RefusedChanged -= LoadHorseHotkeyRefused;
+        ListeningControlHotkey = false;
+        _services.Overlay.Hotkeys.RefusedChanged -= LoadHotkeyRefused;
+        _services.Timers.Changed -= OnHotkeyConfigChanged;
+        _services.Settings.Changed -= OnHotkeyConfigChanged;
     }
 
     /// <summary>A finished run is removed by the scheduler; close its panel before another edit targets it.</summary>
@@ -141,17 +176,43 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         if (_host.IsOpen(this) && _services.Timers.Current.Timers.All(t => t.Id != _id)) _host.ClosePanel();
     }));
 
-    void LoadHorseHotkeyRefused() =>
-        HorseHotkeyRefused = _services.Overlay.Hotkeys.Refused.Contains(HotkeyAction.StartHorseRegistration);
+    void LoadHotkeyRefused()
+    {
+        var refused = _services.Overlay.Hotkeys.Refused;
+        HorseHotkeyRefused = refused.Contains(new(HotkeyAction.StartHorseRegistration));
+        ControlHotkeyRefused = refused.Contains(new(HotkeyAction.ControlCountdown, _id));
+    }
+
+    void OnHotkeyConfigChanged()
+    {
+        if (Application.Current.Dispatcher.CheckAccess()) OnPropertyChanged(nameof(OtherHotkeys));
+        else Application.Current.Dispatcher.BeginInvoke((Action)(() => OnPropertyChanged(nameof(OtherHotkeys))));
+    }
 
     partial void OnHorseHotkeyChanged(Hotkey? value)
     {
         if (IsHorseTemplate) Modify(t => t with { StartHotkey = value });
     }
 
+    partial void OnControlHotkeyChanged(Hotkey? value)
+    {
+        if (IsCustomCountdown) Modify(t => t with { ControlHotkey = value });
+    }
+
     partial void OnListeningHorseHotkeyChanged(bool value)
     {
         if (!IsHorseTemplate) return;
+        Listen(value);
+    }
+
+    partial void OnListeningControlHotkeyChanged(bool value)
+    {
+        if (!IsCustomCountdown) return;
+        Listen(value);
+    }
+
+    void Listen(bool value)
+    {
         if (value) _services.Overlay.Hotkeys.Suspend();
         else _services.Overlay.Hotkeys.Resume();
     }
@@ -162,7 +223,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     partial void OnFarmGrowthChanged(FarmGrowthOption value)
     {
         if (_syncingDuration || !IsFarm || value.Duration is not { } duration) return;
-        _typedFarmDuration = null;
+        _typedDuration = null;
         Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) });
         _syncingDuration = true;
         DurationText = Parsing.FormatDuration(duration);
@@ -171,7 +232,39 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
 
     partial void OnTimeZoneIdChanged(string? value)
     {
-        if (value is not null) Modify(t => t with { Scheduled = (t.Scheduled ?? new ScheduledSpec()) with { TimeZoneId = value } });
+        if (value is null) return;
+        if (IsOneTime) ApplyEvent();
+        else if (IsWeekly) Modify(t => t with { Scheduled = (t.Scheduled ?? new ScheduledSpec()) with { TimeZoneId = value } });
+    }
+
+    partial void OnEventDateTextChanged(string value) => ApplyEvent();
+    partial void OnEventTimeTextChanged(string value) => ApplyEvent();
+
+    void ApplyEvent()
+    {
+        EventDateInvalid = !Parsing.TryParseDate(EventDateText, out var date);
+        EventTimeInvalid = !Parsing.TryParseTime(EventTimeText, out var time);
+        ScheduleError = EventDateInvalid ? "Enter a date (YYYY-MM-DD)." : EventTimeInvalid ? "Enter a time (HH:mm)." : "";
+        if (!ScheduleValid || TimeZoneId is not { } zone) return;
+        try { _services.Timers.RescheduleEvent(_id, date, time, zone, _services.Clock); }
+        catch (ArgumentOutOfRangeException) { ScheduleError = "Date is out of range."; EventDateInvalid = true; }
+    }
+
+    partial void OnStartDateTextChanged(string value) => ApplyDateRange();
+    partial void OnEndDateTextChanged(string value) => ApplyDateRange();
+
+    void ApplyDateRange()
+    {
+        StartDateInvalid = !Parsing.TryParseDate(StartDateText, out var start) && !string.IsNullOrWhiteSpace(StartDateText);
+        EndDateInvalid = !Parsing.TryParseDate(EndDateText, out var end) && !string.IsNullOrWhiteSpace(EndDateText);
+        ScheduleError = StartDateInvalid || EndDateInvalid ? "Enter a date (YYYY-MM-DD)." : "";
+        if (!ScheduleValid) return;
+        try
+        {
+            _services.Timers.SetWeeklyDateRange(_id, string.IsNullOrWhiteSpace(StartDateText) ? null : start,
+                string.IsNullOrWhiteSpace(EndDateText) ? null : end);
+        }
+        catch (ArgumentException ex) { ScheduleError = ex.Message; EndDateInvalid = true; }
     }
 
     partial void OnAlertsOnChanged(Choice value) => Modify(t => t with { Enabled = value.IsOn });

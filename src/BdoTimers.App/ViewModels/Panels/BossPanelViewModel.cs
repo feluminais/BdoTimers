@@ -32,7 +32,7 @@ public sealed partial class BossPanelViewModel : ObservableObject
         _alertsOn = Choice.For(boss.Enabled);
         Name = boss.Name;
         Images = [services.Art.For(boss)];
-        NextText = NextSpawnText(boss, DateTimeOffset.UtcNow);
+        NextText = NextSpawnText(boss, services.Clock.UtcNow);
         AppliesText = $"Applies to every {boss.Name} spawn";
         Alerts = new AlertRowsViewModel(services, boss);
         var spec = boss.Scheduled ?? new ScheduledSpec();

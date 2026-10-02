@@ -135,6 +135,17 @@
                 <TextBlock Text="Bosses" Style="{StaticResource SectionText}" />
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
+                        <DockPanel>
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Regions}" SelectedItem="{Binding Region}"
+                                                    ValueWidth="160" AutomationProperties.Name="Boss region" />
+                            <TextBlock Text="Region" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding RegionError}" Style="{StaticResource LabelText}"
+                                   Visibility="{Binding RegionError, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource Row}">
+                    <StackPanel>
                         <TextBlock Text="{Binding TimetableVerified}" Style="{StaticResource LabelText}" ToolTip="{Binding TimetableSource}" />
                         <Button Style="{StaticResource LinkButton}" Content="Review timetable changes" HorizontalAlignment="Left" Margin="0,6,0,0"
                                 Command="{Binding ReviewTimetableCommand}"
@@ -169,11 +180,11 @@
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
-                        <Button Style="{StaticResource LinkButton}" Content="Reset all boss alert settings" HorizontalAlignment="Left"
+                        <Button Style="{StaticResource LinkButton}" Content="{Binding ResetAlertLabel}" HorizontalAlignment="Left"
                                 Command="{Binding AskAlertResetCommand}"
                                 Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource InverseBoolToVisibility}}" />
                         <StackPanel Visibility="{Binding ConfirmingAlertReset, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="Reset all boss alert settings?" Style="{StaticResource LabelText}" FontSize="12" />
+                            <TextBlock Text="{Binding ResetAlertConfirmation}" Style="{StaticResource LabelText}" FontSize="12" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                 <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmAlertResetCommand}"
                                         AutomationProperties.Name="Reset alert settings" />
@@ -185,11 +196,11 @@
                 </Border>
                 <Border Style="{StaticResource Row}">
                     <StackPanel>
-                        <Button Style="{StaticResource LinkButton}" Content="Reset spawn times to the EU timetable" HorizontalAlignment="Left"
+                        <Button Style="{StaticResource LinkButton}" Content="{Binding ResetTimetableLabel}" HorizontalAlignment="Left"
                                 Command="{Binding AskResetCommand}"
                                 Visibility="{Binding ConfirmingReset, Converter={StaticResource InverseBoolToVisibility}}" />
                         <StackPanel Visibility="{Binding ConfirmingReset, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="Reset spawn times to the EU timetable?" Style="{StaticResource LabelText}" FontSize="12" />
+                            <TextBlock Text="{Binding ResetTimetableConfirmation}" Style="{StaticResource LabelText}" FontSize="12" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                 <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding ConfirmResetCommand}"
                                         AutomationProperties.Name="Reset spawn times" />
@@ -230,6 +241,15 @@
                         </TextBlock>
                         <TextBlock Text="© 2026 feluminais · Free software under GPL-3.0, with no warranty." Style="{StaticResource LabelText}" Margin="0,2,0,0" />
                         <TextBlock Text="Not affiliated with Pearl Abyss. Game artwork © Pearl Abyss." Style="{StaticResource LabelText}" Margin="0,2,0,6" />
+                        <WrapPanel Margin="0,0,0,6">
+                            <Button Style="{StaticResource LinkButton}" Content="Check for updates" Command="{Binding CheckForUpdatesCommand}" Margin="0,0,14,0" />
+                            <TextBlock Text="{Binding UpdateStatus}" Style="{StaticResource LabelText}" VerticalAlignment="Center" Margin="0,0,8,0"
+                                       AutomationProperties.LiveSetting="Polite" Visibility="{Binding UpdateStatus, Converter={StaticResource NullToCollapsed}}" />
+                            <TextBlock Text="{Binding AvailableVersion}" FontSize="12" VerticalAlignment="Center" Margin="0,0,14,0"
+                                       Visibility="{Binding AvailableVersion, Converter={StaticResource NullToCollapsed}}" />
+                            <Button Style="{StaticResource LinkButton}" Content="View release" Command="{Binding OpenReleaseCommand}"
+                                    Visibility="{Binding AvailableVersion, Converter={StaticResource NullToCollapsed}}" />
+                        </WrapPanel>
                         <StackPanel Orientation="Horizontal">
                             <Button Style="{StaticResource LinkButton}" Content="Source code" Command="{Binding OpenSourceCommand}" />
                             <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
