@@ -15,6 +15,8 @@ public sealed class OverlayController(AppServices services) : IDisposable
     OverlayWindow? _window;
     OverlayPresence _presence = new();
     readonly OverlayPopUpGate _popUps = new();
+    // Runs every second, so a lasting failure is logged once rather than each tick.
+    readonly RepeatingErrorLog _updateErrors = new("Overlay update", services.Clock);
     bool _previewing;
 
     public HotkeyService Hotkeys { get; } = new();
@@ -90,8 +92,12 @@ public sealed class OverlayController(AppServices services) : IDisposable
 
     void Update(DateTimeOffset now)
     {
-        try { Refresh(now); }
-        catch (Exception ex) { Log.Error("Overlay update failed", ex); }
+        try
+        {
+            Refresh(now);
+            _updateErrors.Succeeded();
+        }
+        catch (Exception ex) { _updateErrors.Failed(ex); }
     }
 
     void Refresh(DateTimeOffset now)
