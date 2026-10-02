@@ -190,7 +190,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [RelayCommand]
     void PickStart()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _services.Clock.UtcNow;
         var running = _timer.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } c ? end - c.Duration
             : _timer.Stopwatch is { Status: CountdownStatus.Running } s ? s.StartedAtUtc
             : null;
@@ -232,7 +232,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         if (_following) return;
         _fromPercent = false;
         if (TimeStart() is { } at && _timer.Countdown is { } c)
-            Follow(() => StartPercent = PercentFor(c.Duration, DateTimeOffset.UtcNow - at));
+            Follow(() => StartPercent = PercentFor(c.Duration, _services.Clock.UtcNow - at));
         CheckStart();
     }
 
@@ -267,7 +267,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     {
         StartInvalid = TimeStart() is null;
         var at = PickedStart();
-        StartProblem = !IsFarm && at is { } start && _timer.Countdown is { } c && start + c.Duration <= DateTimeOffset.UtcNow
+        StartProblem = !IsFarm && at is { } start && _timer.Countdown is { } c && start + c.Duration <= _services.Clock.UtcNow
             ? $"Would have ended at {Formats.Time(start + c.Duration)}"
             : "";
         ConfirmStartCommand.NotifyCanExecuteChanged();
@@ -279,12 +279,12 @@ public sealed partial class TimerTileViewModel : ObservableObject
     DateTimeOffset? TimeStart() =>
         int.TryParse(StartHour, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) && hour < 24
         && int.TryParse(StartMinute, NumberStyles.None, CultureInfo.InvariantCulture, out var minute) && minute < 60
-            ? ScheduleMath.MostRecent(new TimeOnly(hour, minute), DateTimeOffset.UtcNow, TimeZoneInfo.Local)
+            ? ScheduleMath.MostRecent(new TimeOnly(hour, minute), _services.Clock.UtcNow, TimeZoneInfo.Local)
             : null;
 
     /// <summary>Taken against the current time, so a pause before pressing Start doesn't shift it.</summary>
     DateTimeOffset? PercentStart() =>
-        _timer.Countdown is { } c ? CountdownOps.StartForProgress(c.Duration, StartPercent, DateTimeOffset.UtcNow) : null;
+        _timer.Countdown is { } c ? CountdownOps.StartForProgress(c.Duration, StartPercent, _services.Clock.UtcNow) : null;
 
     static string Step(string text, int modulo, int delta)
     {
