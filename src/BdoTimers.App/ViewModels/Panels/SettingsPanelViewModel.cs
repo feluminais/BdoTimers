@@ -337,7 +337,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
             CheckStatus.Checking => "Checking",
             CheckStatus.UpToDate => "Up to date",
             CheckStatus.UpdateAvailable => "Update available",
-            CheckStatus.CouldNotCheck => "Couldn’t check",
+            CheckStatus.CouldNotCheck => "Couldn't check",
             _ => null,
         };
         AvailableVersion = result.Release?.Number;
@@ -365,7 +365,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         catch (Exception ex)
         {
             Log.Error("Couldn't open the release page", ex);
-            UpdateStatus = "Couldn’t open release";
+            UpdateStatus = "Couldn't open release";
         }
     }
 

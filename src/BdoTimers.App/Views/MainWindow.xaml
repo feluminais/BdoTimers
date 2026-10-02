@@ -50,8 +50,8 @@
                         <Button Style="{StaticResource LinkButton}" Content="Resume" Margin="10,0,0,0" Command="{Binding ResumeCommand}"
                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                     </StackPanel>
-                    <Button Style="{StaticResource CaptionButton}" Content="&#xE895;" FontSize="15" Foreground="#78C99A"
-                            ToolTip="Update available, click to open GitHub" AutomationProperties.Name="Update available"
+                    <Button Style="{StaticResource CaptionButton}" Content="&#xE895;" FontSize="15" Foreground="{StaticResource UpdateBrush}"
+                            ToolTip="Update available" AutomationProperties.Name="Update available"
                             Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}"
                             Command="{Binding OpenUpdateDetailsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE7F4;" FontSize="13" ToolTip="Overlay"
