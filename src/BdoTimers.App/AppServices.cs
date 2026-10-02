@@ -46,7 +46,7 @@ public sealed class AppServices : IDisposable
     public BossRegion Region => BossRegions.Find(Timers.Current.SelectedBossRegion);
     public BossSeed Seed => _seeds[Timers.Current.SelectedBossRegion];
     readonly IReadOnlyDictionary<string, BossSeed> _seeds;
-    public UiClock UiClock { get; } = new();
+    public UiClock UiClock { get; }
     /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
     public BossBoardCache Boards { get; } = new();
     public IClock Clock { get; } = new SystemClock();
@@ -62,6 +62,7 @@ public sealed class AppServices : IDisposable
     {
         _app = app;
         _dataDir = dataDir;
+        UiClock = new UiClock(Clock);
         Art = new ArtLibrary(Path.Combine(dataDir, "images"));
         Sounds = new UserSounds(Path.Combine(dataDir, "sounds"));
         _sound = new SoundChannel(Sounds);
@@ -220,7 +221,7 @@ public sealed class AppServices : IDisposable
     }
 
     public void PauseAlerts(TimeSpan? duration) =>
-        Settings.Update(s => AlertPause.Pause(s, DateTimeOffset.UtcNow, duration));
+        Settings.Update(s => AlertPause.Pause(s, Clock.UtcNow, duration));
 
     /// <summary>Brings the window up with the Overlay panel open.</summary>
     public void ShowOverlaySettings()
@@ -243,7 +244,7 @@ public sealed class AppServices : IDisposable
     }
 
     public void SendTestAlert() => _alerts.Dispatch(new AlertEvent(
-        [new TimerDef { Name = "Test boss" }], DateTimeOffset.UtcNow.AddMinutes(5), 5, 5));
+        [new TimerDef { Name = "Test boss" }], Clock.UtcNow.AddMinutes(5), 5, 5));
 
     /// <summary>The key that plays for a timer sound key; null means the app-wide alert sound.</summary>
     public string PlayableSound(string? key) => SoundKeys.Playable(key, Settings.Current.AlertSound, Sounds.Exists);
