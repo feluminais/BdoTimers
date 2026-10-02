@@ -77,11 +77,21 @@
     </Style>
 
     <!-- Rows -->
+    <!-- Geometry keeps chevrons centered independently of font bearings and baselines. -->
+    <Style x:Key="SpawnArrow" TargetType="Path">
+        <Setter Property="Width" Value="4" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="Stretch" Value="Fill" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeLineJoin" Value="Round" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0,0,8,2" />
+    </Style>
     <DataTemplate x:Key="PreviousRow" DataType="{x:Type overlay:OverlaySpawn}">
         <DockPanel Style="{StaticResource SampleDim}" Margin="0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12"
                        Foreground="{DynamicResource SubtleBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="&#x2039;" Foreground="{DynamicResource AccentSoftBrush}" FontSize="13" Width="12" VerticalAlignment="Center" />
+            <Path Style="{StaticResource SpawnArrow}" Data="M 4,0 L 0,3 L 4,6" Stroke="{DynamicResource AccentSoftBrush}" />
             <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
         </DockPanel>
     </DataTemplate>
@@ -89,7 +99,7 @@
         <DockPanel Style="{StaticResource SampleDim}" Margin="0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="16"
                        Foreground="{DynamicResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="&#x203A;" Foreground="{DynamicResource AccentBrush}" FontSize="17" Width="12" VerticalAlignment="Center" />
+            <Path Style="{StaticResource SpawnArrow}" Data="M 0,0 L 4,3 L 0,6" Stroke="{DynamicResource AccentBrush}" Height="8" />
             <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="14" />
         </DockPanel>
     </DataTemplate>
@@ -117,7 +127,8 @@
             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,5">
                 <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="15" HorizontalAlignment="Right" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <TextBlock Text="&#x203A;" Foreground="{DynamicResource AccentBrush}" FontSize="18" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <Path Style="{StaticResource SpawnArrow}" Data="M 0,0 L 4,3 L 0,6" Stroke="{DynamicResource AccentBrush}"
+                          Height="8" Margin="0,0,6,2" />
                     <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="17" Foreground="{DynamicResource AccentTextBrush}"
                                VerticalAlignment="Center" />
                 </StackPanel>
@@ -126,7 +137,7 @@
     </DataTemplate>
     <DataTemplate x:Key="BarPrevious" DataType="{x:Type overlay:OverlaySpawn}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
-            <TextBlock Text="&#x2039;" Foreground="{DynamicResource AccentSoftBrush}" FontSize="13" Margin="0,0,4,0" VerticalAlignment="Center" />
+            <Path Style="{StaticResource SpawnArrow}" Data="M 4,0 L 0,3 L 4,6" Stroke="{DynamicResource AccentSoftBrush}" Margin="0,0,4,2" />
             <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
             <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
@@ -134,7 +145,8 @@
     </DataTemplate>
     <DataTemplate x:Key="BarNext" DataType="{x:Type overlay:OverlaySpawn}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
-            <TextBlock Text="&#x203A;" Foreground="{DynamicResource AccentBrush}" FontSize="16" Margin="0,0,4,0" VerticalAlignment="Center" />
+            <Path Style="{StaticResource SpawnArrow}" Data="M 0,0 L 4,3 L 0,6" Stroke="{DynamicResource AccentBrush}"
+                  Height="8" Margin="0,0,4,2" />
             <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="14" />
             <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
