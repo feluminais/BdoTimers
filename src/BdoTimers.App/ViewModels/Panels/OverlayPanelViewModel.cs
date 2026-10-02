@@ -30,6 +30,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
 
     public IReadOnlyList<Choice> SecondsChoices { get; } = new[] { 5, 10, 15, 30, 60 }.Select(s => new Choice($"{s} s", s)).ToList();
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
+    public IReadOnlyList<Choice> GuildBossChoices { get; }
     public IReadOnlyList<Swatch> Swatches { get; }
     public bool HasPicture => Picture is not null;
     public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
@@ -43,6 +44,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     {
         _services = services;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
+        GuildBossChoices = PopUpChoices.For(PopUpChoices.GuildBossMinutes, Current.GuildBosses);
         _colorSave.Tick += (_, _) => SaveCustomColor();
         var o = Current;
         if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) _customColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
@@ -64,6 +66,11 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     {
         get => SecondsChoices.FirstOrDefault(c => (int)c.Value! == Current.ShowSeconds) ?? SecondsChoices[1];
         set => Modify(o => o with { ShowSeconds = (int)value.Value! });
+    }
+    public Choice GuildBosses
+    {
+        get => PopUpChoices.Matching(GuildBossChoices, Current.GuildBosses);
+        set => Modify(o => o with { GuildBosses = PopUpChoices.Apply(o.GuildBosses, value) });
     }
     public Choice Layout
     {

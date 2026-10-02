@@ -39,7 +39,7 @@ internal static class SavedDataValidation
         Require(double.IsFinite(settings.Overlay.Scale) && settings.Overlay.Scale is >= 0.6 and <= 2);
         Require(double.IsFinite(settings.Overlay.BackgroundOpacity) && settings.Overlay.BackgroundOpacity is >= 0 and <= 1);
         Require(double.IsFinite(settings.Overlay.TextOpacity) && settings.Overlay.TextOpacity is >= 0.2 and <= 1);
-        Require(settings.Overlay.BackgroundColor is not null);
+        Require(settings.Overlay.BackgroundColor is not null && settings.Overlay.GuildBosses is not null);
         Require(settings.Overlay.ShowSeconds > 0);
         Require(settings.OverlayLeft is not { } left || double.IsFinite(left));
         Require(settings.OverlayTop is not { } top || double.IsFinite(top));

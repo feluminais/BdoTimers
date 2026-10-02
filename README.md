@@ -5,11 +5,11 @@ Tray app for Black Desert Online (EU and North America) world-boss spawns and yo
 - Bosses screen: previous, next and following spawn at a glance, over a week grid in your local time
 - Timers screen: Farm (22-hour growth estimate that continues through overgrowth to 200%), Fishing (stopwatch) and
   Horse registration (up to ten independent 10-minute waits from the game's registration notice to sale) on top,
-  then your own countdowns, weekly timers and dated one-time events
+  then your own countdowns, weekly timers, guild bosses and dated one-time events
 - To-do screen: daily and weekly checklists with child rows, shared reset times and your own lists
 - Alerts: sound, urgent Windows notification (gets through gaming Do Not Disturb), spoken alert in a natural offline
   voice (Kokoro), an in-game overlay you can pin or call up with a hotkey (clock, bosses, farm, fishing, horse registrations,
-  custom countdowns and upcoming one-time events)
+  custom countdowns and upcoming one-time events) and that pops up before guild bosses
 - Can start with Windows, minimized to the tray (off until you turn it on in Settings)
 - Local backup and restore, and a review of timetable changes included in newer releases
 
@@ -60,6 +60,9 @@ leave timers running, time out after ten seconds, and can be retried manually. D
   an enabled Overlay alert also brings it into pop-ups. It stays visible as Finished after its occurrence and never
   repeats. Edit its date, time or time zone to a future occurrence to use it again, or delete it. Reopening after a
   missed event shows one concise missed-event notice, with no replayed lead alerts or notices on later launches.
+- Timers → New timer → Guild boss: a weekly timer for the times your guild summons its boss. Overlay → Guild bosses
+  (Off, or 5 to 60 min before) pops the overlay up with each guild boss and its time left from that long before.
+  All guild bosses share this setting; each one's Overlay over the game row shows and changes it.
 - Weekly timers have optional Start date and End date in their own time zone; blank means no limit. Both dates are
   inclusive, even when the occurrence falls on a different date in your local time. After the last allowed occurrence,
   the timer shows Expired and stops scheduling. An end before the start is refused. Events and weekly timers use the

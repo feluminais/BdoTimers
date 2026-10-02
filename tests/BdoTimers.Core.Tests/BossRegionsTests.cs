@@ -42,8 +42,8 @@ public class BossRegionsTests
     {
         var data = Both("eu");
         var at = Now.AddHours(2).AddMinutes(-1);
-        Assert.Empty(UpcomingQuery.ForOverlay(data, at));
-        Assert.False(new OverlayPopUpGate().MayBeDue(data, at));
+        Assert.Empty(UpcomingQuery.ForOverlay(data, new OverlaySettings(), at));
+        Assert.False(new OverlayPopUpGate().MayBeDue(data, new OverlaySettings(), at));
         var overlay = OverlayContent.Build(data, new OverlaySettings(), at);
         Assert.Null(overlay.Next);
         Assert.Empty(overlay.PopUps);
@@ -303,9 +303,9 @@ public class BossRegionsTests
         var custom = TestTimers.Countdown(at.AddMinutes(1), 0) with
             { Alerts = new() { Overlay = new() { Enabled = true, ShowMinutesBefore = 5 } } };
         var data = Both() with { BossAlertsAfterUtc = at, Timers = [.. Both().Timers, custom] };
-        Assert.Equal(custom.Id, Assert.Single(UpcomingQuery.ForOverlay(data, at)).Timer.Id);
+        Assert.Equal(custom.Id, Assert.Single(UpcomingQuery.ForOverlay(data, new OverlaySettings(), at)).Timer.Id);
         var bossesOnly = data with { Timers = data.Timers.Where(t => t.IsBuiltIn).ToList() };
-        Assert.False(new OverlayPopUpGate().MayBeDue(bossesOnly, at));
+        Assert.False(new OverlayPopUpGate().MayBeDue(bossesOnly, new OverlaySettings(), at));
         // Pinning the overlay still shows the selected region's next spawn in its board section.
         Assert.Equal(data.Timers[1].Id, Assert.Single(OverlayContent.Build(data, new() { ShowNext = true }, at).Next!.Bosses).Id);
     }
