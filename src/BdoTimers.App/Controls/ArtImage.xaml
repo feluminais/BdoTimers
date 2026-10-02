@@ -11,7 +11,7 @@
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
             <DataTemplate>
-                <controls:FocusImage Picture="{Binding}" />
+                <controls:FocusImage Picture="{Binding}" MaxZoom="{Binding MaxZoom, RelativeSource={RelativeSource AncestorType=controls:ArtImage}}" />
             </DataTemplate>
         </ItemsControl.ItemTemplate>
         <!-- The picture fades into the black to its right. -->

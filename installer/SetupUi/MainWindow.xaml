@@ -71,7 +71,7 @@
             <Grid Grid.Row="1">
                 <!-- Welcome: picture fading into black, name, Next to the install location -->
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Welcome}">
-                    <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <controls:ArtImage Width="380" HorizontalAlignment="Left" MaxZoom="1" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" Margin="0,0,0,24" />
                         <Button Style="{StaticResource OutlineButton}" Content="Next" IsDefault="True" HorizontalAlignment="Left"
@@ -116,7 +116,7 @@
 
                 <!-- Done -->
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Done}">
-                    <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding DoneArt, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <controls:ArtImage Width="380" HorizontalAlignment="Left" MaxZoom="1" Sources="{Binding DoneArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="{Binding DoneTitle}" Style="{StaticResource DisplayText}" FontSize="24" />
                         <TextBlock Text="{Binding DoneText}" TextWrapping="Wrap" Foreground="{StaticResource SubtleBrush}" Margin="0,6,0,20" />
@@ -164,7 +164,7 @@
 
                 <!-- Maintenance: already installed (run again, or Uninstall from Settings > Apps) -->
                 <Grid Visibility="{Binding Page, Converter={StaticResource PageVisible}, ConverterParameter=Maintenance}">
-                    <controls:ArtImage Width="380" HorizontalAlignment="Left" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    <controls:ArtImage Width="380" HorizontalAlignment="Left" MaxZoom="1" Sources="{Binding WelcomeArt, RelativeSource={RelativeSource AncestorType=Window}}" />
                     <StackPanel Width="280" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,32,0">
                         <TextBlock Text="BDO Timers" Style="{StaticResource DisplayText}" FontSize="26" />
                         <StackPanel Margin="0,8,0,22" Visibility="{Binding HasInstalledFolder, Converter={StaticResource BoolToVisibility}}">
