@@ -3,6 +3,7 @@ using System.Text.Json;
 using BdoTimers.Core.Json;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Sounds;
 
 namespace BdoTimers.Core.Storage;
 
@@ -199,7 +200,7 @@ public static class BackupArchive
         {
             // WPF decodes pictures by content; imported files retain their original extension, including none.
             "images" => true,
-            "sounds" => new[] { ".wav", ".mp3" }.Contains(Path.GetExtension(parts[1]), StringComparer.OrdinalIgnoreCase),
+            "sounds" => UserSounds.Extensions.Contains(Path.GetExtension(parts[1]), StringComparer.OrdinalIgnoreCase),
             _ => false,
         });
     }
