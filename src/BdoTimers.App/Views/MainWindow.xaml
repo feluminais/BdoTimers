@@ -73,14 +73,19 @@
 
             <Grid Grid.Row="1" x:Name="ScreenContent" LayoutTransform="{DynamicResource UiScaleTransform}">
               <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-              <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False">
-               <Grid Margin="22,18,22,20" MinWidth="596">
+              <!-- Sized to the viewport, so each screen's own list scrolls under its pinned header;
+                   the whole screen scrolls only when the window is smaller than the minimum size. -->
+              <ScrollViewer x:Name="ScreenScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False">
+               <Grid Width="{Binding ViewportWidth, ElementName=ScreenScroller}" Height="{Binding ViewportHeight, ElementName=ScreenScroller}"
+                     MinWidth="640" MinHeight="300">
+               <Grid Margin="22,18,22,20">
                 <views:BossesView DataContext="{Binding Bosses}"
                                   Visibility="{Binding IsChecked, ElementName=BossesTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:CustomView DataContext="{Binding Custom}"
                                   Visibility="{Binding IsChecked, ElementName=CustomTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:TodoView DataContext="{Binding Todo}"
                                 Visibility="{Binding IsChecked, ElementName=TodoTab, Converter={StaticResource BoolToVisibility}}" />
+               </Grid>
                </Grid>
               </ScrollViewer>
               <views:UndoStrip Grid.Row="1" DataContext="{Binding Undo}" />
@@ -90,15 +95,16 @@
             <!-- Panel layer: dims the whole window and centres one panel; the panel itself can't be moved -->
             <Grid x:Name="PanelLayer" Visibility="Collapsed" Opacity="0" WindowChrome.IsHitTestVisibleInChrome="True">
                 <Border Background="{DynamicResource DimBrush}" MouseLeftButtonDown="Dim_MouseLeftButtonDown" />
-                <Grid x:Name="PanelViewport" Margin="16,24">
+                <!-- A tall panel is held to the viewport, so its own list scrolls between its header and Done;
+                     the layer scrolls only when the viewport is shorter than the minimum height. -->
+                <ScrollViewer x:Name="PanelScroller" Margin="16,24" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                              Focusable="False" LayoutTransform="{DynamicResource UiScaleTransform}">
                 <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
-                        MaxWidth="{Binding ActualWidth, ElementName=PanelViewport}" MaxHeight="{Binding ActualHeight, ElementName=PanelViewport}">
-                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Focusable="False">
-                      <ContentControl x:Name="PanelContent" Focusable="False" LayoutTransform="{DynamicResource UiScaleTransform}" />
-                    </ScrollViewer>
+                        MaxHeight="{Binding ViewportHeight, ElementName=PanelScroller, Converter={StaticResource AtLeast}, ConverterParameter=300}">
+                    <ContentControl x:Name="PanelContent" Focusable="False" />
                 </Border>
-                </Grid>
+                </ScrollViewer>
             </Grid>
         </Grid>
     </Border>
