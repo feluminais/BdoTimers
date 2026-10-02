@@ -63,6 +63,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     ];
     public bool IsStopwatch { get; }
     public bool IsWeekly { get; }
+    public string WeeklyHeading => Timer.Preset == Presets.GuildBosses ? "Weekly time" : "Weekly times";
+    public bool HasWeeklyDateRange => IsWeekly && Timer.Preset is not (Presets.GuildBosses or Presets.GuildWar);
     public bool IsOneTime { get; }
     public bool HasTimeZone => IsWeekly || IsOneTime;
     public bool ScheduleValid => ScheduleError.Length == 0;
@@ -111,7 +113,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
             _startDateText = spec.StartDate is { } start ? Parsing.FormatDate(start) : "";
             _endDateText = spec.EndDate is { } end ? Parsing.FormatDate(end) : "";
             Slots = new SlotListViewModel(spec.Slots,
-                slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }));
+                slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
+                Presets.MinimumSlots(timer.Preset), Presets.MaximumSlots(timer.Preset));
         }
         if (timer.OneTime is { } oneTime)
         {

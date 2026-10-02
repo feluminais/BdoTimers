@@ -21,6 +21,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <Button Style="{StaticResource LinkButton}" Content="+ Add time" HorizontalAlignment="Left" Margin="0,4,0,0" Command="{Binding AddTimeCommand}" />
+        <Button Style="{StaticResource LinkButton}" Content="+ Add time" HorizontalAlignment="Left" Margin="0,4,0,0"
+                Visibility="{Binding MayAddTime, Converter={StaticResource BoolToVisibility}}" Command="{Binding AddTimeCommand}" />
     </StackPanel>
 </UserControl>
