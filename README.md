@@ -86,7 +86,7 @@ leave timers running, time out after ten seconds, and can be retried manually. D
   counts any others that are running.
 
 ## Develop
-See CLAUDE.md for commands. `scripts/get-voice.ps1` fetches the voice model (132 MB) that the setup ships.
+See AGENTS.md for commands. `scripts/get-voice.ps1` fetches the voice model (132 MB) that the setup ships.
 Manual test checklist: [docs/manual-tests.md](docs/manual-tests.md).
 
 ## License
