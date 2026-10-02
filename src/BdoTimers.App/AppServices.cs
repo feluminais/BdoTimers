@@ -196,14 +196,33 @@ public sealed class AppServices : IDisposable
 
     public void ShowMainWindow()
     {
+        var main = EnsureMainWindow();
+        main.Show();
+        if (main.WindowState == WindowState.Minimized) main.WindowState = WindowState.Normal;
+        main.Activate();
+    }
+
+#if DEBUG
+    /// <summary>Shows the window unfocused and keeps it behind every other one, for background inspection and
+    /// screenshot a dev build without covering the game.</summary>
+    public void ShowMainWindowBehind()
+    {
+        var main = EnsureMainWindow();
+        var hwnd = new System.Windows.Interop.WindowInteropHelper(main).EnsureHandle();
+        System.Windows.Interop.HwndSource.FromHwnd(hwnd).AddHook(NativeMethods.KeepAtBottom);
+        main.ShowActivated = false;
+        main.Show();
+    }
+#endif
+
+    MainWindow EnsureMainWindow()
+    {
         if (_main is null)
         {
             _mainViewModel = new MainViewModel(this);
             _main = new MainWindow(_mainViewModel, this);
         }
-        _main.Show();
-        if (_main.WindowState == WindowState.Minimized) _main.WindowState = WindowState.Normal;
-        _main.Activate();
+        return _main;
     }
 
     public void PauseAlerts(TimeSpan? duration) =>
