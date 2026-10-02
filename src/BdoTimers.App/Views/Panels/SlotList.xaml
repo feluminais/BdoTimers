@@ -14,7 +14,7 @@
                                     Command="{Binding DataContext.RemoveCommand, ElementName=Root}" CommandParameter="{Binding}" />
                             <controls:CycleSelector ItemsSource="{Binding Days}" SelectedItem="{Binding Day}" ValueWidth="96" />
                             <TextBox Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}" Width="64" Margin="18,0,0,0"
-                                     HorizontalAlignment="Left" VerticalAlignment="Center" controls:Ui.HasError="{Binding Invalid}"
+                                     HorizontalAlignment="Left" VerticalAlignment="Center" controls:Ui.HasError="{Binding Invalid}" controls:Ui.TimeEntry="True"
                                      ToolTip="24-hour time, e.g. 21:15" />
                         </DockPanel>
                     </Border>

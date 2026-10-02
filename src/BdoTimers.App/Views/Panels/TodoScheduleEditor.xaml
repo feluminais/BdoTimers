@@ -8,7 +8,7 @@
                                 AutomationProperties.Name="Reset day" />
         <TextBox Text="{Binding Time, UpdateSourceTrigger=PropertyChanged}" Width="62" MaxLength="5"
                  Margin="8,0,0,0" HorizontalContentAlignment="Center" AutomationProperties.Name="Reset time"
-                 controls:Ui.HasError="{Binding InvalidTime}" />
+                 controls:Ui.HasError="{Binding InvalidTime}" controls:Ui.TimeEntry="True" />
         <controls:CycleSelector ItemsSource="{Binding Zones}" SelectedItem="{Binding Zone}" ValueWidth="72"
                                 Margin="8,0,0,0" AutomationProperties.Name="Reset time zone" />
     </StackPanel>

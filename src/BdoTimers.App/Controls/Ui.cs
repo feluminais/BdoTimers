@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using BdoTimers.Core.Text;
 
 namespace BdoTimers.App.Controls;
 
@@ -14,6 +15,33 @@ public static class Ui
 
     public static bool GetHasError(DependencyObject d) => (bool)d.GetValue(HasErrorProperty);
     public static void SetHasError(DependencyObject d, bool value) => d.SetValue(HasErrorProperty, value);
+
+    /// <summary>On a 24-hour time field, puts in the colon as the digits are typed, so "2200" reads "22:00".</summary>
+    public static readonly DependencyProperty TimeEntryProperty = DependencyProperty.RegisterAttached(
+        "TimeEntry", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(false, OnTimeEntryChanged));
+
+    public static bool GetTimeEntry(DependencyObject d) => (bool)d.GetValue(TimeEntryProperty);
+    public static void SetTimeEntry(DependencyObject d, bool value) => d.SetValue(TimeEntryProperty, value);
+
+    static void OnTimeEntryChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not TextBox box) return;
+        if ((bool)e.NewValue) box.TextChanged += AddTimeColon;
+        else box.TextChanged -= AddTimeColon;
+    }
+
+    static void AddTimeColon(object sender, TextChangedEventArgs e)
+    {
+        var box = (TextBox)sender;
+        var text = Parsing.AddTimeColon(box.Text);
+        if (text == box.Text) return;
+        // The caret keeps its place among the digits; one just past the hour stays before the colon, so a backspace
+        // over the colon steps across it.
+        var caret = box.CaretIndex;
+        var colon = text.IndexOf(':');
+        box.Text = text;
+        box.CaretIndex = caret <= colon ? caret : caret + 1;
+    }
 
     /// <summary>
     /// On a slider that moves its thumb to a press on the track (<see cref="Slider.IsMoveToPointEnabled"/>), hands the
