@@ -28,7 +28,7 @@ public sealed class AppServices : IDisposable
     readonly ToastChannel _toast;
     readonly SoundChannel _sound;
     readonly AlertDispatcher _alerts;
-    readonly BossSeed _seed;
+    readonly IReadOnlyDictionary<string, BossSeed> _seeds;
     readonly string _dataDir;
     MainWindow? _main;
     MainViewModel? _mainViewModel;
@@ -45,7 +45,6 @@ public sealed class AppServices : IDisposable
     public PersistentState<AppSettings> Settings { get; }
     public BossRegion Region => BossRegions.Find(Timers.Current.SelectedBossRegion);
     public BossSeed Seed => _seeds[Timers.Current.SelectedBossRegion];
-    readonly IReadOnlyDictionary<string, BossSeed> _seeds;
     public UiClock UiClock { get; }
     /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
     public BossBoardCache Boards { get; } = new();
@@ -66,9 +65,9 @@ public sealed class AppServices : IDisposable
         Art = new ArtLibrary(Path.Combine(dataDir, "images"));
         Sounds = new UserSounds(Path.Combine(dataDir, "sounds"));
         _sound = new SoundChannel(Sounds);
-        _seed = SeedService.LoadEmbedded();
+        _seeds = BossRegions.All.ToDictionary(r => r.Id, r => SeedService.LoadEmbedded(r.Id));
         var settingsFile = new JsonFileStore<AppSettings>(Path.Combine(dataDir, "settings.json"), () => new AppSettings());
-        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => SeedService.NewData(_seed));
+        var timersFile = new JsonFileStore<AppData>(Path.Combine(dataDir, "timers.json"), () => SeedService.NewData(_seeds[BossRegions.Europe]));
         var settings = settingsFile.Load();
         var timers = timersFile.Load();
         if (!File.Exists(timersFile.FilePath)) timersFile.Save(timers.Value);
@@ -88,7 +87,6 @@ public sealed class AppServices : IDisposable
             catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); }
         };
         Timers = new TimerStore(timersFile, timers.Value);
-        _seeds = BossRegions.All.ToDictionary(r => r.Id, r => SeedService.LoadEmbedded(r.Id));
         Timers.Update(d =>
         {
             var migrated = DataMigrations.Apply(d, Settings.Current);
