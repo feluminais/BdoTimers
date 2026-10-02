@@ -1,3 +1,5 @@
+using BdoTimers.Core.Model;
+using BdoTimers.Core.Storage;
 using BdoTimers.SetupUi;
 
 namespace BdoTimers.Core.Tests;
@@ -24,5 +26,26 @@ public class PersonalDataCleanupTests
         Assert.True(File.Exists(temp.File("Data.before-restore-my-files/file.txt")));
         Assert.True(File.Exists(temp.File(".restore-my-files/file.txt")));
         Assert.True(File.Exists(temp.File("Other/file.txt")));
+    }
+
+    [Fact]
+    public void Explicit_deletion_removes_the_folders_backup_restore_creates()
+    {
+        using var temp = new TempDir();
+        var app = Directory.CreateDirectory(temp.File("BdoTimers")).FullName;
+        var data = Directory.CreateDirectory(Path.Combine(app, "Data")).FullName;
+        var archive = temp.File("backup.zip");
+        var clock = new FakeClock(new DateTimeOffset(2026, 10, 2, 12, 0, 0, TimeSpan.Zero));
+        BackupArchive.Export(data, archive,
+            new BackupSnapshot(new AppSettings(), new AppData { DataVersion = DataMigrations.Current }, new TodoData()),
+            clock, "1.0.0");
+        var previous = BackupArchive.ApplyPrepared(BackupArchive.Prepare(archive, app).Directory, data, clock);
+        var pending = BackupArchive.Prepare(archive, app).Directory;
+
+        PersonalDataCleanup.Delete(app);
+
+        Assert.False(Directory.Exists(data));
+        Assert.False(Directory.Exists(previous));
+        Assert.False(Directory.Exists(pending));
     }
 }
