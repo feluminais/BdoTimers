@@ -2,7 +2,7 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:BdoTimers.App.Controls"
                     xmlns:overlay="clr-namespace:BdoTimers.App.Overlay">
-    <!-- The overlay's List, Card and Bar layouts (spec: docs/superpowers/specs/2026-09-28-overlay-design.md) -->
+    <!-- The overlay's List, Card and Bar layouts (spec: docs/design/2026-09-28-overlay-design.md) -->
 
     <Style x:Key="SampleDim" TargetType="FrameworkElement">
         <Style.Triggers>

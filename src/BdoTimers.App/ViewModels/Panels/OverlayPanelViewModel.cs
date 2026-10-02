@@ -9,7 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels.Panels;
 
 /// <summary>
-/// The Overlay panel (spec: docs/superpowers/specs/2026-09-28-overlay-design.md). While it's open the overlay is a
+/// The Overlay panel (spec: docs/design/2026-09-28-overlay-design.md). While it's open the overlay is a
 /// draggable preview, and every change applies at once.
 /// </summary>
 public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel

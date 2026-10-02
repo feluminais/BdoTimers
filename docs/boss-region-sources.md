@@ -66,7 +66,7 @@ failed-save atomicity and backup round trips. Pacific seed conversions cover Mar
 EU has already changed. Fake-clock scheduler tests exercise edited spawn times in both regions' spring gaps and autumn
 folds, including single firing in a repeated hour. The README's manual checklist covers UI, audio and restore behavior.
 
-Implementation details and extension points are in [the region design](superpowers/specs/2026-10-02-boss-regions-design.md).
+Implementation details and extension points are in [the region design](design/2026-10-02-boss-regions-design.md).
 
 Validation on **2026-10-02**: `dotnet test tests/BdoTimers.Core.Tests` passed **430 tests**; `dotnet build
 src/BdoTimers.App` succeeded with no errors. Both reported NU1900 because the environment could not reach NuGet's

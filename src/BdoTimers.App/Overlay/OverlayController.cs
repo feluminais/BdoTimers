@@ -8,7 +8,7 @@ namespace BdoTimers.App.Overlay;
 
 /// <summary>
 /// Shows the overlay while it's pinned, summoned by hotkey, due for a pop-up or previewed in the Overlay panel
-/// (spec: docs/superpowers/specs/2026-09-28-overlay-design.md). UI thread only.
+/// (spec: docs/design/2026-09-28-overlay-design.md). UI thread only.
 /// </summary>
 public sealed class OverlayController(AppServices services) : IDisposable
 {
