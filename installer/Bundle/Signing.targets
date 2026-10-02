@@ -1,0 +1,9 @@
+<Project>
+  <!-- WiX detaches and reattaches the engine around these targets, then signs the final bundle. -->
+  <Target Name="SignBundleEngine">
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\sign.ps1&quot; -FilePath &quot;%(SignBundleEngine.FullPath)&quot; -CertificateThumbprint &quot;$(CertificateThumbprint)&quot;" />
+  </Target>
+  <Target Name="SignBundle">
+    <Exec Command="pwsh -NoProfile -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\sign.ps1&quot; -FilePath &quot;%(SignBundle.FullPath)&quot; -CertificateThumbprint &quot;$(CertificateThumbprint)&quot;" />
+  </Target>
+</Project>

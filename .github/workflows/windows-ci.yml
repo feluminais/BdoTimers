@@ -1,0 +1,30 @@
+name: Windows verification
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Core tests
+        run: dotnet test tests/BdoTimers.Core.Tests --configuration Release --logger "trx;LogFileName=core.trx" --results-directory TestResults
+      - name: Build WPF app
+        run: dotnet build src/BdoTimers.App --configuration Release
+      - name: WPF UI smoke tests
+        run: pwsh scripts/test-windows.ps1 -Configuration Release
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-test-results
+          path: TestResults/*.trx
