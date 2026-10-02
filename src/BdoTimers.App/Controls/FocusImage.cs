@@ -19,12 +19,15 @@ public sealed class ArtPicture(ImageSource source, Point? focus = null)
 /// </summary>
 public sealed class FocusImage : FrameworkElement
 {
-    const double MaxZoom = 2.5;
     static readonly Point Target = new(0.38, 0.45);
 
     public static readonly DependencyProperty PictureProperty = DependencyProperty.Register(
         nameof(Picture), typeof(ArtPicture), typeof(FocusImage),
         new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty MaxZoomProperty = DependencyProperty.Register(
+        nameof(MaxZoom), typeof(double), typeof(FocusImage),
+        new FrameworkPropertyMetadata(2.5, FrameworkPropertyMetadataOptions.AffectsRender));
 
     public FocusImage()
     {
@@ -38,21 +41,28 @@ public sealed class FocusImage : FrameworkElement
         set => SetValue(PictureProperty, value);
     }
 
+    /// <summary>How far past filling the box the picture may be scaled; 1 never zooms in.</summary>
+    public double MaxZoom
+    {
+        get => (double)GetValue(MaxZoomProperty);
+        set => SetValue(MaxZoomProperty, value);
+    }
+
     protected override void OnRender(DrawingContext dc)
     {
         if (Picture?.Source is not { Width: > 0, Height: > 0 } source || ActualWidth <= 0 || ActualHeight <= 0) return;
-        dc.DrawImage(source, Place(new Size(source.Width, source.Height), new Size(ActualWidth, ActualHeight), Picture.Focus));
+        dc.DrawImage(source, Place(new Size(source.Width, source.Height), new Size(ActualWidth, ActualHeight), Picture.Focus, MaxZoom));
     }
 
     /// <summary>Where to draw a picture of <paramref name="image"/> size so it covers <paramref name="box"/>.</summary>
-    static Rect Place(Size image, Size box, Point? focus)
+    static Rect Place(Size image, Size box, Point? focus, double maxZoom)
     {
         var f = focus ?? new Point(0.5, 0.5);
         var t = focus is null ? new Point(0.5, 0.5) : Target;
         var fill = Math.Max(box.Width / image.Width, box.Height / image.Height);
         var scale = Math.Max(Needed(t.X * box.Width, (1 - t.X) * box.Width, f.X, image.Width),
                              Needed(t.Y * box.Height, (1 - t.Y) * box.Height, f.Y, image.Height));
-        scale = Math.Min(Math.Max(scale, fill), fill * MaxZoom);
+        scale = Math.Min(Math.Max(scale, fill), fill * Math.Max(1, maxZoom));
         var width = image.Width * scale;
         var height = image.Height * scale;
         // Never show an edge: the picture always covers the whole box.
