@@ -109,6 +109,20 @@ public sealed class TimerStoreTests : IDisposable
     }
 
     [Fact]
+    public void Modify_that_changes_nothing_does_not_save()
+    {
+        var timer = Countdown();
+        var store = new TimerStore(_file, new AppData { Timers = [timer] });
+        var raised = 0;
+        store.Changed += () => raised++;
+
+        store.Modify(timer.Id, t => t);
+
+        Assert.Equal(0, raised);
+        Assert.False(File.Exists(_file.FilePath));
+    }
+
+    [Fact]
     public void Failed_save_leaves_state_unchanged_and_throws()
     {
         var raised = 0;
