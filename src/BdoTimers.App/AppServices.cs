@@ -136,6 +136,8 @@ public sealed class AppServices : IDisposable
             }
             catch (StateSaveException ex) { todoResetErrors.Failed(ex); }
         };
+        // .NET caches the local time zone; without this a zone change would show old local times until a restart.
+        SystemEvents.TimeChanged += OnTimeChanged;
         _loop.Start();
         UiClock.Start();
         Overlay.Start();
@@ -160,6 +162,8 @@ public sealed class AppServices : IDisposable
         _ = Task.Run(CheckForUpdatesOnStartup);
 #endif
     }
+
+    static void OnTimeChanged(object? sender, EventArgs e) => TimeZoneInfo.ClearCachedData();
 
     void NotifyTimetableReview()
     {
@@ -380,6 +384,7 @@ public sealed class AppServices : IDisposable
 
     public void Dispose()
     {
+        SystemEvents.TimeChanged -= OnTimeChanged;
         _mainViewModel?.Dispose();
         _updateShutdown.Cancel();
         _updateHttp.Dispose();
