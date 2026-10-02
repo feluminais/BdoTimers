@@ -1,6 +1,6 @@
-using System.IO;
 using System.Windows;
 using BdoTimers.App.Controls;
+using BdoTimers.App.Overlay;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -8,7 +8,6 @@ using BdoTimers.Core.Seed;
 using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Microsoft.Win32;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
@@ -40,13 +39,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _endDateInvalid;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid))] private string _scheduleError = "";
     [ObservableProperty] private Choice _alertsOn;
-    [ObservableProperty] private bool _confirmingDelete;
     [ObservableProperty] private Hotkey? _horseHotkey;
-    [ObservableProperty] private bool _horseHotkeyRefused;
-    [ObservableProperty] private bool _listeningHorseHotkey;
     [ObservableProperty] private Hotkey? _controlHotkey;
-    [ObservableProperty] private bool _controlHotkeyRefused;
-    [ObservableProperty] private bool _listeningControlHotkey;
 
     public bool IsCountdown { get; }
     public bool IsFarm { get; }
@@ -55,7 +49,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public bool IsCustomCountdown { get; }
     public bool CanChangePicture { get; }
     bool HasHotkey => IsHorseTemplate || IsCustomCountdown;
-    HotkeyTarget HotkeyTarget => IsHorseTemplate ? new(HotkeyAction.StartHorseRegistration)
+    public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
+    public HotkeyTarget HotkeyTarget => IsHorseTemplate ? new(HotkeyAction.StartHorseRegistration)
         : new(HotkeyAction.ControlCountdown, _id);
     public IReadOnlyList<Hotkey> OtherHotkeys =>
         HotkeyCatalog.OtherKeys(_services.Timers.Current, _services.Settings.Current.Overlay, HotkeyTarget);
@@ -74,7 +69,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
     public bool HasAlerts => !IsStopwatch;
     public bool CanDelete { get; }
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
+    public Confirmation Delete { get; }
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
     public SlotListViewModel? Slots { get; }
@@ -102,13 +97,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _controlHotkey = timer.ControlHotkey;
         if (HasHotkey)
         {
-            services.Overlay.Hotkeys.RefusedChanged += LoadHotkeyRefused;
             services.Timers.Changed += OnHotkeyConfigChanged;
             services.Settings.Changed += OnHotkeyConfigChanged;
-            LoadHotkeyRefused();
         }
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
+        Delete = new Confirmation(DeleteTimer, hideAfter: false);
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
         _farmGrowth = GrowthOption(timer.Countdown?.Duration);
         if (timer.Scheduled is { } spec)
@@ -163,9 +157,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         CommitDuration();
         if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
         if (!HasHotkey) return;
-        ListeningHorseHotkey = false;
-        ListeningControlHotkey = false;
-        _services.Overlay.Hotkeys.RefusedChanged -= LoadHotkeyRefused;
         _services.Timers.Changed -= OnHotkeyConfigChanged;
         _services.Settings.Changed -= OnHotkeyConfigChanged;
     }
@@ -175,13 +166,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         if (_host.IsOpen(this) && _services.Timers.Current.Timers.All(t => t.Id != _id)) _host.ClosePanel();
     }));
-
-    void LoadHotkeyRefused()
-    {
-        var refused = _services.Overlay.Hotkeys.Refused;
-        HorseHotkeyRefused = refused.Contains(new(HotkeyAction.StartHorseRegistration));
-        ControlHotkeyRefused = refused.Contains(new(HotkeyAction.ControlCountdown, _id));
-    }
 
     void OnHotkeyConfigChanged()
     {
@@ -197,24 +181,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     partial void OnControlHotkeyChanged(Hotkey? value)
     {
         if (IsCustomCountdown) Modify(t => t with { ControlHotkey = value });
-    }
-
-    partial void OnListeningHorseHotkeyChanged(bool value)
-    {
-        if (!IsHorseTemplate) return;
-        Listen(value);
-    }
-
-    partial void OnListeningControlHotkeyChanged(bool value)
-    {
-        if (!IsCustomCountdown) return;
-        Listen(value);
-    }
-
-    void Listen(bool value)
-    {
-        if (value) _services.Overlay.Hotkeys.Suspend();
-        else _services.Overlay.Hotkeys.Resume();
     }
 
     FarmGrowthOption GrowthOption(TimeSpan? duration) =>
@@ -272,16 +238,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void ChoosePicture()
     {
-        var dialog = new OpenFileDialog { Filter = "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
-        if (dialog.ShowDialog() != true) return;
-        string file;
-        try { file = _services.Art.Import(dialog.FileName); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            Log.Error($"Couldn't import picture {dialog.FileName}", ex);
-            return;
-        }
-        ReplacePicture(file);
+        if (_services.ChoosePicture() is { } file) ReplacePicture(file);
     }
 
     [RelayCommand]
@@ -296,14 +253,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         HasPicture = file is not null;
     }
 
-    [RelayCommand]
-    void AskDelete() => ConfirmingDelete = true;
-
-    [RelayCommand]
-    void CancelDelete() => ConfirmingDelete = false;
-
-    [RelayCommand]
-    void ConfirmDelete()
+    void DeleteTimer()
     {
         var image = Timer.ImageFile;
         _services.Timers.Delete(_id);

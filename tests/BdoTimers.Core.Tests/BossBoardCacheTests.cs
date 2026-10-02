@@ -132,7 +132,7 @@ public class BossBoardCacheTests
     {
         var data = new AppData { Timers = [Nouver, Kzarka] };
         var cache = new BossBoardCache();
-        var berlin = TimeZones.Find("Europe/Berlin");
+        var berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
 
         var content = OverlayContent.Build(data, new OverlaySettings(), TuesdayNoonBerlin, cache);
         var grid = WeekGrid.Build(data, TuesdayNoonBerlin, berlin, cache);

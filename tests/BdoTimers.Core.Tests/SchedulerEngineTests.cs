@@ -3,6 +3,7 @@ using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
@@ -10,8 +11,6 @@ namespace BdoTimers.Core.Tests;
 [Collection(nameof(Log))]
 public class SchedulerEngineTests : IDisposable
 {
-    static readonly DateTimeOffset T0 = new(2026, 9, 22, 12, 0, 0, TimeSpan.Zero);
-
     sealed class RecordingSink : IAlertSink
     {
         public List<AlertEvent> Alerts { get; } = [];
@@ -48,7 +47,7 @@ public class SchedulerEngineTests : IDisposable
             Alerts = new AlertConfig { LeadTimesMinutes = [5, 0] },
         };
         _timers.Upsert(timer);
-        _timers.StartCountdown(timer.Id, T0);
+        _timers.Start(timer.Id, T0);
         return timer;
     }
 
@@ -97,7 +96,7 @@ public class SchedulerEngineTests : IDisposable
             Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(10) },
         };
         _timers.Upsert(timer);
-        _timers.StartCountdown(timer.Id, T0);
+        _timers.Start(timer.Id, T0);
 
         TickAt(T0.AddMinutes(5));
         TickAt(T0.AddMinutes(8));
@@ -265,7 +264,7 @@ public class SchedulerEngineTests : IDisposable
             Alerts = new AlertConfig { LeadTimesMinutes = [0] },
         };
         _timers.Upsert(farm);
-        _timers.StartCountdown(farm.Id, T0);
+        _timers.Start(farm.Id, T0);
 
         TickAt(T0.AddMinutes(10));
         TickAt(T0.AddMinutes(12));

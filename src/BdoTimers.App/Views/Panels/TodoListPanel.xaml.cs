@@ -5,8 +5,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Media.Media3D;
 using System.Windows.Threading;
+using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels.Panels;
 
 namespace BdoTimers.App.Views.Panels;
@@ -17,16 +17,14 @@ public partial class TodoListPanel : UserControl
     readonly DispatcherTimer _holdTimer = new() { Interval = TimeSpan.FromMilliseconds(200) };
     readonly DispatcherTimer _scrollTimer = new() { Interval = TimeSpan.FromMilliseconds(30) };
     Grid? _pressedRow;
-    Guid? _pressedId;
     Point _pressedAt;
     Point _grabAt;
     bool _dragArmed;
-    Guid? _activeDrag;
-    Guid? _dropTarget;
+    /// <summary>The row being dragged; set for as long as a drag lasts.</summary>
     Grid? _dragRow;
+    Guid? _dropTarget;
     Point _dragPointer;
     DragPreviewAdorner? _preview;
-    AdornerLayer? _adornerLayer;
 
     public TodoListPanel()
     {
@@ -78,33 +76,22 @@ public partial class TodoListPanel : UserControl
 
     void FocusRow(Guid id) => Dispatcher.BeginInvoke(() =>
     {
-        var box = FindRowBox(RowsControl, id);
+        var box = VisualTree.FindDescendant<TextBox>(RowsControl, b => b.Tag is Guid tag && tag == id);
         if (box is null) return;
         box.Focus();
         box.CaretIndex = box.Text.Length;
     }, DispatcherPriority.Loaded);
 
-    static TextBox? FindRowBox(DependencyObject root, Guid id)
-    {
-        if (root is TextBox { Tag: Guid tag } box && tag == id) return box;
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
-        {
-            var found = FindRowBox(VisualTreeHelper.GetChild(root, i), id);
-            if (found is not null) return found;
-        }
-        return null;
-    }
-
     void Row_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        if (e.ChangedButton != MouseButton.Left || sender is not Grid { Tag: Guid id } row ||
-            HasAncestor<ButtonBase>(e.OriginalSource as DependencyObject, row)) return;
+        var source = e.OriginalSource as DependencyObject;
+        if (e.ChangedButton != MouseButton.Left || sender is not Grid { Tag: Guid } row ||
+            VisualTree.FindAncestor<ButtonBase>(source, row) is not null) return;
         ClearPress();
         _pressedRow = row;
-        _pressedId = id;
         _pressedAt = e.GetPosition(this);
         _grabAt = e.GetPosition(row);
-        _dragArmed = !HasAncestor<TextBox>(e.OriginalSource as DependencyObject, row);
+        _dragArmed = VisualTree.FindAncestor<TextBox>(source, row) is null;
         if (!_dragArmed) _holdTimer.Start();
     }
 
@@ -123,7 +110,7 @@ public partial class TodoListPanel : UserControl
 
     void Panel_PreviewMouseMove(object sender, MouseEventArgs e)
     {
-        if (_activeDrag is not null)
+        if (_dragRow is not null)
         {
             if (e.LeftButton != MouseButtonState.Pressed) EndDrag();
             else
@@ -134,7 +121,7 @@ public partial class TodoListPanel : UserControl
             e.Handled = true;
             return;
         }
-        if (_pressedRow is not { } row || _pressedId is not { } id) return;
+        if (_pressedRow is not { Tag: Guid } row) return;
         if (e.LeftButton != MouseButtonState.Pressed)
         {
             ClearPress();
@@ -150,13 +137,13 @@ public partial class TodoListPanel : UserControl
         }
         var grab = _grabAt;
         ClearPress();
-        BeginDrag(row, id, grab, point);
+        BeginDrag(row, grab, point);
         e.Handled = true;
     }
 
     void Panel_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (_activeDrag is not { } source)
+        if (_dragRow is not { } row)
         {
             ClearPress();
             return;
@@ -166,7 +153,7 @@ public partial class TodoListPanel : UserControl
         UpdateDropTarget();
         var target = _dropTarget;
         EndDrag();
-        if (target is { } id) _model?.MoveTo(source, id);
+        if (row.Tag is Guid source && target is { } id) _model?.MoveTo(source, id);
         e.Handled = true;
     }
 
@@ -175,26 +162,23 @@ public partial class TodoListPanel : UserControl
         _holdTimer.Stop();
         if (_pressedRow is not null) _pressedRow.Background = Brushes.Transparent;
         _pressedRow = null;
-        _pressedId = null;
         _dragArmed = false;
-        if (_activeDrag is null) Mouse.OverrideCursor = null;
+        if (_dragRow is null) Mouse.OverrideCursor = null;
     }
 
-    void BeginDrag(Grid row, Guid id, Point grab, Point pointer)
+    void BeginDrag(Grid row, Point grab, Point pointer)
     {
         var image = new RenderTargetBitmap(Math.Max(1, (int)Math.Ceiling(row.ActualWidth)),
             Math.Max(1, (int)Math.Ceiling(row.ActualHeight)), 96, 96, PixelFormats.Pbgra32);
         image.Render(row);
         image.Freeze();
-        _activeDrag = id;
         _dragRow = row;
         _dragPointer = pointer;
-        _adornerLayer = AdornerLayer.GetAdornerLayer(this);
-        if (_adornerLayer is not null)
+        if (AdornerLayer.GetAdornerLayer(this) is { } layer)
         {
             _preview = new DragPreviewAdorner(this, image, grab,
                 (Brush)FindResource("PanelBrush"), (Brush)FindResource("AccentBrush"));
-            _adornerLayer.Add(_preview);
+            layer.Add(_preview);
         }
         row.Opacity = 0.25;
         if (!CaptureMouse())
@@ -209,15 +193,14 @@ public partial class TodoListPanel : UserControl
 
     void EndDrag()
     {
-        if (_activeDrag is null) return;
-        _activeDrag = null;
+        if (_dragRow is null) return;
+        _dragRow.Opacity = 1;
+        _dragRow = null;
         _dropTarget = null;
         _scrollTimer.Stop();
-        if (_dragRow is not null) _dragRow.Opacity = 1;
-        _dragRow = null;
-        if (_adornerLayer is not null && _preview is not null) _adornerLayer.Remove(_preview);
+        // Through the adorner's own parent: once the panel has left the window, its layer can't be looked up.
+        if (_preview is not null) (VisualTreeHelper.GetParent(_preview) as AdornerLayer)?.Remove(_preview);
         _preview = null;
-        _adornerLayer = null;
         if (IsMouseCaptured) ReleaseMouseCapture();
         Mouse.OverrideCursor = null;
     }
@@ -226,7 +209,7 @@ public partial class TodoListPanel : UserControl
     {
         Rect? line = null;
         _dropTarget = null;
-        if (_activeDrag is { } source &&
+        if (_dragRow?.Tag is Guid source &&
             RowAt(TranslatePoint(_dragPointer, RowsControl)) is { Tag: Guid target } row &&
             _model is { } model && model.CanMoveTo(source, target, out var below))
         {
@@ -239,7 +222,7 @@ public partial class TodoListPanel : UserControl
 
     void ScrollNearEdge()
     {
-        if (_activeDrag is null || RowsScrollViewer.ScrollableHeight <= 0) return;
+        if (_dragRow is null || RowsScrollViewer.ScrollableHeight <= 0) return;
         var point = TranslatePoint(_dragPointer, RowsScrollViewer);
         if (point.X < 0 || point.X > RowsScrollViewer.ActualWidth ||
             point.Y < 0 || point.Y > RowsScrollViewer.ViewportHeight) return;
@@ -250,30 +233,8 @@ public partial class TodoListPanel : UserControl
         UpdateDropTarget();
     }
 
-    Grid? RowAt(Point point) => FindRow(RowsControl.InputHitTest(point) as DependencyObject);
-
-    Grid? FindRow(DependencyObject? element)
-    {
-        while (element is not null && element != RowsControl)
-        {
-            if (element is Grid { Tag: Guid } row) return row;
-            element = ParentOf(element);
-        }
-        return null;
-    }
-
-    static bool HasAncestor<T>(DependencyObject? element, DependencyObject row) where T : DependencyObject
-    {
-        while (element is not null && element != row)
-        {
-            if (element is T) return true;
-            element = ParentOf(element);
-        }
-        return false;
-    }
-
-    static DependencyObject? ParentOf(DependencyObject element) =>
-        element is Visual or Visual3D ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element);
+    Grid? RowAt(Point point) =>
+        VisualTree.FindAncestor<Grid>(RowsControl.InputHitTest(point) as DependencyObject, RowsControl, row => row.Tag is Guid);
 
     sealed class DragPreviewAdorner : Adorner
     {

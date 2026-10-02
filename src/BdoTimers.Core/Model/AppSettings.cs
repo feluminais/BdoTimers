@@ -20,12 +20,11 @@ public sealed record AppSettings
     public OverlaySettings Overlay { get; init; } = new();
     /// <summary>DateTimeOffset.MaxValue means paused until resumed.</summary>
     public DateTimeOffset? AlertsPausedUntilUtc { get; init; }
-    /// <summary>Set once the priority notifications hint was shown for the app id notifications use now; the flag
-    /// before it (priorityHintShown) was for the Windows App SDK's id, which Windows' priority list no longer matches.</summary>
+    /// <summary>Set once the hint to add the app to Windows' priority notifications has been shown.</summary>
     public bool NotificationHintShown { get; init; }
     /// <summary>Legacy EU notice revision, copied into its region profile by migration.</summary>
     public string? TimetableNoticeRevision { get; init; }
     public WindowPlacement? Window { get; init; }
-    public TodoSchedule DailyTodoReset { get; init; } = TodoSchedule.DailyDefault;
-    public TodoSchedule WeeklyTodoReset { get; init; } = TodoSchedule.WeeklyDefault;
+    public TodoSchedule DailyTodoReset { get; init; } = new();
+    public TodoSchedule WeeklyTodoReset { get; init; } = new();
 }

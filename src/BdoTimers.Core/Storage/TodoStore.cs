@@ -7,55 +7,43 @@ namespace BdoTimers.Core.Storage;
 public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IClock clock)
     : PersistentState<TodoData>(file, initial)
 {
-    public void Modify(Guid id, Func<TodoList, TodoList> change) => Update(data =>
-    {
-        var lists = data.Lists.Select(list => list.Id == id ? change(list) : list).ToList();
-        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
-    });
+    public void Modify(Guid id, Func<TodoList, TodoList> change) =>
+        UpdateLists(lists => lists.Select(list => list.Id == id ? change(list) : list).ToList());
 
     public Guid CreateList(TodoCadence cadence, AppSettings settings)
     {
-        var schedule = Schedule(settings, cadence);
         var list = new TodoList
         {
             Name = "New list",
-            Cadence = cadence, Enabled = true, Schedule = schedule,
-            NextResetUtc = TodoReset.Next(schedule, clock.UtcNow),
+            Cadence = cadence, Enabled = true,
+            NextResetUtc = TodoReset.Next(cadence, Schedule(settings, cadence), clock.UtcNow),
         };
         Update(data => data with { Lists = [.. data.Lists, list] });
         return list.Id;
     }
 
-    public void SetEnabled(Guid id, bool enabled) => Modify(id, list => list.Enabled == enabled ? list : list with { Enabled = enabled });
-
-    public void ApplyDefaultSchedules(AppSettings settings) => Update(data =>
-    {
-        var lists = data.Lists.Select(list => WithSchedule(list, Schedule(settings, list.Cadence))).ToList();
-        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
-    });
-
-    TodoList WithSchedule(TodoList list, TodoSchedule schedule) => list.Schedule == schedule ? list
-        : list with { Schedule = schedule, NextResetUtc = TodoReset.Next(schedule, clock.UtcNow) };
+    public void SetEnabled(Guid id, bool enabled) => Modify(id, list => list with { Enabled = enabled });
 
     static TodoSchedule Schedule(AppSettings settings, TodoCadence cadence) =>
-        (cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset) with { Cadence = cadence };
+        cadence == TodoCadence.Daily ? settings.DailyTodoReset : settings.WeeklyTodoReset;
 
-    public void Reconcile() => Update(data =>
+    /// <summary>
+    /// Clears the lists whose reset is due and moves every list's next reset to its cadence's schedule in
+    /// <paramref name="settings"/>, so a changed schedule applies without clearing checks and a reset set while the clock
+    /// ran ahead comes back instead of skipping resets.
+    /// </summary>
+    public void Reconcile(AppSettings settings) => UpdateLists(lists =>
     {
         var now = clock.UtcNow;
-        var lists = data.Lists.Select(list =>
+        return lists.Select(list =>
         {
-            var next = TodoReset.Next(list.Schedule, now);
-            // Later than the schedule's next reset means it was set while the clock ran ahead; kept, it would skip resets.
-            if (list.NextResetUtc == default || list.NextResetUtc > next) return list with { NextResetUtc = next };
-            if (list.NextResetUtc > now) return list;
+            var due = list.NextResetUtc != default && list.NextResetUtc <= now;
             return list with
             {
-                Rows = list.Rows.Select(row => TodoOps.SetDone(row, false)).ToList(),
-                NextResetUtc = next,
+                Rows = due ? list.Rows.Select(row => TodoOps.SetDone(row, false)).ToList() : list.Rows,
+                NextResetUtc = TodoReset.Next(list.Cadence, Schedule(settings, list.Cadence), now),
             };
         }).ToList();
-        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
     });
 
     public void Toggle(Guid listId, Guid rowId) => Modify(listId, list =>
@@ -72,30 +60,27 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
 
     public void Rename(Guid id, string name)
     {
-        name = Clean(name);
-        Modify(id, list => list with { Name = name });
+        var trimmed = name.Trim();
+        if (trimmed.Length == 0) throw new ArgumentException("Name cannot be empty.", nameof(name));
+        Modify(id, list => list with { Name = trimmed });
     }
 
-    public void Delete(Guid id) => Update(data =>
-    {
-        var lists = data.Lists.Where(list => list.Id != id || list.IsBuiltIn)
-            .Select(list => list.Id == id ? list with { Deleted = true } : list).ToList();
-        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
-    });
+    public void Delete(Guid id) => UpdateLists(lists => lists.Where(list => list.Id != id || list.IsBuiltIn)
+        .Select(list => list.Id == id ? list with { Deleted = true } : list).ToList());
 
-    public void RestoreDefaults(AppSettings? settings = null) => Update(data =>
+    public void RestoreDefaults(AppSettings settings) => UpdateLists(current =>
     {
-        var source = TodoSeed.Create(clock.UtcNow, settings ?? new AppSettings());
-        var lists = data.Lists.Select(list => list.IsBuiltIn && list.Deleted ? list with { Deleted = false } : list).ToList();
+        var source = TodoSeed.Create(clock.UtcNow, settings);
+        var lists = current.Select(list => list.IsBuiltIn && list.Deleted ? list with { Deleted = false } : list).ToList();
         for (var i = 0; i < source.Lists.Count; i++)
             if (lists.All(list => list.Id != source.Lists[i].Id)) lists.Insert(Math.Min(i, lists.Count), source.Lists[i]);
-        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
+        return lists;
     });
 
-    static string Clean(string value)
+    /// <summary>Saves the lists <paramref name="change"/> returns, unless they equal the current ones.</summary>
+    void UpdateLists(Func<IReadOnlyList<TodoList>, IReadOnlyList<TodoList>> change) => Update(data =>
     {
-        var text = value.Trim();
-        if (text.Length == 0) throw new ArgumentException("Name cannot be empty.", nameof(value));
-        return text;
-    }
+        var lists = change(data.Lists);
+        return lists.SequenceEqual(data.Lists) ? data : data with { Lists = lists };
+    });
 }

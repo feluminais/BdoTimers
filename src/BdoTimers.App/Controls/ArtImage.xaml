@@ -14,7 +14,7 @@
                 <controls:FocusImage Picture="{Binding}" />
             </DataTemplate>
         </ItemsControl.ItemTemplate>
-        <!-- The picture melts into the black to its right instead of ending at a hard edge. -->
+        <!-- The picture fades into the black to its right. -->
         <ItemsControl.OpacityMask>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                 <GradientStop Color="#FF000000" Offset="0" />

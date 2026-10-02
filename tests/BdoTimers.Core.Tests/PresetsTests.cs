@@ -1,6 +1,7 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
+using static BdoTimers.Core.Tests.TestTimes;
 
 namespace BdoTimers.Core.Tests;
 
@@ -53,16 +54,15 @@ public class PresetsTests
     [Fact]
     public void Horse_registration_alerts_a_minute_before_and_at_the_end_whatever_the_default_times()
     {
-        var t0 = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
         var horse = Presets.CreateHorseRegistration();
-        horse = horse with { Countdown = CountdownOps.Start(horse.Countdown!, t0) };
+        horse = horse with { Countdown = CountdownOps.Start(horse.Countdown!, T0) };
         var planner = new AlertPlanner();
         var none = new HashSet<MutedOccurrence>();
         var defaults = AlertConfig.StandardLeadTimesMinutes;
 
-        Assert.Empty(planner.Tick([horse], none, t0, defaults));
-        Assert.Equal(1, Assert.Single(planner.Tick([horse], none, t0.AddMinutes(9), defaults)).LeadMinutes);
-        Assert.Equal(0, Assert.Single(planner.Tick([horse], none, t0.AddMinutes(10), defaults)).LeadMinutes);
+        Assert.Empty(planner.Tick([horse], none, T0, defaults));
+        Assert.Equal(1, Assert.Single(planner.Tick([horse], none, T0.AddMinutes(9), defaults)).LeadMinutes);
+        Assert.Equal(0, Assert.Single(planner.Tick([horse], none, T0.AddMinutes(10), defaults)).LeadMinutes);
     }
 
     [Fact]
@@ -77,9 +77,8 @@ public class PresetsTests
     [Fact]
     public void A_stopwatch_never_alerts()
     {
-        var t0 = new DateTimeOffset(2026, 9, 25, 12, 0, 0, TimeSpan.Zero);
-        var fishing = Presets.Create()[1] with { Stopwatch = StopwatchOps.Start(new StopwatchSpec(), t0) };
+        var fishing = Presets.Create()[1] with { Stopwatch = StopwatchOps.Start(new StopwatchSpec(), T0) };
 
-        Assert.Empty(OccurrenceSource.Between(fishing, t0, t0.AddDays(8)));
+        Assert.Empty(OccurrenceSource.Between(fishing, T0, T0.AddDays(8)));
     }
 }

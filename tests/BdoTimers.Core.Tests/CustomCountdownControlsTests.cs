@@ -41,7 +41,7 @@ public class CustomCountdownControlsTests
         Assert.Equal(timer.ControlHotkey, Saved().ControlHotkey);
         Assert.False(Saved().Enabled);
 
-        store.ResetCountdown(timer.Id);
+        store.Reset(timer.Id);
         Assert.Equal(CountdownStatus.Idle, Saved().Countdown!.Status);
         store.ControlCustomCountdown(timer.Id, clock);
         Assert.Equal(clock.UtcNow.AddMinutes(30), Saved().Countdown!.EndsAtUtc);

@@ -15,12 +15,13 @@ public sealed partial class TodoScheduleEditorViewModel : ObservableObject
     [ObservableProperty] private string _time = "00:00";
     [ObservableProperty] private bool _invalidTime;
 
-    public bool IsWeekly => _schedule.Cadence == TodoCadence.Weekly;
+    public bool IsWeekly { get; }
     public IReadOnlyList<Choice> Days => Choice.Days;
     public IReadOnlyList<Choice> Zones { get; } = [new("UTC", false), new("Local", true)];
 
-    public TodoScheduleEditorViewModel(TodoSchedule schedule, Action<TodoSchedule> save)
+    public TodoScheduleEditorViewModel(TodoCadence cadence, TodoSchedule schedule, Action<TodoSchedule> save)
     {
+        IsWeekly = cadence == TodoCadence.Weekly;
         _schedule = schedule;
         _save = save;
         Load();

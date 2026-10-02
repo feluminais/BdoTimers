@@ -16,12 +16,11 @@ Tray app for Black Desert Online (EU and North America) world-boss spawns and yo
 ## Install
 `pwsh scripts/publish.ps1` builds `publish/BdoTimers-Setup-<version>.exe`. Run it; no admin rights needed.
 
-- Next shows the install location, `%LocalAppData%\Programs` by default; the app always gets its own `BdoTimers` folder
-  inside it, shown in gold after the path. The install is per-user, so a folder that needs admin rights (Program Files) is refused with a note.
-- Adds a Start Menu shortcut and can launch the app when setup finishes. Start with Windows stays off until you turn
-  it on in Settings; uninstall removes it.
-- Everything the app keeps (timers, to-do lists in `todos.json`, settings, your sounds and pictures, logs) is in `Data` inside its folder; the app
-  warns and exits if it can't write there.
+- Next shows the install location, `%LocalAppData%\Programs` by default; the app always gets its own `BdoTimers`
+  folder inside it. The install is per-user, so a folder that needs admin rights (Program Files) is refused.
+- Adds a Start Menu shortcut and can launch the app when setup finishes.
+- Everything the app keeps (timers, to-do lists, settings, your sounds and pictures, logs) is in `Data` inside its
+  folder; the app warns and exits if it can't write there.
 - Run the setup again (or Uninstall in Settings → Apps) to see where it's installed and to repair or remove it.
   Uninstall keeps your data by default. Clear "Keep my timers, lists and settings" to delete it, including the recovery
   copies made by backup restore. Reinstall into the same folder to use the kept data.
@@ -88,6 +87,7 @@ leave timers running, time out after ten seconds, and can be retried manually. D
 
 ## Develop
 See CLAUDE.md for commands. `scripts/get-voice.ps1` fetches the voice model (132 MB) that the setup ships.
+Manual test checklist: [docs/manual-tests.md](docs/manual-tests.md).
 
 ## License
 GPL-3.0 (see LICENSE). Bundled components and their licenses are listed in THIRD-PARTY-NOTICES.txt. BDO Timers is not

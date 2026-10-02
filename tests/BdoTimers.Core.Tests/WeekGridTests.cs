@@ -1,5 +1,6 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using static BdoTimers.Core.Tests.TestTimers;
 
 namespace BdoTimers.Core.Tests;
 
@@ -7,19 +8,7 @@ public class WeekGridTests
 {
     // 2026-09-22 is a Tuesday; Berlin is UTC+2 until 2026-10-25.
     static readonly DateTimeOffset TuesdayThreePmBerlin = new(2026, 9, 22, 13, 0, 0, TimeSpan.Zero);
-    static readonly TimeZoneInfo Berlin = TimeZones.Find("Europe/Berlin");
-
-    static TimerDef Boss(string name, params (DayOfWeek Day, int Hour, int Minute)[] slots) => new()
-    {
-        Name = name,
-        Kind = TimerKind.Scheduled,
-        IsBuiltIn = true,
-        Scheduled = new ScheduledSpec
-        {
-            TimeZoneId = "Europe/Berlin",
-            Slots = slots.Select(s => new Slot(s.Day, new TimeOnly(s.Hour, s.Minute))).ToList(),
-        },
-    };
+    static readonly TimeZoneInfo Berlin = TimeZoneInfo.FindSystemTimeZoneById("Europe/Berlin");
 
     static readonly TimerDef Kzarka = Boss("Kzarka", (DayOfWeek.Monday, 22, 15), (DayOfWeek.Tuesday, 19, 0));
     static readonly TimerDef Nouver = Boss("Nouver", (DayOfWeek.Tuesday, 16, 0));

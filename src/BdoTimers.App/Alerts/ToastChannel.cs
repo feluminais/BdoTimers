@@ -10,7 +10,7 @@ using Windows.UI.Notifications;
 namespace BdoTimers.App.Alerts;
 
 /// <summary>Windows notifications through the toast API built into Windows.</summary>
-public sealed class ToastChannel
+public sealed partial class ToastChannel
 {
     /// <summary>Windows 11 22H2 added the urgent scenario, which gets through Do Not Disturb; older builds use alarm.</summary>
     const int UrgentScenarioBuild = 22621;
@@ -29,7 +29,7 @@ public sealed class ToastChannel
             () => NotificationRegistration.RemoveLegacy(Environment.ProcessPath!));
         TryRegistry("Couldn't update the notification registration",
             () => NotificationRegistration.Register(appId, displayName, Path.Combine(AppContext.BaseDirectory, "app.png")));
-        SetCurrentProcessExplicitAppUserModelID(appId);
+        Marshal.ThrowExceptionForHR(SetCurrentProcessExplicitAppUserModelID(appId));
         _notifier = ToastNotificationManager.CreateToastNotifier(appId);
     }
 
@@ -88,6 +88,6 @@ public sealed class ToastChannel
 
     static string Escape(string text) => SecurityElement.Escape(text);
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode, PreserveSig = false)]
-    static extern void SetCurrentProcessExplicitAppUserModelID(string appId);
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial int SetCurrentProcessExplicitAppUserModelID(string appId);
 }

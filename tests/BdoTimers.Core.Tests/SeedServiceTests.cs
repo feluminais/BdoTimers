@@ -1,5 +1,6 @@
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Seed;
+using BdoTimers.Core.Storage;
 
 namespace BdoTimers.Core.Tests;
 
@@ -30,11 +31,33 @@ public class SeedServiceTests
     }
 
     [Fact]
-    public void Applies_once_only()
+    public void New_data_starts_with_the_presets_then_the_bosses()
+    {
+        var data = SeedService.NewData(Seed);
+
+        Assert.Equal(["Farm", "Fishing", "Horse registration", "Kzarka", "Nouver"], data.Timers.Select(t => t.Name));
+        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.HorseRegistration, null, null], data.Timers.Select(t => t.Preset));
+        Assert.All(data.Timers.Skip(3), t => Assert.True(t.IsBuiltIn));
+        Assert.Equal(DataMigrations.Current, data.DataVersion);
+        Assert.Same(data, Presets.Ensure(DataMigrations.Apply(data)));
+    }
+
+    [Fact]
+    public void A_deleted_horse_registration_is_not_added_back()
+    {
+        var data = SeedService.NewData(Seed);
+        var deleted = data with { Timers = data.Timers.Where(t => t.Preset != Presets.HorseRegistration).ToList() };
+
+        var restarted = Presets.Ensure(DataMigrations.Apply(deleted));
+
+        Assert.DoesNotContain(restarted.Timers, t => t.Preset == Presets.HorseRegistration);
+    }
+
+    [Fact]
+    public void Region_seed_applies_once_without_duplicating_bosses()
     {
         var once = SeedService.ApplyIfNeeded(new AppData(), Seed, Defaults);
         var twice = SeedService.ApplyIfNeeded(once, Seed, Defaults);
-
         Assert.True(BossRegions.State(once).SeedApplied);
         Assert.Equal(2, once.Timers.Count);
         Assert.Same(once, twice);
@@ -44,7 +67,7 @@ public class SeedServiceTests
     public void Reset_replaces_builtins_keeps_custom_timers_and_alert_settings()
     {
         var custom = new TimerDef { Name = "Farm", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
-        var applied = SeedService.ApplyIfNeeded(new AppData { Timers = [custom] }, Seed, Defaults);
+        var applied = new AppData { Timers = [custom, .. SeedService.ToTimers(Seed, Defaults)] };
         var tunedAlerts = new AlertConfig { LeadTimesMinutes = [30] };
         var edited = applied with
         {
@@ -67,7 +90,7 @@ public class SeedServiceTests
     [Fact]
     public void Reset_keeps_each_boss_id_and_alerts_off_and_drops_mutes_of_removed_bosses()
     {
-        var applied = SeedService.ApplyIfNeeded(new AppData(), Seed, Defaults);
+        var applied = new AppData { Timers = SeedService.ToTimers(Seed, Defaults) };
         var kzarka = applied.Timers.Single(t => t.Name == "Kzarka");
         var retired = new TimerDef { Name = "Retired", Kind = TimerKind.Scheduled, IsBuiltIn = true, Scheduled = new ScheduledSpec() };
         var at = new DateTimeOffset(2026, 10, 2, 17, 0, 0, TimeSpan.Zero);

@@ -11,7 +11,7 @@ public static class ScheduleMath
     }
 
     public static bool IsExpired(ScheduledSpec spec, DateTimeOffset now) =>
-        spec.EndDate is not null && Next(spec, now, 1).Count == 0;
+        spec.EndDate is not null && !From(spec, now).Any();
 
     /// <summary>
     /// Converts a wall-clock time in <paramref name="tz"/> to UTC. A time inside a
@@ -31,9 +31,17 @@ public static class ScheduleMath
         return new DateTimeOffset(local, offset).ToUniversalTime();
     }
 
-    /// <summary>The next <paramref name="count"/> occurrences at or after <paramref name="fromUtc"/>, ascending.</summary>
-    public static IReadOnlyList<DateTimeOffset> Next(ScheduledSpec spec, DateTimeOffset fromUtc, int count) =>
-        From(spec, fromUtc).Take(Math.Max(0, count)).ToList();
+    /// <summary>
+    /// The latest moment, at or before <paramref name="nowUtc"/>, when the clock in <paramref name="zone"/> showed
+    /// <paramref name="time"/>: today, or yesterday when today's is still ahead (23:30 picked at 01:00). It turns a time
+    /// picked for "I started at…" into the moment it means.
+    /// </summary>
+    public static DateTimeOffset MostRecent(TimeOnly time, DateTimeOffset nowUtc, TimeZoneInfo zone)
+    {
+        var today = TimeZoneInfo.ConvertTime(nowUtc, zone).Date + time.ToTimeSpan();
+        var at = LocalToUtc(today, zone);
+        return at <= nowUtc ? at : LocalToUtc(today.AddDays(-1), zone);
+    }
 
     /// <summary>
     /// All occurrences at or after <paramref name="fromUtc"/>, ascending, within the optional inclusive date limits.
@@ -45,7 +53,7 @@ public static class ScheduleMath
         if (!spec.Slots.Any(s => Enum.IsDefined(s.Day))) yield break;
         ValidateDateRange(spec.StartDate, spec.EndDate);
 
-        var tz = TimeZones.Find(spec.TimeZoneId);
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId);
         // Start a day early: a late slot on the previous local day that falls in a spring-forward gap
         // is pushed past midnight, into the day that contains fromUtc.
         var first = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(fromUtc, tz).DateTime);

@@ -4,32 +4,6 @@
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:vm="clr-namespace:BdoTimers.App.ViewModels">
     <UserControl.Resources>
-        <Style x:Key="TileButton" TargetType="Button">
-            <Setter Property="Height" Value="100" />
-            <Setter Property="Margin" Value="0,0,10,10" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
-            <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{StaticResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" ClipToBounds="True">
-                            <ContentPresenter />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
-                </Trigger>
-                <Trigger Property="IsKeyboardFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
         <!-- Two-digit field of the start picker; the wheel and the arrow keys step it -->
         <Style x:Key="ClockBox" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
             <Setter Property="FontFamily" Value="{StaticResource ClockFont}" />
@@ -62,7 +36,7 @@
 
         <DataTemplate DataType="{x:Type vm:TimerTileViewModel}">
             <Grid>
-                <Button Style="{StaticResource TileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}"
+                <Button Style="{StaticResource TileButton}" Height="100" Margin="0,0,10,10" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}"
                         ContextMenuService.IsEnabled="{Binding IsWeekly}">
                     <Button.ContextMenu>
                         <ContextMenu>
@@ -201,7 +175,7 @@
         </DataTemplate>
 
         <DataTemplate DataType="{x:Type vm:CustomViewModel}">
-            <Button Style="{StaticResource TileButton}" BorderBrush="Transparent" Command="{Binding NewTimerCommand}"
+            <Button Style="{StaticResource TileButton}" Height="100" Margin="0,0,10,10" BorderBrush="Transparent" Command="{Binding NewTimerCommand}"
                     AutomationProperties.Name="Create a new timer">
                 <Grid>
                     <Rectangle Stroke="{StaticResource HairlineStrongBrush}" StrokeThickness="1" StrokeDashArray="4 3" />

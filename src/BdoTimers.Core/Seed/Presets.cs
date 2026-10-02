@@ -13,8 +13,6 @@ public static class Presets
     public const string HorseRegistration = "horse-registration";
     public const string HorseRegistrationRun = "horse-registration-run";
 
-    static readonly string[] Order = [Farm, Fishing, HorseRegistration];
-
     /// <summary>Default temperature estimate; offline time and crop care can delay the harvest.</summary>
     public static readonly TimeSpan CropGrowth = TimeSpan.FromHours(22);
 
@@ -41,8 +39,8 @@ public static class Presets
     ];
 
     /// <summary>
-    /// Can be deleted like the user's own timers, so <see cref="Storage.DataMigrations"/> adds it once rather than
-    /// <see cref="Ensure"/> at every startup.
+    /// Can be deleted like the user's own timers, so only new data starts with it (<see cref="SeedService.NewData"/>);
+    /// <see cref="Ensure"/> doesn't add it back.
     /// </summary>
     public static TimerDef CreateHorseRegistration() => new()
     {
@@ -55,6 +53,18 @@ public static class Presets
         Alerts = new AlertConfig { LeadTimesMinutes = [1, 0] },
     };
 
+    /// <summary>A registration started from the Horse registration preset: its copy numbered <paramref name="number"/>,
+    /// without the preset's hotkey or picture.</summary>
+    public static TimerDef HorseRun(TimerDef template, int number) => template with
+    {
+        Id = Guid.NewGuid(), Name = $"{template.Name} {number}", Preset = HorseRegistrationRun,
+        HorseRunNumber = number, StartHotkey = null, ImageFile = null,
+    };
+
+    /// <summary>A horse registration that is running or paused; these count towards the limit of runs.</summary>
+    public static bool IsActiveHorseRun(TimerDef timer) =>
+        timer.Preset == HorseRegistrationRun && timer.Countdown?.Status is not CountdownStatus.Idle;
+
     /// <summary>Adds any preset that can't be deleted and the data lacks, ahead of the other timers.</summary>
     public static AppData Ensure(AppData data)
     {
@@ -62,10 +72,18 @@ public static class Presets
         return missing.Count == 0 ? data : data with { Timers = [.. missing, .. data.Timers] };
     }
 
+    /// <summary>Farm crops keep growing after the harvest time, so its countdown runs on past zero until reset.</summary>
+    public static bool Overgrows(string? preset) => preset == Farm;
+
     /// <summary>Farm and Fishing can't be deleted; Horse registration and the user's own timers can.</summary>
     public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun;
 
     /// <summary>Sort key that puts presets first, in their fixed order, and keeps other timers after them.</summary>
-    public static int Rank(string? preset) => preset == HorseRegistrationRun ? Array.IndexOf(Order, HorseRegistration)
-        : preset is null ? Order.Length : Math.Max(0, Array.IndexOf(Order, preset));
+    public static int Rank(string? preset) => preset switch
+    {
+        null => 3,
+        Fishing => 1,
+        HorseRegistration or HorseRegistrationRun => 2,
+        _ => 0, // Farm, and a preset from a newer version
+    };
 }

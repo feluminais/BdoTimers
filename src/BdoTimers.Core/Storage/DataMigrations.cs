@@ -5,7 +5,10 @@ using BdoTimers.Core.Sounds;
 
 namespace BdoTimers.Core.Storage;
 
-/// <summary>Brings timer data saved by older versions up to date; data that is already current comes back unchanged.</summary>
+/// <summary>
+/// Brings timer data saved by older versions up to date; data that is already current comes back unchanged.
+/// Region and date migrations preserve saved schedules and alert settings.
+/// </summary>
 public static class DataMigrations
 {
     // Version 7 adds optional schedule dates and dated events; existing timers keep their values and unlimited dates.
@@ -13,6 +16,8 @@ public static class DataMigrations
 
     /// <summary>Lists that earlier versions gave timers themselves: the built-in default, and 5 and 0 for countdowns.</summary>
     static readonly IReadOnlyList<IReadOnlyList<int>> AssignedLeadTimes = [AlertConfig.StandardLeadTimesMinutes, [5, 0]];
+
+    public static AppData Apply(AppData data) => Apply(data, new AppSettings());
 
     public static AppData Apply(AppData data, AppSettings settings)
     {
@@ -44,7 +49,7 @@ public static class DataMigrations
     /// <summary>Version 3: the first built-in sounds were replaced; timers that picked one go back to Default.</summary>
     static IReadOnlyList<TimerDef> ForgetRetiredSounds(IReadOnlyList<TimerDef> timers) =>
         timers
-            .Select(t => t.Alerts.Sound.Key is { } key && !SoundKeys.IsKnown(key)
+            .Select(t => t.Alerts.Sound.Key is { } key && !(SoundKeys.IsBuiltIn(key) || SoundKeys.IsUserKey(key))
                 ? t with { Alerts = t.Alerts with { Sound = t.Alerts.Sound with { Key = null } } }
                 : t)
             .ToList();
@@ -61,11 +66,7 @@ public static class DataMigrations
     {
         var template = timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
         if (template?.Countdown is not { Status: not CountdownStatus.Idle } countdown) return timers;
-        var run = template with
-        {
-            Id = Guid.NewGuid(), Name = $"{template.Name} 1", Preset = Presets.HorseRegistrationRun,
-            HorseRunNumber = 1, StartHotkey = null, ImageFile = null,
-        };
-        return [.. timers.Select(t => t.Id == template.Id ? t with { Countdown = CountdownOps.Reset(countdown) } : t), run];
+        var idle = timers.Select(t => t.Id == template.Id ? t with { Countdown = CountdownOps.Reset(countdown) } : t);
+        return [.. idle, Presets.HorseRun(template, 1)];
     }
 }

@@ -268,8 +268,8 @@ public class BossRegionsTests
         var clock = new FakeClock(Now);
         var settings = new AppSettings
         {
-            DailyTodoReset = new() { Cadence = TodoCadence.Daily, Hour = 9, Minute = 17, LocalTime = true },
-            WeeklyTodoReset = new() { Cadence = TodoCadence.Weekly, Day = DayOfWeek.Friday, Hour = 21, Minute = 30 },
+            DailyTodoReset = new() { Hour = 9, Minute = 17, LocalTime = true },
+            WeeklyTodoReset = new() { Day = DayOfWeek.Friday, Hour = 21, Minute = 30 },
         };
         var todos = new TodoStore(new(dir.File("todos.json"), () => new()), TodoSeed.Create(Now, settings), clock);
         var personalId = todos.CreateList(TodoCadence.Daily, settings);
@@ -279,7 +279,7 @@ public class BossRegionsTests
         var store = new TimerStore(new(dir.File("timers.json"), () => new()), new() { Timers = [custom] });
         store.SelectBossRegion("na", clock);
         store.SelectBossRegion("eu", clock);
-        todos.ApplyDefaultSchedules(settings);
+        todos.Reconcile(settings);
         Assert.Same(before, todos.Current);
         Assert.Same(custom, store.Current.Timers.Single(t => t.Id == custom.Id));
     }

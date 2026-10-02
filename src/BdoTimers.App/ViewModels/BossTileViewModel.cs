@@ -1,4 +1,3 @@
-using System.Globalization;
 using BdoTimers.App.Controls;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -10,6 +9,8 @@ namespace BdoTimers.App.ViewModels;
 /// <summary>A boss in the Bosses section under the table; clicking it opens the boss panel.</summary>
 public sealed partial class BossTileViewModel : ObservableObject
 {
+    readonly Action<Guid> _open;
+
     [ObservableProperty] private bool _isOff;
     [ObservableProperty] private bool _ownSettings;
     [ObservableProperty] private string _detail = "";
@@ -17,16 +18,18 @@ public sealed partial class BossTileViewModel : ObservableObject
     public Guid Id { get; }
     public string Name { get; }
     public IReadOnlyList<ArtPicture> Images { get; }
-    public IRelayCommand OpenCommand { get; }
 
     public BossTileViewModel(TimerDef boss, ArtPicture image, Action<Guid> open, DateTimeOffset now)
     {
+        _open = open;
         Id = boss.Id;
         Name = boss.Name;
         Images = [image];
-        OpenCommand = new RelayCommand(() => open(Id));
         Show(boss, now);
     }
+
+    [RelayCommand]
+    void Open() => _open(Id);
 
     /// <summary>"Next · Fri 03:00", or "Alerts off" for a boss that doesn't alert.</summary>
     public void Show(TimerDef boss, DateTimeOffset now)
@@ -38,7 +41,7 @@ public sealed partial class BossTileViewModel : ObservableObject
             Detail = "Alerts off";
             return;
         }
-        var next = OccurrenceSource.Between(boss, now, now + TimeSpan.FromDays(8)).Cast<DateTimeOffset?>().FirstOrDefault();
-        Detail = next is { } at ? "Next · " + at.ToLocalTime().ToString("ddd HH:mm", CultureInfo.InvariantCulture) : "No upcoming spawns";
+        var next = OccurrenceSource.Next(boss, now);
+        Detail = next is { } at ? "Next · " + Formats.DayTime(at) : "No upcoming spawns";
     }
 }

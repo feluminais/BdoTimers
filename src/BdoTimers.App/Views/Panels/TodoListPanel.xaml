@@ -36,12 +36,12 @@
                     </StackPanel>
                 </Grid>
                 <StackPanel Orientation="Horizontal" Margin="14,2,0,4"
-                            Visibility="{Binding ConfirmingRemove, Converter={StaticResource BoolToVisibility}}">
+                            Visibility="{Binding Removal.IsAsking, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="{Binding ChildCount, StringFormat='Remove with {0} rows?'}" Style="{StaticResource LabelText}"
                                VerticalAlignment="Center" />
-                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Command="{Binding ConfirmRemoveCommand}"
+                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Command="{Binding Removal.ConfirmCommand}"
                             Margin="8,0,0,0" />
-                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding CancelRemoveCommand}"
+                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding Removal.CancelCommand}"
                             Margin="8,0,0,0" />
                 </StackPanel>
             </StackPanel>
@@ -58,8 +58,7 @@
     </UserControl.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="22,16,12,4">
-            <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
             <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource DisplayFont}"
                      FontSize="18" controls:Ui.HasError="{Binding InvalidName}" AutomationProperties.Name="List name">
                 <TextBox.Style>
@@ -75,27 +74,23 @@
             </TextBox>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16">
-            <Button DockPanel.Dock="Right" Style="{StaticResource OutlineButton}" Content="Done"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelDoneButton}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Style="{StaticResource DangerLinkButton}" Content="Delete list" Command="{Binding AskDeleteCommand}"
-                        Visibility="{Binding ConfirmingDelete, Converter={StaticResource InverseBoolToVisibility}}" />
-                <StackPanel Orientation="Horizontal" Visibility="{Binding ConfirmingDelete, Converter={StaticResource BoolToVisibility}}">
+                <Button Style="{StaticResource DangerLinkButton}" Content="Delete list" Command="{Binding Delete.AskCommand}"
+                        Visibility="{Binding Delete.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding Delete.IsAsking, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Delete?" Style="{StaticResource LabelText}" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Command="{Binding ConfirmDeleteCommand}" Margin="8,0,0,0" />
-                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding CancelDeleteCommand}" Margin="8,0,0,0" />
+                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Command="{Binding Delete.ConfirmCommand}" Margin="8,0,0,0" />
+                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding Delete.CancelCommand}" Margin="8,0,0,0" />
                 </StackPanel>
             </StackPanel>
         </DockPanel>
         <ScrollViewer x:Name="RowsScrollViewer" MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
-                <Border Style="{StaticResource Row}" Margin="0,0,0,10">
-                    <DockPanel>
-                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Enabled}"
-                                                ValueWidth="90" AutomationProperties.Name="Active" />
-                        <TextBlock Text="Active" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Active" Margin="0,0,0,10">
+                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Enabled}"
+                                            ValueWidth="90" AutomationProperties.Name="Active" />
+                </HeaderedContentControl>
                 <ItemsControl x:Name="RowsControl" ItemsSource="{Binding Rows}" />
                 <Button Style="{StaticResource LinkButton}" Content="+ Add item" Command="{Binding AddRowCommand}"
                         HorizontalAlignment="Left" Margin="14,10,0,6" />

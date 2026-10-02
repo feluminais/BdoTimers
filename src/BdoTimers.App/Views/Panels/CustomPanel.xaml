@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
+             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
              Width="440">
     <UserControl.Resources>
         <!-- The header picture: the whole area is clickable, and a labelled badge in its corner says so -->
@@ -46,7 +47,6 @@
     </UserControl.Resources>
     <DockPanel>
         <Grid DockPanel.Dock="Top" Height="88">
-            <!-- Clicking the picture offers to change or remove it -->
             <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="230" HorizontalAlignment="Left"
                     AutomationProperties.Name="Change picture" IsEnabled="{Binding CanChangePicture}" Click="PictureButton_Click">
                 <Button.ContextMenu>
@@ -58,28 +58,22 @@
                 <controls:ArtImage Sources="{Binding Images}" />
             </Button>
             <!-- Right-aligned in the black, clear of the close button; long names are trimmed before the picture -->
-            <StackPanel Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
-                        IsHitTestVisible="False">
-                <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
-            </StackPanel>
-            <Button Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="10" ToolTip="Close"
-                    HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis"
+                       Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" IsHitTestVisible="False" />
+            <Button Style="{StaticResource PanelCloseButton}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,4,4,0" />
         </Grid>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
-            <Button Style="{StaticResource OutlineButton}" Content="Done" DockPanel.Dock="Right" IsDefault="True"
-                    IsEnabled="{Binding ScheduleValid}"
-                    Command="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding ScheduleValid}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}">
-                <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding AskDeleteCommand}"
-                        Visibility="{Binding ConfirmingDelete, Converter={StaticResource InverseBoolToVisibility}}" />
-                <StackPanel Orientation="Horizontal" Visibility="{Binding ConfirmingDelete, Converter={StaticResource BoolToVisibility}}">
+                <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding Delete.AskCommand}"
+                        Visibility="{Binding Delete.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding Delete.IsAsking, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="Delete?" Foreground="{StaticResource SubtleBrush}" FontSize="12" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding ConfirmDeleteCommand}" />
+                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding Delete.ConfirmCommand}" />
                     <TextBlock Text="·" Foreground="{StaticResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding CancelDeleteCommand}" />
+                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding Delete.CancelCommand}" />
                 </StackPanel>
             </StackPanel>
         </DockPanel>
@@ -107,29 +101,24 @@
                     </Border>
                 </StackPanel>
 
-                <Border Style="{StaticResource Row}" Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
-                    <DockPanel>
-                        <TextBox x:Name="DurationBox" DockPanel.Dock="Right" Width="80" TextAlignment="Right" VerticalAlignment="Center"
-                                 Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
-                                 PreviewKeyDown="DurationBox_PreviewKeyDown" LostKeyboardFocus="DurationBox_LostKeyboardFocus"
-                                 controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
-                        <TextBlock Text="Duration" Style="{StaticResource RowLabel}" />
-                    </DockPanel>
-                </Border>
+                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Duration"
+                                        Visibility="{Binding IsCountdown, Converter={StaticResource BoolToVisibility}}">
+                    <TextBox x:Name="DurationBox" Width="80" TextAlignment="Right" VerticalAlignment="Center"
+                             Text="{Binding DurationText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                             PreviewKeyDown="DurationBox_PreviewKeyDown" LostKeyboardFocus="DurationBox_LostKeyboardFocus"
+                             controls:Ui.HasError="{Binding DurationInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes" />
+                </HeaderedContentControl>
 
                 <Border Style="{StaticResource Row}" Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel>
-                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding HorseHotkey}" OtherKeys="{Binding OtherHotkeys}"
-                                            IsRefused="{Binding HorseHotkeyRefused}"
-                                            IsListening="{Binding ListeningHorseHotkey}" AutomationProperties.Name="Start horse registration hotkey" />
+                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding HorseHotkey}" Taken="{Binding OtherHotkeys}" Hotkeys="{Binding Hotkeys}" Target="{Binding HotkeyTarget}" AutomationProperties.Name="Start horse registration hotkey" />
                         <TextBlock Text="Start hotkey" Style="{StaticResource RowLabel}" />
                     </DockPanel>
                 </Border>
 
                 <Border Style="{StaticResource Row}" Visibility="{Binding IsCustomCountdown, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel>
-                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding ControlHotkey}" OtherKeys="{Binding OtherHotkeys}"
-                                            IsRefused="{Binding ControlHotkeyRefused}" IsListening="{Binding ListeningControlHotkey}"
+                        <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding ControlHotkey}" Taken="{Binding OtherHotkeys}" Hotkeys="{Binding Hotkeys}" Target="{Binding HotkeyTarget}"
                                             AutomationProperties.Name="Countdown hotkey" />
                         <TextBlock Text="Hotkey" Style="{StaticResource RowLabel}" ToolTip="Start, pause or resume" />
                     </DockPanel>
@@ -185,13 +174,10 @@
                 </StackPanel>
 
                 <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">
-                    <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
-                                                    AutomationProperties.Name="Alerts" />
-                            <TextBlock Text="Alerts" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                    </Border>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Alerts">
+                        <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
+                                                AutomationProperties.Name="Alerts" />
+                    </HeaderedContentControl>
                     <panels:AlertRows DataContext="{Binding Alerts}" />
                 </StackPanel>
             </StackPanel>

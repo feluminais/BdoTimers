@@ -8,16 +8,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-public enum Section { Bosses, Custom, Todo }
-
 public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDisposable
 {
     readonly AppServices _services;
     bool _shown;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsBossesSection), nameof(IsCustomSection), nameof(IsTodoSection))]
-    private Section _section;
 
     [ObservableProperty] private object? _panel;
     [ObservableProperty] private bool _isPaused;
@@ -29,24 +23,6 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     public BossesViewModel Bosses { get; }
     public CustomViewModel Custom { get; }
     public TodoViewModel Todo { get; }
-
-    public bool IsBossesSection
-    {
-        get => Section == Section.Bosses;
-        set { if (value) Section = Section.Bosses; }
-    }
-
-    public bool IsCustomSection
-    {
-        get => Section == Section.Custom;
-        set { if (value) Section = Section.Custom; }
-    }
-
-    public bool IsTodoSection
-    {
-        get => Section == Section.Todo;
-        set { if (value) Section = Section.Todo; }
-    }
 
     public MainViewModel(AppServices services)
     {
@@ -127,6 +103,8 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [RelayCommand]
     void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services));
 
+    /// <summary>Unlike <see cref="OpenPanel"/>, closes the open panel before making the new one: the Overlay panel
+    /// starts the overlay preview when it's made, which an open Overlay panel would end on closing.</summary>
     [RelayCommand]
     public void OpenOverlaySettings()
     {

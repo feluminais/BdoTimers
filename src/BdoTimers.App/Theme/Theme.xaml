@@ -22,7 +22,7 @@
     <SolidColorBrush x:Key="DangerBrush" Color="#A0493B" />
     <SolidColorBrush x:Key="DimBrush" Color="#99000000" />
 
-    <!-- Bundled Cinzel, with Palatino Linotype as fallback. -->
+    <!-- Palatino Linotype if Cinzel can't load. -->
     <FontFamily x:Key="DisplayFont">./Fonts/#Cinzel, Palatino Linotype</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
     <FontFamily x:Key="ClockFont">Segoe UI</FontFamily>
@@ -65,6 +65,23 @@
     <Style x:Key="RowLabel" TargetType="TextBlock">
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+    </Style>
+    <!-- A Row whose header is the label and whose content is the control on the right -->
+    <Style x:Key="SettingRow" TargetType="HeaderedContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="HeaderedContentControl">
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <ContentPresenter DockPanel.Dock="Right" />
+                            <TextBlock Text="{Binding Header, RelativeSource={RelativeSource TemplatedParent}}" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- Buttons -->
@@ -189,9 +206,9 @@
         </Style.Triggers>
     </Style>
 
-    <!-- Plain clickable content: boss names in the strip and the week grid, pictures, tiles. Not based on BareButton
-         so the colour is inherited from the surrounding text. The transparent background keeps the whole area
-         clickable over content that ignores the mouse, such as ArtImage. -->
+    <!-- Plain clickable content: boss names in the strip and the week grid, to-do names, the spawn times header. Not
+         based on BareButton so the colour is inherited from the surrounding text. The transparent background makes the
+         whole area clickable, not only the text. -->
     <Style x:Key="NameButton" TargetType="Button">
         <!-- Without this the default button theme would still force black text. -->
         <Setter Property="OverridesDefaultStyle" Value="True" />
@@ -209,6 +226,31 @@
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Foreground" Value="{StaticResource AccentTextBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- A tile that is one button: a dark field whose hairline brightens on hover and focus -->
+    <Style x:Key="TileButton" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{StaticResource HairlineBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{StaticResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1" ClipToBounds="True">
+                        <ContentPresenter />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource AccentSoftBrush}" />
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -286,7 +328,7 @@
         </Setter>
     </Style>
 
-    <!-- Thin scrollbars -->
+    <!-- Thin scrollbars; only vertical ones are ever shown -->
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">
             <Setter.Value>
@@ -326,25 +368,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Style.Triggers>
-            <Trigger Property="Orientation" Value="Horizontal">
-                <Setter Property="Width" Value="Auto" />
-                <Setter Property="MinWidth" Value="0" />
-                <Setter Property="Height" Value="4" />
-                <Setter Property="MinHeight" Value="4" />
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ScrollBar">
-                            <Track x:Name="PART_Track">
-                                <Track.DecreaseRepeatButton><RepeatButton Style="{StaticResource ScrollPage}" Command="ScrollBar.PageLeftCommand" /></Track.DecreaseRepeatButton>
-                                <Track.IncreaseRepeatButton><RepeatButton Style="{StaticResource ScrollPage}" Command="ScrollBar.PageRightCommand" /></Track.IncreaseRepeatButton>
-                                <Track.Thumb><Thumb Style="{StaticResource ScrollThumb}" /></Track.Thumb>
-                            </Track>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Trigger>
-        </Style.Triggers>
     </Style>
 
     <!-- Menus and tooltips -->

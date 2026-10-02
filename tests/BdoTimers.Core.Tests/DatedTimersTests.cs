@@ -210,8 +210,8 @@ public sealed class DatedTimersTests : IDisposable
     public void Weekly_limits_include_both_boundary_dates_and_stop_after_end()
     {
         var spec = Weekly() with { StartDate = new(2026, 10, 9), EndDate = new(2026, 10, 16) };
-        Assert.Equal([Now.AddDays(7), Now.AddDays(14)], ScheduleMath.Next(spec, Now, 5));
-        Assert.Empty(ScheduleMath.Next(spec, Now.AddDays(14).AddSeconds(1), 1));
+        Assert.Equal([Now.AddDays(7), Now.AddDays(14)], ScheduleMath.From(spec, Now).Take(5).ToList());
+        Assert.Empty(ScheduleMath.From(spec, Now.AddDays(14).AddSeconds(1)).Take(1).ToList());
         Assert.True(ScheduleMath.IsExpired(spec, Now.AddDays(14).AddSeconds(1)));
         Assert.False(ScheduleMath.IsExpired(spec, Now));
     }
@@ -221,9 +221,9 @@ public sealed class DatedTimersTests : IDisposable
     {
         var spec = Weekly() with { TimeZoneId = "America/Los_Angeles", Slots = [new(DayOfWeek.Friday, new(23, 30))] };
         var last = new DateTimeOffset(2026, 10, 3, 6, 30, 0, TimeSpan.Zero);
-        Assert.Equal(last, ScheduleMath.Next(spec with { EndDate = new(2026, 10, 2) }, Now, 2).Single());
-        Assert.Equal(last.AddDays(7), ScheduleMath.Next(spec with { StartDate = new(2026, 10, 9) }, Now, 1).Single());
-        Assert.Empty(ScheduleMath.Next(spec with { EndDate = new(2026, 10, 2) }, last.AddSeconds(1), 1));
+        Assert.Equal(last, ScheduleMath.From(spec with { EndDate = new(2026, 10, 2) }, Now).Take(2).ToList().Single());
+        Assert.Equal(last.AddDays(7), ScheduleMath.From(spec with { StartDate = new(2026, 10, 9) }, Now).Take(1).ToList().Single());
+        Assert.Empty(ScheduleMath.From(spec with { EndDate = new(2026, 10, 2) }, last.AddSeconds(1)).Take(1).ToList());
     }
 
     [Theory]
@@ -234,8 +234,8 @@ public sealed class DatedTimersTests : IDisposable
         var date = new DateOnly(2026, month, day);
         var spec = Weekly() with { TimeZoneId = "Europe/Berlin", Slots = [new(DayOfWeek.Sunday, new(2, 30))], StartDate = date, EndDate = date };
         var expected = new DateTimeOffset(2026, month, day, utcHour, 30, 0, TimeSpan.Zero);
-        Assert.Equal(expected, ScheduleMath.Next(spec, expected.AddDays(-1), 2).Single());
-        Assert.Empty(ScheduleMath.Next(spec, expected.AddSeconds(1), 1));
+        Assert.Equal(expected, ScheduleMath.From(spec, expected.AddDays(-1)).Take(2).ToList().Single());
+        Assert.Empty(ScheduleMath.From(spec, expected.AddSeconds(1)).Take(1).ToList());
     }
 
     [Fact]
