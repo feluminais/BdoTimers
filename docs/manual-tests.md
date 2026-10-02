@@ -72,13 +72,13 @@
     in the tray, press one key: Ready → Running → Paused → Running; the other timer stays unchanged. Time freezes while
     paused and resumes with the saved time left. Reset from the tile; the next press starts the full duration. Repeat
     with the overlay off, and after restarting the app with one running and one paused timer.
-30. Try assigning an overlay shortcut, Horse registration's shortcut, or another countdown's shortcut: “Used by another
-    hotkey”, with the previous binding kept. Repeat from the overlay and Horse registration fields, including with the
+30. Try assigning an overlay shortcut, Horse registration's shortcut, or another countdown's shortcut: "Used by another
+    hotkey", with the previous binding kept. Repeat from the overlay and Horse registration fields, including with the
     overlay or Show on hotkey off. While any hotkey field listens, no shortcut fires; Esc, clicking away, and closing
-    the panel restore bindings. A shortcut held by another app shows “In use by another app”. Change or clear a
+    the panel restore bindings. A shortcut held by another app shows "In use by another app". Change or clear a
     countdown's shortcut, or delete the timer: the old key no longer controls it and can be assigned to another timer.
 31. Pin the overlay with two running custom countdowns; pause one, rename one and resume it: rows stay in creation order
-    and a paused row says “Paused”. Check List, Card and Bar, turn Custom timers off/on, and confirm Ready and completed
+    and a paused row says "Paused". Check List, Card and Bar, turn Custom timers off/on, and confirm Ready and completed
     timers leave the section. Pop-up alerts show each countdown only once. Outside preview, clicks pass through; the
     preview still drags. Horse registration presses still start independent runs.
 32. Tray → Custom timers: check Start, Pause and Resume against each countdown's state, including Alerts off. Create,
@@ -88,15 +88,15 @@
     shows Update available and the numeric release version; View release opens that tag's page in the official
     repository. Repeat with `1.0.9` installed and `1.0.10` released, and with draft/prerelease releases: only the newer
     stable version is offered.
-34. Disconnect the network and check manually: Couldn’t check appears within ten seconds, with no release action.
+34. Disconnect the network and check manually: Couldn't check appears within ten seconds, with no release action.
     Restore connectivity and retry; check while a short countdown runs and confirm its alerts still arrive. Close/reopen
     Settings during a check and confirm the current status returns without a second concurrent request. A controlled
     HTTP fixture/proxy returning 403, 429, 500 or malformed JSON should produce the same concise failure with no
     immediate retry.
 35. Start a Release build normally and with `--minimized`: it stays responsive and no Windows update notification
     appears. When an update is available, open the app: a green update icon appears immediately before Overlay settings.
-    Hover: “Update available, click to open GitHub”. Click: a small centered dialog shows the version, official release
-    URL and “Download the .exe to update.” Cancel, Escape, the close button or clicking outside dismisses it without
+    Hover: "Update available". Click: a small centered dialog shows the version, official release
+    URL and "Download the .exe to update." Cancel, Escape, the close button or clicking outside dismisses it without
     opening a browser; Open GitHub opens the shown release page and closes the dialog. A manual check finding an update
     also shows the icon. Up-to-date and failed checks show no icon. Restart within 24 hours, including after an offline
     failure or manual check: no automatic request. After 24 hours a startup can check again. A Debug build makes no
