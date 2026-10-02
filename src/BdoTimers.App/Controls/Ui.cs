@@ -33,7 +33,7 @@ public static class Ui
     static void AddTimeColon(object sender, TextChangedEventArgs e)
     {
         var box = (TextBox)sender;
-        var text = Parsing.AddTimeColon(box.Text);
+        var text = TimeEntry.AddColon(box.Text);
         if (text == box.Text) return;
         // The caret keeps its place among the digits; one just past the hour stays before the colon, so a backspace
         // over the colon steps across it.

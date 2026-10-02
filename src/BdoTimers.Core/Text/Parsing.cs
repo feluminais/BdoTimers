@@ -10,17 +10,6 @@ public static class Parsing
     public static bool TryParseTime(string text, out TimeOnly time) =>
         TimeOnly.TryParseExact(text.Trim(), ["H:mm", "HH:mm"], CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
 
-    /// <summary>
-    /// Puts the colon into a time typed as digits: "2200" → "22:00", "930" → "9:30". Two leading digits make the hour
-    /// unless they exceed 23; a lone hour gets no trailing colon, so backspace can still remove it.
-    /// </summary>
-    public static string AddTimeColon(string text)
-    {
-        if (text.Length < 2 || !text.All(char.IsAsciiDigit)) return text;
-        var hourDigits = (text[0] - '0') * 10 + (text[1] - '0') <= 23 ? 2 : 1;
-        return text.Length == hourDigits ? text : $"{text[..hourDigits]}:{text[hourDigits..]}";
-    }
-
     public static string FormatDate(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public static bool TryParseDate(string text, out DateOnly date) =>

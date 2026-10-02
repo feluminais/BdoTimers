@@ -29,6 +29,7 @@
     <Compile Include="..\..\src\BdoTimers.App\Controls\FocusImage.cs" Link="Controls\FocusImage.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\Ui.cs" Link="Controls\Ui.cs" />
     <Compile Include="..\..\src\BdoTimers.Core\Text\ListSearch.cs" Link="Controls\ListSearch.cs" />
+    <Compile Include="..\..\src\BdoTimers.Core\Text\TimeEntry.cs" Link="Controls\TimeEntry.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Alerts\NotificationRegistration.cs" Link="Alerts\NotificationRegistration.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Autostart.cs" Link="Autostart.cs" />
     <Resource Include="..\..\src\BdoTimers.App\Theme\Fonts\Cinzel-Regular.ttf" Link="Theme\Fonts\Cinzel-Regular.ttf" />

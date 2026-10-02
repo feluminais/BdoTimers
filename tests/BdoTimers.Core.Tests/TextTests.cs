@@ -155,7 +155,7 @@ public class TextTests
     [InlineData("9:3", "9:3")]
     [InlineData("2a00", "2a00")]
     public void Adds_the_colon_typed_digits_imply(string text, string expected) =>
-        Assert.Equal(expected, Parsing.AddTimeColon(text));
+        Assert.Equal(expected, TimeEntry.AddColon(text));
 
     [Fact]
     public void Parses_minutes_in_range()
