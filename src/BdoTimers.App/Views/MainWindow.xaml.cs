@@ -193,24 +193,21 @@ public partial class MainWindow : Window
 
     IntPtr WindowMessages(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        const int WmDisplayChange = 0x007E, WmSettingChange = 0x001A, WmNcHitTest = 0x0084, WmNcLButtonUp = 0x00A2;
+        const int WmDisplayChange = 0x007E, WmSettingChange = 0x001A, WmNcHitTest = 0x0084;
         const int HtMaxButton = 9;
         if (message is WmDisplayChange or WmSettingChange) QueuePlacementCheck();
         if (message == WmNcHitTest && MainContent.IsEnabled && MaximizeButton.IsVisible)
         {
             var packed = lParam.ToInt64();
             var point = new Point((short)(packed & 0xffff), (short)((packed >> 16) & 0xffff));
-            var origin = MaximizeButton.PointToScreen(new Point());
-            var end = MaximizeButton.PointToScreen(new Point(MaximizeButton.ActualWidth, MaximizeButton.ActualHeight));
-            if (new Rect(origin, end).Contains(point))
+            if (CaptionMaximize.Bounds(MaximizeButton).Contains(point))
             {
                 handled = true;
                 return new IntPtr(HtMaxButton);
             }
         }
-        if (message == WmNcLButtonUp && wParam.ToInt32() == HtMaxButton)
+        if (CaptionMaximize.Handle(MaximizeButton, message, wParam, lParam, ToggleMaximize))
         {
-            ToggleMaximize();
             handled = true;
         }
         return IntPtr.Zero;

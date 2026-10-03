@@ -84,13 +84,28 @@ static partial class NativeMethods
         public uint Flags;
     }
 
-    /// <summary>An HwndSource hook that turns every z-order change of its window into a move to the bottom, without
-    /// activation.</summary>
+    public static void ReleaseBottom(IntPtr hwnd)
+    {
+        var source = System.Windows.Interop.HwndSource.FromHwnd(hwnd);
+        source?.RemoveHook(KeepAtBottom);
+        if (source?.RootVisual is System.Windows.Window window) window.ShowActivated = true;
+    }
+
+    /// <summary>Keeps an inspection window behind other windows until it is explicitly activated.</summary>
     public static IntPtr KeepAtBottom(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (msg == 0x0021 // WM_MOUSEACTIVATE
+            || (msg == 0x0006 && (wParam.ToInt64() & 0xffff) != 0) // WM_ACTIVATE
+            || (msg == 0x0112 && (wParam.ToInt64() & 0xfff0) == 0xf120)) // SC_RESTORE
+            ReleaseBottom(hwnd);
         if (msg == WM_WINDOWPOSCHANGING)
         {
             var pos = Marshal.PtrToStructure<WindowPos>(lParam);
+            if ((pos.Flags & SWP_NOACTIVATE) == 0)
+            {
+                ReleaseBottom(hwnd);
+                return IntPtr.Zero;
+            }
             pos.InsertAfter = HWND_BOTTOM;
             pos.Flags = (pos.Flags & ~SWP_NOZORDER) | SWP_NOACTIVATE;
             Marshal.StructureToPtr(pos, lParam, false);

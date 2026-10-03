@@ -171,6 +171,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     while running, unplug/reconnect the saved monitor (also while hidden to tray), then show the app. Maximize/restore,
     title double-click, Win+arrows and Windows 11 maximize-hover Snap remain usable. Overlay preview and List/Card/Bar
     stay on their monitor and preserve click-through behavior after scale or monitor changes.
+    Click Maximize/Restore repeatedly: each click changes the window size once and no white native button appears.
+    Press Maximize, move away and release: it does not maximize. After a background inspection, bring the app forward
+    from the taskbar, Alt+Tab and tray; repeat while minimized and after hiding to tray. It stays usable and can move
+    above ordinary windows. Repeat Maximize/Restore at each Text size and with a panel open (caption stays disabled).
 53. [ ] Sleep and time changes: pause/resume around a boss lead, custom countdown, one-time event and to-do reset;
     sleep across each boundary and change the Windows time zone/clock. No burst of stale audio or duplicate alerts;
     countdown completion and missed-event handling follow steps 12/45 and checklist reset times remain correct.

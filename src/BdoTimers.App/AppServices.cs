@@ -212,6 +212,9 @@ public sealed class AppServices : IDisposable
     public void ShowMainWindow()
     {
         var main = EnsureMainWindow();
+#if DEBUG
+        NativeMethods.ReleaseBottom(new System.Windows.Interop.WindowInteropHelper(main).EnsureHandle());
+#endif
         main.Show();
         if (main.WindowState == WindowState.Minimized) main.WindowState = WindowState.Normal;
         main.Activate();
