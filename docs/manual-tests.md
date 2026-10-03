@@ -2,8 +2,8 @@
 
 This is the authoritative manual checklist. Run against disposable data; close only a dev process whose executable
 is under `bin\Debug`. Record the tested commit, Windows version, displays/scales and results in the release notes.
-Unchecked items are unperformed, including all manual checks for the current improvement work; automated checks do
-not establish Narrator, gaming, monitor, sleep, disk-failure or installer behavior.
+Unchecked items are unperformed; automated checks do not establish Narrator, gaming, monitor, sleep, disk-failure or
+installer behavior.
 
 Automated checks: `dotnet test tests/BdoTimers.Core.Tests`, `dotnet build src/BdoTimers.App`, and
 `pwsh scripts/test-windows.ps1`. Windows CI runs these without downloading the speech model or publishing an
