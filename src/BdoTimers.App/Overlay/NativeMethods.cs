@@ -31,12 +31,18 @@ static partial class NativeMethods
         public int Flags;
     }
 
-    [LibraryImport("user32.dll")]
-    public static partial IntPtr MonitorFromWindow(IntPtr hwnd, int flags);
-
     [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo info);
+
+    public delegate bool MonitorCallback(IntPtr monitor, IntPtr dc, ref Rect rect, IntPtr data);
+
+    // DllImport: LibraryImport doesn't marshal delegates.
+    [DllImport("user32.dll")]
+    public static extern bool EnumDisplayMonitors(IntPtr dc, IntPtr clip, MonitorCallback callback, IntPtr data);
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetDpiForSystem();
 
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW")]
     public static partial int GetWindowLong(IntPtr hWnd, int nIndex);

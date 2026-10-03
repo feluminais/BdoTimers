@@ -1,8 +1,8 @@
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using BdoTimers.Core.Model;
 
 namespace BdoTimers.App.Overlay;
 
@@ -64,18 +64,11 @@ public partial class OverlayWindow : Window
     /// <summary>Layouts and scale can grow past the screen edge; keep the measured window on its monitor.</summary>
     void KeepOnScreen()
     {
-        var handle = new WindowInteropHelper(this).Handle;
-        if (handle == IntPtr.Zero || ActualWidth <= 0 || ActualHeight <= 0) return;
-        var monitor = NativeMethods.MonitorFromWindow(handle, 2); // MONITOR_DEFAULTTONEAREST
-        var info = new NativeMethods.MonitorInfo { Size = Marshal.SizeOf<NativeMethods.MonitorInfo>() };
-        if (!NativeMethods.GetMonitorInfo(monitor, ref info)) return;
-        var source = HwndSource.FromHwnd(handle);
-        if (source?.CompositionTarget is not { } target) return;
-        var fromDevice = target.TransformFromDevice;
-        var start = fromDevice.Transform(new Point(info.Work.Left, info.Work.Top));
-        var end = fromDevice.Transform(new Point(info.Work.Right, info.Work.Bottom));
-        Left = Math.Clamp(Left, start.X, Math.Max(start.X, end.X - ActualWidth));
-        Top = Math.Clamp(Top, start.Y, Math.Max(start.Y, end.Y - ActualHeight));
+        var bounds = new WindowRect(Left, Top, ActualWidth, ActualHeight);
+        if (new WindowInteropHelper(this).Handle == IntPtr.Zero || !bounds.IsValid) return;
+        var placed = WindowGeometry.Clamp(bounds, VirtualScreen.WorkAreas(this));
+        Left = placed.Left;
+        Top = placed.Top;
     }
 
     /// <summary>
