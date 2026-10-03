@@ -69,7 +69,17 @@
                             <TextBlock Text="Show on hotkey" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource Row}" BorderThickness="0" Visibility="{Binding ShowOnHotkey, Converter={StaticResource BoolToVisibility}}">
+                    <!-- Stays visible while Show on hotkey is off, so the timed show reads apart from Always show -->
+                    <Border BorderThickness="0" IsEnabled="{Binding ShowOnHotkey}">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource Row}">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.4" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding SecondsChoices}" SelectedItem="{Binding ShowSeconds}"
                                                     ValueWidth="60" AutomationProperties.Name="Show for" />
