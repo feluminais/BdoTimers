@@ -22,21 +22,42 @@ public static class Ui
     public static bool GetTrackKeyboardFocus(DependencyObject d) => (bool)d.GetValue(TrackKeyboardFocusProperty);
     public static void SetTrackKeyboardFocus(DependencyObject d, bool value) => d.SetValue(TrackKeyboardFocusProperty, value);
 
+    static readonly DependencyProperty KeyboardPointerPositionProperty = DependencyProperty.RegisterAttached(
+        "KeyboardPointerPosition", typeof(Point), typeof(Ui));
+
     static void OnTrackKeyboardFocusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not Window window) return;
         window.RemoveHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(ShowFocusCue));
         window.RemoveHandler(Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(HideFocusCue));
+        window.RemoveHandler(Mouse.PreviewMouseMoveEvent, new MouseEventHandler(MouseMoved));
+        window.RemoveHandler(Mouse.PreviewMouseWheelEvent, new MouseWheelEventHandler(MouseScrolled));
         window.Deactivated -= HideInactiveFocusCue;
         if (!(bool)e.NewValue) { window.ClearValue(ShowKeyboardFocusProperty); return; }
         SetShowKeyboardFocus(window, false);
         window.AddHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(ShowFocusCue), true);
         window.AddHandler(Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(HideFocusCue), true);
+        window.AddHandler(Mouse.PreviewMouseMoveEvent, new MouseEventHandler(MouseMoved), true);
+        window.AddHandler(Mouse.PreviewMouseWheelEvent, new MouseWheelEventHandler(MouseScrolled), true);
         window.Deactivated += HideInactiveFocusCue;
     }
 
-    static void ShowFocusCue(object sender, KeyEventArgs e) => SetShowKeyboardFocus((Window)sender, true);
+    static void ShowFocusCue(object sender, KeyEventArgs e)
+    {
+        var window = (Window)sender;
+        window.SetValue(KeyboardPointerPositionProperty, Mouse.GetPosition(window));
+        SetShowKeyboardFocus(window, true);
+    }
     static void HideFocusCue(object sender, MouseButtonEventArgs e) => SetShowKeyboardFocus((Window)sender, false);
+    static void MouseScrolled(object sender, MouseWheelEventArgs e) => SetShowKeyboardFocus((Window)sender, false);
+    static void MouseMoved(object sender, MouseEventArgs e) => PointerMoved((Window)sender, e.GetPosition((Window)sender));
+
+    internal static void PointerMoved(Window window, Point position)
+    {
+        // WPF also raises MouseMove when layout changes beneath a stationary pointer.
+        if (GetShowKeyboardFocus(window) && position != (Point)window.GetValue(KeyboardPointerPositionProperty))
+            SetShowKeyboardFocus(window, false);
+    }
     static void HideInactiveFocusCue(object? sender, EventArgs e) => SetShowKeyboardFocus((Window)sender!, false);
 
     /// <summary>Marks a text field as invalid; the theme draws its hairline in the danger colour.</summary>

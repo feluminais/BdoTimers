@@ -33,6 +33,24 @@ public sealed class FocusAppearanceTests
             { RoutedEvent = Keyboard.PreviewKeyDownEvent });
             WpfTest.Drain();
             Assert.Equal(Visibility.Visible, rectangle.Visibility);
+            Ui.PointerMoved(window, Mouse.GetPosition(window));
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Visible, rectangle.Visibility);
+            Ui.PointerMoved(window, Mouse.GetPosition(window) + new Vector(1, 0));
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Collapsed, rectangle.Visibility);
+            button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Tab)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Visible, rectangle.Visibility);
+            button.RaiseEvent(new MouseWheelEventArgs(Mouse.PrimaryDevice, 0, 120)
+            { RoutedEvent = Mouse.PreviewMouseWheelEvent });
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Collapsed, rectangle.Visibility);
+            button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Tab)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Visible, rectangle.Visibility);
             button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
             { RoutedEvent = Mouse.PreviewMouseDownEvent });
             WpfTest.Drain();

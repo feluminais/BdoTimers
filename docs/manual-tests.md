@@ -153,7 +153,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Settings with the mouse, close each panel and move the pointer away: their caption buttons keep no bright frame.
     Repeat with timer tiles, picture actions and to-do checkboxes; Tab still gives a visible keyboard focus cue.
     Tab to Timers, then click that same tab and click empty space: the focus frame disappears without changing the
-    selected tab. Tab again: the frame returns outside the text. Repeat with names/links at the largest Text size;
+    selected tab. Tab again: the frame returns outside the text. Move the mouse or scroll: the frame disappears;
+    Tab brings it back. A stationary pointer during keyboard navigation keeps the frame visible.
+    Repeat with names/links at the largest Text size;
     no focus frame crosses a label. Switch away from the app: no lingering keyboard frame remains.
 50. [ ] Narrator: tabs, window caption buttons, panel Close/Done, tile actions, alert toggles, cycle selectors, date
     fields and Undo announce concise useful names, roles, state and values. Tile actions are reachable without hover;
