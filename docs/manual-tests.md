@@ -202,3 +202,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 61. [ ] Overlay → Look → Outline: Off removes the clock box, timer chip borders and preview frame immediately;
     On restores their faint neutral outlines in List, Card and Bar. With Off and background opacity at zero, the
     preview remains draggable. Close the panel and restart: the selected outline setting remains saved.
+62. [ ] Time fields (Guild war, One-time event, Settings → To-do): type 9 and a space: it reads 09: with the caret after
+    the colon, and 3 then gives 09:3. Type 9 and press Enter: it reads 09:00, is saved and
+    the panel closes. Type 134, 13 40 or 13.40 and click another field: 13:40; 14 reads 14:00, 24 and 2 4 read 02:40.
+    Type 97 and press Enter: it stays red and isn't saved.

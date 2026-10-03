@@ -16,7 +16,10 @@ public static class Ui
     public static bool GetHasError(DependencyObject d) => (bool)d.GetValue(HasErrorProperty);
     public static void SetHasError(DependencyObject d, bool value) => d.SetValue(HasErrorProperty, value);
 
-    /// <summary>On a 24-hour time field, puts in the colon as the digits are typed, so "2200" reads "22:00".</summary>
+    /// <summary>
+    /// On a 24-hour time field, puts in the colon as the digits are typed, so "2200" reads "22:00", and completes the
+    /// time on Enter or leaving the field, so "9" reads "09:00".
+    /// </summary>
     public static readonly DependencyProperty TimeEntryProperty = DependencyProperty.RegisterAttached(
         "TimeEntry", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(false, OnTimeEntryChanged));
 
@@ -26,8 +29,31 @@ public static class Ui
     static void OnTimeEntryChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not TextBox box) return;
-        if ((bool)e.NewValue) box.TextChanged += AddTimeColon;
-        else box.TextChanged -= AddTimeColon;
+        box.TextChanged -= AddTimeColon;
+        box.PreviewKeyDown -= FinishTimeOnEnter;
+        box.LostKeyboardFocus -= FinishTimeOnLeave;
+        if (!(bool)e.NewValue) return;
+        box.TextChanged += AddTimeColon;
+        box.PreviewKeyDown += FinishTimeOnEnter;
+        box.LostKeyboardFocus += FinishTimeOnLeave;
+    }
+
+    static void FinishTimeOnEnter(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter) FinishTime((TextBox)sender);
+    }
+
+    static void FinishTimeOnLeave(object sender, KeyboardFocusChangedEventArgs e) => FinishTime((TextBox)sender);
+
+    /// <summary>The completed time goes to the binding at once, ahead of any update delay, so the Enter that finished it
+    /// already finds the panel's Done enabled.</summary>
+    static void FinishTime(TextBox box)
+    {
+        var text = TimeEntry.Finish(box.Text);
+        if (text == box.Text) return;
+        box.Text = text;
+        box.CaretIndex = text.Length;
+        box.GetBindingExpression(TextBox.TextProperty)?.UpdateSource();
     }
 
     static void AddTimeColon(object sender, TextChangedEventArgs e)
@@ -36,11 +62,11 @@ public static class Ui
         var text = TimeEntry.AddColon(box.Text);
         if (text == box.Text) return;
         // The caret keeps its place among the digits; one just past the hour stays before the colon, so a backspace
-        // over the colon steps across it.
+        // over the colon steps across it. A typed separator that became the colon leaves it after the colon.
         var caret = box.CaretIndex;
         var colon = text.IndexOf(':');
         box.Text = text;
-        box.CaretIndex = caret <= colon ? caret : caret + 1;
+        box.CaretIndex = colon == text.Length - 1 ? text.Length : caret <= colon ? caret : caret + 1;
     }
 
     /// <summary>
