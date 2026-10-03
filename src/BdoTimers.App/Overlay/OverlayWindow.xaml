@@ -13,8 +13,18 @@
             <ScaleTransform ScaleX="{Binding Scale}" ScaleY="{Binding Scale}" />
         </Grid.LayoutTransform>
         <!-- Background colour or picture; no outline, so nothing on it draws the eye in game -->
-        <Border Background="{Binding Background}" Opacity="{Binding BackgroundOpacity}" />
-        <ContentControl Content="{Binding}" Opacity="{Binding TextOpacity}" Focusable="False">
+        <Border Background="{Binding Background}" Opacity="{Binding BackgroundOpacity}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Layout}" Value="Card">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+        <ContentControl Content="{Binding}" Focusable="False">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Setter Property="ContentTemplate" Value="{StaticResource ListLayout}" />
@@ -30,7 +40,17 @@
             </ContentControl.Style>
         </ContentControl>
         <!-- Preview: a near-invisible fill keeps the overlay draggable even with its outline off -->
-        <Border BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="{Binding OutlineThickness}" Background="#01000000"
-                Visibility="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
+        <Border BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="{Binding OutlineThickness}" Background="#01000000">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Layout}" Value="Card">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
     </Grid>
 </Window>

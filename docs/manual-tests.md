@@ -214,3 +214,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 61. [ ] Overlay → Look → Outline: Off removes the clock box, timer chip borders and preview frame immediately;
     On restores their faint neutral outlines in List, Card and Bar. With Off and background opacity at zero, the
     preview remains draggable. Close the panel and restart: the selected outline setting remains saved.
+62. [ ] Overlay → Card: the clocks sit above the card in a raised section with smoothly curved shoulders and no seam.
+    Toggle each clock and then all clocks off: the section fits the enabled clocks and disappears when none remain.
+    Check colour and picture backgrounds, opacity and scale; Outline follows the joined shape in preview. With the
+    background and outline off, drag the clock section and card body; both move the overlay together.

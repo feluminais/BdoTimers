@@ -33,13 +33,15 @@
     <!-- Local, server and in-game time: a monitor, a globe, and a sun or by night a moon -->
     <Style x:Key="OverlayClocks" TargetType="ContentControl">
         <Setter Property="Focusable" Value="False" />
+        <Setter Property="BorderThickness" Value="{Binding OutlineThickness}" />
+        <Setter Property="Padding" Value="6,1" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="Visibility" Value="{Binding HasClocks, Converter={StaticResource BoolToVisibility}}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContentControl">
                     <Border Background="{TemplateBinding Background}" BorderBrush="{DynamicResource HairlineStrongBrush}"
-                            BorderThickness="{Binding OutlineThickness}" Padding="6,1">
+                            BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}">
                         <!-- Each icon's left margin spaces it from the clock before; this takes back the first one's -->
                         <StackPanel Orientation="Horizontal" Margin="-10,0,0,0">
                             <StackPanel Orientation="Horizontal" Visibility="{Binding Clock, Converter={StaticResource NullToCollapsed}}">
@@ -164,7 +166,7 @@
     <!-- Layouts. Sections are ContentControls: a ContentPresenter takes its Content as DataContext, so a Visibility
          binding on it would miss the view model and an empty section would keep its space. -->
     <DataTemplate x:Key="ListLayout" DataType="{x:Type overlay:OverlayViewModel}">
-        <StackPanel Margin="12,8" MinWidth="200">
+        <StackPanel Margin="12,8" MinWidth="200" Opacity="{Binding TextOpacity}">
             <ContentControl Style="{StaticResource OverlayClocks}" Margin="0,0,0,4" />
             <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
                             Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
@@ -187,35 +189,55 @@
     </DataTemplate>
 
     <DataTemplate x:Key="CardLayout" DataType="{x:Type overlay:OverlayViewModel}">
-        <StackPanel Width="250">
-            <Grid>
-                <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource CardBanner}"
-                                Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
-                <ContentControl Style="{StaticResource OverlayClocks}" Background="#CC0B0B0C" HorizontalAlignment="Right"
-                                VerticalAlignment="Top" Margin="0,6,6,0" />
+        <overlay:CardSurface Fill="{Binding Background}" FillOpacity="{Binding BackgroundOpacity}">
+            <overlay:CardSurface.Style>
+                <Style TargetType="overlay:CardSurface">
+                    <Style.Triggers>
+                        <MultiDataTrigger>
+                            <MultiDataTrigger.Conditions>
+                                <Condition Binding="{Binding IsPreview}" Value="True" />
+                                <Condition Binding="{Binding OutlineThickness}" Value="1" />
+                            </MultiDataTrigger.Conditions>
+                            <Setter Property="Outline" Value="{DynamicResource HairlineStrongBrush}" />
+                        </MultiDataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </overlay:CardSurface.Style>
+            <Grid MinWidth="250" Opacity="{Binding TextOpacity}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <ContentControl Style="{StaticResource OverlayClocks}" HorizontalAlignment="Center"
+                                BorderThickness="0" Padding="16,3,16,5" Margin="18,0" />
+                <Grid Grid.Row="1" MaxWidth="250">
+                    <ContentControl Content="{Binding Next}" ContentTemplate="{StaticResource CardBanner}"
+                                    Focusable="False" Visibility="{Binding Next, Converter={StaticResource NullToCollapsed}}" />
+                </Grid>
+                <StackPanel Grid.Row="2" MaxWidth="230" Margin="10,4,10,8">
+                    <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
+                                    Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
+                    <ItemsControl Style="{StaticResource PopUpList}" ItemTemplate="{StaticResource LineRow}" />
+                    <WrapPanel Margin="0,4,0,0">
+                        <ContentControl Content="{Binding Farm}" ContentTemplate="{StaticResource ChipLine}"
+                                        Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
+                        <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource ChipLine}"
+                                        Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
+                    </WrapPanel>
+                    <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
+                    <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
+                               Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
+                    <TextBlock Text="Custom timers" Style="{StaticResource LabelText}" Margin="12,6,0,2"
+                               Visibility="{Binding HasCustomTimers, Converter={StaticResource BoolToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding CustomTimers}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
+                </StackPanel>
             </Grid>
-            <StackPanel Margin="10,4,10,8">
-                <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
-                                Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
-                <ItemsControl Style="{StaticResource PopUpList}" ItemTemplate="{StaticResource LineRow}" />
-                <WrapPanel Margin="0,4,0,0">
-                    <ContentControl Content="{Binding Farm}" ContentTemplate="{StaticResource ChipLine}"
-                                    Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
-                    <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource ChipLine}"
-                                    Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
-                </WrapPanel>
-                <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
-                <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
-                           Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
-                <TextBlock Text="Custom timers" Style="{StaticResource LabelText}" Margin="12,6,0,2"
-                           Visibility="{Binding HasCustomTimers, Converter={StaticResource BoolToVisibility}}" />
-                <ItemsControl ItemsSource="{Binding CustomTimers}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
-            </StackPanel>
-        </StackPanel>
+        </overlay:CardSurface>
     </DataTemplate>
 
     <DataTemplate x:Key="BarLayout" DataType="{x:Type overlay:OverlayViewModel}">
-        <StackPanel Orientation="Horizontal" Margin="8,5">
+        <StackPanel Orientation="Horizontal" Margin="8,5" Opacity="{Binding TextOpacity}">
             <ContentControl Style="{StaticResource OverlayClocks}" Margin="0,0,12,0" VerticalAlignment="Center" />
             <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource BarPrevious}" VerticalAlignment="Center"
                             Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
