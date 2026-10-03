@@ -38,4 +38,11 @@ public class WindowGeometryTests
         WindowRect[] areas = [new(0, 0, 1000, 800), new(1000, 0, 1000, 800)];
         Assert.Equal(areas[1], WindowGeometry.WorkAreaFor(new(900, 100, 800, 500), areas));
     }
+
+    [Fact]
+    public void ResizeKeepsTheCentre()
+    {
+        Assert.Equal(new WindowRect(100, 140, 1200, 900), WindowGeometry.Resize(new(300, 290, 800, 600), 1200, 900));
+        Assert.Equal(new WindowRect(300, 290, 800, 600), WindowGeometry.Resize(new(100, 140, 1200, 900), 800, 600));
+    }
 }

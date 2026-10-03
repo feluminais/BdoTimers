@@ -5,7 +5,9 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media;
 using System.Windows.Media.Animation;
+using System.Windows.Shell;
 using System.Windows.Threading;
 using BdoTimers.App.ViewModels;
 using BdoTimers.Core.Diagnostics;
@@ -17,12 +19,20 @@ namespace BdoTimers.App.Views;
 public partial class MainWindow : Window
 {
     static readonly Duration Fade = TimeSpan.FromMilliseconds(120);
+    const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 40;
+
+    static readonly DependencyProperty UiScaleProperty = DependencyProperty.Register(nameof(UiScale), typeof(ScaleTransform),
+        typeof(MainWindow), new PropertyMetadata(null, (d, e) => ((MainWindow)d).UiScaleChanged((ScaleTransform?)e.OldValue)));
 
     readonly MainViewModel _vm;
     readonly AppServices _services;
     readonly PanelFocusScope _panelFocus;
     HwndSource? _source;
     bool _placementPending;
+    // The size the last text size change asked for, which the screen may have held back; while the window keeps the size
+    // it got, the next change scales from this, so returning to a smaller text size restores the earlier window.
+    Size? _scaledSize;
+    Size _appliedSize;
 
     public MainWindow(MainViewModel viewModel, AppServices services)
     {
@@ -30,6 +40,7 @@ public partial class MainWindow : Window
         DataContext = _vm = viewModel;
         _services = services;
         _panelFocus = new PanelFocusScope(this, MainContent, PanelLayer, _vm.ClosePanel);
+        SetResourceReference(UiScaleProperty, "UiScaleTransform");
         SourceInitialized += (_, _) =>
         {
             _source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
@@ -111,6 +122,27 @@ public partial class MainWindow : Window
 
     void Close_Click(object sender, RoutedEventArgs e) => Close();
 
+    /// <summary>Text size and Windows' text scaling, which every screen and panel is drawn at.</summary>
+    double UiScale => GetValue(UiScaleProperty) is ScaleTransform { ScaleX: > 0 and var scale } ? scale : 1;
+
+    /// <summary>The window grows and shrinks with the text, so each screen keeps its layout.</summary>
+    void UiScaleChanged(ScaleTransform? previous)
+    {
+        WindowChrome.GetWindowChrome(this).CaptionHeight = BaseCaptionHeight * UiScale;
+        if (_source is null || previous is not { ScaleX: > 0 } || WindowState != WindowState.Normal)
+        {
+            QueuePlacementCheck();
+            return;
+        }
+        var ratio = UiScale / previous.ScaleX;
+        var current = new Size(Width, Height);
+        var size = _scaledSize is { } asked && current == _appliedSize ? asked : current;
+        var target = new Size(size.Width * ratio, size.Height * ratio);
+        ApplyPlacement(WindowGeometry.Resize(new WindowRect(Left, Top, Width, Height), target.Width, target.Height));
+        _scaledSize = target;
+        _appliedSize = new Size(Width, Height);
+    }
+
     void RestorePlacement(WindowPlacement? placement)
     {
         if (placement is { } saved)
@@ -123,6 +155,8 @@ public partial class MainWindow : Window
                 return;
             }
         }
+        Width *= UiScale;
+        Height *= UiScale;
         QueuePlacementCheck();
     }
 
@@ -144,8 +178,8 @@ public partial class MainWindow : Window
     {
         var areas = VirtualScreen.WorkAreas(this);
         var work = WindowGeometry.WorkAreaFor(requested, areas);
-        MinWidth = Math.Min(640, work.Width);
-        MinHeight = Math.Min(360, work.Height);
+        MinWidth = Math.Min(BaseMinWidth * UiScale, work.Width);
+        MinHeight = Math.Min(BaseMinHeight * UiScale, work.Height);
         var clamped = WindowGeometry.Clamp(requested with
         {
             Width = Math.Max(requested.Width, MinWidth), Height = Math.Max(requested.Height, MinHeight)

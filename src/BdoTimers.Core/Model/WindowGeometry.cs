@@ -29,6 +29,9 @@ public static class WindowGeometry
             Math.Clamp(window.Top, work.Top, work.Bottom - height), width, height);
     }
 
+    public static WindowRect Resize(WindowRect window, double width, double height) =>
+        new(window.Left + (window.Width - width) / 2, window.Top + (window.Height - height) / 2, width, height);
+
     static double Overlap(WindowRect a, WindowRect b) =>
         Math.Max(0, Math.Min(a.Right, b.Right) - Math.Max(a.Left, b.Left))
         * Math.Max(0, Math.Min(a.Bottom, b.Bottom) - Math.Max(a.Top, b.Top));

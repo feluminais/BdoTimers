@@ -160,7 +160,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     focus remains visible on each action. Change a selector with arrows/Home/End and hear the new value.
 51. [ ] Windows High Contrast: switch on/off while the app and a panel are open; text, icons, borders, selected tabs,
     errors and focus indicators remain visible. Set Windows text size and app Text size to their largest supported
-    values; screens and panels can scroll to every control without clipped actions or obscured fields.
+    values; screens and panels can scroll to every control without clipped actions or obscured fields. With app Text
+    size back at 100%, step it to 150%: the window grows by the same factor within its screen, the tabs and caption
+    buttons grow with the text and the caption still drags the window. Boss tile labels and clocks, week grid names
+    and timer countdowns stay whole at any window width; a narrow tile shrinks them and a long name wraps. Return to
+    100%: the window regains its earlier size.
 52. [ ] Window geometry: use 1080p at 200% scaling, 100/150/200% displays, a negative-coordinate monitor and a layout
     with a gap. Restore saved partly-offscreen/oversized placements; the complete window fits a real work area with
     its caption and taskbar clear. Move across mixed-DPI screens, change display scale/resolution/taskbar position

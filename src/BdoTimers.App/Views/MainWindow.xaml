@@ -28,12 +28,12 @@
         <Grid>
           <Grid x:Name="MainContent">
             <Grid.RowDefinitions>
-                <RowDefinition Height="40" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <!-- Top bar: the empty area drags the window -->
-            <Grid Margin="22,0,0,0">
+            <Grid Margin="22,0,0,0" Height="40" LayoutTransform="{DynamicResource UiScaleTransform}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <RadioButton x:Name="BossesTab" Style="{StaticResource TabButton}" Content="Bosses" IsChecked="True"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
