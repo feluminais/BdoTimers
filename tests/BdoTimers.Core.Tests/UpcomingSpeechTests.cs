@@ -19,6 +19,22 @@ public class UpcomingSpeechTests
     static TimerDef Silent(TimerDef timer) => timer with { Alerts = timer.Alerts with { Tts = new TtsAlert { Enabled = false } } };
 
     [Theory]
+    [InlineData("Sangoon", "Karanda")]
+    [InlineData("Golden Pig King", "Nouver")]
+    [InlineData("Bulgasal", "Kzarka")]
+    [InlineData("Uturi", "Kutum")]
+    public void Morning_Light_leads_prepared_and_spoken_shared_alerts(string morningLight, string other)
+    {
+        var timers = new[] { Boss(other, 0) with { IsBuiltIn = true }, Boss(morningLight, 0) with { IsBuiltIn = true } };
+        var planner = new AlertPlanner();
+
+        Assert.Equal([$"{morningLight} and {other} now"],
+            planner.UpcomingSpeech(timers, NoMutes, T.AddSeconds(-30), Window));
+        var alert = AlertGrouping.Group(planner.Tick(timers, NoMutes, T)).Single();
+        Assert.Equal($"{morningLight} and {other} now", AlertMessage.Build(alert).Speech);
+    }
+
+    [Theory]
     [InlineData(-1, false)]
     [InlineData(0, true)]
     [InlineData(1, true)]

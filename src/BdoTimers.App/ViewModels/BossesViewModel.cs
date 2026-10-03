@@ -75,9 +75,9 @@ public sealed partial class BossesViewModel : ObservableObject
     static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
         data.Timers.Where(t => BossRegions.IsSelected(data, t));
 
-    /// <summary>Keeps each boss's tile, in name order, and updates it in place.</summary>
+    /// <summary>Keeps each boss's tile, with Morning Light bosses first, and updates it in place.</summary>
     void SyncTiles(AppData data, DateTimeOffset now) =>
-        Tiles.Sync(BuiltInBosses(data).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase),
+        Tiles.Sync(BossOrder.Sort(BuiltInBosses(data)),
             (tile, boss) => tile.Id == boss.Id, boss => new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now),
             (tile, boss) => tile.Show(boss, now));
 

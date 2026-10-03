@@ -6,7 +6,7 @@ public enum CellState { Upcoming, Next, Past, Skipped, Unfollowed }
 
 public sealed record GridEntry(TimerDef Boss, DateTimeOffset AtUtc, CellState State);
 
-/// <summary>One local spawn time; <see cref="Days"/> holds Monday to Sunday, each with its bosses sorted by name.</summary>
+/// <summary>One local spawn time; <see cref="Days"/> holds Monday to Sunday, each with Morning Light bosses first.</summary>
 public sealed record GridRow(TimeOnly Time, IReadOnlyList<IReadOnlyList<GridEntry>> Days);
 
 public sealed record WeekGridState(DateOnly WeekStart, IReadOnlyList<GridRow> Rows);

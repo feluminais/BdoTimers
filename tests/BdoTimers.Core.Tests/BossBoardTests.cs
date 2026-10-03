@@ -25,7 +25,7 @@ public class BossBoardTests
         Assert.Equal(Utc(22, 14, 0), board.Next!.AtUtc);
         Assert.Equal(new[] { "Nouver" }, board.Next.Bosses.Select(b => b.Name));
         Assert.Equal(Utc(22, 17, 0), board.FollowedBy!.AtUtc);
-        Assert.Equal(new[] { "Kzarka", "Uturi" }, board.FollowedBy.Bosses.Select(b => b.Name));
+        Assert.Equal(new[] { "Uturi", "Kzarka" }, board.FollowedBy.Bosses.Select(b => b.Name));
     }
 
     [Fact]

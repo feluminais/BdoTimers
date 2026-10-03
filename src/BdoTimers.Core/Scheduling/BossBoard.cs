@@ -28,7 +28,7 @@ public static class BossBoard
         return new BossBoardState(InReach(next - 1), InReach(next), InReach(next + 1));
     }
 
-    /// <summary>Built-in boss spawns in [fromUtc, toUtc), grouped by instant and ascending; bosses sorted by name.</summary>
+    /// <summary>Built-in boss spawns in [fromUtc, toUtc), grouped by instant and ascending; Morning Light bosses first.</summary>
     internal static List<SpawnGroup> Spawns(AppData data, DateTimeOffset fromUtc, DateTimeOffset toUtc, bool followedOnly)
     {
         var muted = data.Muted.ToHashSet();
@@ -39,7 +39,7 @@ public static class BossBoard
             .OrderBy(g => g.Key)
             .Select(g => new SpawnGroup(
                 g.Key,
-                g.Select(s => s.Boss).OrderBy(b => b.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+                BossOrder.Sort(g.Select(s => s.Boss)).ToList(),
                 g.All(s => muted.Contains(new MutedOccurrence(s.Boss.Id, g.Key)))))
             .ToList();
     }

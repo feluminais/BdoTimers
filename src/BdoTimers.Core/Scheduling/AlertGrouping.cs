@@ -4,7 +4,7 @@ public static class AlertGrouping
 {
     /// <summary>
     /// Merges alerts for the same instant and minutes left (bosses sharing a spawn) into one alert whose timers are
-    /// sorted by name, so a shared spawn plays one sound and speaks one line.
+    /// sorted with Morning Light bosses first, so a shared spawn plays one sound and speaks one line.
     /// </summary>
     public static IReadOnlyList<AlertEvent> Group(IReadOnlyList<AlertEvent> alerts) =>
         alerts
@@ -13,7 +13,7 @@ public static class AlertGrouping
                 ? g.First()
                 : g.First() with
                 {
-                    Timers = g.SelectMany(a => a.Timers).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+                    Timers = BossOrder.Sort(g.SelectMany(a => a.Timers)).ToList(),
                 })
             .ToList();
 }

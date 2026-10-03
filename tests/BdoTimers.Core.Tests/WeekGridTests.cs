@@ -26,7 +26,7 @@ public class WeekGridTests
         Assert.Equal(new DateOnly(2026, 9, 21), grid.WeekStart);
         Assert.Equal(new[] { "14:00", "16:00", "19:00", "22:15" }, grid.Rows.Select(r => r.Time.ToString("HH:mm")));
         Assert.All(grid.Rows, r => Assert.Equal(7, r.Days.Count));
-        Assert.Equal(new[] { "Kzarka", "Uturi" }, grid.Rows[2].Days[1].Select(e => e.Boss.Name));
+        Assert.Equal(new[] { "Uturi", "Kzarka" }, grid.Rows[2].Days[1].Select(e => e.Boss.Name));
     }
 
     [Fact]

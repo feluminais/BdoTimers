@@ -19,6 +19,8 @@ public static class UpcomingQuery
                 .Where(at => !muted.Contains(new MutedOccurrence(p.Timer.Id, at)) && NewWindow(data, p.Timer, at, p.Window))
                 .Select(at => new UpcomingItem(p.Timer, at)))
             .OrderBy(i => i.AtUtc)
+            .ThenBy(i => BossOrder.Priority(i.Timer))
+            .ThenBy(i => i.Timer.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
