@@ -256,7 +256,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         Flush();
         _services.Todos.Changed -= OnStoreChanged;
         if (IsNew && _services.Todos.Current.Lists.FirstOrDefault(l => l.Id == _id) is { } list &&
-            list.Name == "New list" && list.Rows.Count == 0) _services.Todos.Delete(_id);
+            list.Name == TodoStore.NewListName && list.Rows.Count == 0) _services.Todos.Delete(_id);
     }
 }
 

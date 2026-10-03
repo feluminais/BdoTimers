@@ -7,6 +7,9 @@ namespace BdoTimers.Core.Storage;
 public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IClock clock)
     : PersistentState<TodoData>(file, initial)
 {
+    /// <summary>The name a list starts with; an untouched new list still has it.</summary>
+    public const string NewListName = "New list";
+
     public void Modify(Guid id, Func<TodoList, TodoList> change) =>
         UpdateLists(lists => lists.Select(list => list.Id == id ? change(list) : list).ToList());
 
@@ -14,7 +17,7 @@ public sealed class TodoStore(JsonFileStore<TodoData> file, TodoData initial, IC
     {
         var list = new TodoList
         {
-            Name = "New list",
+            Name = NewListName,
             Cadence = cadence, Enabled = true,
             NextResetUtc = TodoReset.Next(cadence, Schedule(settings, cadence), clock.UtcNow),
         };
