@@ -72,7 +72,10 @@
                                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
                                            TextTrimming="CharacterEllipsis" />
                             </DockPanel>
-                            <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
+                            <!-- Shrinks to fit a narrow tile rather than lose its last digits -->
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right">
+                                <TextBlock Text="{Binding Digits}" Style="{StaticResource ClockText}" FontSize="27" />
+                            </Viewbox>
                             <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
                             <!-- As wide as the lines above; the number's fixed width keeps the line from shifting as it grows -->
                             <DockPanel Margin="0,3,0,0" Visibility="{Binding Growth, Converter={StaticResource NullToCollapsed}}">
@@ -128,7 +131,8 @@
                 <!-- Outside the tile's button, so clicks in it never open the timer panel -->
                 <Popup IsOpen="{Binding IsPickingStart}" StaysOpen="False" PlacementTarget="{Binding ElementName=StartedButton}"
                        Placement="Left" HorizontalOffset="-6" AllowsTransparency="True" Opened="StartPicker_Opened">
-                    <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1" Padding="16,6,16,14">
+                    <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1" Padding="16,6,16,14"
+                            LayoutTransform="{DynamicResource UiScaleTransform}">
                         <Border.InputBindings>
                             <KeyBinding Key="Escape" Command="{Binding CancelStartCommand}" />
                             <KeyBinding Key="Enter" Command="{Binding ConfirmStartCommand}" />

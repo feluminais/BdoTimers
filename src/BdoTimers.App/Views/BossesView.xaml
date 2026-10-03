@@ -35,6 +35,8 @@
                     <controls:ArtImage Sources="{Binding Images}" />
                     <StackPanel Grid.Column="1" Margin="-16,0,16,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
                                 Visibility="{Binding HasSpawn, Converter={StaticResource BoolToVisibility}}">
+                        <!-- Label and clock shrink to fit a narrow tile rather than lose their ends -->
+                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right">
                         <TextBlock Text="{Binding Label}" FontSize="11">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock">
@@ -47,6 +49,7 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
+                        </Viewbox>
                         <ItemsControl ItemsSource="{Binding Names}" Margin="0,2,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:BossLink}">
@@ -56,7 +59,8 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <TextBlock Text="{Binding Clock}" Margin="0,2,0,0">
+                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right" Margin="0,2,0,0">
+                        <TextBlock Text="{Binding Clock}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
                                     <Setter Property="FontSize" Value="17" />
@@ -68,6 +72,7 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
+                        </Viewbox>
                         <TextBlock Text="Skipped" Style="{StaticResource LabelText}"
                                    Visibility="{Binding Skipped, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
@@ -243,10 +248,12 @@
                                                                             <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipCommand}" />
                                                                         </ContextMenu>
                                                                     </Button.ContextMenu>
-                                                                    <StackPanel Orientation="Horizontal">
+                                                                    <!-- A long name wraps within its day's column -->
+                                                                    <DockPanel>
                                                                     <!-- Invisible twin of the pencil: the name alone is centred and the pencil hangs to its right -->
-                                                                    <TextBlock Style="{StaticResource OwnSettingsMark}" Margin="0,0,4,0" Opacity="0" IsHitTestVisible="False" />
-                                                                    <TextBlock Text="{Binding Name}" FontSize="12">
+                                                                    <TextBlock DockPanel.Dock="Left" Style="{StaticResource OwnSettingsMark}" Margin="0,0,4,0" Opacity="0" IsHitTestVisible="False" />
+                                                                    <TextBlock DockPanel.Dock="Right" Style="{StaticResource OwnSettingsMark}" Margin="4,0,0,0" />
+                                                                    <TextBlock Text="{Binding Name}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center">
                                                                         <TextBlock.Style>
                                                                             <Style TargetType="TextBlock">
                                                                                 <Style.Triggers>
@@ -257,8 +264,7 @@
                                                                             </Style>
                                                                         </TextBlock.Style>
                                                                     </TextBlock>
-                                                                    <TextBlock Style="{StaticResource OwnSettingsMark}" Margin="4,0,0,0" />
-                                                                    </StackPanel>
+                                                                    </DockPanel>
                                                                 </Button>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
