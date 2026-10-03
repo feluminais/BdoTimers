@@ -89,6 +89,13 @@ public partial class MainWindow : Window
 
     void Dim_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _vm.ClosePanel();
 
+    /// <summary>The scroller's content presenter takes hits across its whole area, so most of the dim around the panel
+    /// is under it; a press that lands on the presenter itself is outside the panel.</summary>
+    void PanelScroller_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is ScrollContentPresenter presenter && presenter.TemplatedParent == PanelScroller) _vm.ClosePanel();
+    }
+
     void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
     void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
