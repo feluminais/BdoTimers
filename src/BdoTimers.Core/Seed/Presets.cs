@@ -3,7 +3,7 @@ using BdoTimers.Core.Model;
 namespace BdoTimers.Core.Seed;
 
 /// <summary>
-/// Timers everyone starts with at the top of the Timers screen: farm growth, fishing, horse registration, and guild events.
+/// Timers everyone starts with at the top of the Timers screen: farm growth, fishing, horse registration and guild bosses.
 /// </summary>
 public static class Presets
 {
@@ -12,6 +12,7 @@ public static class Presets
     public const string HorseRegistration = "horse-registration";
     public const string HorseRegistrationRun = "horse-registration-run";
     public const string GuildBosses = "guild-bosses";
+    /// <summary>No longer a preset; data from earlier versions may keep one that has times set.</summary>
     public const string GuildWar = "guild-war";
 
     /// <summary>Default temperature estimate; offline time and crop care can delay the harvest.</summary>
@@ -42,13 +43,6 @@ public static class Presets
             Name = "Guild bosses",
             Kind = TimerKind.Scheduled,
             Preset = GuildBosses,
-            Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
-        },
-        new TimerDef
-        {
-            Name = "Guild war",
-            Kind = TimerKind.Scheduled,
-            Preset = GuildWar,
             Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
         },
     ];
@@ -90,8 +84,8 @@ public static class Presets
     /// <summary>Farm crops keep growing after the harvest time, so its countdown runs on past zero until reset.</summary>
     public static bool Overgrows(string? preset) => preset == Farm;
 
-    /// <summary>Horse registration and the user's own timers can be deleted.</summary>
-    public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun;
+    /// <summary>Horse registration, a kept Guild war and the user's own timers can be deleted.</summary>
+    public static bool CanDelete(string? preset) => preset is null or HorseRegistration or HorseRegistrationRun or GuildWar;
 
     /// <summary>Sort key that puts presets first, in their fixed order, and keeps other timers after them.</summary>
     public static int Rank(string? preset) => preset switch

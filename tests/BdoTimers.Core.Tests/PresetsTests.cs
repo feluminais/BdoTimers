@@ -13,18 +13,16 @@ public class PresetsTests
         var own = new TimerDef { Name = "Buff", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
         var data = Presets.Ensure(new AppData { Timers = [own] });
 
-        Assert.Equal(["Farm", "Fishing", "Guild bosses", "Guild war", "Buff"], data.Timers.Select(t => t.Name));
+        Assert.Equal(["Farm", "Fishing", "Guild bosses", "Buff"], data.Timers.Select(t => t.Name));
         var farm = data.Timers[0];
         Assert.Equal(TimerKind.Countdown, farm.Kind);
         Assert.Equal(TimeSpan.FromHours(22), farm.Countdown!.Duration);
         Assert.Equal(TimerKind.Stopwatch, data.Timers[1].Kind);
         Assert.NotNull(data.Timers[1].Stopwatch);
-        Assert.All(data.Timers.Skip(2).Take(2), t =>
-        {
-            Assert.Equal(TimerKind.Scheduled, t.Kind);
-            Assert.Equal(TimeZoneInfo.Local.Id, t.Scheduled!.TimeZoneId);
-            Assert.Empty(t.Scheduled.Slots);
-        });
+        var guild = data.Timers[2];
+        Assert.Equal(TimerKind.Scheduled, guild.Kind);
+        Assert.Equal(TimeZoneInfo.Local.Id, guild.Scheduled!.TimeZoneId);
+        Assert.Empty(guild.Scheduled.Slots);
     }
 
     [Fact]
@@ -37,18 +35,18 @@ public class PresetsTests
     }
 
     [Fact]
-    public void Ensure_adds_guild_presets_to_existing_data_without_resetting_farm_or_fishing()
+    public void Ensure_adds_guild_bosses_to_existing_data_without_resetting_farm_or_fishing()
     {
         var old = Presets.Create().Take(2).Select(t => t with { Name = t.Name + "!" }).ToList();
         var own = new TimerDef { Name = "Buff", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
 
         var upgraded = Presets.Ensure(new AppData { Timers = [own, .. old] });
 
-        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.GuildBosses, Presets.GuildWar, null],
+        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.GuildBosses, null],
             upgraded.Timers.Select(t => t.Preset));
         Assert.Same(old[0], upgraded.Timers[0]);
         Assert.Same(old[1], upgraded.Timers[1]);
-        Assert.Same(own, upgraded.Timers[4]);
+        Assert.Same(own, upgraded.Timers[3]);
         Assert.Same(upgraded, Presets.Ensure(upgraded));
     }
 
@@ -90,12 +88,12 @@ public class PresetsTests
     }
 
     [Fact]
-    public void Of_the_presets_only_horse_registration_can_be_deleted()
+    public void Horse_registration_and_a_kept_guild_war_can_be_deleted()
     {
         Assert.False(Presets.CanDelete(Presets.Farm));
         Assert.False(Presets.CanDelete(Presets.Fishing));
         Assert.False(Presets.CanDelete(Presets.GuildBosses));
-        Assert.False(Presets.CanDelete(Presets.GuildWar));
+        Assert.True(Presets.CanDelete(Presets.GuildWar));
         Assert.True(Presets.CanDelete(Presets.HorseRegistration));
         Assert.True(Presets.CanDelete(null));
     }
@@ -105,7 +103,7 @@ public class PresetsTests
     {
         var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
         var bosses = Presets.Create().Single(t => t.Preset == Presets.GuildBosses);
-        var war = Presets.Create().Single(t => t.Preset == Presets.GuildWar);
+        var war = GuildWar();
 
         Assert.Empty(OccurrenceSource.Between(bosses, now, now.AddDays(8)));
         Assert.Empty(OccurrenceSource.Between(war, now, now.AddDays(8)));
@@ -121,7 +119,7 @@ public class PresetsTests
     {
         var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
         var boss = Presets.Create().Single(t => t.Preset == Presets.GuildBosses);
-        var war = Presets.Create().Single(t => t.Preset == Presets.GuildWar);
+        var war = GuildWar();
         var tuesday = new Slot(DayOfWeek.Tuesday, new TimeOnly(20, 0));
         var friday = new Slot(DayOfWeek.Friday, new TimeOnly(20, 0));
         boss = boss with { Scheduled = boss.Scheduled! with { Slots = [tuesday] } };
@@ -135,7 +133,7 @@ public class PresetsTests
     public void Guild_war_alerts_at_each_configured_weekly_time()
     {
         var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
-        var war = Presets.Create().Single(t => t.Preset == Presets.GuildWar);
+        var war = GuildWar();
         war = war with
         {
             Scheduled = new ScheduledSpec
@@ -163,4 +161,13 @@ public class PresetsTests
 
         Assert.Empty(OccurrenceSource.Between(fishing, T0, T0.AddDays(8)));
     }
+
+    /// <summary>A Guild war kept from data saved before it stopped being a preset.</summary>
+    static TimerDef GuildWar() => new()
+    {
+        Name = "Guild war",
+        Kind = TimerKind.Scheduled,
+        Preset = Presets.GuildWar,
+        Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
+    };
 }

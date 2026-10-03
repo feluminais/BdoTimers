@@ -185,11 +185,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     timer, to-do list) scrolls that list; the boss strip, list headings and each panel's header and Done stay in place.
     Shrink the window to its minimum with the largest Text size: only then does the screen or panel scroll as a whole.
     Clicking the dimmed area beside a panel still closes it.
-58. [ ] Timers: Guild bosses and Guild war appear after Horse registration as Not set and have no Delete. Open Guild
-    bosses, add a day and time, and confirm only one weekly row is allowed. Remove it and confirm the tile returns to
-    Not set. Add it again, restart, and check that its next weekly occurrence remains. Guild war accepts several
-    day/time rows; check that the tile advances through them and each occurrence alerts at its configured lead times.
-    Remove all rows to return to Not set.
+58. [ ] Timers: Guild bosses appears after Horse registration as Not set and has no Delete; there is no Guild war tile.
+    Open Guild bosses, add a day and time, and confirm only one weekly row is allowed. Remove it and confirm the tile
+    returns to Not set. Add it again, restart, and check that its next weekly occurrence remains. Data from an earlier
+    version drops a Guild war without times; one with times stays, accepts several day/time rows and can be deleted.
 59. [ ] Timers → Guild bosses: set its time 20 minutes ahead. Overlay → Guild bosses → 15 min before: the preview shows
     a dimmed Guild bosses row; the timer panel's Overlay over the game shows the same value, and changing it there
     changes the Overlay panel's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes

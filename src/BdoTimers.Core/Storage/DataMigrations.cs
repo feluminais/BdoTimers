@@ -12,7 +12,8 @@ namespace BdoTimers.Core.Storage;
 public static class DataMigrations
 {
     // Version 7 adds optional schedule dates and dated events; existing timers keep their values and unlimited dates.
-    public const int Current = 7;
+    // Version 8 drops the Guild war preset.
+    public const int Current = 8;
 
     /// <summary>Lists that earlier versions gave timers themselves: the built-in default, and 5 and 0 for countdowns.</summary>
     static readonly IReadOnlyList<IReadOnlyList<int>> AssignedLeadTimes = [AlertConfig.StandardLeadTimesMinutes, [5, 0]];
@@ -25,6 +26,7 @@ public static class DataMigrations
         if (data.DataVersion < 3) timers = ForgetRetiredSounds(timers);
         if (data.DataVersion < 4) timers = AddHorseRegistration(timers);
         if (data.DataVersion < 5) timers = SeparateHorseRegistration(timers);
+        if (data.DataVersion < 8) timers = DropUnsetGuildWar(timers);
         var migrated = data with { Timers = timers };
         if (data.DataVersion < 6) migrated = BossRegions.MigrateLegacy(migrated, settings);
         return migrated with { DataVersion = Current };
@@ -66,5 +68,14 @@ public static class DataMigrations
         if (template?.Countdown is not { Status: not CountdownStatus.Idle } countdown) return timers;
         var idle = timers.Select(t => t.Id == template.Id ? t with { Countdown = CountdownOps.Reset(countdown) } : t);
         return [.. idle, Presets.HorseRun(template, 1)];
+    }
+
+    /// <summary>
+    /// Version 8: Guild war is no longer a preset. One without times is removed; one with times stays, and can be deleted.
+    /// </summary>
+    static IReadOnlyList<TimerDef> DropUnsetGuildWar(IReadOnlyList<TimerDef> timers)
+    {
+        static bool Unset(TimerDef t) => t.Preset == Presets.GuildWar && t.Scheduled is not { Slots.Count: > 0 };
+        return timers.Any(Unset) ? timers.Where(t => !Unset(t)).ToList() : timers;
     }
 }

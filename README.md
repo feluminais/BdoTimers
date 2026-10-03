@@ -5,7 +5,7 @@ with alerts that reach you in game.
 
 - **Bosses**: previous, next and following spawn at a glance, over a week grid in your local time
 - **Timers**: Farm growth (through overgrowth to 200%), Fishing stopwatch, Horse registration (up to ten 10-minute
-  waits), Guild bosses and Guild war, plus your own countdowns, weekly timers and one-time events
+  waits), Guild bosses, plus your own countdowns, weekly timers and one-time events
 - **To-do**: daily and weekly checklists with child rows that clear at the game's reset
 - **Alerts**: sound, urgent Windows notification (gets through gaming Do Not Disturb), a spoken alert in an offline
   voice (Kokoro) and an in-game overlay you can pin, call up with a hotkey or have pop up before guild bosses
@@ -43,7 +43,7 @@ No. BDO Timers never opens the game's process, reads its memory, injects anythin
 - Settings → Bosses → Region switches between Europe (`Europe/Berlin`, the default) and North America
   (`America/Los_Angeles`). Each region keeps its own alert settings and edited spawn times.
   [Timetable sources](docs/boss-region-sources.md).
-- Set your guild's times on the Guild bosses and Guild war tiles. Overlay → Guild bosses sets how long before a guild
+- Set your guild's time on the Guild bosses tile. Overlay → Guild bosses sets how long before a guild
   boss the overlay pops up (Off, or 5 to 60 minutes).
 - When a release changes spawn times, Settings → Bosses lets you review the changes before they apply.
 - Settings → Data exports or restores a backup ZIP of your timers, lists, settings, sounds and pictures.

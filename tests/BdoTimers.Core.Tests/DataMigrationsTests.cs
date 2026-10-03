@@ -36,4 +36,19 @@ public class DataMigrationsTests
         Assert.Equal(1, run.HorseRunNumber);
         Assert.Equal(DataMigrations.Current, migrated.DataVersion);
     }
+
+    [Fact]
+    public void Guild_war_without_times_is_dropped_and_one_with_times_is_kept()
+    {
+        TimerDef War(params Slot[] slots) => new()
+        {
+            Name = "Guild war", Kind = TimerKind.Scheduled, Preset = Presets.GuildWar,
+            Scheduled = new ScheduledSpec { Slots = slots },
+        };
+        var own = new TimerDef { Name = "Buff", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
+        var set = War(new Slot(DayOfWeek.Tuesday, new TimeOnly(20, 0)));
+
+        Assert.Equal([own], DataMigrations.Apply(new AppData { DataVersion = 7, Timers = [War(), own] }, new()).Timers);
+        Assert.Equal([set, own], DataMigrations.Apply(new AppData { DataVersion = 7, Timers = [set, own] }, new()).Timers);
+    }
 }
