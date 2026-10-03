@@ -44,6 +44,17 @@ public static class Ui
 
     static void ShowFocusCue(object sender, KeyEventArgs e)
     {
+        // Dismissal and text editing do not start keyboard navigation.
+        if (e.Key != Key.Tab)
+        {
+            if (e.OriginalSource is TextBoxBase) return;
+            if (e.Key is Key.Enter or Key.Space)
+            {
+                if (e.OriginalSource is not ButtonBase) return;
+            }
+            else if (e.Key is not (Key.Left or Key.Right or Key.Up or Key.Down or Key.Home or Key.End or Key.PageUp or Key.PageDown))
+                return;
+        }
         var window = (Window)sender;
         window.SetValue(KeyboardPointerPositionProperty, Mouse.GetPosition(window));
         SetShowKeyboardFocus(window, true);

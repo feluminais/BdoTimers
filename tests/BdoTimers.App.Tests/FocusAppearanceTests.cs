@@ -12,6 +12,48 @@ namespace BdoTimers.App.Tests;
 
 public sealed class FocusAppearanceTests
 {
+    [Theory]
+    [InlineData(Key.Escape, false)]
+    [InlineData(Key.A, false)]
+    [InlineData(Key.LeftCtrl, false)]
+    [InlineData(Key.Tab, true)]
+    [InlineData(Key.Right, true)]
+    [InlineData(Key.Enter, true)]
+    [InlineData(Key.Space, true)]
+    public void Only_keyboard_navigation_and_activation_enable_focus_cues(Key key, bool expected) => WpfTest.Run(() =>
+    {
+        var button = new Button { Content = "Settings" };
+        var window = new Window { Content = button, Width = 240, Height = 120, ShowInTaskbar = false };
+        Ui.SetTrackKeyboardFocus(window, true);
+        try
+        {
+            window.Show();
+            button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, key)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+            Assert.Equal(expected, Ui.GetShowKeyboardFocus(window));
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
+    public void Typing_in_a_mouse_focused_field_does_not_enable_focus_cues() => WpfTest.Run(() =>
+    {
+        var field = new TextBox();
+        var window = new Window { Content = field, Width = 240, Height = 120, ShowInTaskbar = false };
+        Ui.SetTrackKeyboardFocus(window, true);
+        try
+        {
+            window.Show();
+            foreach (var key in new[] { Key.A, Key.Space, Key.Left, Key.Home, Key.Enter, Key.Escape })
+            {
+                field.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(field), 0, key)
+                { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+                Assert.False(Ui.GetShowKeyboardFocus(window));
+            }
+        }
+        finally { window.Close(); }
+    });
+
     [Fact]
     public void Focus_cue_stays_outside_text_and_hides_when_mouse_input_resumes() => WpfTest.Run(() =>
     {
