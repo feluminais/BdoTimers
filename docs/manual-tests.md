@@ -27,6 +27,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 11. [ ] Settings → Start with Windows On, reboot → app starts minimized in the tray. Off → it no longer starts.
 12. [ ] Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
 13. [ ] Timer panel → click the picture (badge "Change picture") → Choose picture…: the tile shows it, fading into black.
+    Choose a file that isn't a picture, here and in Overlay → Picture: "Couldn't add …" shows and the picture stays.
 14. [ ] Boss panel → Sound: stepping plays nothing; ▶ plays the choice. + → pick a WAV or MP3: it's selected and listed in
     Settings → Your sounds. A file that isn't audio shows "Couldn't play …".
 15. [ ] Settings → Your sounds → ✕: the sound is gone; timers that used it show Default.

@@ -156,20 +156,24 @@
                         </StackPanel>
                     </Border>
                     <Border Style="{StaticResource Row}">
-                        <DockPanel>
-                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
-                                        Visibility="{Binding HasPicture, Converter={StaticResource BoolToVisibility}}">
-                                <Border Width="48" Height="28" ClipToBounds="True" Margin="0,0,10,0">
-                                    <Image Source="{Binding Picture}" Stretch="UniformToFill" />
-                                </Border>
-                                <Button Style="{StaticResource LinkButton}" Content="Remove picture" VerticalAlignment="Center"
-                                        Command="{Binding RemovePictureCommand}" />
-                            </StackPanel>
-                            <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Choose picture…" VerticalAlignment="Center"
-                                    Command="{Binding ChoosePictureCommand}"
-                                    Visibility="{Binding HasPicture, Converter={StaticResource InverseBoolToVisibility}}" />
-                            <TextBlock Text="Picture" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
+                        <StackPanel>
+                            <DockPanel>
+                                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"
+                                            Visibility="{Binding HasPicture, Converter={StaticResource BoolToVisibility}}">
+                                    <Border Width="48" Height="28" ClipToBounds="True" Margin="0,0,10,0">
+                                        <Image Source="{Binding Picture}" Stretch="UniformToFill" />
+                                    </Border>
+                                    <Button Style="{StaticResource LinkButton}" Content="Remove picture" VerticalAlignment="Center"
+                                            Command="{Binding RemovePictureCommand}" />
+                                </StackPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Choose picture…" VerticalAlignment="Center"
+                                        Command="{Binding ChoosePictureCommand}"
+                                        Visibility="{Binding HasPicture, Converter={StaticResource InverseBoolToVisibility}}" />
+                                <TextBlock Text="Picture" Style="{StaticResource RowLabel}" />
+                            </DockPanel>
+                            <TextBlock Text="{Binding PictureError}" Style="{StaticResource ErrorText}"
+                                       Visibility="{Binding PictureError, Converter={StaticResource NullToCollapsed}}" />
+                        </StackPanel>
                     </Border>
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Background opacity">
                         <Slider Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center"

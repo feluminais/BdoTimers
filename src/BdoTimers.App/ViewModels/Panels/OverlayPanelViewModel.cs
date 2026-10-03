@@ -25,6 +25,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _pickerOpen;
     [ObservableProperty] private Color _customColor;
     [ObservableProperty] private bool _isCustomColor;
+    [ObservableProperty] private string? _pictureError;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasPicture))]
     private ImageSource? _picture;
@@ -162,12 +163,9 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void ChoosePicture()
     {
-        if (_services.ChoosePicture() is not { } file) return;
-        if (_services.Art.UserPicture(file) is null)
-        {
-            _services.Art.Delete(file);
-            return;
-        }
+        var (file, error) = _services.ChoosePicture();
+        PictureError = error;
+        if (file is null) return;
         PickerOpen = false;
         MarkColor(null);
         ReplacePicture(file);
@@ -176,6 +174,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void RemovePicture()
     {
+        PictureError = null;
         ReplacePicture(null);
         MarkColor(_services.Settings.Current.Overlay.BackgroundColor);
     }

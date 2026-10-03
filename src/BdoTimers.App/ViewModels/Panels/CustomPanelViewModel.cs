@@ -25,6 +25,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private bool _nameInvalid;
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images;
     [ObservableProperty] private bool _hasPicture;
+    [ObservableProperty] private string? _pictureError;
     [ObservableProperty] private string _durationText = "";
     [ObservableProperty] private bool _durationInvalid;
     [ObservableProperty] private FarmGrowthOption _farmGrowth;
@@ -245,11 +246,17 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void ChoosePicture()
     {
-        if (_services.ChoosePicture() is { } file) ReplacePicture(file);
+        var (file, error) = _services.ChoosePicture();
+        PictureError = error;
+        if (file is not null) ReplacePicture(file);
     }
 
     [RelayCommand]
-    void RemovePicture() => ReplacePicture(null);
+    void RemovePicture()
+    {
+        PictureError = null;
+        ReplacePicture(null);
+    }
 
     void ReplacePicture(string? file)
     {
