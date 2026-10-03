@@ -40,8 +40,8 @@ public sealed class ArtLibrary(string imagesDir)
     static readonly IReadOnlyDictionary<string, Point> PresetFocus = new Dictionary<string, Point>
     {
         [Presets.Fishing] = new(0.48, 0.42),
-        [Presets.HorseRegistration] = new(0.22, 0.38),
-        [Presets.HorseRegistrationRun] = new(0.22, 0.38),
+        [Presets.HorseRegistration] = new(0.32, 0.42),
+        [Presets.HorseRegistrationRun] = new(0.32, 0.42),
         [Presets.GuildBosses] = new(0.56, 0.24),
         [Presets.GuildWar] = new(0.50, 0.37),
     };
