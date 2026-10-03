@@ -27,13 +27,23 @@
     <SolidColorBrush x:Key="DimBrush" Color="#99000000" />
     <ScaleTransform x:Key="UiScaleTransform" ScaleX="1" ScaleY="1" />
 
-    <!-- The adorner remains visible on borderless links and buttons. -->
+    <!-- Draw outside the hit area so borderless labels retain space around their text. -->
     <Style x:Key="KeyboardFocusVisual" TargetType="Control">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Control">
-                    <Rectangle Margin="2" Stroke="{DynamicResource FocusBrush}" StrokeThickness="2"
-                               SnapsToDevicePixels="True" />
+                    <Rectangle Margin="-3" Stroke="{DynamicResource FocusBrush}" StrokeThickness="2"
+                               SnapsToDevicePixels="True">
+                        <Rectangle.Style>
+                            <Style TargetType="Rectangle">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Path=(controls:Ui.ShowKeyboardFocus), RelativeSource={RelativeSource Self}}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Rectangle.Style>
+                    </Rectangle>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

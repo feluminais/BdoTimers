@@ -1,6 +1,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Input;
+using System.Windows.Shapes;
+using System.Windows.Documents;
+using BdoTimers.App.Controls;
 using BdoTimers.App.Views.Panels;
 using BdoTimers.App.Views;
 
@@ -8,6 +12,65 @@ namespace BdoTimers.App.Tests;
 
 public sealed class FocusAppearanceTests
 {
+    [Fact]
+    public void Focus_cue_stays_outside_text_and_hides_when_mouse_input_resumes() => WpfTest.Run(() =>
+    {
+        var cue = new Control { Style = (Style)Application.Current.FindResource("KeyboardFocusVisual") };
+        var button = new Button { Content = "Timers" };
+        var panel = new StackPanel();
+        panel.Children.Add(button);
+        var window = new Window { Content = new AdornerDecorator { Child = panel }, Width = 240, Height = 120, ShowInTaskbar = false };
+        Ui.SetTrackKeyboardFocus(window, true);
+        try
+        {
+            window.Show();
+            AdornerLayer.GetAdornerLayer(button).Add(new TestFocusAdorner(button, cue));
+            button.Focus();
+            WpfTest.Drain();
+            var rectangle = PanelFocusScope.Descendants(cue).OfType<Rectangle>().Single();
+            Assert.True(rectangle.Margin.Left < -rectangle.StrokeThickness / 2);
+            button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Tab)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Visible, rectangle.Visibility);
+            button.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+            { RoutedEvent = Mouse.PreviewMouseDownEvent });
+            WpfTest.Drain();
+            Assert.True(button.IsKeyboardFocused);
+            Assert.Equal(Visibility.Collapsed, rectangle.Visibility);
+            button.RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(button), 0, Key.Right)
+            { RoutedEvent = Keyboard.PreviewKeyDownEvent });
+            WpfTest.Drain();
+            Assert.Equal(Visibility.Visible, rectangle.Visibility);
+        }
+        finally { window.Close(); }
+    });
+
+    sealed class TestFocusAdorner : Adorner
+    {
+        readonly Control _cue;
+
+        public TestFocusAdorner(UIElement target, Control cue) : base(target)
+        {
+            _cue = cue;
+            AddVisualChild(cue);
+        }
+
+        protected override int VisualChildrenCount => 1;
+        protected override Visual GetVisualChild(int index) => _cue;
+        protected override Size MeasureOverride(Size constraint)
+        {
+            // Match WPF's focus visual: the template lives in the adorner layer, outside the target's content.
+            _cue.Measure(AdornedElement.RenderSize);
+            return AdornedElement.RenderSize;
+        }
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            _cue.Arrange(new Rect(finalSize));
+            return finalSize;
+        }
+    }
+
     [Theory]
     [InlineData("CaptionButton")]
     [InlineData("IconButton")]

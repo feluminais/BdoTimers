@@ -9,6 +9,36 @@ namespace BdoTimers.App.Controls;
 /// <summary>Attached properties the theme's styles and templates use.</summary>
 public static class Ui
 {
+    public static readonly DependencyProperty ShowKeyboardFocusProperty = DependencyProperty.RegisterAttached(
+        "ShowKeyboardFocus", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.Inherits));
+
+    public static bool GetShowKeyboardFocus(DependencyObject d) => (bool)d.GetValue(ShowKeyboardFocusProperty);
+    public static void SetShowKeyboardFocus(DependencyObject d, bool value) => d.SetValue(ShowKeyboardFocusProperty, value);
+
+    /// <summary>Hide keyboard adorners on mouse input even when the focused control does not change.</summary>
+    public static readonly DependencyProperty TrackKeyboardFocusProperty = DependencyProperty.RegisterAttached(
+        "TrackKeyboardFocus", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(false, OnTrackKeyboardFocusChanged));
+
+    public static bool GetTrackKeyboardFocus(DependencyObject d) => (bool)d.GetValue(TrackKeyboardFocusProperty);
+    public static void SetTrackKeyboardFocus(DependencyObject d, bool value) => d.SetValue(TrackKeyboardFocusProperty, value);
+
+    static void OnTrackKeyboardFocusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not Window window) return;
+        window.RemoveHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(ShowFocusCue));
+        window.RemoveHandler(Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(HideFocusCue));
+        window.Deactivated -= HideInactiveFocusCue;
+        if (!(bool)e.NewValue) { window.ClearValue(ShowKeyboardFocusProperty); return; }
+        SetShowKeyboardFocus(window, false);
+        window.AddHandler(Keyboard.PreviewKeyDownEvent, new KeyEventHandler(ShowFocusCue), true);
+        window.AddHandler(Mouse.PreviewMouseDownEvent, new MouseButtonEventHandler(HideFocusCue), true);
+        window.Deactivated += HideInactiveFocusCue;
+    }
+
+    static void ShowFocusCue(object sender, KeyEventArgs e) => SetShowKeyboardFocus((Window)sender, true);
+    static void HideFocusCue(object sender, MouseButtonEventArgs e) => SetShowKeyboardFocus((Window)sender, false);
+    static void HideInactiveFocusCue(object? sender, EventArgs e) => SetShowKeyboardFocus((Window)sender!, false);
+
     /// <summary>Marks a text field as invalid; the theme draws its hairline in the danger colour.</summary>
     public static readonly DependencyProperty HasErrorProperty = DependencyProperty.RegisterAttached(
         "HasError", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(false));
