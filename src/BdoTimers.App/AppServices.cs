@@ -139,7 +139,7 @@ public sealed class AppServices : IDisposable
         try { _engine.ReconcileStartup(); }
         catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); Health.Failed("Startup", ex); }
         try { Todos.Reconcile(Settings.Current); }
-        catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); Health.Failed("To-do reset", ex); }
+        catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); Health.Failed("Saving", ex); }
         var todoResetErrors = new RepeatingErrorLog("To-do reset", Clock);
         UiClock.Tick += _ =>
         {
@@ -148,9 +148,8 @@ public sealed class AppServices : IDisposable
             {
                 Todos.Reconcile(Settings.Current);
                 todoResetErrors.Succeeded();
-                Health.Succeeded("To-do reset");
             }
-            catch (StateSaveException ex) { todoResetErrors.Failed(ex); Health.Failed("To-do reset", ex); }
+            catch (StateSaveException ex) { todoResetErrors.Failed(ex); Health.Failed("Saving", ex); }
         };
         // .NET caches the local time zone; without this a zone change would show old local times until a restart.
         SystemEvents.TimeChanged += OnTimeChanged;
