@@ -24,6 +24,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     [ObservableProperty] private Choice _region;
     [ObservableProperty] private string? _regionError;
+    [ObservableProperty] private string? _autostartError;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(AlertSound))] private IReadOnlyList<Choice> _alertSounds = [];
     [ObservableProperty] private string? _soundError;
     [ObservableProperty] private bool _hasDeletedTodoDefaults;
@@ -105,8 +106,17 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         get => Choice.For(Current.Autostart);
         set
         {
+            // Windows first, so a refused change isn't saved as made; startup applies the saved choice again.
+            try { BdoTimers.App.Autostart.Apply(value.IsOn); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
+            {
+                Log.Error("Couldn't update autostart", ex);
+                AutostartError = "Couldn't change Windows startup";
+                Application.Current.Dispatcher.BeginInvoke(() => OnPropertyChanged(nameof(Autostart)));
+                return;
+            }
+            AutostartError = null;
             _services.Settings.Update(s => s with { Autostart = value.IsOn });
-            BdoTimers.App.Autostart.Apply(value.IsOn);
         }
     }
 

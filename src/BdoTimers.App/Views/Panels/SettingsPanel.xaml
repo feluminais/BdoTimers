@@ -62,9 +62,17 @@
                     <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding CloseToTray}"
                                             ValueWidth="110" AutomationProperties.Name="Close to tray" />
                 </HeaderedContentControl>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Start with Windows">
-                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Autostart}" ValueWidth="110" AutomationProperties.Name="Start with Windows" />
-                </HeaderedContentControl>
+                <Border Style="{StaticResource SearchRow}">
+                    <StackPanel>
+                        <DockPanel>
+                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Autostart}"
+                                                    ValueWidth="110" AutomationProperties.Name="Start with Windows" />
+                            <TextBlock Text="Start with Windows" Style="{StaticResource RowLabel}" TextWrapping="Wrap" Margin="0,0,10,0" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding AutostartError}" Style="{StaticResource ErrorText}"
+                                   Visibility="{Binding AutostartError, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                </Border>
                 <Border Style="{StaticResource SearchRow}">
                     <StackPanel>
                         <TextBlock Text="Default alert times (minutes before)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
