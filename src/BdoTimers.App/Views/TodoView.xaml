@@ -120,8 +120,10 @@
                            VerticalAlignment="Center" Margin="4,0,6,0" />
                 <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="21" VerticalAlignment="Center" />
             </DockPanel>
+            <Border DockPanel.Dock="Top" Height="1" Margin="0,0,8,0" Background="{DynamicResource HairlineBrush}"
+                    Visibility="{Binding HasItems, ElementName=WeeklyLists, Converter={StaticResource InverseBoolToVisibility}}" />
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Weekly}" Margin="0,0,8,0" />
+                <ItemsControl x:Name="WeeklyLists" ItemsSource="{Binding Weekly}" Margin="0,0,8,0" />
             </ScrollViewer>
         </DockPanel>
         <DockPanel Grid.Column="2">
@@ -132,8 +134,10 @@
                            VerticalAlignment="Center" Margin="4,0,6,0" />
                 <TextBlock Text="Daily" Style="{StaticResource DisplayText}" FontSize="21" VerticalAlignment="Center" />
             </DockPanel>
+            <Border DockPanel.Dock="Top" Height="1" Background="{DynamicResource HairlineBrush}"
+                    Visibility="{Binding HasItems, ElementName=DailyLists, Converter={StaticResource InverseBoolToVisibility}}" />
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Daily}" />
+                <ItemsControl x:Name="DailyLists" ItemsSource="{Binding Daily}" />
             </ScrollViewer>
         </DockPanel>
     </Grid>
