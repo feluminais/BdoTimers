@@ -182,7 +182,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 57. [ ] Mouse wheel over the Bosses table, Timers, both To-do lists and each tall panel (Settings, Overlay, boss,
     timer, to-do list) scrolls that list; the boss strip, list headings and each panel's header and Done stay in place.
     Shrink the window to its minimum with the largest Text size: only then does the screen or panel scroll as a whole.
-    Clicking the dimmed area beside a panel still closes it.
+    Clicking anywhere in the dimmed area (beside, above or below a panel, near or far from it) closes it; clicking
+    inside the panel, on its scroll bar, or in a list or calendar dropping out past its edge does not.
 58. [ ] Timers: Guild bosses and Guild war appear after Horse registration as Not set and have no Delete. Open Guild
     bosses, add a day and time, and confirm only one weekly row is allowed. Remove it and confirm the tile returns to
     Not set. Add it again, restart, and check that its next weekly occurrence remains. Guild war accepts several
