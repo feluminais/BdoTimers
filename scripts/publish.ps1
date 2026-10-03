@@ -31,21 +31,11 @@ try {
 
     $stage = 'obj/publish/app'
     foreach ($dir in 'obj/publish', 'installer/Msi/bin', 'installer/Bundle/bin') {
-        $target = [IO.Path]::GetFullPath((Join-Path $workspace $dir))
-        if (-not $target.StartsWith($workspace + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
-            throw 'Publish cleanup must stay within the workspace.'
-        }
-        if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
+        if (Test-Path -LiteralPath $dir) { Remove-Item -LiteralPath $dir -Recurse -Force }
     }
     # Empty publish/ rather than delete it: an Explorer window showing the folder would block deleting the folder itself.
     New-Item -ItemType Directory -Force publish | Out-Null
-    $publishDirectory = [IO.Path]::GetFullPath((Join-Path $workspace 'publish'))
-    foreach ($item in Get-ChildItem -LiteralPath $publishDirectory) {
-        if (-not $item.FullName.StartsWith($publishDirectory + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) {
-            throw 'Publish cleanup must stay within publish/.'
-        }
-        Remove-Item -LiteralPath $item.FullName -Recurse -Force
-    }
+    Get-ChildItem -LiteralPath publish | Remove-Item -Recurse -Force
 
     # App -> MSI (the package) -> setup window -> bundle (the setup.exe users run)
     dotnet publish src/BdoTimers.App -c Release -o $stage "-p:Version=$version"
