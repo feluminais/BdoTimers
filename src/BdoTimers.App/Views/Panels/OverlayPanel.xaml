@@ -46,15 +46,15 @@
             <StackPanel Margin="22,0,22,4">
                 <TextBlock Text="Show" Style="{StaticResource SectionText}" Margin="0,4,0,4" />
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Overlay">
-                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Enabled}" ValueWidth="60"
+                    <ToggleButton controls:Ui.InitialFocus="True" Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Enabled}" Width="60"
                                             AutomationProperties.Name="Overlay" />
                 </HeaderedContentControl>
 
-                <StackPanel Visibility="{Binding Enabled.IsOn, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel Visibility="{Binding Enabled, Converter={StaticResource BoolToVisibility}}">
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlwaysShow}"
-                                                    ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
+                            <ToggleButton Style="{StaticResource OnOffSwitch}" DockPanel.Dock="Right" IsChecked="{Binding AlwaysShow}"
+                                                    Width="60" VerticalAlignment="Top" AutomationProperties.Name="Always show" />
                             <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding AlwaysShowHotkey}" Taken="{Binding TakenForAlwaysShow}" Hotkeys="{Binding Hotkeys}" Target="{Binding AlwaysShowTarget}"
                                                 AutomationProperties.Name="Always show hotkey" />
                             <TextBlock Text="Always show" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
@@ -62,14 +62,14 @@
                     </Border>
                     <Border Style="{StaticResource Row}">
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding ShowOnHotkey}"
-                                                    ValueWidth="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
+                            <ToggleButton Style="{StaticResource OnOffSwitch}" DockPanel.Dock="Right" IsChecked="{Binding ShowOnHotkey}"
+                                                    Width="60" VerticalAlignment="Top" AutomationProperties.Name="Show on hotkey" />
                             <controls:HotkeyBox DockPanel.Dock="Right" Margin="0,0,14,0" Combo="{Binding ShowHotkey}" Taken="{Binding TakenForShow}" Hotkeys="{Binding Hotkeys}" Target="{Binding ShowTarget}"
                                                 AutomationProperties.Name="Show hotkey" />
                             <TextBlock Text="Show on hotkey" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>
-                    <Border Style="{StaticResource Row}" BorderThickness="0" Visibility="{Binding ShowOnHotkey.IsOn, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Row}" BorderThickness="0" Visibility="{Binding ShowOnHotkey, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding SecondsChoices}" SelectedItem="{Binding ShowSeconds}"
                                                     ValueWidth="60" AutomationProperties.Name="Show for" />
@@ -94,7 +94,7 @@
                                 Value="{Binding Scale, Delay=100}" AutomationProperties.Name="Size" />
                     </HeaderedContentControl>
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Outline">
-                        <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Outline}" ValueWidth="60"
+                        <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Outline}" Width="60"
                                                 AutomationProperties.Name="Outline" />
                     </HeaderedContentControl>
                     <Border Style="{StaticResource Row}">

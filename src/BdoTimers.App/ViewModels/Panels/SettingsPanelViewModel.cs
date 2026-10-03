@@ -20,6 +20,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     readonly AppServices _services;
     bool _syncingRegion;
     bool _closed;
+    AppSettings _lastSettings;
     PreparedRestore? _preparedRestore;
 
     [ObservableProperty] private Choice _region;
@@ -43,7 +44,6 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     private bool _updateChecking;
     Uri? _releasePage;
 
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     public IReadOnlyList<Choice> TextSizes { get; } = new[] { 1d, 1.1, 1.25, 1.5 }
         .Select(scale => new Choice($"{scale:P0}", scale)).ToList();
     public AppHealth Health => _services.Health;
@@ -80,6 +80,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         services.Updates.Changed += UpdateCheckChanged;
         RefreshUpdateCheck();
         var s = services.Settings.Current;
+        _lastSettings = s;
         _region = Regions.Single(r => (string)r.Value! == services.Timers.Current.SelectedBossRegion);
         ReloadSounds();
         // So Test voice speaks without first waiting for the model.
@@ -90,6 +91,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
             schedule => services.SetTodoReset(TodoCadence.Daily, schedule));
         WeeklyTodoReset = new TodoScheduleEditorViewModel(TodoCadence.Weekly, s.WeeklyTodoReset,
             schedule => services.SetTodoReset(TodoCadence.Weekly, schedule));
+        DailyTodoReset.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
+        WeeklyTodoReset.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         AlertReset = new Confirmation(services.Timers.ResetBossAlerts);
         TimetableReset = new Confirmation(() => { services.ResetBossTimetable(); RefreshTimetable(); });
         HasDeletedTodoDefaults = services.Todos.Current.Lists.Any(list => list.IsBuiltIn && list.Deleted)
@@ -101,13 +104,13 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
 
     AppSettings Current => _services.Settings.Current;
 
-    public Choice Autostart
+    public bool Autostart
     {
-        get => Choice.For(Current.Autostart);
+        get => Current.Autostart;
         set
         {
             // Windows first, so a refused change isn't saved as made; startup applies the saved choice again.
-            try { BdoTimers.App.Autostart.Apply(value.IsOn); }
+            try { BdoTimers.App.Autostart.Apply(value); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
             {
                 Log.Error("Couldn't update autostart", ex);
@@ -116,7 +119,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
                 return;
             }
             AutostartError = null;
-            _services.Settings.Update(s => s with { Autostart = value.IsOn });
+            _services.Settings.Update(s => s with { Autostart = value });
         }
     }
 
@@ -148,10 +151,10 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         }
     }
 
-    public Choice CloseToTray
+    public bool CloseToTray
     {
-        get => Choice.For(Current.CloseToTray);
-        set => _services.Settings.Update(s => s with { CloseToTray = value.IsOn });
+        get => Current.CloseToTray;
+        set => _services.Settings.Update(s => s with { CloseToTray = value });
     }
 
     /// <summary>The saved app-wide sound, or the default when it's gone.</summary>
@@ -185,7 +188,20 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         set => _services.Settings.Update(s => s with { TtsRate = (int)Math.Round(value) });
     }
 
-    void OnSettingsChanged() => OnPropertyChanged(string.Empty);
+    public bool CanFinish => !DailyTodoReset.InvalidTime && !WeeklyTodoReset.InvalidTime;
+
+    void OnSettingsChanged()
+    {
+        var previous = _lastSettings;
+        var next = _lastSettings = Current;
+        if (previous.Autostart != next.Autostart) OnPropertyChanged(nameof(Autostart));
+        if (previous.CloseToTray != next.CloseToTray) OnPropertyChanged(nameof(CloseToTray));
+        if (previous.TextScale != next.TextScale) OnPropertyChanged(nameof(TextSize));
+        if (previous.AlertSound != next.AlertSound) OnPropertyChanged(nameof(AlertSound));
+        if (previous.Volume != next.Volume) OnPropertyChanged(nameof(Volume));
+        if (previous.TtsVoice != next.TtsVoice) OnPropertyChanged(nameof(Voice));
+        if (previous.TtsRate != next.TtsRate) OnPropertyChanged(nameof(SpeechRate));
+    }
 
     /// <summary>Rebuilds the sound list and the "Your sounds" rows.</summary>
     void ReloadSounds()
@@ -252,7 +268,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void ApplyTimetable()
     {
-        _services.ApplyTimetable(TimetableChanges.Where(c => c.Apply.IsOn).Select(c => c.Change.Name));
+        _services.ApplyTimetable(TimetableChanges.Where(c => c.Apply).Select(c => c.Change.Name));
         ReviewingTimetable = false;
         RefreshTimetable();
     }

@@ -1,7 +1,6 @@
 using System.Windows;
-using System.Windows.Automation;
+using BdoTimers.App.Controls;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -52,9 +51,7 @@ internal sealed class PanelFocusScope
             _panel.UpdateLayout();
             var controls = Descendants(_panel).OfType<Control>()
                 .Where(c => c.Focusable && c.IsVisible && c.IsEnabled && KeyboardNavigation.GetIsTabStop(c)).ToArray();
-            var target = controls.FirstOrDefault(c => c is TextBoxBase or ComboBox or Selector)
-                ?? controls.FirstOrDefault(c => c is ButtonBase && AutomationProperties.GetName(c) != "Close" && c.ToolTip as string != "Close")
-                ?? controls.FirstOrDefault();
+            var target = controls.FirstOrDefault(Ui.GetInitialFocus) ?? controls.FirstOrDefault();
             target?.Focus();
         });
     }

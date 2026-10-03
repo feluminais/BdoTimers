@@ -94,9 +94,22 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
 
     public bool IsOpen(object panel) => ReferenceEquals(Panel, panel);
 
+    public event Action? CompletingPanelEdits;
+    public void CompletePanelEdits() => CompletingPanelEdits?.Invoke();
+
+    [RelayCommand]
+    public void FinishPanel()
+    {
+        CompletePanelEdits();
+        if (Panel is IPanel { CanFinish: false }) return;
+        ClosePanel();
+    }
+
     [RelayCommand]
     public void ClosePanel()
     {
+        if (Panel is null) return;
+        CompletePanelEdits();
         (Panel as IPanel)?.OnClosed();
         Panel = null;
     }

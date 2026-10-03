@@ -21,6 +21,8 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     // Picking in the colour square changes the colour many times a second; it's saved once the picking pauses.
     readonly DispatcherTimer _colorSave = new() { Interval = TimeSpan.FromMilliseconds(150) };
     bool _syncing;
+    bool _closed;
+    OverlaySettings _lastSettings;
 
     [ObservableProperty] private bool _pickerOpen;
     [ObservableProperty] private Color _customColor;
@@ -52,20 +54,21 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         GuildBossChoices = PopUpChoices.For(PopUpChoices.GuildBossMinutes, Current.GuildBosses);
         _colorSave.Tick += (_, _) => SaveCustomColor();
         var o = Current;
+        _lastSettings = o;
         if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) _customColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
         _picture = o.BackgroundImage is { } file ? services.Art.UserPicture(file) : null;
         MarkColor(_picture is null ? o.BackgroundColor : null);
         services.Settings.Changed += OnSettingsChanged;
-        services.Timers.Changed += OnSettingsChanged;
+        services.Timers.Changed += OnTimersChanged;
         services.Overlay.BeginPreview();
     }
 
     OverlaySettings Current => _services.Settings.Current.Overlay;
 
-    public Choice Enabled { get => Choice.For(Current.Enabled); set => Modify(o => o with { Enabled = value.IsOn }); }
-    public Choice AlwaysShow { get => Choice.For(Current.AlwaysShow); set => Modify(o => o with { AlwaysShow = value.IsOn }); }
+    public bool Enabled { get => Current.Enabled; set => Modify(o => o with { Enabled = value }); }
+    public bool AlwaysShow { get => Current.AlwaysShow; set => Modify(o => o with { AlwaysShow = value }); }
     public Hotkey? AlwaysShowHotkey { get => Current.AlwaysShowHotkey; set => Modify(o => o with { AlwaysShowHotkey = value }); }
-    public Choice ShowOnHotkey { get => Choice.For(Current.ShowOnHotkey); set => Modify(o => o with { ShowOnHotkey = value.IsOn }); }
+    public bool ShowOnHotkey { get => Current.ShowOnHotkey; set => Modify(o => o with { ShowOnHotkey = value }); }
     public Hotkey? ShowHotkey { get => Current.ShowHotkey; set => Modify(o => o with { ShowHotkey = value }); }
     public Choice ShowSeconds
     {
@@ -83,7 +86,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         set => Modify(o => o with { Layout = (OverlayLayout)value.Value! });
     }
     public double Scale { get => Current.Scale; set => Modify(o => o with { Scale = Math.Round(value, 2) }); }
-    public Choice Outline { get => Choice.For(Current.ShowOutline); set => Modify(o => o with { ShowOutline = value.IsOn }); }
+    public bool Outline { get => Current.ShowOutline; set => Modify(o => o with { ShowOutline = value }); }
     public bool ShowClock { get => Current.ShowClock; set => Modify(o => o with { ShowClock = value }); }
     public bool ShowServerTime { get => Current.ShowServerTime; set => Modify(o => o with { ShowServerTime = value }); }
     public bool ShowGameTime { get => Current.ShowGameTime; set => Modify(o => o with { ShowGameTime = value }); }
@@ -111,8 +114,48 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     /// <summary>Settings also change from outside the panel: Always show by its hotkey.</summary>
     void OnSettingsChanged()
     {
-        if (System.Windows.Application.Current.Dispatcher.CheckAccess()) OnPropertyChanged(string.Empty);
-        else System.Windows.Application.Current.Dispatcher.BeginInvoke(() => OnPropertyChanged(string.Empty));
+        if (_closed) return;
+        if (!System.Windows.Application.Current.Dispatcher.CheckAccess())
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(OnSettingsChanged);
+            return;
+        }
+        var previous = _lastSettings;
+        var next = _lastSettings = Current;
+        if (previous.Enabled != next.Enabled) OnPropertyChanged(nameof(Enabled));
+        if (previous.AlwaysShow != next.AlwaysShow) OnPropertyChanged(nameof(AlwaysShow));
+        if (previous.ShowOnHotkey != next.ShowOnHotkey) OnPropertyChanged(nameof(ShowOnHotkey));
+        if (previous.AlwaysShowHotkey != next.AlwaysShowHotkey) OnPropertyChanged(nameof(AlwaysShowHotkey));
+        if (previous.ShowHotkey != next.ShowHotkey) OnPropertyChanged(nameof(ShowHotkey));
+        if (previous.ShowSeconds != next.ShowSeconds) OnPropertyChanged(nameof(ShowSeconds));
+        if (previous.GuildBosses != next.GuildBosses) OnPropertyChanged(nameof(GuildBosses));
+        if (previous.Layout != next.Layout) OnPropertyChanged(nameof(Layout));
+        if (previous.Scale != next.Scale) OnPropertyChanged(nameof(Scale));
+        if (previous.ShowOutline != next.ShowOutline) OnPropertyChanged(nameof(Outline));
+        if (previous.ShowClock != next.ShowClock) OnPropertyChanged(nameof(ShowClock));
+        if (previous.ShowServerTime != next.ShowServerTime) OnPropertyChanged(nameof(ShowServerTime));
+        if (previous.ShowGameTime != next.ShowGameTime) OnPropertyChanged(nameof(ShowGameTime));
+        if (previous.ShowPrevious != next.ShowPrevious) OnPropertyChanged(nameof(ShowPrevious));
+        if (previous.ShowNext != next.ShowNext) OnPropertyChanged(nameof(ShowNext));
+        if (previous.ShowFarm != next.ShowFarm) OnPropertyChanged(nameof(ShowFarm));
+        if (previous.ShowCustomTimers != next.ShowCustomTimers) OnPropertyChanged(nameof(ShowCustomTimers));
+        if (previous.ShowFishing != next.ShowFishing) OnPropertyChanged(nameof(ShowFishing));
+        if (previous.ShowHorseRegistrations != next.ShowHorseRegistrations) OnPropertyChanged(nameof(ShowHorseRegistrations));
+        if (previous.BackgroundOpacity != next.BackgroundOpacity) OnPropertyChanged(nameof(BackgroundOpacity));
+        if (previous.TextOpacity != next.TextOpacity) OnPropertyChanged(nameof(TextOpacity));
+        OnTimersChanged();
+    }
+
+    void OnTimersChanged()
+    {
+        if (_closed) return;
+        if (!System.Windows.Application.Current.Dispatcher.CheckAccess())
+        {
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(OnTimersChanged);
+            return;
+        }
+        OnPropertyChanged(nameof(TakenForAlwaysShow));
+        OnPropertyChanged(nameof(TakenForShow));
     }
 
     void Modify(Func<OverlaySettings, OverlaySettings> change) =>
@@ -191,8 +234,9 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public void OnClosed()
     {
         if (_colorSave.IsEnabled) SaveCustomColor();
+        _closed = true;
         _services.Settings.Changed -= OnSettingsChanged;
-        _services.Timers.Changed -= OnSettingsChanged;
+        _services.Timers.Changed -= OnTimersChanged;
         _services.Overlay.EndPreview();
     }
 }

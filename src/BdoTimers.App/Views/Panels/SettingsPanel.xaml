@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
-             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
              MaxWidth="460" HorizontalAlignment="Stretch" PreviewKeyDown="Panel_PreviewKeyDown">
     <UserControl.Resources>
         <Style x:Key="SearchRow" TargetType="Border" BasedOn="{StaticResource Row}">
@@ -38,13 +37,13 @@
                 <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE894;" ToolTip="Clear search"
                         Width="28" Height="28" Click="ClearSearch_Click" />
                 <TextBlock Text="Search" Foreground="{DynamicResource SubtleBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
-                <TextBox x:Name="SearchBox" AutomationProperties.Name="Search settings" ToolTip="Search settings (Ctrl+F)"
+                <TextBox controls:Ui.InitialFocus="True" x:Name="SearchBox" AutomationProperties.Name="Search settings" ToolTip="Search settings (Ctrl+F)"
                          TextChanged="SearchBox_TextChanged" />
             </DockPanel>
         </StackPanel>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16" LastChildFill="False">
-            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding CanFinish}" />
         </DockPanel>
 
         <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
@@ -53,44 +52,44 @@
                            Margin="0,12,0,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
                 <StackPanel x:Name="SettingsItems">
                 <TextBlock Text="Appearance" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" />
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Text size" Tag="display font accessibility scale Windows">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Text size" Tag="Text size display font accessibility scale Windows">
                     <controls:CycleSelector ItemsSource="{Binding TextSizes}" SelectedItem="{Binding TextSize}" ValueWidth="110"
                                             AutomationProperties.Name="Text size" />
                 </HeaderedContentControl>
                 <TextBlock Text="General" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" />
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Close to tray">
-                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding CloseToTray}"
-                                            ValueWidth="110" AutomationProperties.Name="Close to tray" />
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Close to tray" Tag="Close to tray">
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding CloseToTray}"
+                                            Width="110" AutomationProperties.Name="Close to tray" />
                 </HeaderedContentControl>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Start with Windows autostart startup">
                     <StackPanel>
                         <DockPanel>
-                            <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Autostart}"
-                                                    ValueWidth="110" AutomationProperties.Name="Start with Windows" />
+                            <ToggleButton Style="{StaticResource OnOffSwitch}" DockPanel.Dock="Right" IsChecked="{Binding Autostart}"
+                                                    Width="110" AutomationProperties.Name="Start with Windows" />
                             <TextBlock Text="Start with Windows" Style="{StaticResource RowLabel}" TextWrapping="Wrap" Margin="0,0,10,0" />
                         </DockPanel>
                         <TextBlock Text="{Binding AutostartError}" Style="{StaticResource ErrorText}"
                                    Visibility="{Binding AutostartError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Default alert times (minutes before)">
                     <StackPanel>
                         <TextBlock Text="Default alert times (minutes before)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
                         <panels:LeadChips DataContext="{Binding DefaultLeads}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Default sound Test sound">
                     <StackPanel>
                         <TextBlock Text="Default sound" Style="{StaticResource RowLabel}" Margin="0,0,0,4" />
                         <DockPanel>
                         <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test sound" Margin="8,0,0,0"
                                 VerticalAlignment="Center" Command="{Binding PreviewSoundCommand}" />
-                        <controls:CycleSelector HorizontalAlignment="Left" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" ValueWidth="130"
+                        <ComboBox DisplayMemberPath="Label" HorizontalAlignment="Left" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" Width="130"
                                                 AutomationProperties.Name="Default sound" />
                         </DockPanel>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Your sounds + Add sound…">
                     <StackPanel>
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="+ Add sound…" VerticalAlignment="Center"
@@ -116,25 +115,25 @@
                                    Visibility="{Binding SoundError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Volume" Tag="audio sound loudness">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Volume" Tag="Volume audio sound loudness">
                     <Slider AutomationProperties.Name="Volume" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center" Value="{Binding Volume, Delay=250}" />
                 </HeaderedContentControl>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Voice test speech TTS">
                     <StackPanel>
                         <TextBlock Text="Voice" Style="{StaticResource RowLabel}" Margin="0,0,0,4" />
                         <DockPanel>
                         <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test voice" Margin="8,0,0,0"
                                 VerticalAlignment="Center" Command="{Binding TestVoiceCommand}" />
-                        <controls:CycleSelector HorizontalAlignment="Left" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" ValueWidth="130"
+                        <ComboBox DisplayMemberPath="Label" HorizontalAlignment="Left" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" Width="130"
                                                 AutomationProperties.Name="Voice" />
                         </DockPanel>
                     </StackPanel>
                 </Border>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Speech speed">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Speech speed" Tag="Speech speed rate TTS">
                     <Slider AutomationProperties.Name="Speech speed" Width="170" Minimum="-5" Maximum="5" IsSnapToTickEnabled="True" TickFrequency="1"
                             VerticalAlignment="Center" Value="{Binding SpeechRate, Delay=250}" />
                 </HeaderedContentControl>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Test alert">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Test alert" Tag="Test alert Send Send test alert">
                     <StackPanel>
                         <Button Content="Send" Command="{Binding TestAlertCommand}" HorizontalAlignment="Right"
                                 AutomationProperties.Name="Send test alert">
@@ -155,25 +154,25 @@
                 </HeaderedContentControl>
 
                 <TextBlock Text="To-do" Style="{StaticResource SearchHeading}" Tag="todo tasks" />
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily reset">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily reset" Tag="Daily reset time UTC local">
                     <panels:TodoScheduleEditor DataContext="{Binding DailyTodoReset}" />
                 </HeaderedContentControl>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Weekly reset">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Weekly reset" Tag="Weekly reset day time UTC local">
                     <panels:TodoScheduleEditor DataContext="{Binding WeeklyTodoReset}" />
                 </HeaderedContentControl>
-                <Border Style="{StaticResource SearchRow}" Tag="restore default lists">
+                <Border Style="{StaticResource SearchRow}" Tag="Restore default lists">
                     <Button Style="{StaticResource LinkButton}" Content="Restore default lists" HorizontalAlignment="Left"
                             Command="{Binding RestoreTodoDefaultsCommand}" IsEnabled="{Binding HasDeletedTodoDefaults}" />
                 </Border>
 
                 <TextBlock Text="In game" Style="{StaticResource SearchHeading}" Tag="notification fullscreen priority" />
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Priority notifications">
                     <Button Style="{StaticResource GhostButton}" Content="Priority notifications" HorizontalAlignment="Left" Margin="0,4,8,6"
                             ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
                 </Border>
 
                 <TextBlock x:Name="BossesHeading" Text="Bosses" Style="{StaticResource SearchHeading}" />
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Boss region server Europe North America Asia">
                     <StackPanel>
                         <DockPanel>
                             <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Regions}" SelectedItem="{Binding Region}"
@@ -184,7 +183,7 @@
                                    Visibility="{Binding RegionError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Timetable verified source changes spawn times review apply keep">
                     <StackPanel>
                         <TextBlock Text="{Binding TimetableVerified}" Style="{StaticResource LabelText}" ToolTip="{Binding TimetableSource}" />
                         <Button Style="{StaticResource LinkButton}" Content="Review timetable changes" HorizontalAlignment="Left" Margin="0,6,0,0"
@@ -197,8 +196,8 @@
                                     <DataTemplate>
                                         <StackPanel Margin="0,4,0,8">
                                             <DockPanel>
-                                                <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OnOff}" SelectedItem="{Binding Apply}"
-                                                                        ValueWidth="65" AutomationProperties.Name="Apply timetable change" />
+                                                <ToggleButton DockPanel.Dock="Right" Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Apply}"
+                                                                        Width="65" AutomationProperties.Name="Apply timetable change" />
                                                 <StackPanel>
                                                     <TextBlock Text="{Binding Name}" FontSize="12" />
                                                     <TextBlock Text="{Binding CustomLabel}" FontSize="11" Foreground="{DynamicResource AccentBrush}"
@@ -218,7 +217,7 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="· Reset Cancel Reset alert settings reset boss alert settings">
                     <StackPanel>
                         <Button Style="{StaticResource LinkButton}" Content="{Binding ResetAlertLabel}" HorizontalAlignment="Left"
                                 Command="{Binding AlertReset.AskCommand}"
@@ -234,7 +233,7 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="· Reset Cancel Reset spawn times reset spawn times timetable">
                     <StackPanel>
                         <Button Style="{StaticResource LinkButton}" Content="{Binding ResetTimetableLabel}" HorizontalAlignment="Left"
                                 Command="{Binding TimetableReset.AskCommand}"
@@ -252,7 +251,7 @@
                 </Border>
 
                 <TextBlock Text="Data" Style="{StaticResource SearchHeading}" />
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="Replace current data and restart? · Export backup… Restore backup… Open data folder Restore Cancel">
                     <StackPanel>
                         <WrapPanel>
                             <Button Style="{StaticResource LinkButton}" Content="Export backup…" Command="{Binding ExportBackupCommand}" Margin="0,0,14,6" />
@@ -274,7 +273,7 @@
                 </Border>
 
                 <TextBlock Text="Diagnostics" Style="{StaticResource SearchHeading}" />
-                <Border Style="{StaticResource SearchRow}" Tag="health status errors logs copy diagnostics">
+                <Border Style="{StaticResource SearchRow}" Tag="Health status errors logs copy diagnostics">
                     <StackPanel>
                         <TextBlock Text="{Binding Health.Status, TargetNullValue=No issues reported}" TextWrapping="Wrap" Style="{StaticResource LabelText}" AutomationProperties.LiveSetting="Polite" />
                         <WrapPanel Margin="0,6,0,0">
@@ -297,7 +296,7 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Text="About" Style="{StaticResource SearchHeading}" />
-                <Border Style="{StaticResource SearchRow}">
+                <Border Style="{StaticResource SearchRow}" Tag="BDO Timers © 2026 feluminais · Free software under GPL-3.0, with no warranty. Not affiliated with Pearl Abyss. Game artwork © Pearl Abyss. · Check for updates View release Source code Licenses version updates release licenses GPL source code">
                     <StackPanel>
                         <TextBlock FontSize="12">
                             <Run Text="BDO Timers" /> <Run Text="{Binding Version, Mode=OneWay}" Foreground="{DynamicResource SubtleBrush}" />

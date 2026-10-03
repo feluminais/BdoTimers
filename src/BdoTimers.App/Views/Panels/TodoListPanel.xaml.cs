@@ -69,6 +69,7 @@ public partial class TodoListPanel : UserControl
         // With Alt held, WPF reports the arrow as Key.System and puts it in SystemKey.
         else if (Keyboard.Modifiers == ModifierKeys.Alt && e.SystemKey is Key.Up or Key.Down)
         {
+            Ui.UseKeyboardFocus(this);
             _model.Move(id, e.SystemKey == Key.Up ? -1 : 1);
             e.Handled = true;
         }

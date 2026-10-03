@@ -19,8 +19,8 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     /// <summary>The Guild bosses timer's overlay row shows and changes the Overlay panel's Guild bosses setting.</summary>
     readonly bool _guildBoss;
 
-    [ObservableProperty] private Choice _toast;
-    [ObservableProperty] private Choice _voice;
+    [ObservableProperty] private bool _toast;
+    [ObservableProperty] private bool _voice;
     [ObservableProperty] private string _voiceLine;
     [ObservableProperty] private bool _voiceLineInvalid;
     [ObservableProperty] private bool _editingVoiceLine;
@@ -45,8 +45,8 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         // So the voice line's ▶ speaks without first waiting for the model.
         if (a.Tts.Enabled) services.Tts.Warm(services.Settings.Current.TtsVoice);
         Sound = new TimerSoundViewModel(services, timer);
-        _toast = Choice.For(a.Toast.Enabled);
-        _voice = Choice.For(a.Tts.Enabled);
+        _toast = a.Toast.Enabled;
+        _voice = a.Tts.Enabled;
         _voiceLine = ToEditor(a.Tts.Template);
         UpdateVoiceSample();
         var overlay = _guildBoss ? services.Settings.Current.Overlay.GuildBosses : a.Overlay;
@@ -73,9 +73,9 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         Leads = NewLeads(DefaultLeads);
     }
 
-    partial void OnToastChanged(Choice value) => Modify(a => a with { Toast = a.Toast with { Enabled = value.IsOn } });
+    partial void OnToastChanged(bool value) => Modify(a => a with { Toast = a.Toast with { Enabled = value } });
 
-    partial void OnVoiceChanged(Choice value) => Modify(a => a with { Tts = a.Tts with { Enabled = value.IsOn } });
+    partial void OnVoiceChanged(bool value) => Modify(a => a with { Tts = a.Tts with { Enabled = value } });
 
     partial void OnVoiceLineChanged(string value)
     {

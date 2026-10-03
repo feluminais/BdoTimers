@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
-             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
              MaxWidth="440" HorizontalAlignment="Stretch">
     <UserControl.Resources>
         <!-- The header picture: the whole area is clickable, and a labelled badge in its corner says so -->
@@ -60,7 +59,7 @@
         </Grid>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
-            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding ScheduleValid}" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding CanFinish}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}">
                 <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding Delete.AskCommand}"
@@ -81,7 +80,7 @@
                 <Border Style="{StaticResource Row}">
                     <DockPanel>
                         <TextBlock Text="Name" Style="{StaticResource RowLabel}" Width="120" />
-                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
+                        <TextBox controls:Ui.InitialFocus="True" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
                                  controls:Ui.HasError="{Binding NameInvalid}" />
                     </DockPanel>
                 </Border>
@@ -163,7 +162,7 @@
                     <Border Style="{StaticResource Row}" Margin="0,6,0,0">
                         <DockPanel>
                             <TextBlock Text="Time zone" Style="{StaticResource RowLabel}" Width="120" />
-                            <ComboBox ItemsSource="{Binding TimeZones}" DisplayMemberPath="DisplayName" SelectedValuePath="Id"
+                            <ComboBox controls:Ui.TypeToSearch="True" ItemsSource="{Binding TimeZones}" DisplayMemberPath="DisplayName" SelectedValuePath="Id"
                                       SelectedValue="{Binding TimeZoneId}" MaxDropDownHeight="260" VerticalAlignment="Center"
                                       AutomationProperties.Name="Event time zone" />
                         </DockPanel>
@@ -174,7 +173,7 @@
 
                 <StackPanel Visibility="{Binding HasAlerts, Converter={StaticResource BoolToVisibility}}">
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Alerts">
-                        <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
+                        <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding AlertsOn}" Width="110"
                                                 AutomationProperties.Name="Alerts" />
                     </HeaderedContentControl>
                     <panels:AlertRows DataContext="{Binding Alerts}" />

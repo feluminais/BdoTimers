@@ -220,3 +220,15 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Toggle each clock and then all clocks off: the section fits the enabled clocks and disappears when none remain.
     Check colour and picture backgrounds, opacity and scale; Outline follows the joined shape in preview. With the
     background and outline off, drag the clock section and card body; both move the overlay together.
+63. [ ] Edit Volume, speech speed, overlay size and either opacity, then immediately change another setting, preview an
+    alert or close the panel. Every slider keeps its edit and previews use the new values. Type a timer name, duration
+    or custom voice line and immediately press Done or Escape: reopening shows the final valid value. Blank names,
+    invalid durations, duplicate/invalid weekly times and blank voice lines disable Done; fixing them enables it.
+    Close/Escape with an invalid draft retains the last valid saved value. Delete a timer immediately after editing
+    its duration; Undo restores the final edit. A horse run finishing during an edit closes without an error.
+64. [ ] Tray → Custom timers: hover and keyboard navigation open the submenu and every enabled timer action works.
+    Shrink the window at the largest text size and drag/page a horizontal scrollbar in both directions. Binary
+    settings toggle with one click or Space and Narrator reports their state. Voice/sound dropdowns list all choices;
+    time-zone typing still matches words such as Kyiv. Ctrl+F and keyboard hotkey capture show a focus cue; mouse
+    interaction hides it. Setup: a long install root scrolls inside its field while the BdoTimers suffix stays visible,
+    and Tab to Launch BDO Timers shows its focus cue.

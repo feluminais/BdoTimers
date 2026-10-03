@@ -54,6 +54,7 @@ public partial class CycleSelector : UserControl
             case Key.End: SelectIndex((ItemsSource?.Count ?? 0) - 1); break;
             default: return;
         }
+        Ui.UseKeyboardFocus(this);
         e.Handled = true;
     }
 

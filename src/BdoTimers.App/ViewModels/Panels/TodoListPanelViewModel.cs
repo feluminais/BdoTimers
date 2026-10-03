@@ -21,10 +21,11 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
     bool _rowsDirty;
 
     [ObservableProperty] private string _name = "";
-    [ObservableProperty] private bool _invalidName;
-    [ObservableProperty] private Choice _enabled = Choice.OnOff[0];
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanFinish))] private bool _invalidName;
+    [ObservableProperty] private bool _enabled = true;
 
     public bool IsNew { get; }
+    public bool CanFinish => !InvalidName;
     public Confirmation Delete { get; }
     public ObservableCollection<TodoEditRowViewModel> Rows { get; } = [];
     public event Action<Guid>? FocusRequested;
@@ -52,7 +53,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
             // The only outside row change while this modal panel is open is a reset. Keep unfinished rows and focus.
             _loading = true;
             if (!_nameDirty) Name = list.Name;
-            Enabled = Choice.For(list.Enabled);
+            Enabled = list.Enabled;
             _loading = false;
         });
     }
@@ -67,7 +68,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         _loading = true;
         Name = list.Name;
         InvalidName = false;
-        Enabled = Choice.For(list.Enabled);
+        Enabled = list.Enabled;
         _outline = TodoOutline.Flatten(list.Rows);
         RebuildRows();
         _loading = false;
@@ -88,13 +89,13 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
         ArmSave();
     }
 
-    partial void OnEnabledChanged(Choice value)
+    partial void OnEnabledChanged(bool value)
     {
         if (_loading) return;
         try
         {
             _saving = true;
-            _services.Todos.SetEnabled(_id, value.IsOn);
+            _services.Todos.SetEnabled(_id, value);
         }
         catch (StateSaveException)
         {
@@ -246,6 +247,7 @@ public sealed partial class TodoListPanelViewModel : ObservableObject, IPanel
 
     void DeleteList()
     {
+        _host.CompletePanelEdits();
         Flush();
         _services.Undo.DeleteTodoList(_id);
         _host.ClosePanel();

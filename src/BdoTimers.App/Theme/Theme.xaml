@@ -318,6 +318,16 @@
         </Style.Triggers>
     </Style>
 
+    <Style x:Key="OnOffSwitch" TargetType="ToggleButton" BasedOn="{StaticResource Chip}">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Content" Value="Off" />
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="On" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
     <!-- Text input: a single bottom hairline, gold when focused, red when invalid -->
     <Style TargetType="TextBox">
         <Setter Property="Background" Value="Transparent" />
@@ -350,7 +360,7 @@
         </Setter>
     </Style>
 
-    <!-- Thin scrollbars; only vertical ones are ever shown -->
+    <!-- Thin scrollbars in either orientation -->
     <Style x:Key="ScrollThumb" TargetType="Thumb">
         <Setter Property="Template">
             <Setter.Value>
@@ -377,19 +387,34 @@
         </Setter>
     </Style>
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="4" />
-        <Setter Property="MinWidth" Value="4" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
                     <Track x:Name="PART_Track" IsDirectionReversed="True">
-                        <Track.DecreaseRepeatButton><RepeatButton Style="{StaticResource ScrollPage}" Command="ScrollBar.PageUpCommand" /></Track.DecreaseRepeatButton>
-                        <Track.IncreaseRepeatButton><RepeatButton Style="{StaticResource ScrollPage}" Command="ScrollBar.PageDownCommand" /></Track.IncreaseRepeatButton>
+                        <Track.DecreaseRepeatButton><RepeatButton x:Name="Decrease" Style="{StaticResource ScrollPage}" Command="ScrollBar.PageUpCommand" /></Track.DecreaseRepeatButton>
+                        <Track.IncreaseRepeatButton><RepeatButton x:Name="Increase" Style="{StaticResource ScrollPage}" Command="ScrollBar.PageDownCommand" /></Track.IncreaseRepeatButton>
                         <Track.Thumb><Thumb Style="{StaticResource ScrollThumb}" /></Track.Thumb>
                     </Track>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Orientation" Value="Horizontal">
+                            <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False" />
+                            <Setter TargetName="Decrease" Property="Command" Value="ScrollBar.PageLeftCommand" />
+                            <Setter TargetName="Increase" Property="Command" Value="ScrollBar.PageRightCommand" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Vertical">
+                <Setter Property="Width" Value="4" />
+                <Setter Property="MinWidth" Value="4" />
+            </Trigger>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Height" Value="4" />
+                <Setter Property="MinHeight" Value="4" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Menus and tooltips -->
@@ -413,10 +438,28 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="MenuItem">
-                    <Border x:Name="Bd" Background="Transparent" Padding="14,6" MinWidth="170">
-                        <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
-                    </Border>
+                    <Grid>
+                        <Border x:Name="Bd" Background="Transparent" Padding="14,6" MinWidth="170">
+                            <DockPanel>
+                                <TextBlock x:Name="Arrow" DockPanel.Dock="Right" Text="&#xE76C;" Style="{StaticResource IconText}"
+                                           FontSize="9" Margin="12,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" />
+                                <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
+                            </DockPanel>
+                        </Border>
+                        <Popup x:Name="PART_Popup" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                               Placement="Right" PlacementTarget="{Binding ElementName=Bd}" AllowsTransparency="True" Focusable="False">
+                            <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}"
+                                    BorderThickness="1" Padding="0,4" LayoutTransform="{DynamicResource UiScaleTransform}">
+                                <ScrollViewer CanContentScroll="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Cycle" />
+                                </ScrollViewer>
+                            </Border>
+                        </Popup>
+                    </Grid>
                     <ControlTemplate.Triggers>
+                        <Trigger Property="HasItems" Value="True">
+                            <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
+                        </Trigger>
                         <Trigger Property="IsHighlighted" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverFillBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource HoverTextBrush}" />
@@ -526,7 +569,6 @@
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
-        <Setter Property="controls:Ui.TypeToSearch" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -551,7 +593,7 @@
                                           Content="{TemplateBinding SelectionBoxItem}" ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
                                           ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
                                           ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" />
-                        <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="None">
+                        <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False" PopupAnimation="None">
                             <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1"
                                     LayoutTransform="{DynamicResource UiScaleTransform}"
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}" MaxHeight="{TemplateBinding MaxDropDownHeight}">

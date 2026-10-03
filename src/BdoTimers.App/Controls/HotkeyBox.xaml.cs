@@ -143,6 +143,7 @@ public partial class HotkeyBox : UserControl
         {
             if (!ClearButton.IsKeyboardFocusWithin && (key is Key.Enter or Key.Space))
             {
+                Ui.UseKeyboardFocus(this);
                 _error = null;
                 Listen(true);
                 return true;

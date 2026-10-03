@@ -9,6 +9,20 @@ namespace BdoTimers.App.Controls;
 /// <summary>Attached properties the theme's styles and templates use.</summary>
 public static class Ui
 {
+    /// <summary>The panel's first keyboard target, declared alongside its layout.</summary>
+    public static readonly DependencyProperty InitialFocusProperty = DependencyProperty.RegisterAttached(
+        "InitialFocus", typeof(bool), typeof(Ui), new PropertyMetadata(false));
+    public static bool GetInitialFocus(DependencyObject d) => (bool)d.GetValue(InitialFocusProperty);
+    public static void SetInitialFocus(DependencyObject d, bool value) => d.SetValue(InitialFocusProperty, value);
+
+    /// <summary>Custom controls and focus shortcuts report intentional keyboard interaction here.</summary>
+    public static void UseKeyboardFocus(DependencyObject target)
+    {
+        var window = target as Window ?? Window.GetWindow(target);
+        if (window is null) return;
+        window.SetValue(KeyboardPointerPositionProperty, Mouse.GetPosition(window));
+        SetShowKeyboardFocus(window, true);
+    }
     public static readonly DependencyProperty ShowKeyboardFocusProperty = DependencyProperty.RegisterAttached(
         "ShowKeyboardFocus", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.Inherits));
 
@@ -55,9 +69,7 @@ public static class Ui
             else if (e.Key is not (Key.Left or Key.Right or Key.Up or Key.Down or Key.Home or Key.End or Key.PageUp or Key.PageDown))
                 return;
         }
-        var window = (Window)sender;
-        window.SetValue(KeyboardPointerPositionProperty, Mouse.GetPosition(window));
-        SetShowKeyboardFocus(window, true);
+        UseKeyboardFocus((Window)sender);
     }
     static void HideFocusCue(object sender, MouseButtonEventArgs e) => SetShowKeyboardFocus((Window)sender, false);
     static void MouseScrolled(object sender, MouseWheelEventArgs e) => SetShowKeyboardFocus((Window)sender, false);

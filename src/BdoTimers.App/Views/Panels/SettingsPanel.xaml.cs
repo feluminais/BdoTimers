@@ -1,9 +1,6 @@
-using System.Text;
 using System.Windows;
-using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Threading;
 using BdoTimers.App.ViewModels.Panels;
 
@@ -38,6 +35,7 @@ public partial class SettingsPanel : UserControl
     {
         if (e.Key == Key.F && Keyboard.Modifiers == ModifierKeys.Control)
         {
+            Controls.Ui.UseKeyboardFocus(this);
             SearchBox.Focus();
             SearchBox.SelectAll();
             e.Handled = true;
@@ -60,9 +58,7 @@ public partial class SettingsPanel : UserControl
             var sectionFound = false;
             foreach (var row in rows)
             {
-                var terms = new StringBuilder(heading.Text).Append(' ').Append(heading.Tag);
-                CollectTerms(row, terms);
-                var match = SettingsFilter.Matches(SearchBox.Text, terms.ToString());
+                var match = SettingsFilter.Matches(SearchBox.Text, $"{heading.Text} {heading.Tag} {row.Tag}");
                 SettingsFilter.SetIsMatch(row, match);
                 sectionFound |= match;
             }
@@ -83,17 +79,6 @@ public partial class SettingsPanel : UserControl
         NoResults.Visibility = found ? Visibility.Collapsed : Visibility.Visible;
     }
 
-    static void CollectTerms(DependencyObject item, StringBuilder terms)
-    {
-        if (item is FrameworkElement element)
-        {
-            terms.Append(' ').Append(element.Tag).Append(' ').Append(AutomationProperties.GetName(element));
-            if (element is TextBlock text) terms.Append(' ').Append(text.Text);
-            if (element is ContentControl content && content.Content is string label) terms.Append(' ').Append(label);
-            if (element is HeaderedContentControl header) terms.Append(' ').Append(header.Header);
-        }
-        foreach (var child in LogicalTreeHelper.GetChildren(item).OfType<DependencyObject>()) CollectTerms(child, terms);
-    }
 }
 
 /// <summary>Search visibility is separate from settings availability and validation.</summary>

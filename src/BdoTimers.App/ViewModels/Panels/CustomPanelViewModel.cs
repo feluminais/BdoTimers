@@ -22,12 +22,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     TimeSpan? _typedDuration;
 
     [ObservableProperty] private string _name;
-    [ObservableProperty] private bool _nameInvalid;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanFinish))] private bool _nameInvalid;
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images;
     [ObservableProperty] private bool _hasPicture;
     [ObservableProperty] private string? _pictureError;
     [ObservableProperty] private string _durationText = "";
-    [ObservableProperty] private bool _durationInvalid;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanFinish))] private bool _durationInvalid;
     [ObservableProperty] private FarmGrowthOption _farmGrowth;
     [ObservableProperty] private string? _timeZoneId;
     [ObservableProperty] private string _eventDateText = "";
@@ -38,8 +38,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private string _endDateText = "";
     [ObservableProperty] private bool _startDateInvalid;
     [ObservableProperty] private bool _endDateInvalid;
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid))] private string _scheduleError = "";
-    [ObservableProperty] private Choice _alertsOn;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid)), NotifyPropertyChangedFor(nameof(CanFinish))] private string _scheduleError = "";
+    [ObservableProperty] private bool _alertsOn;
     [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private Hotkey? _controlHotkey;
 
@@ -72,6 +72,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId ?? "UTC")).Date;
     public Func<DateTime> TodayProvider => () => Today;
     public bool ScheduleValid => ScheduleError.Length == 0;
+    public bool CanFinish => !NameInvalid && !DurationInvalid && ScheduleValid && (Slots?.IsValid ?? true) && !Alerts.VoiceLineInvalid;
     /// <summary>Stopwatches never alert, so they have no alert settings or on/off.</summary>
     public bool HasAlerts => !IsStopwatch;
     public bool CanDelete { get; }
@@ -90,7 +91,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _name = timer.Name;
         _images = [services.Art.For(timer)];
         _hasPicture = timer.ImageFile is not null;
-        _alertsOn = Choice.For(timer.Enabled);
+        _alertsOn = timer.Enabled;
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsWeekly = timer.Kind == TimerKind.Scheduled;
         IsOneTime = timer.Kind == TimerKind.OneTime;
@@ -127,6 +128,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
             _eventTimeText = Parsing.FormatTime(oneTime.Time);
         }
         Alerts = new AlertRowsViewModel(services, timer);
+        Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
+        if (Slots is not null) Slots.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
     }
 
@@ -142,7 +145,10 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         if (_syncingDuration) return;
         _typedDuration = null;
         if (DurationInvalid) return;
-        if (Timer.Countdown is { Status: not CountdownStatus.Idle })
+        // A horse run can finish and disappear while its last text update is still queued.
+        var timer = _services.Timers.Current.Timers.FirstOrDefault(t => t.Id == _id);
+        if (timer is null) return;
+        if (timer.Countdown is { Status: not CountdownStatus.Idle })
             _typedDuration = duration;
         else
             Modify(t => t with { Countdown = (t.Countdown ?? new CountdownSpec()) with { Duration = duration } });
@@ -241,7 +247,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         catch (ArgumentException ex) { ScheduleError = ex.Message; EndDateInvalid = true; }
     }
 
-    partial void OnAlertsOnChanged(Choice value) => Modify(t => t with { Enabled = value.IsOn });
+    partial void OnAlertsOnChanged(bool value) => Modify(t => t with { Enabled = value });
 
     [RelayCommand]
     void ChoosePicture()
@@ -269,6 +275,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
 
     void DeleteTimer()
     {
+        _host.CompletePanelEdits();
         CommitDuration();
         _services.Undo.DeleteTimer(_id);
         _host.ClosePanel();

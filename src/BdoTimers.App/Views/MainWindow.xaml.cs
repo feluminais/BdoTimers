@@ -40,6 +40,13 @@ public partial class MainWindow : Window
         DataContext = _vm = viewModel;
         _services = services;
         _panelFocus = new PanelFocusScope(this, MainContent, PanelLayer, _vm.ClosePanel);
+        viewModel.CompletingPanelEdits += () => PanelEdits.Complete(PanelContent);
+        // Button commands (including previews) use the current draft, even inside a binding's debounce interval.
+        AddHandler(ButtonBase.ClickEvent, new RoutedEventHandler((_, e) =>
+        {
+            if (_vm.Panel is not null && e.OriginalSource is ButtonBase { Command: not null } button
+                && PanelContent.IsAncestorOf(button)) PanelEdits.Complete(PanelContent);
+        }));
         SetResourceReference(UiScaleProperty, "UiScaleTransform");
         SourceInitialized += (_, _) =>
         {
@@ -81,12 +88,14 @@ public partial class MainWindow : Window
         if (panel is not null)
         {
             PanelContent.Content = panel;
+            PanelContent.IsEnabled = true;
             PanelLayer.Visibility = Visibility.Visible;
             _panelFocus.Open();
             PanelLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Fade));
             return;
         }
         // Keep the old content on screen while it fades out.
+        PanelContent.IsEnabled = false;
         var fadeOut = new DoubleAnimation(0, Fade);
         fadeOut.Completed += (_, _) =>
         {

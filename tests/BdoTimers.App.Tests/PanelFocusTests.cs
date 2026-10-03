@@ -17,6 +17,7 @@ public class PanelFocusTests
         background.Children.Add(opener);
         var close = new Button { Content = "Close", ToolTip = "Close" };
         var text = new TextBox { Text = "Timer name" };
+        Ui.SetInitialFocus(text, true);
         var done = new Button { Content = "Done" };
         var panel = new StackPanel { Visibility = Visibility.Collapsed };
         panel.Children.Add(close);

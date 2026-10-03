@@ -9,14 +9,13 @@ public sealed partial class TimetableChangeRow : ObservableObject
     public TimetableChange Change { get; }
     public string Name => Change.Name;
     public string? CustomLabel => Change.HasCustomTimes ? "Custom times" : null;
-    public IReadOnlyList<Choice> OnOff => Choice.OnOff;
-    [ObservableProperty] private Choice _apply;
+    [ObservableProperty] private bool _apply;
     public string Details { get; }
 
     public TimetableChangeRow(TimetableChange change)
     {
         Change = change;
-        _apply = Choice.For(!change.HasCustomTimes);
+        _apply = !change.HasCustomTimes;
         Details = Describe(change);
     }
 

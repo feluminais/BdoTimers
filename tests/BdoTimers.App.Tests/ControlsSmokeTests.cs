@@ -24,8 +24,9 @@ public sealed class ControlsSmokeTests
     {
         WpfTest.Run(() =>
         {
-            var model = new SelectionModel { Value = Choice.OnOff[0] };
-            var selector = new CycleSelector { ItemsSource = (IList)Choice.OnOff, ValueWidth = 110 };
+            Choice[] choices = [new("On", true), new("Off", false)];
+            var model = new SelectionModel { Value = choices[0] };
+            var selector = new CycleSelector { ItemsSource = (IList)choices, ValueWidth = 110 };
             AutomationProperties.SetName(selector, "Close to tray");
             selector.SetBinding(CycleSelector.SelectedItemProperty, new Binding(nameof(SelectionModel.Value)) { Source = model });
             var window = new Window { Content = selector, Width = 250, Height = 100, ShowInTaskbar = false };
@@ -42,11 +43,11 @@ public sealed class ControlsSmokeTests
                 Assert.Equal("On", provider.Value);
                 Key(selector, window, System.Windows.Input.Key.Left);
                 Assert.Equal("Off", provider.Value);
-                Assert.Equal(Choice.OnOff[1], model.Value);
+                Assert.Equal(choices[1], model.Value);
                 Key(selector, window, System.Windows.Input.Key.Right);
                 Assert.Equal("On", provider.Value);
                 provider.SetValue("Off");
-                Assert.Equal(Choice.OnOff[1], model.Value);
+                Assert.Equal(choices[1], model.Value);
                 Assert.True(BindingOperations.IsDataBound(selector, CycleSelector.SelectedItemProperty));
                 selector.IsEnabled = false;
                 Assert.True(provider.IsReadOnly);
@@ -126,6 +127,7 @@ public sealed class ControlsSmokeTests
         {
             Zone[] zones = [new("(UTC+01:00) Warsaw"), new("(UTC+02:00) Helsinki, Kyiv"), new("(UTC+02:00) Kaliningrad"), new("(UTC+09:00) Tokyo")];
             var box = new ComboBox { ItemsSource = zones, DisplayMemberPath = nameof(Zone.DisplayName), SelectedIndex = 0 };
+            Ui.SetTypeToSearch(box, true);
             var window = new Window { Content = box, Width = 300, Height = 100, ShowInTaskbar = false };
             try
             {

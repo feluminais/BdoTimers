@@ -59,7 +59,7 @@
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="22,16,12,4">
             <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
-            <TextBox x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource DisplayFont}"
+            <TextBox controls:Ui.InitialFocus="True" x:Name="NameBox" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" FontFamily="{StaticResource DisplayFont}"
                      FontSize="18" controls:Ui.HasError="{Binding InvalidName}" AutomationProperties.Name="List name">
                 <TextBox.Style>
                     <Style TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
@@ -74,7 +74,7 @@
             </TextBox>
         </DockPanel>
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16">
-            <Button Style="{StaticResource PanelDoneButton}" />
+            <Button Style="{StaticResource PanelDoneButton}" IsEnabled="{Binding CanFinish}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Style="{StaticResource DangerLinkButton}" Content="Delete list" Command="{Binding Delete.AskCommand}"
                         Visibility="{Binding Delete.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
@@ -88,8 +88,8 @@
         <ScrollViewer x:Name="RowsScrollViewer" MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Active" Margin="0,0,0,10">
-                    <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding Enabled}"
-                                            ValueWidth="90" AutomationProperties.Name="Active" />
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Enabled}"
+                                            Width="90" AutomationProperties.Name="Active" />
                 </HeaderedContentControl>
                 <ItemsControl x:Name="RowsControl" ItemsSource="{Binding Rows}" />
                 <Button Style="{StaticResource LinkButton}" Content="+ Add item" Command="{Binding AddRowCommand}"

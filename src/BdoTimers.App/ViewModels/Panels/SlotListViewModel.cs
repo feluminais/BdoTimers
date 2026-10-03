@@ -21,6 +21,7 @@ public sealed partial class SlotListViewModel : ObservableObject
 
     public ObservableCollection<SlotRowViewModel> Rows { get; } = [];
     public bool MayAddTime => _maximum is null || Rows.Count < _maximum;
+    public bool IsValid => Rows.All(row => !row.Invalid);
 
     public SlotListViewModel(IEnumerable<Slot> slots, Action<IReadOnlyList<Slot>> apply, int minimum = 1, int? maximum = null,
         IReadOnlyList<Slot>? defaults = null)
@@ -122,6 +123,7 @@ public sealed partial class SlotListViewModel : ObservableObject
             if (!row.Invalid) slots.Add(slot);
         }
         MayReset = _defaults is not null && (slots.Count != Rows.Count || !seen.SetEquals(_defaults));
+        OnPropertyChanged(nameof(IsValid));
         return slots;
     }
 }
