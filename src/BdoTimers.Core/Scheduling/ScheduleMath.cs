@@ -33,9 +33,17 @@ public static class ScheduleMath
     /// <summary>The slot that <paramref name="occurrenceUtc"/> is an occurrence of, if any.</summary>
     public static Slot? SlotAt(ScheduledSpec spec, DateTimeOffset occurrenceUtc)
     {
-        var local = TimeZoneInfo.ConvertTime(occurrenceUtc, TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId));
-        var time = TimeOnly.FromDateTime(local.DateTime);
-        return spec.Slots.Where(s => s.Day == local.DayOfWeek && s.Time == time).Cast<Slot?>().FirstOrDefault();
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId);
+        var date = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(occurrenceUtc, zone).DateTime);
+        // A spring gap can shift a slot's actual wall time, even into the following day.
+        for (var offset = 0; offset <= 1; offset++)
+        {
+            if (date.DayNumber < offset) break;
+            var day = date.AddDays(-offset);
+            foreach (var slot in spec.Slots.Where(s => s.Day == day.DayOfWeek))
+                if (LocalToUtc(day.ToDateTime(slot.Time), zone) == occurrenceUtc) return slot;
+        }
+        return null;
     }
 
     public static bool IsExpired(ScheduledSpec spec, DateTimeOffset now) =>
@@ -95,7 +103,9 @@ public static class ScheduleMath
             if (!RunsInWeekOf(spec, date))
             {
                 // Straight to the next Monday: nothing in this week counts.
-                var monday = WeekStart(date).AddDays(7);
+                var week = WeekStart(date);
+                if (DateOnly.MaxValue.DayNumber - week.DayNumber < 7) yield break;
+                var monday = week.AddDays(7);
                 if (monday > last || monday < day) yield break;
                 day = monday;
                 continue;

@@ -10,6 +10,13 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
 {
     public const int MaxHorseRegistrations = 10;
 
+    public void SetRepeat(Guid id, int everyWeeks, DateOnly? anchor)
+    {
+        ScheduleMath.ValidateEveryWeeks(everyWeeks);
+        Modify(id, t => t.Scheduled is { } spec
+            ? t with { Scheduled = spec with { EveryWeeks = everyWeeks, WeekAnchor = anchor } } : t);
+    }
+
     public void SetWeeklyDateRange(Guid id, DateOnly? start, DateOnly? end)
     {
         ScheduleMath.ValidateDateRange(start, end);
