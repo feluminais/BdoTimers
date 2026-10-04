@@ -32,7 +32,8 @@ public sealed partial class BossesViewModel : ObservableObject
     public StripTileViewModel FollowedBy { get; } = new("Followed by", elapsed: false);
     public ObservableCollection<DayHeaderViewModel> Days { get; } = [];
     public ObservableCollection<GridRowViewModel> Rows { get; } = [];
-    public ObservableCollection<BossTileViewModel> Tiles { get; } = [];
+    /// <summary>Boss tiles followed by this view model itself, which the view renders as the "+ Add boss" tile.</summary>
+    public ObservableCollection<object> Tiles { get; } = [];
 
     public BossesViewModel(AppServices services, IPanelHost host)
     {
@@ -75,11 +76,23 @@ public sealed partial class BossesViewModel : ObservableObject
     static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
         data.Timers.Where(t => BossRegions.IsSelected(data, t));
 
-    /// <summary>Keeps each boss's tile, in name order, and updates it in place.</summary>
-    void SyncTiles(AppData data, DateTimeOffset now) =>
+    /// <summary>Keeps each boss's tile, in name order, and updates it in place; the "+ Add boss" tile stays last.</summary>
+    void SyncTiles(AppData data, DateTimeOffset now)
+    {
+        if (Tiles.Count == 0) Tiles.Add(this);
         Tiles.Sync(BuiltInBosses(data).OrderBy(t => t.Name, StringComparer.OrdinalIgnoreCase),
-            (tile, boss) => tile.Id == boss.Id, boss => new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now),
-            (tile, boss) => tile.Show(boss, now));
+            (item, boss) => item is BossTileViewModel tile && tile.Id == boss.Id,
+            boss => new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now),
+            (item, boss) => ((BossTileViewModel)item).Show(boss, _services.Art.For(boss), now), keepLast: 1);
+    }
+
+    /// <summary>Adds a boss to the selected region and opens it to be named and timed.</summary>
+    [RelayCommand]
+    void AddBoss()
+    {
+        var boss = _services.Timers.AddBoss();
+        _host.OpenPanel(new BossPanelViewModel(_services, _host, boss));
+    }
 
     /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
     /// and own-settings marks, and their skipped spawns.</summary>
@@ -146,7 +159,7 @@ public sealed partial class BossesViewModel : ObservableObject
     {
         var data = _services.Timers.Current;
         if (data.Timers.FirstOrDefault(t => t.Id == id && BossRegions.IsSelected(data, t)) is { } boss)
-            _host.OpenPanel(new BossPanelViewModel(_services, boss));
+            _host.OpenPanel(new BossPanelViewModel(_services, _host, boss));
     }
 }
 

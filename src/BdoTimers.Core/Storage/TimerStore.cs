@@ -71,6 +71,36 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         return result;
     }
 
+    /// <summary>Adds a boss to the selected region and returns it.</summary>
+    public TimerDef AddBoss()
+    {
+        TimerDef? added = null;
+        Update(d =>
+        {
+            added = BossEdits.Create(d);
+            return d with { Timers = [.. d.Timers, added] };
+        });
+        return added!;
+    }
+
+    /// <summary>Renames a boss the player added; false when the name is blank or another boss of its region has it.</summary>
+    public bool RenameBoss(Guid id, string name)
+    {
+        var trimmed = name.Trim();
+        var renamed = false;
+        Update(d =>
+        {
+            var boss = d.Timers.FirstOrDefault(t => t.Id == id && t.AddedByUser);
+            if (boss is null || trimmed.Length == 0 || !BossEdits.IsNameFree(d, BossRegions.RegionOf(boss), trimmed, id)) return d;
+            renamed = true;
+            return boss.Name == trimmed ? d : d with
+            {
+                Timers = d.Timers.Select(t => t.Id == id ? t with { Name = trimmed } : t).ToList(),
+            };
+        });
+        return renamed;
+    }
+
     public void Upsert(TimerDef timer)
     {
         Validate(timer);
@@ -118,6 +148,8 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         {
             var timer = deleted.Timer;
             if (d.Timers.Any(t => t.Id == timer.Id)) return d;
+            // A reset or timetable update since may have brought back a boss of the same name.
+            if (timer.IsBuiltIn && !BossEdits.IsNameFree(d, BossRegions.RegionOf(timer), timer.Name)) return d;
             if (Presets.IsActiveHorseRun(timer) && (d.Timers.Count(Presets.IsActiveHorseRun) >= MaxHorseRegistrations
                 || d.Timers.Any(t => Presets.IsActiveHorseRun(t) && t.HorseRunNumber == timer.HorseRunNumber))) return d;
             var timers = d.Timers.ToList();

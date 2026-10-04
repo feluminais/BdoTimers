@@ -62,6 +62,8 @@ public sealed class ArtLibrary(string imagesDir)
                 PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
         if (!timer.IsBuiltIn) return new ArtPicture(Placeholder);
         var slug = Slug(timer.Name);
+        // A boss the player added has bundled art only under a bundled boss's name.
+        if (timer.AddedByUser && !BossHeads.ContainsKey(slug)) return new ArtPicture(Placeholder);
         return new ArtPicture(Load($"pack://application:,,,/Assets/Bosses/{slug}.jpg"),
             BossHeads.TryGetValue(slug, out var head) ? head : null);
     }

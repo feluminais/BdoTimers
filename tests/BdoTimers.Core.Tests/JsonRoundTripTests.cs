@@ -32,6 +32,7 @@ public class JsonRoundTripTests
                 Kind = TimerKind.Countdown,
                 Enabled = false,
                 IsBuiltIn = true,
+                AddedByUser = true,
                 BossRegionId = BossRegions.NorthAmerica,
                 Scheduled = new ScheduledSpec
                 {

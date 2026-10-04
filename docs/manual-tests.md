@@ -64,7 +64,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     report an error without closing the app. Cancel a checked restore and confirm the current data stays.
 27. [ ] With a newer bundled seed for either region, Settings → Bosses → Review timetable changes: compare the slot changes, keep a
     marked custom schedule Off, apply other changes and verify the boss's sound, voice, lead times and Alerts state stay.
-    Restart and confirm the reviewed version no longer prompts. Reset spawn times also accepts the bundled version.
+    Restart and confirm the reviewed version no longer prompts. Reset bosses also accepts the bundled version.
 28. [ ] Uninstall through setup with only JSON edits: the keep-data choice still appears, checked. Keep and reinstall into
     the same folder: edits return. Explicit deletion removes Data and restore recovery copies. Quiet uninstall keeps
     them unless DeleteData=1 is passed.
@@ -109,7 +109,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     EU → NA → EU repeatedly, restart and return to NA: each configuration, skipped future spawn and accepted baseline
     returns, with 13 bosses per region. Export/restore a backup while NA is selected; both regions' choices return.
 39. [ ] Open a timetable review or reset confirmation, then switch region: it closes and the verification label, source
-    tooltip and reset actions follow the new region. Apply selected, Keep current times and Reset spawn times affect
+    tooltip and reset actions follow the new region. Apply selected, Keep current times and Reset bosses affect
     only that region. Accept a newer EU timetable, switch to an unaccepted NA version and confirm NA still requests review.
 40. [ ] With a boss lead just passed, switch away and back before the next scheduler tick: no old toast, sound, speech or
     overlay pop-up replays, while later leads still fire. Queue a boss alert behind long audio and switch regions:
@@ -198,3 +198,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
     moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
     server time and the panel's link follow.
+61. [ ] Bosses → Add boss: a "New boss" panel opens with its spawn times expanded in server time. Name it, set a time 20
+    minutes ahead and a picture: its tile, the grid, the strip and the pinned overlay show it, and it alerts at its leads.
+    A name another boss of the region has turns the field red and keeps the old name. Set an end date of yesterday: it
+    leaves the grid, strip and tile's next spawn. Switch region: it shows only in the region it was added to.
+62. [ ] Open a timetable boss: no Name or date rows, but its picture can be changed and removed. Remove it → Yes: the
+    panel closes, the boss leaves the tile list and grid, and Undo brings it back with its alerts and skipped spawns.
+    Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
+    boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.

@@ -14,26 +14,27 @@ public sealed partial class BossTileViewModel : ObservableObject
     [ObservableProperty] private bool _isOff;
     [ObservableProperty] private bool _ownSettings;
     [ObservableProperty] private string _detail = "";
+    [ObservableProperty] private string _name = "";
+    [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
 
     public Guid Id { get; }
-    public string Name { get; }
-    public IReadOnlyList<ArtPicture> Images { get; }
 
     public BossTileViewModel(TimerDef boss, ArtPicture image, Action<Guid> open, DateTimeOffset now)
     {
         _open = open;
         Id = boss.Id;
-        Name = boss.Name;
-        Images = [image];
-        Show(boss, now);
+        Show(boss, image, now);
     }
 
     [RelayCommand]
     void Open() => _open(Id);
 
     /// <summary>"Next · Fri 03:00", or "Alerts off" for a boss that doesn't alert.</summary>
-    public void Show(TimerDef boss, DateTimeOffset now)
+    public void Show(TimerDef boss, ArtPicture image, DateTimeOffset now)
     {
+        Name = boss.Name;
+        // A fresh picture for the same art would redraw the tile every minute.
+        if (Images is not [var shown] || shown.Source != image.Source || shown.Focus != image.Focus) Images = [image];
         IsOff = !boss.Enabled;
         OwnSettings = boss.Alerts.OverridesDefaults;
         if (IsOff)

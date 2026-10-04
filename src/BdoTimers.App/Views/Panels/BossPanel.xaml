@@ -7,9 +7,19 @@
              Width="440">
     <DockPanel>
         <Grid DockPanel.Dock="Top" Height="88">
-            <controls:ArtImage Sources="{Binding Images}" Width="230" HorizontalAlignment="Left" />
+            <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="230" HorizontalAlignment="Left"
+                    AutomationProperties.Name="Change picture" Click="PictureButton_Click">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Choose picture…" Command="{Binding ChoosePictureCommand}" />
+                        <MenuItem Header="Remove picture" Command="{Binding RemovePictureCommand}" IsEnabled="{Binding HasPicture}" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+                <controls:ArtImage Sources="{Binding Images}" />
+            </Button>
             <!-- Right-aligned in the black, clear of the close button; long names are trimmed before the picture -->
-            <StackPanel Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right">
+            <StackPanel Margin="186,0,44,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
+                        IsHitTestVisible="False">
                 <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="20" TextTrimming="CharacterEllipsis" />
                 <TextBlock Text="{Binding NextText}" Style="{StaticResource LabelText}" />
             </StackPanel>
@@ -17,13 +27,32 @@
         </Grid>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
-            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" />
+            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding ScheduleValid}" />
+            <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0">
+                <Button Style="{StaticResource DangerLinkButton}" Content="Remove" Command="{Binding Remove.AskCommand}"
+                        Visibility="{Binding Remove.IsAsking, Converter={StaticResource InverseBoolToVisibility}}"
+                        ToolTip="{Binding RemoveTooltip}" />
+                <StackPanel Orientation="Horizontal" Visibility="{Binding Remove.IsAsking, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="Remove?" Foreground="{DynamicResource SubtleBrush}" FontSize="12" VerticalAlignment="Center" />
+                    <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding Remove.ConfirmCommand}" />
+                    <TextBlock Text="·" Foreground="{DynamicResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                    <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding Remove.CancelCommand}" />
+                </StackPanel>
+            </StackPanel>
             <TextBlock Text="{Binding AppliesText}" Style="{StaticResource LabelText}" Foreground="{DynamicResource PastBrush}"
-                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                       TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                       Visibility="{Binding Remove.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
         </DockPanel>
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,2,22,8">
+                <Border Style="{StaticResource Row}" Visibility="{Binding IsAdded, Converter={StaticResource BoolToVisibility}}">
+                    <DockPanel>
+                        <TextBlock Text="Name" Style="{StaticResource RowLabel}" Width="120" />
+                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged, Delay=300}" VerticalAlignment="Center"
+                                 controls:Ui.HasError="{Binding NameInvalid}" ToolTip="Each boss needs its own name" />
+                    </DockPanel>
+                </Border>
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Alerts">
                     <controls:CycleSelector ItemsSource="{x:Static pvm:Choice.OnOff}" SelectedItem="{Binding AlertsOn}" ValueWidth="110"
                                             AutomationProperties.Name="Alerts" />
@@ -51,6 +80,27 @@
                 </Button>
                 <StackPanel Visibility="{Binding ShowTimes, Converter={StaticResource BoolToVisibility}}">
                     <panels:SlotList DataContext="{Binding Slots}" />
+                </StackPanel>
+                <!-- Event bosses spawn for a limited time -->
+                <StackPanel Visibility="{Binding IsAdded, Converter={StaticResource BoolToVisibility}}">
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="Start date" Style="{StaticResource RowLabel}" Width="120" />
+                            <controls:DateInput Text="{Binding StartDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
+                                                HasError="{Binding StartDateInvalid}" ToolTip="YYYY-MM-DD, server time; blank for no limit"
+                                                AutomationProperties.Name="Start date" />
+                        </DockPanel>
+                    </Border>
+                    <Border Style="{StaticResource Row}">
+                        <DockPanel>
+                            <TextBlock Text="End date" Style="{StaticResource RowLabel}" Width="120" />
+                            <controls:DateInput Text="{Binding EndDateText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
+                                                HasError="{Binding EndDateInvalid}" ToolTip="YYYY-MM-DD, server time, inclusive; blank for no limit"
+                                                AutomationProperties.Name="End date" />
+                        </DockPanel>
+                    </Border>
+                    <TextBlock Text="{Binding ScheduleError}" Foreground="{DynamicResource DangerBrush}" FontSize="12" Margin="0,4,0,6"
+                               Visibility="{Binding ScheduleValid, Converter={StaticResource InverseBoolToVisibility}}" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

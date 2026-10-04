@@ -8,7 +8,10 @@ public sealed partial class TimetableChangeRow : ObservableObject
 {
     public TimetableChange Change { get; }
     public string Name => Change.Name;
-    public string? CustomLabel => Change.HasCustomTimes ? "Custom times" : null;
+    public string? CustomLabel => !Change.HasCustomTimes ? null
+        : Change.AddedByUser ? "Your boss"
+        : Change.Current is null ? "Removed"
+        : "Custom times";
     public IReadOnlyList<Choice> OnOff => Choice.OnOff;
     [ObservableProperty] private Choice _apply;
     public string Details { get; }

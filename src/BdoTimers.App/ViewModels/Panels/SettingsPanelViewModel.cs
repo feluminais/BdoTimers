@@ -64,7 +64,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public string? TimetableSource => string.Join('\n', new[] { _services.Seed.Source }
         .Concat(_services.Seed.SourceUrls ?? []).Where(s => s is not null));
     public string TimetableZone => $"Times in {_services.Seed.TimeZoneId}";
-    public string ResetTimetableLabel => $"Reset spawn times to the {_services.Region.ShortLabel} timetable";
+    public string ResetTimetableLabel => $"Reset bosses to the {_services.Region.ShortLabel} timetable";
     public string ResetTimetableConfirmation => $"{ResetTimetableLabel}?";
     public string ResetAlertLabel => $"Reset {_services.Region.ShortLabel} boss alert settings";
     public string ResetAlertConfirmation => $"{ResetAlertLabel}?";

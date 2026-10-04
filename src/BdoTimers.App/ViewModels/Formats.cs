@@ -22,6 +22,8 @@ public static class Formats
     /// <summary>Horse registrations against their limit: "3 of 10 active".</summary>
     public static string HorseRegistrations(int active) => $"{active} of {TimerStore.MaxHorseRegistrations} active";
 
-    /// <summary>The same while a spawn keeps its time and bosses, so what's shown for it is built only when that changes.</summary>
-    public static string SpawnKey(SpawnGroup group) => $"{group.AtUtc:O}|{string.Join(",", group.Bosses.Select(b => b.Id))}";
+    /// <summary>The same while a spawn keeps its time and bosses and they keep their names and pictures, so what's shown for
+    /// it is built only when that changes.</summary>
+    public static string SpawnKey(SpawnGroup group) =>
+        $"{group.AtUtc:O}|{string.Join(",", group.Bosses.Select(b => $"{b.Id}:{b.Name}:{b.ImageFile}"))}";
 }

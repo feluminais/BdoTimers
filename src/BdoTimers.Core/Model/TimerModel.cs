@@ -53,7 +53,10 @@ public sealed record TimerDef
     public string Name { get; init; } = "";
     public TimerKind Kind { get; init; }
     public bool Enabled { get; init; } = true;
+    /// <summary>A world boss of <see cref="BossRegionId"/>: from the bundled timetable, or one the player added.</summary>
     public bool IsBuiltIn { get; init; }
+    /// <summary>A boss the player added; bundled timetable updates and resets keep it unless it takes a bundled boss's name.</summary>
+    public bool AddedByUser { get; init; }
     /// <summary>Built-in boss region; null in legacy files means EU. Custom schedules ignore this field.</summary>
     public string? BossRegionId { get; init; }
     public ScheduledSpec? Scheduled { get; init; }

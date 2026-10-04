@@ -126,7 +126,7 @@
             </Setter>
         </Style>
 
-        <DataTemplate x:Key="BossTile" DataType="{x:Type vm:BossTileViewModel}">
+        <DataTemplate DataType="{x:Type vm:BossTileViewModel}">
             <Button Style="{StaticResource BossTileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}">
                 <Grid>
                     <Grid.Style>
@@ -275,7 +275,23 @@
                 <Border BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0" />
 
                 <!-- As many columns of 215 px or more as fit; the negative margin absorbs the last tile's gap -->
-                <ItemsControl ItemsSource="{Binding Tiles}" ItemTemplate="{StaticResource BossTile}" Margin="0,22,-8,0" Focusable="False">
+                <ItemsControl ItemsSource="{Binding Tiles}" Margin="0,22,-8,0" Focusable="False">
+                    <ItemsControl.Resources>
+                        <!-- The last tile adds a boss -->
+                        <DataTemplate DataType="{x:Type vm:BossesViewModel}">
+                            <Button Style="{StaticResource TileButton}" Height="52" Margin="0,0,8,8" BorderBrush="Transparent"
+                                    Command="{Binding AddBossCommand}" AutomationProperties.Name="Add a boss">
+                                <Grid>
+                                    <Rectangle Stroke="{DynamicResource HairlineStrongBrush}" StrokeThickness="1" StrokeDashArray="4 3" />
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Text="Add boss" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
+                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.Resources>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <UniformGrid Columns="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource WidthToColumns}, ConverterParameter=215}" />

@@ -18,6 +18,7 @@ public sealed partial class UndoService : ObservableObject, IDisposable
     public bool CanUndo => _history.CanUndo;
     public string Message => _history.Message;
     public bool DeleteTimer(Guid id) => _history.DeleteTimer(id);
+    public bool DeleteBoss(Guid id) => _history.DeleteBoss(id);
     public bool ResetTimer(Guid id) => _history.ResetTimer(id);
     public bool DeleteTodoList(Guid id) => _history.DeleteTodoList(id);
     public void Refresh() => _history.Refresh();
