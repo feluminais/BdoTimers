@@ -247,3 +247,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     panel closes, the boss leaves the tile list and grid, and Undo brings it back with its alerts and skipped spawns.
     Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
     boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.
+63. [ ] Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
+    Day cells list own weekly timers, running countdowns, events and the weekly reset, with "+N more" past three, and
+    "N boss spawns"; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
+    time, coloured as in the week grid. Click a boss or timer: its panel opens. Right-click an upcoming boss or weekly
+    timer → Skip this one: it is struck through here and in the Bosses grid; Unskip restores it. Turn each filter chip
+    off and on; restart and confirm they are kept. New event on a future day opens a one-time event on that date; it
+    is off for past days. Switch boss region: the calendar follows. Around 25 October, Berlin's clock change keeps
+    Sunday and Monday spawns on their own days.

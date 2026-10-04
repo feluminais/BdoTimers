@@ -40,6 +40,10 @@ Add your own event bosses with spawn times and optional date limits. Remove a bo
 Add your own countdowns, weekly schedules and one-time events. Give a countdown a hotkey to start, pause and resume
 it while playing, or control it from the tray menu. Pictures, sounds and spoken alert lines are customizable.
 
+## Calendar
+
+See boss spawns, timers, one-time events and to-do resets in a month view. Select a day for its full list, open an item to edit it, or skip an upcoming occurrence.
+
 ## To-do
 
 ![To-do screen with weekly quest groups, daily tasks and completed rows](docs/images/todo.png)
