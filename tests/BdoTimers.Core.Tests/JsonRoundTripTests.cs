@@ -86,7 +86,7 @@ public class JsonRoundTripTests
             ShowSeconds = 30,
             MouseProximity = OverlayMouseProximity.Hide,
             Layout = OverlayLayout.Card,
-            ShowOutline = false,
+            ShowOutline = true,
             Scale = 1.5,
             ShowClock = false,
             ShowServerTime = true,
