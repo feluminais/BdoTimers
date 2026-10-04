@@ -36,6 +36,47 @@ The notice also records a maintenance exception: NA bosses were one hour earlier
 
 Daily reset remains fixed at 00:00 UTC according to Pearl Abyss's notice; it is 17:00 PDT in NA and 02:00 CEST in EU. The world-boss guide specifies Thursday 00:00 UTC for Garmoth and Morning Light weekly reward resets in both regions. Switching boss region therefore leaves to-do reset times unchanged.
 
+## What differs between servers
+
+The following is for PC NA/EU. War of the Roses recurring times were checked against the official guide on
+**2026-10-04**. Dated notices override recurring rules; a timer does not detect game cancellations or maintenance.
+
+| Schedule | EU | NA | Source and app data |
+|---|---|---|---|
+| Server clock / daylight saving | `Europe/Berlin`, CET/CEST | `America/Los_Angeles`, PST/PDT | The daylight-saving notice above; `Seed/BossRegions.cs`. Each region follows its own civil clock changes, with temporary maintenance exceptions checked separately. |
+| World bosses | EU timetable | Separate NA timetable, including different boss/day combinations | Official timetable images above; `Data/bosses.eu.json` and `Data/bosses.na.json`. Do not derive NA by shifting EU. |
+| War of the Roses | Third Legion deadline Sunday 15:05; battle 17:00–19:00 | Third Legion deadline Sunday 13:05; battle 15:00–17:00 | [Official guide](https://www.naeu.playblackdesert.com/en-US/Wiki?wikiNo=367); regional slots in `Seed/BossRegions.cs`, repeat/anchor in `Seed/Presets.cs`. |
+| Node war | Sunday–Friday, 20:00–21:00 CET/CEST | Sunday–Friday, 18:00–19:00 PT | [Node War guide](https://www.naeu.playblackdesert.com/en-US/Wiki?wikiNo=56), [2024 time-change notice](https://www.naeu.playblackdesert.com/en-US/News/Detail?groupContentNo=6934). Guild war is user-configured; the app does not seed node-war times. |
+| Conquest war | Saturday 20:00–Sunday 00:00 CET/CEST | Saturday 18:00–22:00 PT | [Conquest War guide](https://www.naeu.playblackdesert.com/en-US/Wiki?wikiNo=344). Guild war is user-configured; the app does not seed conquest-war times. |
+| Maintenance | Same UTC window as NA; 10:00–14:00 CEST for 08:00–12:00 UTC | Same UTC window as EU; 01:00–05:00 PDT for 08:00–12:00 UTC | [September 3, 2026 notice](https://www.naeu.playblackdesert.com/en-us/News/Detail?groupContentNo=10531&countryType=en-us). This is a dated Thursday example, not a guaranteed weekly window; use each new notice. No maintenance timer is seeded. |
+| Daily and weekly resets | Daily 00:00 UTC; weekly Thursday 00:00 UTC | The same UTC instants | Daylight-saving notice and World Bosses guide above; default to-do resets stay fixed in UTC when region changes. |
+
+Node and conquest hours are the schedule references supplied for this update. The Node War time-change notice was
+read directly; the two linked PvP guide pages did not return readable content on 2026-10-04. Recheck their current
+rules before changing defaults or documenting a new season. Node-war modes can have different durations; the table
+records the one-hour occupation window, not a promise that every mode ends after one hour.
+
+### War of the Roses registration and battle weeks
+
+The guide places the war on O'dyllita-1 every two weeks. Leading Guild applications run EU Saturday 01:00–Sunday
+01:10 and NA Friday 23:00–Saturday 23:10; Third Legion applications run EU Sunday 01:10–15:05 and NA Saturday
+23:10–Sunday 13:05. These are server wall-clock times. NA's Friday, Saturday and Sunday belong to the same
+Monday-first schedule week as its battle.
+
+The default combines **Applications close** (Third Legion deadline) and **Battle** (start) in one timer. It omits
+overnight application openings; players can add labelled times. Its reference week contains **2026-09-20**, which
+projects occurrences on **2026-10-04** and **2026-10-18**, skipping **2026-10-11**. This reference date was retained
+from the schedule research supplied for this update. The cited [August 9 report](https://www.naeu.playblackdesert.com/en-US/News/Detail?groupContentNo=10438&countryType=en-US)
+did not return readable content on 2026-10-04; these projected dates are not a newly verified announcement of an
+active battle season. Verify a recent dated battle notice/report for both regions when updating the anchor.
+
+Pearl Abyss can suspend or move battles: the [March 2024 schedule notice](https://www.naeu.playblackdesert.com/en-US/News/Detail?groupContentNo=6774)
+cancelled the planned March 31 battle pending improvements. The supplied [later suspension reference](https://www.naeu.playblackdesert.com/en-us/News/Detail?groupContentNo=8894&countryType=en-us)
+was also unreadable on this check, so it is not used to assert whether battles are active today. During a suspension,
+turn this timer's alerts off; for a changed cadence, edit Repeat every and From week of. Reset restores the bundled
+schedule for the selected region, keeping name, picture and alerts. A region switch moves a default schedule and
+preserves an edited schedule.
+
 ## How the app uses this
 
 Each region's timetable is an embedded JSON file in `src/BdoTimers.Core/Data/` with its source URLs and verification

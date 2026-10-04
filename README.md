@@ -36,9 +36,15 @@ Add your own event bosses with spawn times and optional date limits. Remove a bo
 - **Fishing:** count how long you've been fishing, with pause and resume.
 - **Horse registration:** start a ten-minute wait when the game announces a registration. Run up to ten at once.
 - **Guild bosses:** set your guild's schedule and have the overlay appear before it starts.
+- **War of the Roses:** applications deadline and battle in one editable timer, with EU/NA times and a fortnightly repeat.
 
 Add your own countdowns, weekly schedules and one-time events. Give a countdown a hotkey to start, pause and resume
 it while playing, or control it from the tray menu. Pictures, sounds and spoken alert lines are customizable.
+
+Weekly schedules can repeat every 1–52 weeks, with an anchor week and a label for each time. War of the Roses uses
+Sunday 15:05 and 17:00 in Berlin for EU, or 13:05 and 15:00 Pacific for NA, anchored to the week of 20 September 2026.
+Check official notices for changed battle weeks or cancellations; adjust the anchor or turn Alerts off during a
+suspension. **Reset to EU/NA times** restores the selected region's defaults. [Schedule sources](docs/boss-region-sources.md).
 
 ## Calendar
 

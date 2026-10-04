@@ -52,3 +52,6 @@
   behaviour.
 - Timetable changes: edit the region's JSON in `src/BdoTimers.Core/Data/`, its `verifiedOn` and sources, and
   `docs/boss-region-sources.md`. A new region is a JSON file there plus its entry in `Seed/BossRegions.cs`.
+  War of the Roses times are in that region entry; its repeat and reference week are in `Seed/Presets.cs`.
+  Verify both regions and the active battle week from official notices before changing these defaults. Other server
+  schedule differences and exceptions are recorded in `docs/boss-region-sources.md`.

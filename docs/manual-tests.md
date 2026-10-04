@@ -247,7 +247,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     panel closes, the boss leaves the tile list and grid, and Undo brings it back with its alerts and skipped spawns.
     Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
     boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.
-63. [ ] Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
+67. [ ] Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
     Day cells list own weekly timers, running countdowns, events and the weekly reset, with "+N more" past three, and
     "N boss spawns"; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
     time, coloured as in the week grid. Click a boss or timer: its panel opens. Right-click an upcoming boss or weekly
@@ -255,3 +255,24 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     off and on; restart and confirm they are kept. New event on a future day opens a one-time event on that date; it
     is off for past days. Switch boss region: the calendar follows. Around 25 October, Berlin's clock change keeps
     Sunday and Monday spawns on their own days.
+68. [ ] War of the Roses appears once in Timers, with Applications close and Battle in the same panel. EU defaults
+    are Sunday 15:05 and 17:00 Berlin; NA defaults are 13:05 and 15:00 Pacific. Repeat is 2, From week of is
+    2026-09-20, and Calendar shows both on 4 and 18 October, neither on 11 October. Opening and closing its panel
+    leaves the saved schedule untouched. Switch region: defaults move, edited slots/repeat/date limits stay.
+69. [ ] Edit a War of the Roses time, label, repeat, anchor and date limits; restart and confirm they persist. Reset
+    to EU/NA times → No keeps edits; Yes restores the current region's slots, labels, repeat, anchor, date limits and
+    time zone in the open panel. Name, picture, Alerts on/off and alert settings stay. Edit a restored row and confirm
+    it saves. Change region while the panel is open: its reset link names the current region.
+70. [ ] A weekly timer accepts Repeat every 1–52 weeks; above 1, From week of appears. Try 0, 53, blank and text,
+    then an invalid anchor date and reversed date limits. Fields show errors and Done stays off until all errors are
+    corrected; editing another valid field must not clear an existing error. Pick 3 weeks and any Wednesday anchor:
+    the whole Monday–Sunday week runs, the next two skip, then it repeats. Repeat 1 hides the anchor. Confirm start
+    and end dates still bound the results, and the schedule survives restart and backup/restore.
+71. [ ] Add labels to two times in one timer. The tile says Next <label>, Calendar cells and day rows show
+    <timer> · <label>, and the overlay pop-up, notification and speech identify the time that fires. Blank labels
+    show the timer's name only. Two different labels at the same day/time are rejected; fixing the duplicate saves
+    both. A timer in a DST spring gap retains its label when the occurrence moves forward.
+72. [ ] Turn on a 10-minute overlay pop-up for a fortnightly timer whose next occurrence is more than 8 days away:
+    it appears at that occurrence's window, including after restart. Skip it or turn Alerts off: no pop-up. Check
+    EU's 25 October and NA's 1 November clock changes separately; scheduled times remain in their own server clock.
+    War of the Roses without a custom picture shows the placeholder and adds no missing-picture errors to the log.
