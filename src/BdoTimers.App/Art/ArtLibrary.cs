@@ -36,7 +36,7 @@ public sealed class ArtLibrary(string imagesDir)
         ["vell"] = new(0.62, 0.22),
     };
 
-    /// <summary>The same for preset timers' bundled pictures (Assets/Timers/&lt;preset&gt;.jpg); none means the centre.</summary>
+    /// <summary>The same for preset timers' bundled pictures; none means the centre.</summary>
     static readonly IReadOnlyDictionary<string, Point> PresetFocus = new Dictionary<string, Point>
     {
         [Presets.Fishing] = new(0.48, 0.42),
@@ -44,6 +44,7 @@ public sealed class ArtLibrary(string imagesDir)
         [Presets.HorseRegistrationRun] = new(0.32, 0.42),
         [Presets.GuildBosses] = new(0.56, 0.24),
         [Presets.GuildWar] = new(0.50, 0.37),
+        [Presets.WarOfTheRoses] = new(0.50, 0.50),
     };
 
     readonly Dictionary<string, ImageSource> _cache = new(StringComparer.OrdinalIgnoreCase);
@@ -60,7 +61,8 @@ public sealed class ArtLibrary(string imagesDir)
         if (timer.Preset is { } preset)
         {
             if (preset != Presets.Farm && !PresetFocus.ContainsKey(preset)) return new ArtPicture(Placeholder);
-            return new ArtPicture(Load($"pack://application:,,,/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.jpg"),
+            var extension = preset == Presets.WarOfTheRoses ? "png" : "jpg";
+            return new ArtPicture(Load($"pack://application:,,,/BdoTimers;component/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.{extension}"),
                 PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
         }
         if (!timer.IsBuiltIn) return new ArtPicture(Placeholder);

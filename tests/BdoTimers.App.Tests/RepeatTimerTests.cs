@@ -171,15 +171,19 @@ public sealed class RepeatTimerTests
     });
 
     [Fact]
-    public void Preset_without_bundled_art_uses_placeholder_without_load_error() => WpfTest.Run(() =>
+    public void War_of_the_Roses_loads_bundled_picture_without_error() => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
         try
         {
             BdoTimers.Core.Diagnostics.Log.Init(path, new FixedClock());
             var art = new ArtLibrary(path);
-            art.For(Presets.Create().Single(t => t.Preset == Presets.WarOfTheRoses));
-            Assert.Empty(Directory.GetFiles(path, "*.log"));
+            var picture = art.For(Presets.Create().Single(t => t.Preset == Presets.WarOfTheRoses));
+            var logs = Directory.GetFiles(path, "*.log");
+            Assert.True(logs.Length == 0, string.Join(Environment.NewLine, logs.Select(File.ReadAllText)));
+            var bitmap = Assert.IsType<System.Windows.Media.Imaging.BitmapImage>(picture.Source);
+            Assert.Equal(351, bitmap.PixelWidth);
+            Assert.Equal(318, bitmap.PixelHeight);
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });

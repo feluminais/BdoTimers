@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Assets\Bosses\*.jpg;Assets\Timers\*.jpg" />
+    <Resource Include="Assets\Bosses\*.jpg;Assets\Timers\*.jpg;Assets\Timers\*.png" />
     <!-- Windows shows it on notifications; it reads the picture from a file. -->
     <None Update="Assets\app.png" Link="app.png" CopyToOutputDirectory="PreserveNewest" />
     <Resource Include="Assets\Sounds\*.wav" />
