@@ -25,30 +25,26 @@ each region keeps its own alert settings and edited spawn times.
 Choose which bosses you hear about, set how early to alert, or skip a single spawn. When an app update changes the
 timetable, review the changes before applying them. [Timetable sources](docs/boss-region-sources.md).
 
-Add your own event bosses with spawn times and optional date limits. Remove a boss from its panel or restore the bundled timetable in Settings.
+Add event bosses with their own spawn times and date limits, or remove bosses from their panels. Settings can restore
+removed bosses and their bundled spawn times while keeping the bosses you added.
 
 ## Timers
 
-![Timers screen with Farm, Fishing, Horse registration, Guild bosses and a custom countdown](docs/images/timers.png)
+![Timers screen with Farm, Fishing, Horse registration, Guild bosses, War of the Roses and a custom countdown](docs/images/timers.png)
 
 - **Farm:** track estimated crop growth, including overgrowth up to 200%. Set an earlier start time or the current
   growth percentage if you planted before opening the app.
 - **Fishing:** count how long you've been fishing, with pause and resume.
 - **Horse registration:** start a ten-minute wait when the game announces a registration. Run up to ten at once.
 - **Guild bosses:** set your guild's schedule and have the overlay appear before it starts.
-- **War of the Roses:** applications deadline and battle in one editable timer, with EU/NA times and a fortnightly repeat.
+- **War of the Roses:** application deadline and battle reminders on an editable two-week schedule, with EU/NA times.
 
-Add your own countdowns, weekly schedules and one-time events. Give a countdown a hotkey to start, pause and resume
-it while playing, or control it from the tray menu. Pictures, sounds and spoken alert lines are customizable.
+Add your own countdowns, repeating schedules and one-time events. Schedules can repeat every 1 to 52 weeks, with
+date limits and labels for individual times. Give a countdown a hotkey to start, pause and resume it while playing,
+or control it from the tray menu. Pictures, sounds and spoken alert lines are customizable.
 
-Weekly schedules can repeat every 1–52 weeks, with an anchor week and a label for each time. War of the Roses uses
-Sunday 15:05 and 17:00 in Berlin for EU, or 13:05 and 15:00 Pacific for NA, anchored to the week of 20 September 2026.
-Check official notices for changed battle weeks or cancellations; adjust the anchor or turn Alerts off during a
-suspension. **Reset to EU/NA times** restores the selected region's defaults. [Schedule sources](docs/boss-region-sources.md).
-
-## Calendar
-
-See boss spawns, timers, one-time events and to-do resets in a month view. Select a day for its full list, open an item to edit it, or skip an upcoming occurrence.
+Check official notices for War of the Roses battle-week changes or cancellations, then adjust its schedule or turn
+alerts off. **Reset to EU/NA times** restores the selected region's defaults. [Schedule sources](docs/boss-region-sources.md).
 
 ## To-do
 
@@ -122,5 +118,5 @@ region, boss, time and source.
 
 [GPL-3.0](LICENSE). Bundled dependencies are listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
 
-BDO Timers is not affiliated with Pearl Abyss. The boss, farm, fishing, horse and guild artwork belongs to
+BDO Timers is not affiliated with Pearl Abyss. The game artwork belongs to
 © Pearl Abyss and is not covered by the GPL.
