@@ -15,6 +15,38 @@ namespace BdoTimers.App.Tests;
 public class DraftPanelTests
 {
     [Fact]
+    public void GuildBossActiveSwitchStaysPrivateUntilSaveAndKeepsItsWeeklyTime() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            foreach (var peer in services.Timers.Current.Timers)
+                services.Timers.Modify(peer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
+            var timer = services.Timers.Current.Timers.Single(t => t.Preset == BdoTimers.Core.Seed.Presets.GuildBosses);
+            using var main = new MainViewModel(services);
+            var panel = new CustomPanelViewModel(services, main, timer);
+            main.OpenPanel(panel);
+            Assert.True(panel.HasActive);
+            Assert.False(panel.ShowsWeekly);
+            Assert.False(panel.HasTimeZone);
+            panel.Active = true;
+            Assert.True(panel.ShowsWeekly);
+            Assert.True(panel.HasTimeZone);
+            Assert.True(services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.Off);
+            main.FinishPanel().GetAwaiter().GetResult();
+            var saved = services.Timers.Current.Timers.Single(t => t.Id == timer.Id);
+            Assert.False(saved.Scheduled!.Off);
+            Assert.Equal(timer.Scheduled!.Slots, saved.Scheduled.Slots);
+            panel = new CustomPanelViewModel(services, main, saved);
+            main.OpenPanel(panel);
+            panel.Active = false;
+            main.ClosePanel();
+            Assert.True(main.AskingDiscard);
+            main.DiscardChangesCommand.Execute(null);
+            Assert.False(services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.Off);
+        });
+    });
+
+    [Fact]
     public void DismissWarnsKeepEditingRetainsDraftAndDiscardKeepsSavedTimer() => WpfTest.Run(() =>
     {
         WithServices(services =>

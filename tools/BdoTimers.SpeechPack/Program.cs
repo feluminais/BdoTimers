@@ -12,7 +12,10 @@ foreach (var region in BossRegions.All)
         .Concat(Presets.Create(region.Id)).Append(Presets.CreateHorseRegistration()).ToList();
     var horse = Presets.CreateHorseRegistration();
     timers.AddRange(Enumerable.Range(1, 10).Select(n => Presets.HorseRun(horse, n)));
-    foreach (var line in SpeechLines.ForTimers(timers.Select(t => t with { Enabled = true }), AlertConfig.StandardLeadTimesMinutes, new SystemClock())) lines.Add(line);
+    foreach (var line in SpeechLines.ForTimers(timers.Select(t => t with
+    {
+        Enabled = true, Scheduled = t.Scheduled is { } spec ? spec with { Off = false } : null,
+    }), AlertConfig.StandardLeadTimesMinutes, new SystemClock())) lines.Add(line);
 }
 using var tts = new TtsChannel(new KokoroEngine(Path.GetFullPath(args[0])), new SpeechCache(Path.GetFullPath(args[1])));
 Console.WriteLine($"Preparing {lines.Count} standard voice lines...");

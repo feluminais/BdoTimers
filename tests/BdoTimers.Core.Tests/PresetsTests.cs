@@ -22,7 +22,28 @@ public class PresetsTests
         var guild = data.Timers[2];
         Assert.Equal(TimerKind.Scheduled, guild.Kind);
         Assert.Equal(TimeZoneInfo.Local.Id, guild.Scheduled!.TimeZoneId);
-        Assert.Empty(guild.Scheduled.Slots);
+        Assert.Equal([Presets.GuildBossesTime], guild.Scheduled.Slots);
+        Assert.True(guild.Scheduled.Off);
+    }
+
+    [Fact]
+    public void Ensure_turns_off_guild_bosses_saved_without_a_time_and_keeps_a_saved_time_on()
+    {
+        var presets = Presets.Ensure(new AppData());
+        var tuesday = new Slot(DayOfWeek.Tuesday, new TimeOnly(21, 0));
+        AppData WithBosses(ScheduledSpec spec) => presets with
+        {
+            Timers = presets.Timers.Select(t => t.Preset == Presets.GuildBosses ? t with { Scheduled = spec } : t).ToList(),
+        };
+        var unset = WithBosses(new ScheduledSpec { TimeZoneId = "Europe/Berlin" });
+        var set = WithBosses(new ScheduledSpec { TimeZoneId = "Europe/Berlin", Slots = [tuesday] });
+
+        var turnedOff = Presets.Ensure(unset).Timers.Single(t => t.Preset == Presets.GuildBosses).Scheduled!;
+
+        Assert.Equal("Europe/Berlin", turnedOff.TimeZoneId);
+        Assert.Equal([Presets.GuildBossesTime], turnedOff.Slots);
+        Assert.True(turnedOff.Off);
+        Assert.Same(set, Presets.Ensure(set));
     }
 
     [Fact]
@@ -107,7 +128,7 @@ public class PresetsTests
 
         Assert.Empty(OccurrenceSource.Between(bosses, now, now.AddDays(8)));
         Assert.Empty(OccurrenceSource.Between(war, now, now.AddDays(8)));
-        Assert.Equal(0, Presets.MinimumSlots(bosses.Preset));
+        Assert.Equal(1, Presets.MinimumSlots(bosses.Preset));
         Assert.Equal(1, Presets.MaximumSlots(bosses.Preset));
         Assert.Equal(0, Presets.MinimumSlots(war.Preset));
         Assert.Null(Presets.MaximumSlots(war.Preset));
@@ -122,7 +143,7 @@ public class PresetsTests
         var war = GuildWar();
         var tuesday = new Slot(DayOfWeek.Tuesday, new TimeOnly(20, 0));
         var friday = new Slot(DayOfWeek.Friday, new TimeOnly(20, 0));
-        boss = boss with { Scheduled = boss.Scheduled! with { Slots = [tuesday] } };
+        boss = boss with { Scheduled = boss.Scheduled! with { Slots = [tuesday], Off = false } };
         war = war with { Scheduled = war.Scheduled! with { Slots = [tuesday, friday] } };
 
         Assert.Equal(2, OccurrenceSource.Between(boss, now, now.AddDays(9)).Count());
@@ -152,6 +173,18 @@ public class PresetsTests
         Assert.Equal(events[0], Assert.Single(planner.Tick([war], none, events[0])).OccurrenceUtc);
         Assert.Empty(planner.Tick([war], none, events[0].AddMinutes(1)));
         Assert.Equal(events[1], Assert.Single(planner.Tick([war], none, events[1])).OccurrenceUtc);
+    }
+
+    [Fact]
+    public void Guild_bosses_turned_off_keeps_its_time_and_neither_occurs_nor_alerts()
+    {
+        var now = new DateTimeOffset(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+        var off = Presets.Create().Single(t => t.Preset == Presets.GuildBosses);
+        var on = off with { Scheduled = off.Scheduled! with { Off = false } };
+
+        Assert.Empty(OccurrenceSource.Between(off, now, now.AddDays(8)));
+        Assert.Empty(new AlertPlanner().Tick([off], new HashSet<MutedOccurrence>(), OccurrenceSource.Next(on, now)!.Value));
+        Assert.Single(OccurrenceSource.Between(on, now, now.AddDays(7)));
     }
 
     [Fact]

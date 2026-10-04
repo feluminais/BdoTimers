@@ -25,6 +25,9 @@ public static class Presets
     /// <summary>From the game's notice that a horse was registered on the Horse Market until the horse goes on sale.</summary>
     public static readonly TimeSpan HorseMarketWait = TimeSpan.FromMinutes(10);
 
+    /// <summary>The weekly time Guild bosses starts with, turned off until the player sets their guild's time.</summary>
+    public static readonly Slot GuildBossesTime = new(DayOfWeek.Monday, new TimeOnly(20, 0));
+
     /// <summary>The presets that can't be deleted; <see cref="Ensure"/> adds them back. War of the Roses follows
     /// <paramref name="regionId"/>'s server times.</summary>
     public static IReadOnlyList<TimerDef> Create(string regionId = BossRegions.Europe) =>
@@ -48,7 +51,7 @@ public static class Presets
             Name = "Guild bosses",
             Kind = TimerKind.Scheduled,
             Preset = GuildBosses,
-            Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
+            Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id, Slots = [GuildBossesTime], Off = true },
         },
         new TimerDef
         {
@@ -105,11 +108,18 @@ public static class Presets
     public static bool IsActiveHorseRun(TimerDef timer) =>
         timer.Preset == HorseRegistrationRun && timer.Countdown?.Status is not CountdownStatus.Idle;
 
-    /// <summary>Adds any preset that can't be deleted and the data lacks, ahead of the other timers.</summary>
+    /// <summary>
+    /// Adds any preset that can't be deleted and the data lacks, ahead of the other timers, and gives a Guild bosses
+    /// timer saved without a time its starting time, turned off.
+    /// </summary>
     public static AppData Ensure(AppData data)
     {
-        var missing = Create(data.SelectedBossRegion).Where(p => data.Timers.All(t => t.Preset != p.Preset)).ToList();
-        return missing.Count == 0 ? data : data with { Timers = missing.Concat(data.Timers).OrderBy(t => Rank(t.Preset)).ToList() };
+        var timers = data.Timers.Select(t => t is { Preset: GuildBosses, Scheduled: { Slots.Count: 0 } spec }
+            ? t with { Scheduled = spec with { Slots = [GuildBossesTime], Off = true } }
+            : t).ToList();
+        var missing = Create(data.SelectedBossRegion).Where(p => timers.All(t => t.Preset != p.Preset)).ToList();
+        if (missing.Count > 0) return data with { Timers = missing.Concat(timers).OrderBy(t => Rank(t.Preset)).ToList() };
+        return timers.SequenceEqual(data.Timers) ? data : data with { Timers = timers };
     }
 
     /// <summary>Farm crops keep growing after the harvest time, so its countdown runs on past zero until reset.</summary>
@@ -130,8 +140,8 @@ public static class Presets
         _ => 6,
     };
 
-    /// <summary>Guild presets may be unset; other weekly timers keep a time.</summary>
-    public static int MinimumSlots(string? preset) => preset is GuildBosses or GuildWar ? 0 : 1;
+    /// <summary>Guild war may be unset; other weekly timers keep a time, and Guild bosses is turned off instead.</summary>
+    public static int MinimumSlots(string? preset) => preset == GuildWar ? 0 : 1;
 
     /// <summary>Guild bosses has one weekly event; Guild war may be scheduled more often.</summary>
     public static int? MaximumSlots(string? preset) => preset == GuildBosses ? 1 : null;

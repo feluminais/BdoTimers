@@ -21,6 +21,8 @@ public sealed record ScheduledSpec
     /// <summary>A date in a week the schedule runs, when <see cref="EveryWeeks"/> is over 1; null counts from
     /// <see cref="StartDate"/>, else from 2001-01-01.</summary>
     public DateOnly? WeekAnchor { get; init; }
+    /// <summary>A schedule that is off has no occurrences; it keeps its slots for when it is turned back on.</summary>
+    public bool Off { get; init; }
 }
 
 public sealed record OneTimeSpec

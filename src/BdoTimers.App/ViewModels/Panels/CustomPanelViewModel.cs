@@ -53,6 +53,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     [ObservableProperty] private SlotListViewModel? _slots;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid)), NotifyPropertyChangedFor(nameof(CanFinish))] private string _scheduleError = "";
     [ObservableProperty] private bool _alertsOn;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(ShowsWeekly), nameof(HasTimeZone))] private bool _active;
     [ObservableProperty] private Hotkey? _horseHotkey;
     [ObservableProperty] private Hotkey? _controlHotkey;
 
@@ -77,6 +78,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     ];
     public bool IsStopwatch { get; }
     public bool IsWeekly { get; }
+    /// <summary>Guild bosses keeps its weekly time when turned off.</summary>
+    public bool HasActive { get; }
+    public bool ShowsWeekly => IsWeekly && Active;
     public bool HasWeekAnchor => int.TryParse(EveryWeeksText, out var weeks) && weeks > 1;
     public bool IsWarOfTheRoses { get; }
     public string ResetTimesLabel => $"Reset to {_services.Region.ShortLabel} times";
@@ -84,7 +88,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     public string WeeklyHeading => Timer.Preset == Presets.GuildBosses ? "Weekly time" : "Weekly times";
     public bool HasWeeklyDateRange => IsWeekly && Timer.Preset is not (Presets.GuildBosses or Presets.GuildWar);
     public bool IsOneTime { get; }
-    public bool HasTimeZone => IsWeekly || IsOneTime;
+    public bool HasTimeZone => ShowsWeekly || IsOneTime;
     public DateTime Today => TimeZoneInfo.ConvertTime(_services.Clock.UtcNow,
         TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId ?? "UTC")).Date;
     public Func<DateTime> TodayProvider => () => Today;
@@ -112,6 +116,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsWeekly = timer.Kind == TimerKind.Scheduled;
         IsWarOfTheRoses = timer.Preset == Presets.WarOfTheRoses;
+        HasActive = IsWeekly && timer.Preset == Presets.GuildBosses;
+        _active = timer.Scheduled is not { Off: true };
         IsOneTime = timer.Kind == TimerKind.OneTime;
         IsFarm = timer.Preset == Presets.Farm && IsCountdown;
         IsHorseTemplate = timer.Preset == Presets.HorseRegistration;
@@ -333,6 +339,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     }
 
     partial void OnAlertsOnChanged(bool value) => Modify(t => t with { Enabled = value });
+
+    partial void OnActiveChanged(bool value) =>
+        Modify(t => t.Scheduled is { } spec ? t with { Scheduled = spec with { Off = !value } } : t);
 
     [RelayCommand]
     void ChoosePicture()

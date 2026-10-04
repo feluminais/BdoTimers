@@ -21,6 +21,20 @@ public class CalendarQueryTests
     static IEnumerable<CalendarItem> Of(CalendarDay day, CalendarKind kind) => day.Items.Where(i => i.Kind == kind);
 
     [Fact]
+    public void A_weekly_timer_turned_off_keeps_its_times_out_of_the_calendar()
+    {
+        var off = Scheduled("Guild bosses", DayOfWeek.Monday, 20, 0) with
+        {
+            Scheduled = Scheduled("Guild bosses", DayOfWeek.Monday, 20, 0).Scheduled! with { Off = true },
+        };
+        var month = CalendarQuery.Month(new AppData { Timers = [off] }, Settings, 2026, 9, T0, Berlin);
+        Assert.DoesNotContain(month.Days.SelectMany(d => d.Items), i => i.Timer?.Id == off.Id);
+        var on = off with { Scheduled = off.Scheduled! with { Off = false } };
+        month = CalendarQuery.Month(new AppData { Timers = [on] }, Settings, 2026, 9, T0, Berlin);
+        Assert.Contains(month.Days.SelectMany(d => d.Items), i => i.Timer?.Id == off.Id);
+    }
+
+    [Fact]
     public void A_month_is_six_monday_first_weeks_around_it()
     {
         var month = CalendarQuery.Month(new AppData(), Settings, 2026, 9, T0, Berlin);

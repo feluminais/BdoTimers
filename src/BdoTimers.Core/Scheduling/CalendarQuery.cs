@@ -62,7 +62,7 @@ public static class CalendarQuery
     {
         switch (timer)
         {
-            case { Kind: TimerKind.Scheduled, Scheduled: { } spec }:
+            case { Kind: TimerKind.Scheduled, Scheduled: { Off: false } spec }:
                 var kind = timer.IsBuiltIn ? CalendarKind.Boss : CalendarKind.Weekly;
                 return ScheduleMath.From(spec, fromUtc).TakeWhile(at => at < toUtc).Select(at => (kind, at));
             // Finished events stay, as past days do.

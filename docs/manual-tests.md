@@ -207,15 +207,16 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Shrink the window to its minimum with the largest Text size: only then does the screen or panel scroll as a whole.
     Clicking anywhere in the dimmed area (beside, above or below a panel, near or far from it) closes it; clicking
     inside the panel, on its scroll bar, or in a list or calendar dropping out past its edge does not.
-58. [ ] Timers: Guild bosses appears after Horse registration as Not set and has no Delete; there is no Guild war tile.
-    Open Guild bosses, add a day and time, and confirm only one weekly row is allowed. Remove it and confirm the tile
-    returns to Not set. Add it again, restart, and check that its next weekly occurrence remains. Data from an earlier
+58. [ ] Timers: Guild bosses appears after Horse registration as Off and has no Delete; there is no Guild war tile.
+    Open Guild bosses: Active Off hides Weekly time and Time zone. Turn it On: one Monday 20:00 row with no remove
+    or Add time. Change the time and Save; turn Active Off and Save (tile: Off), then On: the time is kept. Discard an
+    Active edit: the saved state stays. Restart and check that its next weekly occurrence remains. Data from an earlier
     version drops a Guild war without times; one with times stays, accepts several day/time rows and can be deleted.
-59. [ ] Timers → Guild bosses: set its time 20 minutes ahead. Overlay → Guild bosses → 15 min before: the preview shows
+59. [ ] Timers → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. Overlay → Guild bosses → 15 min before: the preview shows
     a dimmed Guild bosses row; the timer panel's Overlay over the game shows the same value, and changing it there
     changes the Overlay panel's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
     before, then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next
-    on the tile, Alerts Off, or Guild bosses Off: no pop-up.
+    on the tile, Active Off, Alerts Off, or Guild bosses Off: no pop-up.
 60. [ ] Overlay → Sections → Local time, Server time and In-game time: all three share the top line with a monitor,
     globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
     moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
