@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using BdoTimers.App.Views.Panels;
 using BdoTimers.App.Views;
 
 namespace BdoTimers.App.Tests;
@@ -49,8 +48,7 @@ public sealed class FocusAppearanceTests
     [Fact]
     public void Picture_action_does_not_keep_a_hover_label_after_dialog_focus_returns() => WpfTest.Run(() =>
     {
-        var resources = new CustomPanel().Resources;
-        var button = new Button { Style = (Style)resources["PictureButton"] };
+        var button = new Button { Style = (Style)Application.Current.FindResource("PictureButton") };
         var window = new Window { Content = button, Width = 240, Height = 100, Left = -10000, Top = -10000, ShowInTaskbar = false };
         try
         {
