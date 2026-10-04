@@ -113,7 +113,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
             ? _nextRow.Show(Names(next), DurationFormat.Clock(next.AtUtc - now), next.Skipped, ImagesFor(next), false)
             : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true) : null;
         var popUps = content.PopUps
-            .Select(i => ((object)(i.Timer.Id, i.AtUtc), i.Timer.Name, DurationFormat.Clock(i.AtUtc - now), false)).ToList();
+            .Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc), DurationFormat.Clock(i.AtUtc - now), false)).ToList();
         if (preview && settings.GuildBosses.Enabled && !content.PopUps.Any(i => i.Timer.Preset == Presets.GuildBosses))
             popUps.Add((SampleKey, "Guild bosses", DurationFormat.Clock(TimeSpan.FromMinutes(settings.GuildBosses.ShowMinutesBefore)), true));
         Sync(PopUps, popUps);

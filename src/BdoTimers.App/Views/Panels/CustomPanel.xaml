@@ -88,6 +88,34 @@
                 <StackPanel Visibility="{Binding IsWeekly, Converter={StaticResource BoolToVisibility}}">
                     <TextBlock Text="{Binding WeeklyHeading}" Style="{StaticResource SectionText}" />
                     <panels:SlotList DataContext="{Binding Slots}" />
+                    <Border Style="{StaticResource Row}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Repeat every" Style="{StaticResource RowLabel}" Width="120" />
+                            <TextBox Width="48" TextAlignment="Right" VerticalAlignment="Center"
+                                     Text="{Binding EveryWeeksText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                                     controls:Ui.HasError="{Binding EveryWeeksInvalid}" ToolTip="1–52" AutomationProperties.Name="Repeat every weeks" />
+                            <TextBlock Text="weeks" Style="{StaticResource RowLabel}" Margin="10,0,0,0" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource Row}" Visibility="{Binding HasWeekAnchor, Converter={StaticResource BoolToVisibility}}">
+                        <DockPanel>
+                            <TextBlock Text="From week of" Style="{StaticResource RowLabel}" Width="120" />
+                            <controls:DateInput Text="{Binding WeekAnchorText, UpdateSourceTrigger=PropertyChanged}" TodayProvider="{Binding TodayProvider}"
+                                                HasError="{Binding WeekAnchorInvalid}" ToolTip="A date in a running week; weeks start Monday"
+                                                AutomationProperties.Name="From week of" />
+                        </DockPanel>
+                    </Border>
+                    <StackPanel Margin="0,6,0,4" Visibility="{Binding IsWarOfTheRoses, Converter={StaticResource BoolToVisibility}}">
+                        <Button Style="{StaticResource LinkButton}" Content="{Binding ResetTimesLabel}" HorizontalAlignment="Left"
+                                Command="{Binding ResetTimes.AskCommand}"
+                                Visibility="{Binding ResetTimes.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding ResetTimes.IsAsking, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="Reset times?" Style="{StaticResource LabelText}" FontSize="12" VerticalAlignment="Center" />
+                            <Button Style="{StaticResource DangerLinkButton}" Content="Yes" Margin="10,0,0,0" Command="{Binding ResetTimes.ConfirmCommand}" />
+                            <TextBlock Text="·" Foreground="{DynamicResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
+                            <Button Style="{StaticResource LinkButton}" Content="No" Command="{Binding ResetTimes.CancelCommand}" />
+                        </StackPanel>
+                    </StackPanel>
                     <Border Style="{StaticResource Row}" Visibility="{Binding HasWeeklyDateRange, Converter={StaticResource BoolToVisibility}}">
                         <DockPanel>
                             <TextBlock Text="Start date" Style="{StaticResource RowLabel}" Width="120" />

@@ -228,7 +228,7 @@ public sealed partial class CalendarRowViewModel(CalendarItem item, Action<Guid>
     {
         CalendarKind.DailyReset => "Daily reset",
         CalendarKind.WeeklyReset => "Weekly reset",
-        _ => item.Timer!.Name,
+        _ => OccurrenceSource.NameAt(item.Timer!, item.AtUtc),
     };
 
     [RelayCommand]

@@ -58,8 +58,11 @@ public sealed class ArtLibrary(string imagesDir)
     {
         if (timer.ImageFile is { } file) return new ArtPicture(Load(Path.Combine(ImagesDir, file)));
         if (timer.Preset is { } preset)
+        {
+            if (preset != Presets.Farm && !PresetFocus.ContainsKey(preset)) return new ArtPicture(Placeholder);
             return new ArtPicture(Load($"pack://application:,,,/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.jpg"),
                 PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
+        }
         if (!timer.IsBuiltIn) return new ArtPicture(Placeholder);
         var slug = Slug(timer.Name);
         // A boss the player added has bundled art only under a bundled boss's name.

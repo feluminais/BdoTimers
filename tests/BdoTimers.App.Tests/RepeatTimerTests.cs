@@ -1,0 +1,139 @@
+using System.IO;
+using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Controls;
+using BdoTimers.App.Views;
+using BdoTimers.App.Views.Panels;
+using BdoTimers.App.Art;
+using BdoTimers.App.ViewModels;
+using BdoTimers.App.ViewModels.Panels;
+using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Seed;
+
+namespace BdoTimers.App.Tests;
+
+public sealed class RepeatTimerTests
+{
+    [Fact]
+    public void Calendar_uses_the_label_for_the_selected_occurrence()
+    {
+        var timer = Presets.Create().Single(t => t.Preset == Presets.WarOfTheRoses);
+        var item = new CalendarItem(CalendarKind.Weekly, new(2026, 10, 4, 15, 0, 0, TimeSpan.Zero), timer, CellState.Upcoming);
+        Assert.Equal("War of the Roses · Battle", new CalendarRowViewModel(item, _ => { }, (_, _) => { }).Name);
+    }
+
+    [Fact]
+    public void Panel_persists_repeat_validates_all_fields_and_reload_restores_region_defaults() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var timer = services.Timers.Current.Timers.Single(t => t.Preset == Presets.WarOfTheRoses);
+            var panel = new CustomPanelViewModel(services, new PanelHost(), timer);
+            var view = new CustomPanel { DataContext = panel };
+            var window = new Window { Content = view, Width = 460, Height = 900, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                var repeat = PanelFocusScope.Descendants(view).OfType<TextBox>()
+                    .Single(b => new TextBoxAutomationPeer(b).GetName() == "Repeat every weeks");
+                repeat.Text = "3";
+                repeat.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                Assert.Equal("3", panel.EveryWeeksText);
+                Assert.True(panel.Slots!.HasLabels);
+                panel.EveryWeeksText = "3";
+                panel.WeekAnchorText = "2026-10-04";
+                var saved = services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!;
+                Assert.Equal(3, saved.EveryWeeks);
+                Assert.Equal(new DateOnly(2026, 10, 4), saved.WeekAnchor);
+                panel.EveryWeeksText = "53";
+                Assert.False(panel.ScheduleValid);
+                panel.StartDateText = "2026-10-01";
+                Assert.False(panel.ScheduleValid);
+                panel.EveryWeeksText = "3";
+                panel.WeekAnchorText = "bad";
+                Assert.False(panel.ScheduleValid);
+                panel.EveryWeeksText = "4";
+                Assert.False(panel.ScheduleValid);
+                panel.WeekAnchorText = "2026-10-04";
+                panel.EndDateText = "2026-09-01";
+                Assert.False(panel.ScheduleValid);
+                panel.WeekAnchorText = "2026-10-18";
+                Assert.False(panel.ScheduleValid);
+                panel.ResetTimes.AskCommand.Execute(null);
+                panel.ResetTimes.CancelCommand.Execute(null);
+                Assert.Equal(4, services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.EveryWeeks);
+                services.SelectBossRegion(BossRegions.NorthAmerica);
+                Assert.Contains("NA", panel.ResetTimesLabel);
+                panel.ResetTimes.AskCommand.Execute(null);
+                panel.ResetTimes.ConfirmCommand.Execute(null);
+                Assert.True(panel.ScheduleValid);
+                Assert.Equal("2", panel.EveryWeeksText);
+                Assert.Equal("2026-09-20", panel.WeekAnchorText);
+                Assert.Equal("", panel.StartDateText);
+                Assert.Equal("", panel.EndDateText);
+                Assert.Equal(new[] { "13:05", "15:00" }, panel.Slots.Rows.Select(r => r.TimeText));
+                Assert.Equal("Battle", panel.Slots.Rows[1].LabelText);
+                WpfTest.Drain();
+                Assert.Equal("2", repeat.Text);
+                Assert.Contains(PanelFocusScope.Descendants(view).OfType<TextBox>(), b => b.Text == "13:05");
+                Assert.Contains(PanelFocusScope.Descendants(view).OfType<TextBox>(), b => b.Text == "Battle" && b.IsVisible);
+                if (Environment.GetEnvironmentVariable("BDOTIMERS_TEST_CAPTURE") is { Length: > 0 } capture)
+                {
+                    var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap((int)view.ActualWidth, (int)view.ActualHeight,
+                        96, 96, System.Windows.Media.PixelFormats.Pbgra32);
+                    bitmap.Render(view);
+                    var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                    encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                    using var stream = File.Create(capture);
+                    encoder.Save(stream);
+                }
+                panel.Slots.Rows[1].TimeText = "16:00";
+                Assert.Equal(new TimeOnly(16, 0), services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.Slots[1].Time);
+            }
+            finally { window.Close(); panel.OnClosed(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void Timer_tile_identifies_the_next_label_and_empty_schedule() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var timer = services.Timers.Current.Timers.Single(t => t.Preset == Presets.WarOfTheRoses);
+            var tile = new TimerTileViewModel(timer, services, new PanelHost(), new(2026, 10, 4, 14, 0, 0, TimeSpan.Zero));
+            Assert.StartsWith("Next Battle · ", tile.Detail);
+            tile.SetTimer(timer with { Scheduled = timer.Scheduled! with { Slots = [] } }, services.Clock.UtcNow);
+            Assert.Equal("No times set", tile.Detail);
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void Preset_without_bundled_art_uses_placeholder_without_load_error() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            BdoTimers.Core.Diagnostics.Log.Init(path, new FixedClock());
+            var art = new ArtLibrary(path);
+            art.For(Presets.Create().Single(t => t.Preset == Presets.WarOfTheRoses));
+            Assert.Empty(Directory.GetFiles(path, "*.log"));
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    sealed class FixedClock : IClock { public DateTimeOffset UtcNow => DateTimeOffset.UtcNow; }
+    sealed class PanelHost : IPanelHost
+    {
+        public void OpenPanel(object panel) { }
+        public void ClosePanel() { }
+        public bool IsOpen(object panel) => true;
+    }
+}

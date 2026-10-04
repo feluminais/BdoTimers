@@ -24,7 +24,7 @@ public sealed class TrayIcon : IDisposable
         {
             ToolTipText = "BDO Timers",
             NoLeftClickDelay = true,
-            IconSource = new BitmapImage(new Uri("pack://application:,,,/Assets/app.ico")),
+            IconSource = new BitmapImage(new Uri("pack://application:,,,/BdoTimers;component/Assets/app.ico")),
             ContextMenu = BuildMenu(services),
         };
         _icon.TrayLeftMouseUp += (_, _) => services.ShowMainWindow();

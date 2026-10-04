@@ -17,6 +17,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     readonly IPanelHost _host;
     readonly Guid _id;
     bool _syncingDuration;
+    bool _loadingSchedule;
+    string _repeatError = "";
+    string _dateRangeError = "";
     // An active countdown waits until typing is done: applied per keystroke, a half-typed
     // "2" would move the countdown's end into the past and the scheduler would end it.
     TimeSpan? _typedDuration;
@@ -38,6 +41,11 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     [ObservableProperty] private string _endDateText = "";
     [ObservableProperty] private bool _startDateInvalid;
     [ObservableProperty] private bool _endDateInvalid;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasWeekAnchor))] private string _everyWeeksText = "1";
+    [ObservableProperty] private string _weekAnchorText = "";
+    [ObservableProperty] private bool _everyWeeksInvalid;
+    [ObservableProperty] private bool _weekAnchorInvalid;
+    [ObservableProperty] private SlotListViewModel? _slots;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(ScheduleValid)), NotifyPropertyChangedFor(nameof(CanFinish))] private string _scheduleError = "";
     [ObservableProperty] private bool _alertsOn;
     [ObservableProperty] private Hotkey? _horseHotkey;
@@ -64,6 +72,10 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     ];
     public bool IsStopwatch { get; }
     public bool IsWeekly { get; }
+    public bool HasWeekAnchor => int.TryParse(EveryWeeksText, out var weeks) && weeks > 1;
+    public bool IsWarOfTheRoses => Timer.Preset == Presets.WarOfTheRoses;
+    public string ResetTimesLabel => $"Reset to {_services.Region.ShortLabel} times";
+    public Confirmation ResetTimes { get; }
     public string WeeklyHeading => Timer.Preset == Presets.GuildBosses ? "Weekly time" : "Weekly times";
     public bool HasWeeklyDateRange => IsWeekly && Timer.Preset is not (Presets.GuildBosses or Presets.GuildWar);
     public bool IsOneTime { get; }
@@ -79,7 +91,6 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public Confirmation Delete { get; }
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
-    public SlotListViewModel? Slots { get; }
 
     TimerDef Timer => _services.Timers.Current.Timers.First(t => t.Id == _id);
 
@@ -110,16 +121,13 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
         Delete = new Confirmation(DeleteTimer, hideAfter: false);
+        ResetTimes = new Confirmation(ResetSchedule);
+        if (IsWarOfTheRoses) services.Timers.Changed += OnRegionChanged;
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
         _farmGrowth = GrowthOption(timer.Countdown?.Duration);
         if (timer.Scheduled is { } spec)
         {
-            _timeZoneId = TimeZoneInfo.TryConvertIanaIdToWindowsId(spec.TimeZoneId, out var windowsId) ? windowsId : spec.TimeZoneId;
-            _startDateText = spec.StartDate is { } start ? Parsing.FormatDate(start) : "";
-            _endDateText = spec.EndDate is { } end ? Parsing.FormatDate(end) : "";
-            Slots = new SlotListViewModel(spec.Slots,
-                slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
-                Presets.MinimumSlots(timer.Preset), Presets.MaximumSlots(timer.Preset));
+            LoadSchedule(spec);
         }
         if (timer.OneTime is { } oneTime)
         {
@@ -168,6 +176,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public void OnClosed()
     {
         CommitDuration();
+        if (IsWarOfTheRoses) _services.Timers.Changed -= OnRegionChanged;
         if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
         if (!HasHotkey) return;
         _services.Timers.Changed -= OnHotkeyConfigChanged;
@@ -212,7 +221,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     partial void OnTimeZoneIdChanged(string? value)
     {
         OnPropertyChanged(nameof(Today));
-        if (value is null) return;
+        if (_loadingSchedule || value is null) return;
         if (IsOneTime) ApplyEvent();
         else if (IsWeekly) Modify(t => t with { Scheduled = (t.Scheduled ?? new ScheduledSpec()) with { TimeZoneId = value } });
     }
@@ -233,18 +242,69 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     partial void OnStartDateTextChanged(string value) => ApplyDateRange();
     partial void OnEndDateTextChanged(string value) => ApplyDateRange();
 
+    partial void OnEveryWeeksTextChanged(string value) => ApplyRepeat();
+    partial void OnWeekAnchorTextChanged(string value) => ApplyRepeat();
+
+    void ApplyRepeat()
+    {
+        if (_loadingSchedule) return;
+        EveryWeeksInvalid = !int.TryParse(EveryWeeksText, out var weeks) || weeks is < 1 or > ScheduleMath.MaxEveryWeeks;
+        var validAnchor = Parsing.TryParseDate(WeekAnchorText, out var anchor);
+        WeekAnchorInvalid = HasWeekAnchor && !validAnchor;
+        _repeatError = EveryWeeksInvalid ? "Repeat every 1 to 52 weeks." : WeekAnchorInvalid ? "Enter a date (YYYY-MM-DD)." : "";
+        RefreshScheduleError();
+        if (_repeatError.Length == 0) _services.Timers.SetRepeat(_id, weeks, validAnchor ? anchor : null);
+    }
+
+    void RefreshScheduleError() => ScheduleError = _repeatError.Length > 0 ? _repeatError : _dateRangeError;
+
+    void LoadSchedule(ScheduledSpec spec)
+    {
+        _loadingSchedule = true;
+        try
+        {
+            TimeZoneId = TimeZoneInfo.TryConvertIanaIdToWindowsId(spec.TimeZoneId, out var windowsId) ? windowsId : spec.TimeZoneId;
+            StartDateText = spec.StartDate is { } start ? Parsing.FormatDate(start) : "";
+            EndDateText = spec.EndDate is { } end ? Parsing.FormatDate(end) : "";
+            EveryWeeksText = spec.EveryWeeks.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            WeekAnchorText = Parsing.FormatDate(spec.WeekAnchor ?? spec.StartDate
+                ?? (spec.EveryWeeks > 1 ? new DateOnly(2001, 1, 1) : DateOnly.FromDateTime(Today)));
+            Slots = new SlotListViewModel(spec.Slots,
+                slots => Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
+                Presets.MinimumSlots(Timer.Preset), Presets.MaximumSlots(Timer.Preset), hasLabels: true);
+            StartDateInvalid = EndDateInvalid = EveryWeeksInvalid = WeekAnchorInvalid = false;
+            _repeatError = _dateRangeError = "";
+            RefreshScheduleError();
+        }
+        finally { _loadingSchedule = false; }
+    }
+
+    void ResetSchedule()
+    {
+        _services.Timers.ResetWarOfTheRoses();
+        LoadSchedule(Timer.Scheduled!);
+    }
+
+    void OnRegionChanged()
+    {
+        if (Application.Current.Dispatcher.CheckAccess()) OnPropertyChanged(nameof(ResetTimesLabel));
+        else Application.Current.Dispatcher.BeginInvoke((Action)(() => OnPropertyChanged(nameof(ResetTimesLabel))));
+    }
+
     void ApplyDateRange()
     {
+        if (_loadingSchedule) return;
         StartDateInvalid = !Parsing.TryParseDate(StartDateText, out var start) && !string.IsNullOrWhiteSpace(StartDateText);
         EndDateInvalid = !Parsing.TryParseDate(EndDateText, out var end) && !string.IsNullOrWhiteSpace(EndDateText);
-        ScheduleError = StartDateInvalid || EndDateInvalid ? "Enter a date (YYYY-MM-DD)." : "";
-        if (!ScheduleValid) return;
+        _dateRangeError = StartDateInvalid || EndDateInvalid ? "Enter a date (YYYY-MM-DD)." : "";
+        RefreshScheduleError();
+        if (_dateRangeError.Length > 0) return;
         try
         {
             _services.Timers.SetWeeklyDateRange(_id, string.IsNullOrWhiteSpace(StartDateText) ? null : start,
                 string.IsNullOrWhiteSpace(EndDateText) ? null : end);
         }
-        catch (ArgumentException ex) { ScheduleError = ex.Message; EndDateInvalid = true; }
+        catch (ArgumentException ex) { _dateRangeError = ex.Message; RefreshScheduleError(); EndDateInvalid = true; }
     }
 
     partial void OnAlertsOnChanged(bool value) => Modify(t => t with { Enabled = value });

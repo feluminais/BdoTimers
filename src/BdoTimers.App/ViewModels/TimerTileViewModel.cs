@@ -145,7 +145,9 @@ public sealed partial class TimerTileViewModel : ObservableObject
         var skipped = _services.Timers.Current.Muted.Contains(new MutedOccurrence(_timer.Id, next));
         Digits = DurationFormat.Clock(next - now);
         var format = _timer.Kind == TimerKind.OneTime ? "MMM d, yyyy HH:mm" : "ddd HH:mm";
-        Detail = $"{off}Next {(_timer.Kind == TimerKind.OneTime ? next.ToLocalTime().ToString(format, CultureInfo.InvariantCulture) : Formats.DayTime(next))}{(skipped ? " · skipped" : "")}";
+        var label = _timer.Scheduled is { } schedule ? ScheduleMath.SlotAt(schedule, next)?.Label : null;
+        var named = string.IsNullOrWhiteSpace(label) ? "" : $"{label} · ";
+        Detail = $"{off}Next {named}{(_timer.Kind == TimerKind.OneTime ? next.ToLocalTime().ToString(format, CultureInfo.InvariantCulture) : Formats.DayTime(next))}{(skipped ? " · skipped" : "")}";
         IsDimmed = !_timer.Enabled || skipped;
         SkipLabel = skipped ? "Unskip next" : "Skip next";
     }
