@@ -29,12 +29,79 @@
                 <!-- Text hugs the right edge, in the black the picture fades into; it may reach back only into the faded end -->
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition>
+                            <ColumnDefinition.Style>
+                                <Style TargetType="ColumnDefinition">
+                                    <Setter Property="Width" Value="*" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasMultipleBosses}" Value="True">
+                                            <Setter Property="Width" Value="1.3*" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ColumnDefinition.Style>
+                        </ColumnDefinition>
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <controls:ArtImage Sources="{Binding Images}" />
-                    <StackPanel Grid.Column="1" Margin="-16,0,16,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
+                    <controls:ArtImage Sources="{Binding Images}">
+                        <controls:ArtImage.Style>
+                            <Style TargetType="controls:ArtImage">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasMultipleBosses}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </controls:ArtImage.Style>
+                    </controls:ArtImage>
+                    <!-- Each shared-spawn row owns its picture and name; timing belongs to the whole card. -->
+                    <ItemsControl ItemsSource="{Binding Names}">
+                        <ItemsControl.Style>
+                            <Style TargetType="ItemsControl">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding HasMultipleBosses}" Value="True" />
+                                            <Condition Binding="{Binding HasSpawn}" Value="True" />
+                                        </MultiDataTrigger.Conditions>
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ItemsControl.Style>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><UniformGrid Columns="1" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:BossLink}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <controls:ArtImage Grid.ColumnSpan="2" Sources="{Binding Images}" />
+                                    <Button Grid.Column="1" Margin="-16,0,8,0" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                            Style="{StaticResource NameButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}">
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="14"
+                                                   TextWrapping="Wrap" TextAlignment="Right" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right"
                                 Visibility="{Binding HasSpawn, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Margin" Value="-16,0,16,0" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasMultipleBosses}" Value="True">
+                                        <Setter Property="Margin" Value="8,0,16,0" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <!-- Label and clock shrink to fit a narrow tile rather than lose their ends -->
                         <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right">
                         <TextBlock Text="{Binding Label}" FontSize="11">
@@ -51,6 +118,15 @@
                         </TextBlock>
                         </Viewbox>
                         <ItemsControl ItemsSource="{Binding Names}" Margin="0,2,0,0">
+                            <ItemsControl.Style>
+                                <Style TargetType="ItemsControl">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasMultipleBosses}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ItemsControl.Style>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate DataType="{x:Type vm:BossLink}">
                                     <Button Style="{StaticResource NameButton}" Command="{Binding OpenCommand}" HorizontalAlignment="Right">

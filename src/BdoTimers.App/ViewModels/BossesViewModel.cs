@@ -151,9 +151,10 @@ public sealed partial class BossesViewModel : ObservableObject
 }
 
 /// <summary>A boss name that opens the boss panel when clicked.</summary>
-public sealed partial class BossLink(Guid id, string name, Action<Guid> open)
+public sealed partial class BossLink(Guid id, string name, Action<Guid> open, ArtPicture picture)
 {
     public string Name => name;
+    public IReadOnlyList<ArtPicture> Images { get; } = [picture];
 
     [RelayCommand]
     void Open() => open(id);
@@ -165,10 +166,14 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
 
     [ObservableProperty] private bool _hasSpawn;
     [ObservableProperty] private string _label = "";
-    [ObservableProperty] private IReadOnlyList<BossLink> _names = [];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasMultipleBosses))]
+    private IReadOnlyList<BossLink> _names = [];
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
     [ObservableProperty] private string _clock = "";
     [ObservableProperty] private bool _skipped;
+
+    public bool HasMultipleBosses => Names.Count > 1;
 
     public void Update(SpawnGroup? group, DateTimeOffset now, ArtLibrary art, Action<Guid> open)
     {
@@ -178,8 +183,8 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
         if (signature != _signature)
         {
             _signature = signature;
-            Names = group.Bosses.Select(b => new BossLink(b.Id, b.Name, open)).ToList();
-            Images = art.For(group.Bosses);
+            Names = group.Bosses.Select(b => new BossLink(b.Id, b.Name, open, art.For(b))).ToList();
+            Images = Names.SelectMany(b => b.Images).Take(2).ToList();
             Label = $"{caption} · {Formats.DayTime(group.AtUtc)}";
         }
         Skipped = group.Skipped;
