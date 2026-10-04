@@ -38,9 +38,13 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
             var now = clock.UtcNow;
             var boundary = data.BossAlertsAfterUtc is { } previous && previous > now ? previous : now;
             var seeded = SeedService.ApplyIfNeeded(data, SeedService.LoadEmbedded(regionId), new(), regionId);
+            // War of the Roses follows the region unless the player changed it.
+            var timers = seeded.Timers.Select(t => t.Preset == Presets.WarOfTheRoses
+                && Presets.IsDefaultWarOfTheRoses(t.Scheduled, data.SelectedBossRegion)
+                    ? t with { Scheduled = Presets.WarOfTheRosesSchedule(regionId) } : t).ToList();
             return seeded with
             {
-                SelectedBossRegion = regionId, BossSelectionVersion = Guid.NewGuid(), BossAlertsAfterUtc = boundary,
+                Timers = timers, SelectedBossRegion = regionId, BossSelectionVersion = Guid.NewGuid(), BossAlertsAfterUtc = boundary,
             };
         });
     }
@@ -70,6 +74,13 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         });
         return result;
     }
+
+    /// <summary>Puts War of the Roses back to the selected region's times; its alert settings stay.</summary>
+    public void ResetWarOfTheRoses() => Update(d => d with
+    {
+        Timers = d.Timers.Select(t => t.Preset == Presets.WarOfTheRoses
+            ? t with { Scheduled = Presets.WarOfTheRosesSchedule(d.SelectedBossRegion) } : t).ToList(),
+    });
 
     /// <summary>Adds a boss to the selected region and returns it.</summary>
     public TimerDef AddBoss()
@@ -335,7 +346,9 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
 
     static void Validate(TimerDef timer)
     {
-        if (timer.Scheduled is { } spec) ScheduleMath.ValidateDateRange(spec.StartDate, spec.EndDate);
+        if (timer.Scheduled is not { } spec) return;
+        ScheduleMath.ValidateDateRange(spec.StartDate, spec.EndDate);
+        ScheduleMath.ValidateEveryWeeks(spec.EveryWeeks);
     }
 
     /// <summary>Changes whichever of a countdown and a stopwatch the timer has.</summary>

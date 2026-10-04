@@ -7,7 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels.Panels;
 
 /// <summary>
-/// Editable weekly times, with preset-specific limits. Saves whenever every row is valid. Given default times, offers to
+/// Editable weekly times, with preset-specific limits and optional labels. Saves whenever every row is valid. Given default times, offers to
 /// return to them while the rows differ.
 /// </summary>
 public sealed partial class SlotListViewModel : ObservableObject
@@ -21,11 +21,13 @@ public sealed partial class SlotListViewModel : ObservableObject
 
     public ObservableCollection<SlotRowViewModel> Rows { get; } = [];
     public bool MayAddTime => _maximum is null || Rows.Count < _maximum;
+    public bool HasLabels { get; }
     public bool IsValid => Rows.All(row => !row.Invalid);
 
     public SlotListViewModel(IEnumerable<Slot> slots, Action<IReadOnlyList<Slot>> apply, int minimum = 1, int? maximum = null,
-        IReadOnlyList<Slot>? defaults = null)
+        IReadOnlyList<Slot>? defaults = null, bool hasLabels = false)
     {
+        HasLabels = hasLabels;
         _apply = apply;
         _minimum = minimum;
         _maximum = maximum;
@@ -110,7 +112,7 @@ public sealed partial class SlotListViewModel : ObservableObject
     List<Slot> Validate()
     {
         var slots = new List<Slot>();
-        HashSet<Slot> seen = [];
+        HashSet<(DayOfWeek, TimeOnly)> seen = [];
         foreach (var row in Rows)
         {
             if (row.Day.Value is not DayOfWeek day || !Parsing.TryParseTime(row.TimeText, out var time))
@@ -118,11 +120,11 @@ public sealed partial class SlotListViewModel : ObservableObject
                 row.Invalid = true;
                 continue;
             }
-            var slot = new Slot(day, time);
-            row.Invalid = !seen.Add(slot);
-            if (!row.Invalid) slots.Add(slot);
+            // Two labels can't share one time: an occurrence has one name.
+            row.Invalid = !seen.Add((day, time));
+            if (!row.Invalid) slots.Add(new Slot(day, time, string.IsNullOrWhiteSpace(row.LabelText) ? null : row.LabelText.Trim()));
         }
-        MayReset = _defaults is not null && (slots.Count != Rows.Count || !seen.SetEquals(_defaults));
+        MayReset = _defaults is not null && (slots.Count != Rows.Count || !slots.ToHashSet().SetEquals(_defaults));
         OnPropertyChanged(nameof(IsValid));
         return slots;
     }
@@ -132,6 +134,7 @@ public sealed partial class SlotRowViewModel : ObservableObject
 {
     [ObservableProperty] private Choice _day;
     [ObservableProperty] private string _timeText;
+    [ObservableProperty] private string _labelText;
     [ObservableProperty] private bool _invalid;
 
     public event Action? Changed;
@@ -142,8 +145,10 @@ public sealed partial class SlotRowViewModel : ObservableObject
     {
         _day = Choice.Days.First(d => (DayOfWeek)d.Value! == slot.Day);
         _timeText = Parsing.FormatTime(slot.Time);
+        _labelText = slot.Label ?? "";
     }
 
     partial void OnDayChanged(Choice value) => Changed?.Invoke();
     partial void OnTimeTextChanged(string value) => Changed?.Invoke();
+    partial void OnLabelTextChanged(string value) => Changed?.Invoke();
 }

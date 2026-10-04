@@ -83,6 +83,7 @@ internal static class SavedDataValidation
                 TimeZoneInfo.FindSystemTimeZoneById(timer.Scheduled.TimeZoneId);
                 Require(timer.Scheduled.Slots.All(s => Enum.IsDefined(s.Day)));
                 ScheduleMath.ValidateDateRange(timer.Scheduled.StartDate, timer.Scheduled.EndDate);
+                ScheduleMath.ValidateEveryWeeks(timer.Scheduled.EveryWeeks);
             }
             else if (timer.Kind == TimerKind.OneTime)
             {

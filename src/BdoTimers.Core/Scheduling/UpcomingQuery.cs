@@ -36,7 +36,7 @@ public static class UpcomingQuery
         DateTimeOffset? earliest = null;
         foreach (var (t, window) in PopUpTimers(data, settings))
         {
-            if (t.Kind == TimerKind.OneTime || t.Scheduled is { StartDate: not null } or { EndDate: not null })
+            if (t.Kind == TimerKind.OneTime || t.Scheduled is { StartDate: not null } or { EndDate: not null } or { EveryWeeks: > 1 })
             {
                 var next = OccurrenceSource.From(t, now)
                     .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)) && NewWindow(data, t, at, window))

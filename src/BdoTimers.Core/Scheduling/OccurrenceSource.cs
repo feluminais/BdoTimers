@@ -4,6 +4,13 @@ namespace BdoTimers.Core.Scheduling;
 
 public static class OccurrenceSource
 {
+    /// <summary>The timer's name, followed by the label of the time it occurs at <paramref name="atUtc"/>, if any:
+    /// "War of the Roses · Battle", or with <paramref name="separator"/> in place of the dot.</summary>
+    public static string NameAt(TimerDef timer, DateTimeOffset atUtc, string separator = " · ") =>
+        timer.Scheduled is { } spec && ScheduleMath.SlotAt(spec, atUtc)?.Label is { Length: > 0 } label
+            ? $"{timer.Name}{separator}{label}"
+            : timer.Name;
+
     public static DateTimeOffset? Next(TimerDef timer, DateTimeOffset fromUtc) =>
         From(timer, fromUtc).Cast<DateTimeOffset?>().FirstOrDefault();
 

@@ -5,19 +5,31 @@ namespace BdoTimers.Core.Seed;
 /// <param name="TimeZoneId">The region's server time, which its embedded timetable is written in.</param>
 public sealed record BossRegion(string Id, string Label, string ShortLabel, string ResourceName, string TimeZoneId)
 {
+    /// <summary>War of the Roses in server time: when Third Legion applications close and when the battle starts.</summary>
+    public IReadOnlyList<Slot> WarOfTheRoses { get; init; } = [];
+
     public DateTimeOffset ServerTime(DateTimeOffset now) =>
         TimeZoneInfo.ConvertTime(now, TimeZoneInfo.FindSystemTimeZoneById(TimeZoneId));
 }
 
-/// <summary>Adding a verified region only requires its catalog entry and embedded timetable.</summary>
+/// <summary>
+/// Adding a verified region only requires its catalog entry and embedded timetable. Everything else that differs between
+/// regions is in the entry; docs/boss-region-sources.md lists it with its sources.
+/// </summary>
 public static class BossRegions
 {
     public const string Europe = "eu";
     public const string NorthAmerica = "na";
     public static IReadOnlyList<BossRegion> All { get; } =
     [
-        new(Europe, "Europe", "EU", "BdoTimers.Core.Data.bosses.eu.json", "Europe/Berlin"),
-        new(NorthAmerica, "North America", "NA", "BdoTimers.Core.Data.bosses.na.json", "America/Los_Angeles"),
+        new(Europe, "Europe", "EU", "BdoTimers.Core.Data.bosses.eu.json", "Europe/Berlin")
+        {
+            WarOfTheRoses = [new(DayOfWeek.Sunday, new(15, 5), "Applications close"), new(DayOfWeek.Sunday, new(17, 0), "Battle")],
+        },
+        new(NorthAmerica, "North America", "NA", "BdoTimers.Core.Data.bosses.na.json", "America/Los_Angeles")
+        {
+            WarOfTheRoses = [new(DayOfWeek.Sunday, new(13, 5), "Applications close"), new(DayOfWeek.Sunday, new(15, 0), "Battle")],
+        },
     ];
 
     public static BossRegion Find(string id) => All.FirstOrDefault(r => r.Id == id)

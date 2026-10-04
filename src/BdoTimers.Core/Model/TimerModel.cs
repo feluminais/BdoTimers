@@ -4,7 +4,8 @@ public enum TimerKind { Scheduled, Countdown, Stopwatch, OneTime }
 
 public enum CountdownStatus { Idle, Running, Paused }
 
-public readonly record struct Slot(DayOfWeek Day, TimeOnly Time);
+/// <param name="Label">Names this time within its timer, such as "Battle"; alerts and lists show it after the timer's name.</param>
+public readonly record struct Slot(DayOfWeek Day, TimeOnly Time, string? Label = null);
 
 public sealed record ScheduledSpec
 {
@@ -14,6 +15,12 @@ public sealed record ScheduledSpec
     /// <summary>Inclusive limits on the slot's date in this schedule's time zone.</summary>
     public DateOnly? StartDate { get; init; }
     public DateOnly? EndDate { get; init; }
+    /// <summary>1 for every week; 2 for every other week, and so on, counted in Monday-first weeks from
+    /// <see cref="WeekAnchor"/>'s.</summary>
+    public int EveryWeeks { get; init; } = 1;
+    /// <summary>A date in a week the schedule runs, when <see cref="EveryWeeks"/> is over 1; null counts from
+    /// <see cref="StartDate"/>, else from 2001-01-01.</summary>
+    public DateOnly? WeekAnchor { get; init; }
 }
 
 public sealed record OneTimeSpec

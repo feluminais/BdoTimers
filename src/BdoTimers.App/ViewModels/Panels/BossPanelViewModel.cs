@@ -125,8 +125,6 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
         _host.ClosePanel();
     }
 
-    public void OnClosed() => Alerts.CommitEdits();
-
     internal static string NextSpawnText(TimerDef timer, DateTimeOffset now)
     {
         var next = OccurrenceSource.Next(timer, now);
