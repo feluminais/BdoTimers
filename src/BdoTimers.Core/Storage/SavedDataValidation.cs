@@ -70,6 +70,7 @@ internal static class SavedDataValidation
         {
             Require(timer is not null && timer.Id != Guid.Empty && timer.Name is not null && Enum.IsDefined(timer.Kind));
             if (timer.IsBuiltIn) BossRegions.Find(BossRegions.RegionOf(timer));
+            Require(!timer.AddedByUser || timer.IsBuiltIn && timer.Kind == TimerKind.Scheduled);
             Require(timer.Alerts is not null && timer.Alerts.Sound is not null && timer.Alerts.Toast is not null
                 && timer.Alerts.Tts is not null && timer.Alerts.Overlay is not null);
             Require(timer.Alerts.LeadTimesMinutes is null || timer.Alerts.LeadTimesMinutes.All(m => m is >= 0 and <= 1440));

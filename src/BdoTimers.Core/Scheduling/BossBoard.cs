@@ -11,7 +11,8 @@ public sealed record BossBoardState(SpawnGroup? Previous, SpawnGroup? Next, Spaw
 /// <summary>The previous, next and following spawn of the followed built-in bosses.</summary>
 public static class BossBoard
 {
-    // A week plus a day either side: every boss spawns at least weekly, so previous and following always exist.
+    // A week plus a day either side: a weekly boss always has a previous and a following spawn in reach. A boss limited
+    // to dates may have none, and the board shows nothing for it.
     internal static readonly TimeSpan Reach = TimeSpan.FromDays(8);
 
     public static BossBoardState Build(AppData data, DateTimeOffset now) =>

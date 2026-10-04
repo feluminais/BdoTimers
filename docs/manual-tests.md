@@ -239,3 +239,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     time-zone typing still matches words such as Kyiv. Ctrl+F and keyboard hotkey capture show a focus cue; mouse
     interaction hides it. Setup: a long install root scrolls inside its field while the BdoTimers suffix stays visible,
     and Tab to Launch BDO Timers shows its focus cue.
+65. [ ] Bosses → Add boss: a "New boss" panel opens with its spawn times expanded in server time. Name it, set a time 20
+    minutes ahead and a picture: its tile, the grid, the strip and the pinned overlay show it, and it alerts at its leads.
+    A name another boss of the region has turns the field red and keeps the old name. Set an end date of yesterday: it
+    leaves the grid, strip and tile's next spawn. Switch region: it shows only in the region it was added to.
+66. [ ] Open a timetable boss: no Name or date rows, but its picture can be changed and removed. Remove it → Yes: the
+    panel closes, the boss leaves the tile list and grid, and Undo brings it back with its alerts and skipped spawns.
+    Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
+    boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.

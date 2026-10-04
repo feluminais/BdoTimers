@@ -4,42 +4,6 @@
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
              MaxWidth="440" HorizontalAlignment="Stretch">
-    <UserControl.Resources>
-        <!-- The header picture: the whole area is clickable, and a labelled badge in its corner says so -->
-        <Style x:Key="PictureButton" TargetType="Button">
-            <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="Transparent">
-                            <ContentPresenter />
-                            <Border x:Name="Badge" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="12,0,0,10" Padding="6,4"
-                                    Background="{DynamicResource BgBrush}" BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock x:Name="Icon" Style="{StaticResource IconText}" Text="&#xEB9F;" FontSize="12"
-                                               Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
-                                    <TextBlock x:Name="Label" Text="Change picture" FontSize="11" Margin="6,0,0,0" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource SubtleBrush}" />
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Badge" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                                <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
-                                <Setter TargetName="Label" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Badge" Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-    </UserControl.Resources>
     <DockPanel>
         <Grid DockPanel.Dock="Top" Height="88">
             <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="230" HorizontalAlignment="Left"

@@ -427,8 +427,8 @@ public sealed class AppServices : IDisposable
         NotifyTimetableReview();
     }
 
-    public void ApplyTimetable(IEnumerable<string> names) =>
-        Timers.Update(data => TimetableUpdates.Apply(data, _seeds[data.SelectedBossRegion], names));
+    public void ApplyTimetable(IEnumerable<string> names) => ReleasingDroppedPictures(() =>
+        Timers.Update(data => TimetableUpdates.Apply(data, _seeds[data.SelectedBossRegion], names)));
 
     public void NotifyRestore(string? previousDirectory)
     {
@@ -436,7 +436,17 @@ public sealed class AppServices : IDisposable
         _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder.");
     }
 
-    public void ResetBossTimetable() => Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig()));
+    /// <summary>Brings back the selected region's bundled bosses and spawn times; bosses the player added stay.</summary>
+    public void ResetBossTimetable() => ReleasingDroppedPictures(() =>
+        Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig())));
+
+    /// <summary>Deletes the pictures of bosses that <paramref name="change"/> removed from the timetable.</summary>
+    void ReleasingDroppedPictures(Action change)
+    {
+        var before = Timers.Current.Timers.Select(t => t.ImageFile).OfType<string>().ToList();
+        change();
+        foreach (var image in before) Undo.ReleasePicture(image);
+    }
 
     /// <summary>The spawn times this version ships for a boss, or null when its region's timetable no longer has it.</summary>
     public ScheduledSpec? BundledSchedule(TimerDef boss) =>

@@ -63,20 +63,31 @@ public static class SeedService
     }
 
     /// <summary>
-    /// Replaces the chosen region's timers with the seed's spawn times. A boss still in the seed keeps, by name, its id (which
-    /// fired alerts and skipped spawns refer to), its alerts on/off and its alert settings; skipped spawns of bosses no
-    /// longer in the seed are dropped.
+    /// Restores the chosen region's bundled bosses, removed ones included, with the seed's spawn times. A boss with a
+    /// bundled name keeps its id (which fired alerts and skipped spawns refer to), its alerts on/off, its alert settings
+    /// and its picture; one the player added under that name becomes the bundled boss. Other bosses the player added stay
+    /// as they are. Skipped spawns of bosses no longer there are dropped.
     /// </summary>
     public static AppData ResetBuiltIns(AppData data, BossSeed seed, AlertConfig alerts, string? regionId = null)
     {
         var id = regionId ?? data.SelectedBossRegion;
-        var previous = data.Timers
-            .Where(t => t.IsBuiltIn && BossRegions.RegionOf(t) == id)
+        var region = BossEdits.Of(data, id).ToList();
+        var previous = region
+            .OrderBy(t => t.AddedByUser)
             .GroupBy(t => t.Name, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var fresh = ToTimers(seed, alerts, id)
-            .Select(t => previous.TryGetValue(t.Name, out var old) ? t with { Id = old.Id, Enabled = old.Enabled, Alerts = old.Alerts } : t);
-        List<TimerDef> timers = [.. data.Timers.Where(t => !t.IsBuiltIn || BossRegions.RegionOf(t) != id), .. fresh];
+            .Select(t => previous.TryGetValue(t.Name, out var old)
+                ? t with { Id = old.Id, Enabled = old.Enabled, Alerts = old.Alerts, ImageFile = old.ImageFile }
+                : t)
+            .ToList();
+        var bundled = fresh.Select(t => t.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        List<TimerDef> timers =
+        [
+            .. data.Timers.Where(t => !t.IsBuiltIn || BossRegions.RegionOf(t) != id),
+            .. fresh,
+            .. region.Where(t => t.AddedByUser && !bundled.Contains(t.Name)),
+        ];
         var ids = timers.Select(t => t.Id).ToHashSet();
         return BossRegions.WithState(data with { Timers = timers, Muted = data.Muted.Where(m => ids.Contains(m.TimerId)).ToList() },
             BossRegions.State(data, id) with { SeedApplied = true, AcceptedBossTimetable = seed });

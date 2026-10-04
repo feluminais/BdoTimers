@@ -25,6 +25,8 @@ each region keeps its own alert settings and edited spawn times.
 Choose which bosses you hear about, set how early to alert, or skip a single spawn. When an app update changes the
 timetable, review the changes before applying them. [Timetable sources](docs/boss-region-sources.md).
 
+Add your own event bosses with spawn times and optional date limits. Remove a boss from its panel or restore the bundled timetable in Settings.
+
 ## Timers
 
 ![Timers screen with Farm, Fishing, Horse registration, Guild bosses and a custom countdown](docs/images/timers.png)

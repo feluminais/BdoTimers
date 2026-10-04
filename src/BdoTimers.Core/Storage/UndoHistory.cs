@@ -34,6 +34,9 @@ public sealed class UndoHistory : IDisposable
 
     public bool DeleteTimer(Guid id) => DeleteTimer(id, "Timer deleted");
 
+    /// <summary>Removes a boss, bundled or added; a reset to the region's timetable brings bundled ones back.</summary>
+    public bool DeleteBoss(Guid id) => DeleteTimer(id, "Boss removed");
+
     bool DeleteTimer(Guid id, string message)
     {
         var deleted = _timers.DeleteForUndo(id);
