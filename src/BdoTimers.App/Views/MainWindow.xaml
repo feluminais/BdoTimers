@@ -99,7 +99,8 @@
                 <!-- A tall panel is held to the viewport, so its own list scrolls between its header and Done;
                      the layer scrolls only when the viewport is shorter than the minimum height. -->
                 <ScrollViewer x:Name="PanelScroller" Margin="16,24" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                              Focusable="False" LayoutTransform="{DynamicResource UiScaleTransform}">
+                              Focusable="False" LayoutTransform="{DynamicResource UiScaleTransform}"
+                              MouseLeftButtonDown="PanelScroller_MouseLeftButtonDown">
                 <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
                         MaxHeight="{Binding ViewportHeight, ElementName=PanelScroller, Converter={StaticResource AtLeast}, ConverterParameter=300}">
