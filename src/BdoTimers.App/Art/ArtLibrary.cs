@@ -42,7 +42,7 @@ public sealed class ArtLibrary(string imagesDir)
         [Presets.Fishing] = new(0.48, 0.42),
         [Presets.HorseRegistration] = new(0.32, 0.42),
         [Presets.HorseRegistrationRun] = new(0.32, 0.42),
-        [Presets.GuildBosses] = new(0.56, 0.24),
+        [Presets.GuildBosses] = new(0.35, 0.38),
         [Presets.GuildWar] = new(0.50, 0.37),
         [Presets.WarOfTheRoses] = new(0.50, 0.50),
     };
@@ -61,7 +61,7 @@ public sealed class ArtLibrary(string imagesDir)
         if (timer.Preset is { } preset)
         {
             if (preset != Presets.Farm && !PresetFocus.ContainsKey(preset)) return new ArtPicture(Placeholder);
-            var extension = preset == Presets.WarOfTheRoses ? "png" : "jpg";
+            var extension = preset is Presets.GuildBosses or Presets.WarOfTheRoses ? "png" : "jpg";
             return new ArtPicture(Load($"pack://application:,,,/BdoTimers;component/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.{extension}"),
                 PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
         }

@@ -170,20 +170,22 @@ public sealed class RepeatTimerTests
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
 
-    [Fact]
-    public void War_of_the_Roses_loads_bundled_picture_without_error() => WpfTest.Run(() =>
+    [Theory]
+    [InlineData(Presets.WarOfTheRoses, 351, 318)]
+    [InlineData(Presets.GuildBosses, 960, 540)]
+    public void Preset_loads_bundled_picture_without_error(string preset, int width, int height) => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
         try
         {
             BdoTimers.Core.Diagnostics.Log.Init(path, new FixedClock());
             var art = new ArtLibrary(path);
-            var picture = art.For(Presets.Create().Single(t => t.Preset == Presets.WarOfTheRoses));
+            var picture = art.For(Presets.Create().Single(t => t.Preset == preset));
             var logs = Directory.GetFiles(path, "*.log");
             Assert.True(logs.Length == 0, string.Join(Environment.NewLine, logs.Select(File.ReadAllText)));
             var bitmap = Assert.IsType<System.Windows.Media.Imaging.BitmapImage>(picture.Source);
-            Assert.Equal(351, bitmap.PixelWidth);
-            Assert.Equal(318, bitmap.PixelHeight);
+            Assert.Equal(width, bitmap.PixelWidth);
+            Assert.Equal(height, bitmap.PixelHeight);
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
