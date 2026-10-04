@@ -1,59 +1,114 @@
-# BDO Timers
+<p align="center">
+  <img src="src/BdoTimers.App/Assets/app.png" width="96" height="96" alt="BDO Timers icon">
+</p>
 
-Windows tray app for Black Desert Online (EU and North America): world-boss spawns, your own timers and to-do lists,
-with alerts that reach you in game.
+<h1 align="center">BDO Timers</h1>
 
-- **Bosses**: previous, next and following spawn at a glance, over a week grid in your local time
-- **Timers**: Farm growth (through overgrowth to 200%), Fishing stopwatch, Horse registration (up to ten 10-minute
-  waits), Guild bosses, plus your own countdowns, weekly timers and one-time events
-- **To-do**: daily and weekly checklists with child rows that clear at the game's reset
-- **Alerts**: sound, urgent Windows notification (gets through gaming Do Not Disturb), a spoken alert in an offline
-  voice (Kokoro) and an in-game overlay you can pin, call up with a hotkey or have pop up before guild bosses
-- Optional start with Windows, minimized to the tray; local backup and restore
+<p align="center">World bosses, life skill timers and checklists for Black Desert Online.</p>
+<p align="center">Windows 10 / 11 &nbsp; · &nbsp; x64 &nbsp; · &nbsp; Europe &amp; North America</p>
 
-## Download
-Get `BdoTimers-Setup-<version>.exe` from [Releases](https://github.com/feluminais/BdoTimers/releases) and run it.
-Needs 64-bit Windows 10 or 11; no admin rights and no separate .NET install. The setup isn't code-signed, so SmartScreen
-may warn about an unknown publisher (More info → Run anyway).
+<p align="center">
+  <a href="https://github.com/feluminais/BdoTimers/releases"><strong>Releases</strong></a>
+  &nbsp; · &nbsp;
+  <a href="https://github.com/feluminais/BdoTimers/issues">Report an issue</a>
+  &nbsp; · &nbsp;
+  <a href="CONTRIBUTING.md">Build &amp; contribute</a>
+</p>
 
-- Installs for your user only, into `%LocalAppData%\Programs\BdoTimers` unless you choose another folder.
-- Everything the app keeps (timers, lists, settings, your sounds and pictures, logs) is in `Data` beside the app.
-- Run the setup again, or use Windows Settings → Apps, to repair or uninstall. Uninstall keeps your data unless you
-  clear "Keep my timers, lists and settings".
-- Silent: `/quiet InstallRoot=D:\Games` installs, `/quiet /uninstall` removes (add `DeleteData=1` to delete data).
+![Bosses screen showing upcoming spawns, the weekly timetable and individual boss settings](docs/images/bosses.png)
 
-## Does it touch the game?
-No. BDO Timers never opens the game's process, reads its memory, injects anything or sends keyboard or mouse input.
+## Bosses
 
-- The overlay is an ordinary always-on-top, click-through window, so it shows over BDO in borderless window mode only.
-- Hotkeys use Windows' standard `RegisterHotKey`, like any other app's shortcuts.
-- The only network request is the update check against this repository's GitHub releases. The app never downloads or
-  installs anything; it links to the release page.
+See the previous, next and following spawn above a weekly timetable in your local time. Switch between EU and NA;
+each region keeps its own alert settings and edited spawn times.
 
-## Tips
-- Add BDO Timers to Windows priority notifications (Settings → Notifications → Set priority notifications) so alerts
-  get through while you play.
-- Overlay settings are behind the screen icon in the top bar or in the tray menu; drag the overlay while the panel is
-  open.
-- Overlay → Sections: Local time, Server time and In-game time share the overlay's top line. Server time is the boss
-  region's (Settings → Bosses → Region); in-game time shows a sun by day and a moon by night.
-- Default shortcuts: Ctrl+Shift+F8 pins the overlay, Ctrl+Shift+F9 shows it for 10 seconds and Ctrl+Shift+F10 starts a
-  Horse registration timer. Change or clear them in Overlay settings and on the Horse registration tile. A countdown can
-  have its own start/pause hotkey, set in its panel.
-- Settings → Bosses → Region switches between Europe (`Europe/Berlin`, the default) and North America
-  (`America/Los_Angeles`). Each region keeps its own alert settings and edited spawn times.
-  [Timetable sources](docs/boss-region-sources.md).
-- Set your guild's time on the Guild bosses tile. Overlay → Guild bosses sets how long before a guild
-  boss the overlay pops up (Off, or 5 to 60 minutes).
-- When a release changes spawn times, Settings → Bosses lets you review the changes before they apply.
-- Settings → Data exports or restores a backup ZIP of your timers, lists, settings, sounds and pictures.
-- Settings → About → Check for updates. Release builds also check once a day at startup and show a green icon in the
-  top bar when a newer version is out.
+Choose which bosses you hear about, set how early to alert, or skip a single spawn. When an app update changes the
+timetable, review the changes before applying them. [Timetable sources](docs/boss-region-sources.md).
 
-## Build from source
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+## Timers
+
+![Timers screen with Farm, Fishing, Horse registration, Guild bosses and a custom countdown](docs/images/timers.png)
+
+- **Farm:** track estimated crop growth, including overgrowth up to 200%. Set an earlier start time or the current
+  growth percentage if you planted before opening the app.
+- **Fishing:** count how long you've been fishing, with pause and resume.
+- **Horse registration:** start a ten-minute wait when the game announces a registration. Run up to ten at once.
+- **Guild bosses:** set your guild's schedule and have the overlay appear before it starts.
+
+Add your own countdowns, weekly schedules and one-time events. Give a countdown a hotkey to start, pause and resume
+it while playing, or control it from the tray menu. Pictures, sounds and spoken alert lines are customizable.
+
+## To-do
+
+![To-do screen with weekly quest groups, daily tasks and completed rows](docs/images/todo.png)
+
+Daily and weekly lists clear at their configured reset times, including resets that passed while the app was closed.
+Start with the included quests and tasks, edit them, or make your own lists. Group tasks into child rows; checking a
+parent checks the group. Completed tasks move to the bottom.
+
+## Alerts and overlay
+
+![Compact overlay showing the next boss spawn, Farm growth, Fishing and a custom countdown](docs/images/overlay.png)
+
+Alerts can use sound, Windows notifications, offline speech and overlay pop-ups. Choose channels and lead times for
+individual bosses and timed events. Speech uses the bundled Kokoro voice model. Add BDO Timers to Windows priority
+notifications to allow alerts while Do Not Disturb is on.
+
+The overlay shows boss spawns and running timers in a List, Card or Bar layout. Choose its size, opacity and sections,
+including local, server and in-game time. Pin it, show it briefly with a hotkey, or let it appear for an alert. It can
+fade or hide when the pointer gets close.
+
+| Default shortcut | Action |
+| --- | --- |
+| Ctrl+Shift+F8 | Pin or unpin the overlay |
+| Ctrl+Shift+F9 | Show the overlay for ten seconds |
+| Ctrl+Shift+F10 | Start a horse registration timer |
+
+Shortcuts can be changed or cleared. **The overlay needs borderless window mode.** It is a separate, click-through
+Windows window; the app does not read game memory, inject code or send keyboard or mouse input to BDO.
+
+## Install
+
+Installers will be published on [Releases](https://github.com/feluminais/BdoTimers/releases). No release is published
+yet; [build from source](CONTRIBUTING.md) to try the app.
+
+The installer is `BdoTimers-Setup-<version>.exe`. It installs for your user, requires no admin rights and includes the
+.NET runtime. The default folder is `%LocalAppData%\Programs\BdoTimers`; you can choose another writable folder.
+
+Enable **Close to tray** to keep timers and alerts running after closing the window. **Start with Windows** launches
+the app in the tray. Both are optional. Updates are offered as a link to the release page.
+
+<details>
+<summary>Data, backups and uninstalling</summary>
+
+Timers, lists, settings, sounds, pictures and logs live in `Data` beside the app's executable. **Settings → Data**
+exports or restores a backup ZIP. A restore keeps the previous data folder beside the restored one.
+
+Run the installer again, or use **Windows Settings → Apps**, to repair or uninstall. Uninstall keeps your data unless
+you clear **Keep my timers, lists and settings**.
+
+For unattended installation, from a folder containing one installer:
+
+```powershell
+$setup = (Get-Item .\BdoTimers-Setup-*.exe).FullName
+& $setup /quiet InstallRoot=D:\Games
+& $setup /quiet /uninstall
+```
+
+`InstallRoot` is the parent folder; the example installs into `D:\Games\BdoTimers`. Silent uninstall keeps data;
+add `DeleteData=1` to remove it.
+
+</details>
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for requirements, build commands and the project layout. Bug reports and
+feature requests go to [Issues](https://github.com/feluminais/BdoTimers/issues). For a timetable error, include the
+region, boss, time and source.
 
 ## License
-GPL-3.0 (see LICENSE). Bundled components and their licenses are listed in THIRD-PARTY-NOTICES.txt. BDO Timers is not
-affiliated with Pearl Abyss; the boss, farm, fishing, horse and guild pictures are Black Desert game artwork © Pearl Abyss and
-are not covered by the GPL.
+
+[GPL-3.0](LICENSE). Bundled dependencies are listed in [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).
+
+BDO Timers is not affiliated with Pearl Abyss. The boss, farm, fishing, horse and guild artwork belongs to
+© Pearl Abyss and is not covered by the GPL.
