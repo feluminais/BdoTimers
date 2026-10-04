@@ -12,6 +12,10 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
 {
     readonly AppServices _services;
     bool _shown;
+    Action? _pendingLeave;
+    Action? _cancelLeave;
+    public EditorSave Saving { get; } = new();
+    [ObservableProperty] private bool _askingDiscard;
 
     [ObservableProperty] private object? _panel;
     [ObservableProperty] private bool _isPaused;
@@ -60,7 +64,8 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     {
         _services.Updates.Changed -= UpdatesChanged;
         SetShown(false);
-        ClosePanel();
+        _cancelLeave?.Invoke();
+        ClosePanelNow();
     }
 
     /// <summary>
@@ -91,8 +96,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
 
     public void OpenPanel(object panel)
     {
-        ClosePanel();
-        Panel = panel;
+        RequestLeave(() => { ClosePanelNow(); Panel = panel; }, () => (panel as IPanel)?.OnClosed());
     }
 
     public bool IsOpen(object panel) => ReferenceEquals(Panel, panel);
@@ -101,20 +105,64 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     public void CompletePanelEdits() => CompletingPanelEdits?.Invoke();
 
     [RelayCommand]
-    public void FinishPanel()
+    public async Task FinishPanel()
     {
+        if (Saving.IsBusy || Panel is IDraftPanel { IsBusy: true } || AskingDiscard) return;
         CompletePanelEdits();
         if (Panel is IPanel { CanFinish: false }) return;
-        ClosePanel();
+        var panel = Panel;
+        if (panel is IDraftPanel draft && !await Saving.RunAsync(draft.SaveAsync)) return;
+        if (ReferenceEquals(panel, Panel)) ClosePanelNow();
     }
 
     [RelayCommand]
     public void ClosePanel()
     {
-        if (Panel is null) return;
+        RequestLeave(ClosePanelNow);
+    }
+
+    public bool RequestLeave(Action leave, Action? cancel = null, bool runImmediately = true)
+    {
+        if (AskingDiscard) { cancel?.Invoke(); return false; }
+        if (Saving.IsBusy || Panel is IDraftPanel { IsBusy: true }) { cancel?.Invoke(); return false; }
         CompletePanelEdits();
+        if (Panel is IDraftPanel draft && (draft.HasChanges || !draft.CanFinish))
+        {
+            _cancelLeave?.Invoke();
+            _pendingLeave = leave;
+            _cancelLeave = cancel;
+            AskingDiscard = true;
+            return false;
+        }
+        if (runImmediately) leave();
+        return true;
+    }
+
+    [RelayCommand]
+    void KeepEditing()
+    {
+        AskingDiscard = false;
+        _pendingLeave = null;
+        _cancelLeave?.Invoke();
+        _cancelLeave = null;
+    }
+
+    [RelayCommand]
+    void DiscardChanges()
+    {
+        var leave = _pendingLeave;
+        _pendingLeave = _cancelLeave = null;
+        AskingDiscard = false;
+        ClosePanelNow();
+        leave?.Invoke();
+    }
+
+    void ClosePanelNow()
+    {
+        if (Panel is null) return;
         (Panel as IPanel)?.OnClosed();
         Panel = null;
+        Saving.Error = null;
     }
 
     [RelayCommand]
@@ -125,8 +173,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [RelayCommand]
     public void OpenOverlaySettings()
     {
-        ClosePanel();
-        Panel = new OverlayPanelViewModel(_services, this);
+        RequestLeave(() => { ClosePanelNow(); Panel = new OverlayPanelViewModel(_services, this); });
     }
 
     [RelayCommand]

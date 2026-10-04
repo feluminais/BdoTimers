@@ -43,7 +43,7 @@
         </StackPanel>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16" LastChildFill="False">
-            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding CanFinish}" />
+            <Button Style="{StaticResource PanelDoneButton}" Content="Save" IsDefault="True" IsEnabled="{Binding CanFinish}" />
         </DockPanel>
 
         <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
@@ -187,7 +187,7 @@
                     <StackPanel>
                         <TextBlock Text="{Binding TimetableVerified}" Style="{StaticResource LabelText}" ToolTip="{Binding TimetableSource}" />
                         <Button Style="{StaticResource LinkButton}" Content="Review timetable changes" HorizontalAlignment="Left" Margin="0,6,0,0"
-                                Command="{Binding ReviewTimetableCommand}"
+                                Command="{Binding ReviewTimetableCommand}" IsEnabled="{Binding RegionSaved}"
                                 Visibility="{Binding NeedsTimetableReview, Converter={StaticResource BoolToVisibility}}" />
                         <StackPanel Margin="0,6,0,0" Visibility="{Binding ReviewingTimetable, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding TimetableZone}" Style="{StaticResource LabelText}" Margin="0,0,0,4" />
@@ -210,8 +210,8 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <WrapPanel Margin="0,6,0,0">
-                                <Button Style="{StaticResource LinkButton}" Content="Apply selected" Command="{Binding ApplyTimetableCommand}" Margin="0,0,12,6" />
-                                <Button Style="{StaticResource LinkButton}" Content="Keep current times" Command="{Binding KeepTimetableCommand}" Margin="0,0,12,6" />
+                                <Button Style="{StaticResource LinkButton}" Content="Apply selected" Command="{Binding ApplyTimetableCommand}" IsEnabled="{Binding RegionSaved}" Margin="0,0,12,6" />
+                                <Button Style="{StaticResource LinkButton}" Content="Keep current times" Command="{Binding KeepTimetableCommand}" IsEnabled="{Binding RegionSaved}" Margin="0,0,12,6" />
                                 <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding CancelTimetableCommand}" Margin="0,0,0,6" />
                             </WrapPanel>
                         </StackPanel>
@@ -220,12 +220,12 @@
                 <Border Style="{StaticResource SearchRow}" Tag="· Reset Cancel Reset alert settings reset boss alert settings">
                     <StackPanel>
                         <Button Style="{StaticResource LinkButton}" Content="{Binding ResetAlertLabel}" HorizontalAlignment="Left"
-                                Command="{Binding AlertReset.AskCommand}"
+                                Command="{Binding AlertReset.AskCommand}" IsEnabled="{Binding RegionSaved}"
                                 Visibility="{Binding AlertReset.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
                         <StackPanel Visibility="{Binding AlertReset.IsAsking, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding ResetAlertConfirmation}" Style="{StaticResource LabelText}" FontSize="12" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding AlertReset.ConfirmCommand}"
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding AlertReset.ConfirmCommand}" IsEnabled="{Binding RegionSaved}"
                                         AutomationProperties.Name="Reset alert settings" />
                                 <TextBlock Text="·" Foreground="{DynamicResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
                                 <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding AlertReset.CancelCommand}" />
@@ -236,12 +236,12 @@
                 <Border Style="{StaticResource SearchRow}" Tag="· Reset Cancel Reset spawn times reset spawn times timetable">
                     <StackPanel>
                         <Button Style="{StaticResource LinkButton}" Content="{Binding ResetTimetableLabel}" HorizontalAlignment="Left"
-                                Command="{Binding TimetableReset.AskCommand}" ToolTip="Brings back removed bosses and their spawn times; bosses you added stay"
+                                Command="{Binding TimetableReset.AskCommand}" IsEnabled="{Binding RegionSaved}" ToolTip="Brings back removed bosses and their spawn times; bosses you added stay"
                                 Visibility="{Binding TimetableReset.IsAsking, Converter={StaticResource InverseBoolToVisibility}}" />
                         <StackPanel Visibility="{Binding TimetableReset.IsAsking, Converter={StaticResource BoolToVisibility}}">
                             <TextBlock Text="{Binding ResetTimetableConfirmation}" Style="{StaticResource LabelText}" FontSize="12" />
                             <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding TimetableReset.ConfirmCommand}"
+                                <Button Style="{StaticResource DangerLinkButton}" Content="Reset" Command="{Binding TimetableReset.ConfirmCommand}" IsEnabled="{Binding RegionSaved}"
                                         AutomationProperties.Name="Reset bosses" />
                                 <TextBlock Text="·" Foreground="{DynamicResource PastBrush}" Margin="8,0" VerticalAlignment="Center" />
                                 <Button Style="{StaticResource LinkButton}" Content="Cancel" Command="{Binding TimetableReset.CancelCommand}" />

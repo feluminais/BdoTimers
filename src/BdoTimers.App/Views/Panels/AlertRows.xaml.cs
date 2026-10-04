@@ -8,6 +8,8 @@ public partial class AlertRows : UserControl
 {
     public AlertRows() => InitializeComponent();
 
+    void Generate_Click(object sender, RoutedEventArgs e) => PanelEdits.Complete(this);
+
     /// <summary>Opening the editor puts the caret at the end, so typing or + inserts continue the line.</summary>
     void CustomVoiceLine_Click(object sender, RoutedEventArgs e) =>
         Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>

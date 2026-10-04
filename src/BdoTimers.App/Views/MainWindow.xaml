@@ -108,7 +108,35 @@
                 <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1"
                         HorizontalAlignment="Center" VerticalAlignment="Center"
                         MaxHeight="{Binding ViewportHeight, ElementName=PanelScroller, Converter={StaticResource AtLeast}, ConverterParameter=300}">
-                    <ContentControl x:Name="PanelContent" Focusable="False" />
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <ContentControl x:Name="PanelContent" Focusable="False">
+                            <ContentControl.Style>
+                                <Style TargetType="ContentControl">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Saving.IsBusy}" Value="True"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
+                                        <DataTrigger Binding="{Binding AskingDiscard}" Value="True"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentControl.Style>
+                        </ContentControl>
+                        <StackPanel Grid.Row="1" Margin="22,0,22,12">
+                            <ProgressBar Height="3" IsIndeterminate="{Binding Saving.IsBusy}"
+                                         Visibility="{Binding Saving.IsBusy, Converter={StaticResource BoolToVisibility}}" AutomationProperties.Name="Saving" />
+                            <TextBlock Text="{Binding Saving.Error}" Style="{StaticResource ErrorText}"
+                                       Visibility="{Binding Saving.Error, Converter={StaticResource NullToCollapsed}}" />
+                        </StackPanel>
+                        <Border Grid.RowSpan="2" Background="{DynamicResource PanelBrush}" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding AskingDiscard, Converter={StaticResource BoolToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="Discard changes?" Style="{StaticResource RowLabel}" />
+                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                                    <Button Content="Keep editing" Style="{StaticResource OutlineButton}" Command="{Binding KeepEditingCommand}" />
+                                    <Button Content="Discard" Style="{StaticResource DangerLinkButton}" Margin="16,0,0,0" Command="{Binding DiscardChangesCommand}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                 </Border>
                 </ScrollViewer>
             </Grid>

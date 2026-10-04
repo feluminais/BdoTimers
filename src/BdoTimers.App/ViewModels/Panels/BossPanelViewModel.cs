@@ -11,11 +11,16 @@ namespace BdoTimers.App.ViewModels.Panels;
 /// A boss's alerts, spawn times and picture. Any boss can be removed; a boss the player added can also be renamed and
 /// limited to dates, for event bosses.
 /// </summary>
-public sealed partial class BossPanelViewModel : ObservableObject, IPanel
+public sealed partial class BossPanelViewModel : ObservableObject, IDraftPanel
 {
     readonly AppServices _services;
     readonly IPanelHost _host;
     readonly Guid _id;
+    readonly TimerEditor _editor;
+    public bool HasChanges => _editor.HasChanges;
+    public bool IsBusy => _editor.IsBusy;
+    public Task SaveAsync() => _editor.SaveAsync();
+    public void OnClosed() => _editor.Close();
 
     [ObservableProperty] private bool _alertsOn;
     [ObservableProperty] private bool _showTimes;
@@ -42,13 +47,14 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
     public Confirmation Remove { get; }
     public string? RemoveTooltip => IsAdded ? null : "Settings → Bosses → Reset bosses brings it back";
 
-    TimerDef Boss => _services.Timers.Current.Timers.First(t => t.Id == _id);
+    TimerDef Boss => _editor.Current;
 
     public BossPanelViewModel(AppServices services, IPanelHost host, TimerDef boss)
     {
         _services = services;
         _host = host;
         _id = boss.Id;
+        _editor = new(services, boss);
         _alertsOn = boss.Enabled;
         _name = boss.Name;
         _images = [services.Art.For(boss)];
@@ -57,12 +63,12 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
         // A boss the player added is mostly its spawn times.
         _showTimes = IsAdded;
         NextText = NextSpawnText(boss, services.Clock.UtcNow);
-        Alerts = new AlertRowsViewModel(services, boss);
+        Alerts = new AlertRowsViewModel(services, boss, _editor);
         var spec = boss.Scheduled ?? new ScheduledSpec();
         _startDateText = spec.StartDate is { } start ? Parsing.FormatDate(start) : "";
         _endDateText = spec.EndDate is { } end ? Parsing.FormatDate(end) : "";
         Slots = new SlotListViewModel(spec.Slots,
-            slots => services.Timers.Modify(_id, t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
+            slots => _editor.Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
             defaults: services.BundledSchedule(boss)?.Slots);
         TimeZoneNote = $"Server time ({TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId).StandardName})";
         Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
@@ -72,12 +78,15 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
         Remove = new Confirmation(RemoveBoss, hideAfter: false);
     }
 
-    partial void OnAlertsOnChanged(bool value) => _services.Timers.SetEnabled(_id, value);
+    partial void OnAlertsOnChanged(bool value) => _editor.Modify(t => t with { Enabled = value });
 
     partial void OnNameChanged(string value)
     {
         if (!IsAdded) return;
-        NameInvalid = !_services.Timers.RenameBoss(_id, value);
+        var name = value.Trim();
+        NameInvalid = name.Length == 0 || !BdoTimers.Core.Seed.BossEdits.IsNameFree(_services.Timers.Current,
+            BdoTimers.Core.Seed.BossRegions.RegionOf(Boss), name, _id);
+        if (!NameInvalid) _editor.Modify(t => t with { Name = name });
         if (!NameInvalid) Images = [_services.Art.For(Boss)];
     }
 
@@ -93,8 +102,9 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
         if (!ScheduleValid) return;
         try
         {
-            _services.Timers.SetWeeklyDateRange(_id, string.IsNullOrWhiteSpace(StartDateText) ? null : start,
-                string.IsNullOrWhiteSpace(EndDateText) ? null : end);
+            var first = string.IsNullOrWhiteSpace(StartDateText) ? (DateOnly?)null : start;
+            var last = string.IsNullOrWhiteSpace(EndDateText) ? (DateOnly?)null : end;
+            _editor.Modify(t => t with { Scheduled = t.Scheduled! with { StartDate = first, EndDate = last } });
         }
         catch (ArgumentException ex) { ScheduleError = ex.Message; EndDateInvalid = true; }
     }
@@ -119,9 +129,7 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
 
     void ReplacePicture(string? file)
     {
-        var old = Boss.ImageFile;
-        _services.Timers.Modify(_id, t => t with { ImageFile = file });
-        _services.Undo.ReleasePicture(old);
+        _editor.Modify(t => t with { ImageFile = file });
         Images = [_services.Art.For(Boss)];
         HasPicture = file is not null;
     }
@@ -130,8 +138,12 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
     {
         _host.CompletePanelEdits();
         _services.Undo.DeleteBoss(_id);
+        _discarded = true;
         _host.ClosePanel();
     }
+
+    bool _discarded;
+    bool IDraftPanel.HasChanges => !_discarded && HasChanges;
 
     internal static string NextSpawnText(TimerDef timer, DateTimeOffset now)
     {

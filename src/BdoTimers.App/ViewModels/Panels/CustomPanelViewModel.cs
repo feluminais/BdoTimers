@@ -11,11 +11,16 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
+public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
 {
     readonly AppServices _services;
     readonly IPanelHost _host;
     readonly Guid _id;
+    readonly TimerEditor _editor;
+    bool _discarded;
+    public bool HasChanges => !_discarded && (_editor.HasChanges || _typedDuration is not null);
+    public bool IsBusy => _editor.IsBusy;
+    public async Task SaveAsync() { CommitDuration(); await _editor.SaveAsync(); }
     bool _syncingDuration;
     bool _loadingSchedule;
     string _repeatError = "";
@@ -92,13 +97,14 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public IReadOnlyList<TimeZoneInfo> TimeZones { get; } = TimeZoneInfo.GetSystemTimeZones();
     public AlertRowsViewModel Alerts { get; }
 
-    TimerDef Timer => _services.Timers.Current.Timers.First(t => t.Id == _id);
+    TimerDef Timer => _editor.Current;
 
     public CustomPanelViewModel(AppServices services, IPanelHost host, TimerDef timer)
     {
         _services = services;
         _host = host;
         _id = timer.Id;
+        _editor = new(services, timer);
         _name = timer.Name;
         _images = [services.Art.For(timer)];
         _hasPicture = timer.ImageFile is not null;
@@ -136,7 +142,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
             _eventDateText = Parsing.FormatDate(oneTime.Date);
             _eventTimeText = Parsing.FormatTime(oneTime.Time);
         }
-        Alerts = new AlertRowsViewModel(services, timer);
+        Alerts = new AlertRowsViewModel(services, timer, _editor);
         Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
     }
@@ -164,12 +170,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _typedDuration = null;
         if (DurationInvalid) return;
         // A horse run can finish and disappear while its last text update is still queued.
-        var timer = _services.Timers.Current.Timers.FirstOrDefault(t => t.Id == _id);
-        if (timer is null) return;
+        if (_services.Timers.Current.Timers.All(t => t.Id != _id)) return;
+        var timer = Timer;
         if (timer.Countdown is { Status: not CountdownStatus.Idle })
             _typedDuration = duration;
         else
-            Modify(t => t with { Countdown = (t.Countdown ?? new CountdownSpec()) with { Duration = duration } });
+            _editor.Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) }, "duration");
         _syncingDuration = true;
         FarmGrowth = GrowthOption(duration);
         _syncingDuration = false;
@@ -180,12 +186,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         if (_typedDuration is not { } duration) return;
         _typedDuration = null;
-        Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) });
+        _editor.Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) }, "duration");
     }
 
     public void OnClosed()
     {
-        CommitDuration();
+        _editor?.Close();
         if (IsWarOfTheRoses) _services.Timers.Changed -= OnRegionChanged;
         if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
         if (!HasHotkey) return;
@@ -196,7 +202,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     /// <summary>A finished run is removed by the scheduler; close its panel before another edit targets it.</summary>
     void OnHorseRunChanged() => Application.Current.Dispatcher.BeginInvoke((Action)(() =>
     {
-        if (_host.IsOpen(this) && _services.Timers.Current.Timers.All(t => t.Id != _id)) _host.ClosePanel();
+        if (_host.IsOpen(this) && _services.Timers.Current.Timers.All(t => t.Id != _id)) { _discarded = true; _host.ClosePanel(); }
     }));
 
     void OnHotkeyConfigChanged()
@@ -222,7 +228,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     {
         if (_syncingDuration || !IsFarm || value.Duration is not { } duration) return;
         _typedDuration = null;
-        Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) });
+        _editor.Modify(t => t with { Countdown = CountdownOps.ChangeDuration(t.Countdown ?? new CountdownSpec(), duration, IsFarm) }, "duration");
         _syncingDuration = true;
         DurationText = Parsing.FormatDuration(duration);
         _syncingDuration = false;
@@ -245,7 +251,14 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         EventTimeInvalid = !Parsing.TryParseTime(EventTimeText, out var time);
         ScheduleError = EventDateInvalid ? "Enter a date (YYYY-MM-DD)." : EventTimeInvalid ? "Enter a time (HH:mm)." : "";
         if (!ScheduleValid || TimeZoneId is not { } zone) return;
-        try { _services.Timers.RescheduleEvent(_id, date, time, zone, _services.Clock); }
+        try
+        {
+            var previous = Timer.OneTime!;
+            if (previous.Date == date && previous.Time == time && previous.TimeZoneId == zone) return;
+            var next = new OneTimeSpec { Date = date, Time = time, TimeZoneId = zone };
+            var at = OneTimeEvents.AtUtc(next);
+            Modify(t => t with { OneTime = next with { Finished = t.OneTime!.Finished && at <= _services.Clock.UtcNow } });
+        }
         catch (ArgumentOutOfRangeException) { ScheduleError = "Date is out of range."; EventDateInvalid = true; }
     }
 
@@ -263,7 +276,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         WeekAnchorInvalid = HasWeekAnchor && !validAnchor;
         _repeatError = EveryWeeksInvalid ? "Repeat every 1 to 52 weeks." : WeekAnchorInvalid ? "Enter a date (YYYY-MM-DD)." : "";
         RefreshScheduleError();
-        if (_repeatError.Length == 0) _services.Timers.SetRepeat(_id, weeks, validAnchor ? anchor : null);
+        if (_repeatError.Length == 0) Modify(t => t with { Scheduled = t.Scheduled! with { EveryWeeks = weeks, WeekAnchor = validAnchor ? anchor : null } });
     }
 
     void RefreshScheduleError() => ScheduleError = _repeatError.Length > 0 ? _repeatError : _dateRangeError;
@@ -291,7 +304,8 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
 
     void ResetSchedule()
     {
-        _services.Timers.ResetWarOfTheRoses();
+        var schedule = Presets.WarOfTheRosesSchedule(_services.Timers.Current.SelectedBossRegion);
+        Modify(t => t with { Scheduled = schedule });
         LoadSchedule(Timer.Scheduled!);
     }
 
@@ -311,8 +325,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         if (_dateRangeError.Length > 0) return;
         try
         {
-            _services.Timers.SetWeeklyDateRange(_id, string.IsNullOrWhiteSpace(StartDateText) ? null : start,
-                string.IsNullOrWhiteSpace(EndDateText) ? null : end);
+            var first = string.IsNullOrWhiteSpace(StartDateText) ? (DateOnly?)null : start;
+            var last = string.IsNullOrWhiteSpace(EndDateText) ? (DateOnly?)null : end;
+            Modify(t => t with { Scheduled = t.Scheduled! with { StartDate = first, EndDate = last } });
         }
         catch (ArgumentException ex) { _dateRangeError = ex.Message; RefreshScheduleError(); EndDateInvalid = true; }
     }
@@ -336,9 +351,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
 
     void ReplacePicture(string? file)
     {
-        var old = Timer.ImageFile;
         Modify(t => t with { ImageFile = file });
-        _services.Undo.ReleasePicture(old);
         Images = [_services.Art.For(Timer)];
         HasPicture = file is not null;
     }
@@ -348,10 +361,11 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _host.CompletePanelEdits();
         CommitDuration();
         _services.Undo.DeleteTimer(_id);
+        _discarded = true;
         _host.ClosePanel();
     }
 
-    void Modify(Func<TimerDef, TimerDef> change) => _services.Timers.Modify(_id, change);
+    void Modify(Func<TimerDef, TimerDef> change) => _editor.Modify(change);
 }
 
 public sealed record FarmGrowthOption(string Label, TimeSpan? Duration);

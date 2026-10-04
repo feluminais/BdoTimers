@@ -60,6 +60,9 @@ public partial class MainWindow : Window
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Panel)) ShowPanel(viewModel.Panel);
+            if (e.PropertyName == nameof(MainViewModel.AskingDiscard) && viewModel.AskingDiscard)
+                Dispatcher.BeginInvoke(() => PanelFocusScope.Descendants(PanelLayer).OfType<Button>()
+                    .FirstOrDefault(b => Equals(b.Content, "Keep editing"))?.Focus());
         };
         StateChanged += (_, _) =>
         {
@@ -88,7 +91,7 @@ public partial class MainWindow : Window
         if (panel is not null)
         {
             PanelContent.Content = panel;
-            PanelContent.IsEnabled = true;
+            PanelContent.ClearValue(IsEnabledProperty);
             PanelLayer.Visibility = Visibility.Visible;
             _panelFocus.Open();
             PanelLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Fade));
@@ -247,6 +250,12 @@ public partial class MainWindow : Window
     /// <summary>Hiding to the tray is opt-in; explicit Quit always closes the window.</summary>
     protected override void OnClosing(CancelEventArgs e)
     {
+        if (!_services.IsQuitting && !_vm.RequestLeave(Close, runImmediately: false))
+        {
+            e.Cancel = true;
+            base.OnClosing(e);
+            return;
+        }
         SavePlacement();
         _vm.ClosePanel();
         if (!_services.IsQuitting && _services.Settings.Current.CloseToTray)

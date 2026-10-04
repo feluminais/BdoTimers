@@ -24,13 +24,15 @@ public sealed class RepeatTimerTests
     }
 
     [Fact]
-    public void Panel_persists_repeat_validates_all_fields_and_reload_restores_region_defaults() => WpfTest.Run(() =>
+    public void Panel_saves_repeat_explicitly_validates_all_fields_and_reload_restores_region_defaults() => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
         try
         {
             using var services = new AppServices(Application.Current, path);
             var timer = services.Timers.Current.Timers.Single(t => t.Preset == Presets.WarOfTheRoses);
+            services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
+            timer = services.Timers.Current.Timers.Single(t => t.Id == timer.Id);
             var panel = new CustomPanelViewModel(services, new PanelHost(), timer);
             var view = new CustomPanel { DataContext = panel };
             var window = new Window { Content = view, Width = 460, Height = 900, Left = -10000, Top = -10000, ShowInTaskbar = false };
@@ -46,6 +48,8 @@ public sealed class RepeatTimerTests
                 Assert.True(panel.Slots!.HasLabels);
                 panel.EveryWeeksText = "3";
                 panel.WeekAnchorText = "2026-10-04";
+                Assert.Equal(2, services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.EveryWeeks);
+                panel.SaveAsync().GetAwaiter().GetResult();
                 var saved = services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!;
                 Assert.Equal(3, saved.EveryWeeks);
                 Assert.Equal(new DateOnly(2026, 10, 4), saved.WeekAnchor);
@@ -65,7 +69,7 @@ public sealed class RepeatTimerTests
                 Assert.False(panel.ScheduleValid);
                 panel.ResetTimes.AskCommand.Execute(null);
                 panel.ResetTimes.CancelCommand.Execute(null);
-                Assert.Equal(4, services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.EveryWeeks);
+                Assert.Equal(3, services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.EveryWeeks);
                 services.SelectBossRegion(BossRegions.NorthAmerica);
                 Assert.Contains("NA", panel.ResetTimesLabel);
                 panel.ResetTimes.AskCommand.Execute(null);
@@ -91,7 +95,7 @@ public sealed class RepeatTimerTests
                     using var stream = File.Create(capture);
                     encoder.Save(stream);
                 }
-                var finish = PanelFocusScope.Descendants(view).OfType<Button>().Single(b => Equals(b.Content, "Done") && b.DataContext == panel);
+                var finish = PanelFocusScope.Descendants(view).OfType<Button>().Single(b => Equals(b.Content, "Save") && b.DataContext == panel);
                 Assert.True(finish.IsEnabled);
                 panel.Slots.Rows[1].TimeText = "bad";
                 WpfTest.Drain();
@@ -99,6 +103,7 @@ public sealed class RepeatTimerTests
                 panel.Slots.Rows[1].TimeText = "16:00";
                 WpfTest.Drain();
                 Assert.True(finish.IsEnabled);
+                panel.SaveAsync().GetAwaiter().GetResult();
                 Assert.Equal(new TimeOnly(16, 0), services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.Slots[1].Time);
             }
             finally { window.Close(); panel.OnClosed(); }
@@ -107,7 +112,7 @@ public sealed class RepeatTimerTests
     });
 
     [Fact]
-    public void Removing_an_event_boss_flushes_its_pending_name_before_undo() => WpfTest.Run(() =>
+    public void Removing_an_event_boss_discards_pending_edits_and_undo_restores_saved_name() => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.BossEdits." + Guid.NewGuid().ToString("N"));
         try
@@ -126,7 +131,7 @@ public sealed class RepeatTimerTests
             panel.Remove.AskCommand.Execute(null);
             panel.Remove.ConfirmCommand.Execute(null);
             services.Undo.UndoCommand.Execute(null);
-            Assert.Equal("Event boss", services.Timers.Current.Timers.Single(t => t.Id == boss.Id).Name);
+            Assert.Equal(boss.Name, services.Timers.Current.Timers.Single(t => t.Id == boss.Id).Name);
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });

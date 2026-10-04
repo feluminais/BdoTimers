@@ -30,6 +30,7 @@
     <None Include="Assets\Sounds\SOURCES.txt" Link="licenses\Sounds.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- The Kokoro voice model, fetched by scripts/get-voice.ps1; without it alerts aren't spoken. -->
     <None Update="Voice\kokoro\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Voice\speech\*.wav" CopyToOutputDirectory="PreserveNewest" />
     <!-- The script's record of which archive the model came from. -->
     <None Update="Voice\kokoro\archive.sha256" CopyToOutputDirectory="Never" />
   </ItemGroup>

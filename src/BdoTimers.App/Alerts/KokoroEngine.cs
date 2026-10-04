@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using BdoTimers.Core.Diagnostics;
 using SherpaOnnx;
 
@@ -46,6 +47,12 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
     volatile bool _kept;
     volatile bool _disposed;
     int _warming;
+    readonly Lazy<string> _modelIdentity = new(() => string.Join(' ', new[] { "model.int8.onnx", "voices.bin" }
+        .Select(name =>
+        {
+            using var file = File.OpenRead(Path.Combine(modelDir, name));
+            return Convert.ToHexStringLower(SHA256.HashData(file));
+        }).Append(typeof(OfflineTts).Assembly.GetName().Version?.ToString())));
 
     /// <summary>
     /// True when every file the model needs is there and voices.bin is whole: sherpa-onnx ends the process on a missing
@@ -64,11 +71,7 @@ public sealed class KokoroEngine(string modelDir) : IDisposable
 
     /// <summary>Changes with the model, its voices or the speech runtime, so speech they made isn't reused after an update.
     /// Call only while <see cref="IsAvailable"/>.</summary>
-    public string ModelIdentity =>
-        string.Join(' ', new[] { "model.int8.onnx", "voices.bin" }
-            .Select(name => new FileInfo(ModelFile(name)))
-            .Select(f => $"{f.Length}@{f.LastWriteTimeUtc.Ticks}")
-            .Append(typeof(OfflineTts).Assembly.GetName().Version?.ToString()));
+    public string ModelIdentity => _modelIdentity.Value;
 
     public static KokoroVoice? Find(string? id) => Voices.FirstOrDefault(v => v.Id == id);
 

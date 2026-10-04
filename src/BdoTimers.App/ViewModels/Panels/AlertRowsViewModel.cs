@@ -7,14 +7,14 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-/// <summary>The alert rows shared by the boss and custom panels. Every change is saved immediately.</summary>
+/// <summary>The draft alert rows shared by the boss and custom panels.</summary>
 public sealed partial class AlertRowsViewModel : ObservableObject
 {
     /// <summary>The spoken sample uses this many minutes, like a typical early warning.</summary>
     const int SampleMinutes = 5;
 
     readonly AppServices _services;
-    readonly TimerStore _store;
+    readonly TimerEditor _editor;
     readonly Guid _id;
     /// <summary>The Guild bosses timer's overlay row shows and changes the Overlay panel's Guild bosses setting.</summary>
     readonly bool _guildBoss;
@@ -22,8 +22,10 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     [ObservableProperty] private bool _toast;
     [ObservableProperty] private bool _voice;
     [ObservableProperty] private string _voiceLine;
-    [ObservableProperty] private bool _voiceLineInvalid;
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(GenerateVoiceLineCommand))] private bool _voiceLineInvalid;
     [ObservableProperty] private bool _editingVoiceLine;
+    [ObservableProperty, NotifyCanExecuteChangedFor(nameof(GenerateVoiceLineCommand))] private bool _generating;
+    [ObservableProperty] private string? _generationError;
     [ObservableProperty] private string _voiceSample = "";
     [ObservableProperty] private Choice _overlay;
     [ObservableProperty] private LeadChipsViewModel _leads;
@@ -35,16 +37,16 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         ? "Also in Overlay settings; shows in borderless window mode"
         : "Shows in borderless window mode";
 
-    public AlertRowsViewModel(AppServices services, TimerDef timer)
+    public AlertRowsViewModel(AppServices services, TimerDef timer, TimerEditor editor)
     {
         _services = services;
-        _store = services.Timers;
+        _editor = editor;
         _id = timer.Id;
         _guildBoss = timer.Preset == Presets.GuildBosses;
         var a = timer.Alerts;
         // So the voice line's ▶ speaks without first waiting for the model.
         if (a.Tts.Enabled) services.Tts.Warm(services.Settings.Current.TtsVoice);
-        Sound = new TimerSoundViewModel(services, timer);
+        Sound = new TimerSoundViewModel(services, timer, editor);
         _toast = a.Toast.Enabled;
         _voice = a.Tts.Enabled;
         _voiceLine = ToEditor(a.Tts.Template);
@@ -54,6 +56,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
         _overlay = PopUpChoices.Matching(OverlayChoices, overlay);
         _leadsFollowDefault = a.LeadTimesMinutes is null;
         _leads = NewLeads(a.LeadTimes(DefaultLeads));
+        editor.Changed += () => { UpdateVoiceSample(); Generating = editor.IsBusy; };
     }
 
     IReadOnlyList<int> DefaultLeads => _services.Settings.Current.DefaultLeadTimesMinutes;
@@ -94,9 +97,23 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     [RelayCommand]
     void HearVoiceLine() => _services.Speak(SampleSpeech());
 
+    bool CanGenerateVoiceLine() => !Generating && !VoiceLineInvalid;
+
+    [RelayCommand(CanExecute = nameof(CanGenerateVoiceLine))]
+    async Task GenerateVoiceLine()
+    {
+        GenerationError = null;
+        try { await _editor.GenerateAsync(forceVoice: true); }
+        catch (Exception ex)
+        {
+            BdoTimers.Core.Diagnostics.Log.Error("Couldn't generate voice lines", ex);
+            GenerationError = "Couldn't generate voice lines. Try again.";
+        }
+    }
+
     string SampleSpeech()
     {
-        var name = _store.Current.Timers.FirstOrDefault(t => t.Id == _id)?.Name ?? "";
+        var name = _editor.Current.Name;
         return AlertMessage.Fill(FromEditor(VoiceLine), name, SampleMinutes);
     }
 
@@ -114,10 +131,10 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     partial void OnOverlayChanged(Choice value)
     {
         if (_guildBoss)
-            _services.Settings.Update(s => s with { Overlay = s.Overlay with { GuildBosses = PopUpChoices.Apply(s.Overlay.GuildBosses, value) } });
+            _editor.Settings.Update(s => s with { Overlay = s.Overlay with { GuildBosses = PopUpChoices.Apply(s.Overlay.GuildBosses, value) } });
         else
             Modify(a => a with { Overlay = PopUpChoices.Apply(a.Overlay, value) });
     }
 
-    void Modify(Func<AlertConfig, AlertConfig> change) => _store.Modify(_id, t => t with { Alerts = change(t.Alerts) });
+    void Modify(Func<AlertConfig, AlertConfig> change) => _editor.Modify(t => t with { Alerts = change(t.Alerts) });
 }

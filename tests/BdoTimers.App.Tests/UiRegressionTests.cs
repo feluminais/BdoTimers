@@ -90,6 +90,8 @@ public class UiRegressionTests
         var model = (SettingsPanelViewModel)RuntimeHelpers.GetUninitializedObject(typeof(SettingsPanelViewModel));
         SetField(model, "_services", services);
         SetField(model, "_lastSettings", settings.Current);
+        var draft = new EditDraft<AppSettings>(settings.Current);
+        SetField(model, "_draft", draft);
         var changed = (Action)typeof(SettingsPanelViewModel).GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Instance)!
             .CreateDelegate(typeof(Action), model);
         settings.Changed += changed;
@@ -104,8 +106,9 @@ public class UiRegressionTests
             model.SpeechRate = 1;
             Assert.Equal(.2, volume.Value, 5);
             PanelEdits.Complete(volume);
-            Assert.Equal(.2f, settings.Current.Volume, 5);
-            Assert.Equal(1, settings.Current.TtsRate);
+            Assert.Equal(.2f, draft.Current.Volume, 5);
+            Assert.Equal(1, draft.Current.TtsRate);
+            Assert.Equal(0, settings.Current.TtsRate);
         }
         finally
         {
@@ -174,6 +177,7 @@ public class UiRegressionTests
         box.SetBinding(TextBox.TextProperty, new Binding(nameof(editor.Text))
             { Source = editor, Mode = BindingMode.TwoWay, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, Delay = 300 });
         var main = (MainViewModel)RuntimeHelpers.GetUninitializedObject(typeof(MainViewModel));
+        SetField(main, "<Saving>k__BackingField", new EditorSave());
         main.Panel = editor;
         main.CompletingPanelEdits += () => PanelEdits.Complete(box);
         box.Text = "";

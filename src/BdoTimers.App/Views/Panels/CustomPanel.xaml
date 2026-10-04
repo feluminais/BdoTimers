@@ -5,6 +5,13 @@
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
              MaxWidth="440" HorizontalAlignment="Stretch">
     <DockPanel>
+        <DockPanel.Style>
+            <Style TargetType="DockPanel">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding Alerts.Generating}" Value="True"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </DockPanel.Style>
         <Grid DockPanel.Dock="Top" Height="88">
             <Button x:Name="PictureButton" Style="{StaticResource PictureButton}" Width="230" HorizontalAlignment="Left"
                     AutomationProperties.Name="Change picture" IsEnabled="{Binding CanChangePicture}" Click="PictureButton_Click">
@@ -23,7 +30,7 @@
         </Grid>
 
         <DockPanel DockPanel.Dock="Bottom" Margin="22,4,22,16">
-            <Button Style="{StaticResource PanelDoneButton}" IsDefault="True" IsEnabled="{Binding CanFinish}" />
+            <Button Style="{StaticResource PanelDoneButton}" Content="Save" IsDefault="True" IsEnabled="{Binding CanFinish}" />
             <StackPanel Orientation="Horizontal" VerticalAlignment="Center"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}">
                 <Button Style="{StaticResource DangerLinkButton}" Content="Delete" Command="{Binding Delete.AskCommand}"

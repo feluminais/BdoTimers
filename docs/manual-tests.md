@@ -262,9 +262,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 69. [ ] Edit a War of the Roses time, label, repeat, anchor and date limits; restart and confirm they persist. Reset
     to EU/NA times → No keeps edits; Yes restores the current region's slots, labels, repeat, anchor, date limits and
     time zone in the open panel. Name, picture, Alerts on/off and alert settings stay. Edit a restored row and confirm
-    it saves. Change region while the panel is open: its reset link names the current region.
+    Save keeps it. Change region while the panel is open: its reset link names the current region.
 70. [ ] A weekly timer accepts Repeat every 1–52 weeks; above 1, From week of appears. Try 0, 53, blank and text,
-    then an invalid anchor date and reversed date limits. Fields show errors and Done stays off until all errors are
+    then an invalid anchor date and reversed date limits. Fields show errors and Save stays off until all errors are
     corrected; editing another valid field must not clear an existing error. Pick 3 weeks and any Wednesday anchor:
     the whole Monday–Sunday week runs, the next two skip, then it repeats. Repeat 1 hides the anchor. Confirm start
     and end dates still bound the results, and the schedule survives restart and backup/restore.
@@ -276,3 +276,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     it appears at that occurrence's window, including after restart. Skip it or turn Alerts off: no pop-up. Check
     EU's 25 October and NA's 1 November clock changes separately; scheduled times remain in their own server clock.
     War of the Roses without a custom picture shows the placeholder and adds no missing-picture errors to the log.
+73. [ ] Edit a timer's name or voice line. Generate prepares all selected alert times and the spawn line; Save waits
+    with a loading animation, then keeps the edits. Reopen and Save unchanged wording: saved audio is reused. Leave
+    by clicking outside, Escape, the close button or closing the window: Keep editing retains the draft; Discard
+    keeps the saved timer. Change voice or speed in Settings and Save; alerts use the new audio. A failed generation
+    leaves the draft open for retry. Start a countdown by hotkey while its editor is open, edit its duration and Save:
+    its end follows the new duration without restarting it. On a fresh install, default boss and preset lines play
+    from the bundled files. Saved custom lines still work after more than 30 days without use.

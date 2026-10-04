@@ -19,6 +19,13 @@ public interface IPanel
     void OnClosed() { }
 }
 
+public interface IDraftPanel : IPanel
+{
+    bool HasChanges { get; }
+    bool IsBusy => false;
+    Task SaveAsync();
+}
+
 /// <summary>An option in a <see cref="Controls.CycleSelector"/>; records compare by value so fresh instances still match.</summary>
 public sealed record Choice(string Label, object? Value)
 {

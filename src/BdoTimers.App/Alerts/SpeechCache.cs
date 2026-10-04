@@ -8,10 +8,10 @@ namespace BdoTimers.App.Alerts;
 
 /// <summary>
 /// Generated speech kept as WAV files in <paramref name="dir"/>, so a line is synthesized once and later alerts only read
-/// it. Keys cover everything that shapes the audio, so a new model, voice, speed or wording gets its own entry; entries
-/// unused for a month are deleted by <see cref="DeleteUnused"/>.
+/// it. Keys cover everything that shapes the audio, so a new model, voice, speed or wording gets its own entry.
+/// Saved lines are retained; cleanup only removes abandoned partial writes.
 /// </summary>
-public sealed class SpeechCache(string dir)
+public sealed class SpeechCache(string dir, string? bundledDir = null)
 {
     static readonly TimeSpan Unused = TimeSpan.FromDays(30);
 
@@ -19,16 +19,22 @@ public sealed class SpeechCache(string dir)
     public static string Key(params string[] parts) =>
         Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join('\n', parts))));
 
-    public bool Contains(string key) => File.Exists(PathOf(key));
+    public bool Contains(string key) => File.Exists(PathOf(key)) || (bundledDir is not null && File.Exists(Path.Combine(bundledDir, key + ".wav")));
 
     /// <summary>The stored speech, or null when there is none or it can't be read. Reading it counts as use.</summary>
     public WaveStream? Open(string key)
     {
         var path = PathOf(key);
+        var personal = Read(path, touch: true);
+        return personal ?? (bundledDir is null ? null : Read(Path.Combine(bundledDir, key + ".wav"), touch: false));
+    }
+
+    static WaveStream? Read(string path, bool touch)
+    {
         if (!File.Exists(path)) return null;
         try
         {
-            File.SetLastWriteTimeUtc(path, DateTime.UtcNow);
+            if (touch) File.SetLastWriteTimeUtc(path, DateTime.UtcNow);
             return new WaveFileReader(new MemoryStream(File.ReadAllBytes(path)));
         }
         // Reading fails with IO or format exceptions; either way the line is synthesized again and stored over it.
@@ -50,12 +56,12 @@ public sealed class SpeechCache(string dir)
         File.Move(partial, path, overwrite: true);
     }
 
-    /// <summary>Deletes entries, and partial files left by a crash, not used for a month.</summary>
+    /// <summary>Deletes partial files left by a crash more than a month ago.</summary>
     public void DeleteUnused()
     {
         if (!Directory.Exists(dir)) return;
         var cutoff = DateTime.UtcNow - Unused;
-        foreach (var file in new DirectoryInfo(dir).EnumerateFiles().Where(f => f.LastWriteTimeUtc < cutoff))
+        foreach (var file in new DirectoryInfo(dir).EnumerateFiles("*.partial").Where(f => f.LastWriteTimeUtc < cutoff))
         {
             try { file.Delete(); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

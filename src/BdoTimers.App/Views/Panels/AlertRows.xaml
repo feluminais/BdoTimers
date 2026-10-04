@@ -57,8 +57,8 @@
                     <TextBox x:Name="VoiceLineBox" Text="{Binding VoiceLine, UpdateSourceTrigger=PropertyChanged, Delay=400}"
                              controls:Ui.HasError="{Binding VoiceLineInvalid}" AutomationProperties.Name="Voice line" />
                     <DockPanel Margin="0,8,0,0">
-                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Done" VerticalAlignment="Center"
-                                Command="{Binding EditVoiceLineCommand}" />
+                        <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Generate" VerticalAlignment="Center"
+                                Command="{Binding GenerateVoiceLineCommand}" Click="Generate_Click" />
                         <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Reset" Margin="0,0,14,0" VerticalAlignment="Center"
                                 Command="{Binding ResetVoiceLineCommand}" />
                         <StackPanel Orientation="Horizontal">
@@ -69,6 +69,10 @@
                                     ToolTip="Play" Command="{Binding HearVoiceLineCommand}" />
                         </StackPanel>
                     </DockPanel>
+                    <ProgressBar Height="3" IsIndeterminate="{Binding Generating}" Margin="0,8,0,0"
+                                 Visibility="{Binding Generating, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding GenerationError}" Style="{StaticResource ErrorText}"
+                               Visibility="{Binding GenerationError, Converter={StaticResource NullToCollapsed}}" />
                 </StackPanel>
             </StackPanel>
         </Border>

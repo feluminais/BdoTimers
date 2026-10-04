@@ -78,6 +78,38 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
             .Start();
     }
 
+    /// <summary>Completes only when every requested line has a readable WAV; cache write failures prevent saving edits.</summary>
+    public Task GenerateLinesAsync(IReadOnlyCollection<string> texts, string? voiceId, int rate)
+    {
+        if (texts.Count == 0) return Task.CompletedTask;
+        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        new Thread(() =>
+        {
+            try
+            {
+                if (!kokoro.IsAvailable) throw new FileNotFoundException("Voice files are missing. Repair the installation.");
+                var model = kokoro.ModelIdentity;
+                foreach (var text in texts.Distinct())
+                {
+                    ObjectDisposedException.ThrowIf(_disposed, this);
+                    var line = Line.For(text, voiceId, rate);
+                    var key = line.Key(model);
+                    lock (_synthesis)
+                    {
+                        using var stored = cache.Open(key);
+                        if (stored is not null) continue;
+                        var samples = kokoro.Generate(line.Spoken, line.Voice, line.Speed, out var sampleRate, ahead: true);
+                        cache.Store(key, samples, sampleRate);
+                    }
+                }
+                done.SetResult();
+            }
+            catch (Exception ex) { done.SetException(ex); }
+            finally { kokoro.Release(); }
+        }) { IsBackground = true, Priority = ThreadPriority.BelowNormal, Name = "Voice line generation" }.Start();
+        return done.Task;
+    }
+
     void PrepareQueued()
     {
         while (true)
@@ -113,7 +145,7 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
         }
     }
 
-    /// <summary>Deletes cached speech unused for a month, on a low-priority background thread.</summary>
+    /// <summary>Removes abandoned partial writes on a low-priority background thread.</summary>
     public void CleanCacheInBackground() =>
         new Thread(() =>
         {

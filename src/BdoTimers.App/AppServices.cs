@@ -110,7 +110,7 @@ public sealed class AppServices : IDisposable
         _toast = new ToastChannel(App.InstanceName, App.DisplayName);
         _toast.Activated += () => _app.Dispatcher.BeginInvoke(ShowMainWindow);
         Tts = new TtsChannel(new KokoroEngine(Path.Combine(AppContext.BaseDirectory, "Voice", "kokoro")),
-            new SpeechCache(Path.Combine(dataDir, "speech")));
+            new SpeechCache(Path.Combine(dataDir, "speech"), Path.Combine(AppContext.BaseDirectory, "Voice", "speech")));
         Tts.CleanCacheInBackground();
         _alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds, Timers, Health);
         _engine = new SchedulerEngine(Timers, Settings, _alerts, Clock);
@@ -266,14 +266,16 @@ public sealed class AppServices : IDisposable
         return result;
     }
 
-    public async void SendTestAlert()
+    public void SendTestAlert() => SendTestAlert(Settings.Current);
+
+    public async void SendTestAlert(AppSettings previewSettings)
     {
         if (Health.TestBusy) return;
         Health.TestBusy = true;
         Health.TestStatus = "Sending…";
         try
         {
-            await _alerts.SendTestAsync(new AlertEvent([new TimerDef { Name = "Test boss" }], Clock.UtcNow.AddMinutes(5), 5, 5));
+            await _alerts.SendTestAsync(new AlertEvent([new TimerDef { Name = "Test boss" }], Clock.UtcNow.AddMinutes(5), 5, 5), previewSettings);
             Health.TestStatus = Health.Status is null ? "Test sent" : "Some channels failed. See Diagnostics.";
         }
         catch (Exception ex)
@@ -293,11 +295,12 @@ public sealed class AppServices : IDisposable
     /// presses don't pile up. UI thread only.
     /// </summary>
     public void PlaySound(string? key) => Preview("Sound", cancel => _sound.PlayAsync(PlayableSound(key), Settings.Current.Volume, cancel));
+    public void PlaySound(string? key, float volume) => Preview("Sound", cancel => _sound.PlayAsync(PlayableSound(key), volume, cancel));
 
     /// <summary>Speaks <paramref name="text"/> with the chosen voice and speed, like an alert would.</summary>
-    public void Speak(string text) => Preview("Voice", async cancel =>
+    public void Speak(string text) => Speak(text, Settings.Current);
+    public void Speak(string text, AppSettings s) => Preview("Voice", async cancel =>
     {
-        var s = Settings.Current;
         var speech = await Tts.SynthesizeAsync(text, s.TtsVoice, s.TtsRate);
         if (cancel.IsCancellationRequested) speech.Dispose();
         else await _sound.PlayAsync(speech, s.Volume, cancel);
@@ -419,7 +422,11 @@ public sealed class AppServices : IDisposable
 
     public PreparedRestore PrepareRestore(string archive) => BackupArchive.Prepare(archive, AppContext.BaseDirectory);
 
-    public void RestartForRestore(PreparedRestore restore) => ((App)_app).RestartForRestore(restore);
+    public void RestartForRestore(PreparedRestore restore)
+    {
+        if (_mainViewModel is null) ((App)_app).RestartForRestore(restore);
+        else _mainViewModel.RequestLeave(() => ((App)_app).RestartForRestore(restore), () => BackupArchive.Discard(restore));
+    }
 
     public void SelectBossRegion(string regionId)
     {
@@ -473,6 +480,16 @@ public sealed class AppServices : IDisposable
     }
 
     public void Quit()
+    {
+        if (_mainViewModel is not null && !_mainViewModel.RequestLeave(QuitNow))
+        {
+            ShowMainWindow();
+            return;
+        }
+        if (_mainViewModel is null) QuitNow();
+    }
+
+    void QuitNow()
     {
         IsQuitting = true;
         _app.Shutdown();

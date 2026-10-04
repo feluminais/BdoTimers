@@ -6,12 +6,13 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels.Panels;
 
 /// <summary>
-/// A timer's sound row in the boss and custom panels: each step is saved; sound plays only from the test button.
+/// A timer's draft sound row; sound plays only from the test button.
 /// </summary>
 public sealed partial class TimerSoundViewModel : ObservableObject
 {
     readonly AppServices _services;
     readonly Guid _id;
+    readonly TimerEditor _editor;
     bool _syncing;
 
     [ObservableProperty] private IReadOnlyList<Choice> _choices = [];
@@ -21,10 +22,11 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     private Choice? _selected;
     [ObservableProperty] private string? _error;
 
-    public TimerSoundViewModel(AppServices services, TimerDef timer)
+    public TimerSoundViewModel(AppServices services, TimerDef timer, TimerEditor editor)
     {
         _services = services;
         _id = timer.Id;
+        _editor = editor;
         _choices = SoundChoices.ForTimer(services.Sounds);
         _selected = SoundChoices.Matching(_choices, timer.Alerts.Sound);
     }
@@ -38,7 +40,7 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     {
         if (_syncing || Sound is not { } sound) return;
         Error = null;
-        _services.Timers.Modify(_id, t => t with { Alerts = t.Alerts with { Sound = sound } });
+        _editor.Modify(t => t with { Alerts = t.Alerts with { Sound = sound } });
     }
 
     [RelayCommand(CanExecute = nameof(CanTest))]
@@ -68,5 +70,6 @@ public sealed partial class TimerSoundViewModel : ObservableObject
         Choices = SoundChoices.ForTimer(_services.Sounds);
         Selected = SoundChoices.Matching(Choices, _services.Timers.Current.Timers.First(t => t.Id == _id).Alerts.Sound);
         _syncing = false;
+        if (Selected?.Value is SoundAlert replacement) _editor.Modify(t => t with { Alerts = t.Alerts with { Sound = replacement } });
     }
 }

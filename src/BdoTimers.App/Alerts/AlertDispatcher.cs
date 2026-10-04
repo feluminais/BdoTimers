@@ -22,7 +22,7 @@ public sealed class AlertDispatcher(
     public void Dispatch(AlertEvent alert) => _ = RunAsync(alert);
 
     /// <summary>An explicit test has no saved timer; normal alerts keep every eligibility recheck.</summary>
-    public Task SendTestAsync(AlertEvent alert) => RunAsync(alert, test: true);
+    public Task SendTestAsync(AlertEvent alert, AppSettings? previewSettings = null) => RunAsync(alert, test: true, previewSettings);
 
     internal static AlertEvent? Eligible(AppData data, AlertEvent alert, bool test) => test ? alert : AlertEligibility.Filter(data, alert);
 
@@ -54,7 +54,7 @@ public sealed class AlertDispatcher(
             ? $"Countdown ended at {end.ToLocalTime():HH:mm}."
             : "Countdown ended."));
 
-    async Task RunAsync(AlertEvent planned, bool test = false)
+    async Task RunAsync(AlertEvent planned, bool test = false, AppSettings? previewSettings = null)
     {
         if (Eligible(timers.Current, planned, test) is not { } alert) return;
         var message = AlertMessage.Build(alert);
@@ -69,7 +69,7 @@ public sealed class AlertDispatcher(
             if (Eligible(timers.Current, planned, test) is not { } current) return;
             configs = current.Timers.Select(t => t.Alerts).ToList();
             message = AlertMessage.Build(current);
-            var s = settings.Current;
+            var s = previewSettings ?? settings.Current;
             var speech = configs.Any(c => c.Tts.Enabled)
                 ? tts.SynthesizeAsync(message.Speech, s.TtsVoice, s.TtsRate)
                 : null;

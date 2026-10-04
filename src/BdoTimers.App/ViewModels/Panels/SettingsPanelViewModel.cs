@@ -9,16 +9,19 @@ using BdoTimers.Core.Model;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 using BdoTimers.Core.Updates;
+using BdoTimers.Core.Text;
 using CheckStatus = BdoTimers.Core.Updates.UpdateStatus;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
+public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPanel
 {
     readonly AppServices _services;
-    bool _syncingRegion;
+    readonly EditDraft<AppSettings> _draft;
+    public bool RegionSaved => (string)Region.Value! == _services.Timers.Current.SelectedBossRegion;
+    public bool HasChanges => _draft.HasChanges || !RegionSaved;
     bool _closed;
     AppSettings _lastSettings;
     PreparedRestore? _preparedRestore;
@@ -50,7 +53,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public Choice TextSize
     {
         get => TextSizes.MinBy(choice => Math.Abs((double)choice.Value! - Current.TextScale))!;
-        set => _services.Settings.Update(settings => settings with { TextScale = (double)value.Value! });
+        set => UpdateSettings(settings => settings with { TextScale = (double)value.Value! });
     }
     public IReadOnlyList<Choice> Regions { get; } = BossRegions.All.Select(r => new Choice(r.Label, r.Id)).ToList();
     public IReadOnlyList<Choice> Voices { get; } = KokoroEngine.Voices.Select(v => new Choice(v.Label, v.Id)).ToList();
@@ -80,17 +83,18 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         services.Updates.Changed += UpdateCheckChanged;
         RefreshUpdateCheck();
         var s = services.Settings.Current;
+        _draft = new(s);
         _lastSettings = s;
         _region = Regions.Single(r => (string)r.Value! == services.Timers.Current.SelectedBossRegion);
         ReloadSounds();
         // So Test voice speaks without first waiting for the model.
         services.Tts.Warm(s.TtsVoice);
         DefaultLeads = new LeadChipsViewModel(s.DefaultLeadTimesMinutes,
-            leads => services.Settings.Update(x => x with { DefaultLeadTimesMinutes = leads }));
+            leads => UpdateSettings(x => x with { DefaultLeadTimesMinutes = leads }));
         DailyTodoReset = new TodoScheduleEditorViewModel(TodoCadence.Daily, s.DailyTodoReset,
-            schedule => services.SetTodoReset(TodoCadence.Daily, schedule));
+            schedule => UpdateSettings(x => x with { DailyTodoReset = schedule }));
         WeeklyTodoReset = new TodoScheduleEditorViewModel(TodoCadence.Weekly, s.WeeklyTodoReset,
-            schedule => services.SetTodoReset(TodoCadence.Weekly, schedule));
+            schedule => UpdateSettings(x => x with { WeeklyTodoReset = schedule }));
         DailyTodoReset.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         WeeklyTodoReset.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         AlertReset = new Confirmation(services.Timers.ResetBossAlerts);
@@ -102,72 +106,43 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
         services.Settings.Changed += OnSettingsChanged;
     }
 
-    AppSettings Current => _services.Settings.Current;
+    AppSettings Current => _draft.Current;
+    void UpdateSettings(Func<AppSettings, AppSettings> change) { _draft.Update(change); OnSettingsChanged(); }
 
     public bool Autostart
     {
         get => Current.Autostart;
         set
         {
-            // Windows first, so a refused change isn't saved as made; startup applies the saved choice again.
-            try { BdoTimers.App.Autostart.Apply(value); }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
-            {
-                Log.Error("Couldn't update autostart", ex);
-                AutostartError = "Couldn't change Windows startup";
-                Application.Current.Dispatcher.BeginInvoke(() => OnPropertyChanged(nameof(Autostart)));
-                return;
-            }
             AutostartError = null;
-            _services.Settings.Update(s => s with { Autostart = value });
+            UpdateSettings(s => s with { Autostart = value });
         }
     }
 
     partial void OnRegionChanged(Choice value)
     {
-        if (_syncingRegion) return;
-        try
-        {
-            _services.SelectBossRegion((string)value.Value!);
-            RegionError = null;
-            ReviewingTimetable = false;
-            TimetableReset.IsAsking = AlertReset.IsAsking = false;
-            OnPropertyChanged(nameof(TimetableVerified));
-            OnPropertyChanged(nameof(TimetableSource));
-            OnPropertyChanged(nameof(TimetableZone));
-            OnPropertyChanged(nameof(ResetTimetableLabel));
-            OnPropertyChanged(nameof(ResetTimetableConfirmation));
-            OnPropertyChanged(nameof(ResetAlertLabel));
-            OnPropertyChanged(nameof(ResetAlertConfirmation));
-            RefreshTimetable();
-        }
-        catch (StateSaveException ex)
-        {
-            Log.Error("Couldn't save boss region", ex);
-            RegionError = "Couldn't save region";
-            _syncingRegion = true;
-            Region = Regions.Single(r => (string)r.Value! == _services.Timers.Current.SelectedBossRegion);
-            _syncingRegion = false;
-        }
+        ReviewingTimetable = false;
+        TimetableReset.IsAsking = AlertReset.IsAsking = false;
+        OnPropertyChanged(nameof(RegionSaved));
     }
 
     public bool CloseToTray
     {
         get => Current.CloseToTray;
-        set => _services.Settings.Update(s => s with { CloseToTray = value });
+        set => UpdateSettings(s => s with { CloseToTray = value });
     }
 
     /// <summary>The saved app-wide sound, or the default when it's gone.</summary>
     public Choice? AlertSound
     {
-        get => AlertSounds.FirstOrDefault(c => (string)c.Value! == _services.PlayableSound(null)) ?? AlertSounds[0];
+        get => AlertSounds.FirstOrDefault(c => (string)c.Value! == Current.AlertSound) ?? AlertSounds[0];
         set
         {
-            if (value?.Value is string key) _services.Settings.Update(s => s with { AlertSound = key });
+            if (value?.Value is string key) UpdateSettings(s => s with { AlertSound = key });
         }
     }
 
-    public double Volume { get => Current.Volume; set => _services.Settings.Update(s => s with { Volume = (float)value }); }
+    public double Volume { get => Current.Volume; set => UpdateSettings(s => s with { Volume = (float)value }); }
 
     public Choice? Voice
     {
@@ -176,7 +151,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
                ?? Voices.FirstOrDefault();
         set
         {
-            _services.Settings.Update(s => s with { TtsVoice = value?.Value as string });
+            UpdateSettings(s => s with { TtsVoice = value?.Value as string });
             // A UK voice needs the model loaded for British English, and a US one for American.
             _services.Tts.Warm(value?.Value as string);
         }
@@ -185,10 +160,40 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     public double SpeechRate
     {
         get => Current.TtsRate;
-        set => _services.Settings.Update(s => s with { TtsRate = (int)Math.Round(value) });
+        set => UpdateSettings(s => s with { TtsRate = (int)Math.Round(value) });
     }
 
     public bool CanFinish => !DailyTodoReset.InvalidTime && !WeeklyTodoReset.InvalidTime;
+
+    public async Task SaveAsync()
+    {
+        var region = (string)Region.Value!;
+        var data = _services.Timers.Current;
+        var seeded = SeedService.ApplyIfNeeded(data, SeedService.LoadEmbedded(region), new AlertConfig(), region);
+        var enabled = seeded.Timers.Where(t => !t.IsBuiltIn || BossRegions.RegionOf(t) == region)
+            .Select(t => t.Preset == Presets.WarOfTheRoses && Presets.IsDefaultWarOfTheRoses(t.Scheduled, data.SelectedBossRegion)
+                ? t with { Scheduled = Presets.WarOfTheRosesSchedule(region) } : t);
+        await _services.Tts.GenerateLinesAsync(SpeechLines.ForTimers(enabled, Current.DefaultLeadTimesMinutes, _services.Clock), Current.TtsVoice, Current.TtsRate);
+        var previous = _services.Settings.Current;
+        var next = _draft.Apply(previous);
+        try
+        {
+            if (next.Autostart != previous.Autostart) BdoTimers.App.Autostart.Apply(next.Autostart);
+            _services.Todos.Reconcile(next);
+            _services.Settings.Update(_draft.Apply);
+        }
+        catch
+        {
+            try
+            {
+                if (next.Autostart != previous.Autostart) BdoTimers.App.Autostart.Apply(previous.Autostart);
+                _services.Todos.Reconcile(previous);
+            }
+            catch (Exception ex) { Log.Error("Couldn't restore settings after save failed", ex); }
+            throw;
+        }
+        if (!RegionSaved) _services.SelectBossRegion(region);
+    }
 
     void OnSettingsChanged()
     {
@@ -223,18 +228,19 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IPanel
     void RemoveSound(string key)
     {
         SoundError = _services.RemoveSound(key);
+        if (SoundError is null && Current.AlertSound == key) UpdateSettings(s => s with { AlertSound = new AppSettings().AlertSound });
         ReloadSounds();
     }
 
     [RelayCommand]
-    void PreviewSound() => _services.PlaySound(null);
+    void PreviewSound() => _services.PlaySound(Current.AlertSound, Current.Volume);
 
     [RelayCommand]
-    void TestAlert() => _services.SendTestAlert();
+    void TestAlert() => _services.SendTestAlert(Current);
 
     /// <summary>Two respelled boss names, so the test also shows pronunciation.</summary>
     [RelayCommand]
-    void TestVoice() => _services.Speak("Kzarka and Uturi in 5 minutes");
+    void TestVoice() => _services.Speak("Kzarka and Uturi in 5 minutes", Current);
 
 
     [RelayCommand]

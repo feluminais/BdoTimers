@@ -28,6 +28,7 @@ try {
     & "$PSScriptRoot/test-windows.ps1" -Configuration Release
     # The voice model isn't in git; the setup ships it, so fetch it first if this checkout lacks it.
     & "$PSScriptRoot/get-voice.ps1"
+    & "$PSScriptRoot/generate-speech.ps1"
 
     $stage = 'obj/publish/app'
     foreach ($dir in 'obj/publish', 'installer/Msi/bin', 'installer/Bundle/bin') {
