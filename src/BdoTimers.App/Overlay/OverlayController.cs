@@ -116,6 +116,7 @@ public sealed class OverlayController(AppServices services) : IDisposable
         }
         var window = EnsureWindow();
         window.Model.Update(content, settings, now, _previewing);
+        window.SetMouseProximity(settings.MouseProximity);
         if (!window.IsVisible) window.Show();
         window.KeepOnTop();
     }

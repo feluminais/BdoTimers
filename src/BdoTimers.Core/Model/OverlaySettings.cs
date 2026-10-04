@@ -1,6 +1,7 @@
 namespace BdoTimers.Core.Model;
 
 public enum OverlayLayout { List, Card, Bar }
+public enum OverlayMouseProximity { Off, Fade, Hide }
 
 /// <summary>When the in-game overlay shows and how it looks.</summary>
 public sealed record OverlaySettings
@@ -16,6 +17,7 @@ public sealed record OverlaySettings
     /// <summary>Shows the overlay for <see cref="ShowSeconds"/>; held only while <see cref="ShowOnHotkey"/> is on.</summary>
     public Hotkey? ShowHotkey { get; init; } = DefaultHotkeys.Show;
     public int ShowSeconds { get; init; } = 10;
+    public OverlayMouseProximity MouseProximity { get; init; }
     public OverlayLayout Layout { get; init; }
     public bool ShowOutline { get; init; } = true;
     /// <summary>0.6 to 2.</summary>

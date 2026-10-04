@@ -37,6 +37,7 @@ internal static class SavedDataValidation
         Require(settings.DefaultLeadTimesMinutes is not null && settings.DefaultLeadTimesMinutes.All(m => m is >= 0 and <= 1440));
         Require(float.IsFinite(settings.Volume) && settings.Volume is >= 0 and <= 1 && settings.AlertSound is not null);
         Require(settings.Overlay is not null && Enum.IsDefined(settings.Overlay.Layout));
+        Require(Enum.IsDefined(settings.Overlay.MouseProximity));
         Require(double.IsFinite(settings.Overlay.Scale) && settings.Overlay.Scale is >= 0.6 and <= 2);
         Require(double.IsFinite(settings.Overlay.BackgroundOpacity) && settings.Overlay.BackgroundOpacity is >= 0 and <= 1);
         Require(double.IsFinite(settings.Overlay.TextOpacity) && settings.Overlay.TextOpacity is >= 0.2 and <= 1);

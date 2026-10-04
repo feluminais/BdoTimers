@@ -19,6 +19,12 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 6. [ ] With BDO in borderless and the app in the tray, Ctrl+Shift+F8 pins and unpins the overlay; the panel's switch
    follows. Ctrl+Shift+F9 shows it for 10 s and a second press hides it early. With Always show off, a countdown set
    to Overlay 2 min before still pops it up.
+   In Overlay settings, check Mouse proximity Off / Fade / Hide. Close the panel and approach each overlay edge:
+   Fade dims the entire overlay, Hide disappears, and moving away restores it without flicker. Clicks still reach BDO.
+   Repeat with List, Card and Bar, changed size, negative-position monitors and different display scales. Leave the
+   pointer nearby until a hotkey show or pop-up expires: moving away must not bring the expired overlay back.
+   Open the panel while proximity-hidden: the preview returns immediately and remains draggable in either mode.
+   Restart: the chosen mode persists. Off keeps the normal appearance even with the pointer over the overlay.
 7. [ ] Right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip restores it.
 8. [ ] Bosses, under the table → click a boss tile → panel: set Alerts to Off → the tile says "Alerts off", the boss dims
    in the grid and leaves the strip.

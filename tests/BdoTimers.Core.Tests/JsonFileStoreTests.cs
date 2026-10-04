@@ -84,6 +84,8 @@ public class JsonFileStoreTests
 
     [Theory]
     [InlineData("{\"overlay\":null}")]
+    [InlineData("{\"overlay\":{\"mouseProximity\":99}}")]
+    [InlineData("{\"overlay\":{\"mouseProximity\":\"Unknown\"}}")]
     [InlineData("{\"dailyTodoReset\":null}")]
     [InlineData("{\"defaultLeadTimesMinutes\":null}")]
     public void Invalid_settings_are_preserved_and_replaced_with_defaults(string content)

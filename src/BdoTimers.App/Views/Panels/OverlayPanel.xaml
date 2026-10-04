@@ -94,6 +94,11 @@
                         </DockPanel>
                     </Border>
 
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Mouse proximity">
+                        <controls:CycleSelector ItemsSource="{Binding MouseProximityChoices}" SelectedItem="{Binding MouseProximity}"
+                                                ValueWidth="60" AutomationProperties.Name="Mouse proximity"
+                                                ToolTip="Fade or hide when the mouse approaches" />
+                    </HeaderedContentControl>
                     <TextBlock Text="Look" Style="{StaticResource SectionText}" />
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Layout">
                         <controls:CycleSelector ItemsSource="{Binding Layouts}" SelectedItem="{Binding Layout}" ValueWidth="60"

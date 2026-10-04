@@ -24,6 +24,12 @@ static partial class NativeMethods
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    internal struct Point
+    {
+        public int X, Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
     internal struct MonitorInfo
     {
         public int Size;
@@ -43,6 +49,13 @@ static partial class NativeMethods
 
     [LibraryImport("user32.dll")]
     public static partial uint GetDpiForSystem();
+
+    [LibraryImport("user32.dll")]
+    public static partial uint GetDpiForWindow(IntPtr hWnd);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorPos(out Point point);
 
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW")]
     public static partial int GetWindowLong(IntPtr hWnd, int nIndex);

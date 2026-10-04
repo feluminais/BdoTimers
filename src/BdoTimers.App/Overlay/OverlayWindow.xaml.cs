@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 
 namespace BdoTimers.App.Overlay;
@@ -11,18 +13,33 @@ public partial class OverlayWindow : Window
     bool _clickThrough = true;
     HwndSource? _source;
     bool _screenCheckPending;
+    readonly DispatcherTimer _mouseCheck = new(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(75) };
+    readonly Func<IntPtr, (WindowRect Bounds, double X, double Y)?> _readPointer;
+    OverlayMouseProximity _mouseProximity;
+    OverlayMouseAvoidance _mouseAvoidance;
+    double _targetOpacity = 1;
+    bool _mouseErrorLogged;
 
-    public OverlayWindow(OverlayViewModel model)
+    public OverlayWindow(OverlayViewModel model) : this(model, ReadPointer) { }
+
+    internal OverlayWindow(OverlayViewModel model, Func<IntPtr, (WindowRect Bounds, double X, double Y)?> readPointer)
     {
+        _readPointer = readPointer;
         InitializeComponent();
         DataContext = Model = model;
+        _mouseCheck.Tick += OnMouseCheck;
+        IsVisibleChanged += (_, _) => UpdateMouseTracking();
         SourceInitialized += (_, _) =>
         {
             ApplyStyles();
             _source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
             _source?.AddHook(ScreenMessages);
         };
-        SizeChanged += (_, _) => KeepOnScreen();
+        SizeChanged += (_, _) =>
+        {
+            KeepOnScreen();
+            if (_mouseCheck.IsEnabled) CheckMouse();
+        };
         DpiChanged += (_, _) => QueueScreenCheck();
         MouseLeftButtonDown += (_, e) =>
         {
@@ -56,6 +73,8 @@ public partial class OverlayWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        _mouseCheck.Stop();
+        _mouseCheck.Tick -= OnMouseCheck;
         _source?.RemoveHook(ScreenMessages);
         _source = null;
         base.OnClosed(e);
@@ -109,6 +128,77 @@ public partial class OverlayWindow : Window
     {
         _clickThrough = enabled;
         ApplyStyles();
+        UpdateMouseTracking();
+    }
+
+    public void SetMouseProximity(OverlayMouseProximity mode)
+    {
+        _mouseProximity = mode;
+        UpdateMouseTracking();
+    }
+
+    void UpdateMouseTracking()
+    {
+        if (IsVisible && _clickThrough && _mouseProximity is OverlayMouseProximity.Fade or OverlayMouseProximity.Hide)
+        {
+            CheckMouse();
+            _mouseCheck.Start();
+        }
+        else
+        {
+            _mouseCheck.Stop();
+            _mouseAvoidance = new();
+            SetProximityOpacity(1, immediate: true);
+        }
+    }
+
+    void OnMouseCheck(object? sender, EventArgs e) => CheckMouse();
+
+    void CheckMouse()
+    {
+        try
+        {
+            var sample = _readPointer(new WindowInteropHelper(this).Handle);
+            // Cursor reads can fail on a locked desktop. Restore rather than leave an invisible overlay stuck.
+            _mouseAvoidance = sample is { } p ? _mouseAvoidance.Update(_mouseProximity, p.Bounds, p.X, p.Y) : new();
+            SetProximityOpacity(_mouseAvoidance.Opacity(_mouseProximity));
+            _mouseErrorLogged = false;
+        }
+        catch (Exception ex)
+        {
+            _mouseAvoidance = new();
+            SetProximityOpacity(1, immediate: true);
+            if (!_mouseErrorLogged) Log.Error("Overlay mouse proximity failed", ex);
+            _mouseErrorLogged = true;
+        }
+    }
+
+    void SetProximityOpacity(double target, bool immediate = false)
+    {
+        if (immediate)
+        {
+            BeginAnimation(OpacityProperty, null);
+            Opacity = _targetOpacity = target;
+            return;
+        }
+        if (_targetOpacity == target) return;
+        var from = Opacity;
+        Opacity = _targetOpacity = target;
+        BeginAnimation(OpacityProperty, new DoubleAnimation(from, target, TimeSpan.FromMilliseconds(150))
+        {
+            FillBehavior = FillBehavior.Stop,
+        });
+    }
+
+    static (WindowRect Bounds, double X, double Y)? ReadPointer(IntPtr handle)
+    {
+        if (handle == IntPtr.Zero || !NativeMethods.GetWindowRect(handle, out var rect)
+            || !NativeMethods.GetCursorPos(out var point)) return null;
+        // Both native readings use screen pixels. Convert together so the margins stay consistent across DPI changes.
+        var dpi = NativeMethods.GetDpiForWindow(handle);
+        var scale = dpi == 0 ? 1 : dpi / 96.0;
+        return (new WindowRect(rect.Left / scale, rect.Top / scale,
+            (rect.Right - rect.Left) / scale, (rect.Bottom - rect.Top) / scale), point.X / scale, point.Y / scale);
     }
 
     void ApplyStyles()

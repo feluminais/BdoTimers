@@ -34,6 +34,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
 
     public IReadOnlyList<Choice> SecondsChoices { get; } = new[] { 5, 10, 15, 30, 60 }.Select(s => new Choice($"{s} s", s)).ToList();
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
+    public IReadOnlyList<Choice> MouseProximityChoices { get; } = Enum.GetValues<OverlayMouseProximity>().Select(m => new Choice(m.ToString(), m)).ToList();
     public IReadOnlyList<Choice> GuildBossChoices { get; }
     public IReadOnlyList<Swatch> Swatches { get; }
     public bool HasPicture => Picture is not null;
@@ -85,6 +86,11 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         get => Layouts.First(c => (OverlayLayout)c.Value! == Current.Layout);
         set => Modify(o => o with { Layout = (OverlayLayout)value.Value! });
     }
+    public Choice MouseProximity
+    {
+        get => MouseProximityChoices.FirstOrDefault(c => (OverlayMouseProximity)c.Value! == Current.MouseProximity) ?? MouseProximityChoices[0];
+        set => Modify(o => o with { MouseProximity = (OverlayMouseProximity)value.Value! });
+    }
     public double Scale { get => Current.Scale; set => Modify(o => o with { Scale = Math.Round(value, 2) }); }
     public bool Outline { get => Current.ShowOutline; set => Modify(o => o with { ShowOutline = value }); }
     public bool ShowClock { get => Current.ShowClock; set => Modify(o => o with { ShowClock = value }); }
@@ -130,6 +136,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         if (previous.ShowSeconds != next.ShowSeconds) OnPropertyChanged(nameof(ShowSeconds));
         if (previous.GuildBosses != next.GuildBosses) OnPropertyChanged(nameof(GuildBosses));
         if (previous.Layout != next.Layout) OnPropertyChanged(nameof(Layout));
+        if (previous.MouseProximity != next.MouseProximity) OnPropertyChanged(nameof(MouseProximity));
         if (previous.Scale != next.Scale) OnPropertyChanged(nameof(Scale));
         if (previous.ShowOutline != next.ShowOutline) OnPropertyChanged(nameof(Outline));
         if (previous.ShowClock != next.ShowClock) OnPropertyChanged(nameof(ShowClock));
