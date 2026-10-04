@@ -91,10 +91,65 @@ public sealed class RepeatTimerTests
                     using var stream = File.Create(capture);
                     encoder.Save(stream);
                 }
+                var finish = PanelFocusScope.Descendants(view).OfType<Button>().Single(b => Equals(b.Content, "Done") && b.DataContext == panel);
+                Assert.True(finish.IsEnabled);
+                panel.Slots.Rows[1].TimeText = "bad";
+                WpfTest.Drain();
+                Assert.False(finish.IsEnabled);
                 panel.Slots.Rows[1].TimeText = "16:00";
+                WpfTest.Drain();
+                Assert.True(finish.IsEnabled);
                 Assert.Equal(new TimeOnly(16, 0), services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.Slots[1].Time);
             }
             finally { window.Close(); panel.OnClosed(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void Removing_an_event_boss_flushes_its_pending_name_before_undo() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.BossEdits." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var boss = services.Timers.AddBoss();
+            var name = new TextBox();
+            var panel = new BossPanelViewModel(services, new PanelHost(() => PanelEdits.Complete(name)), boss);
+            name.SetBinding(TextBox.TextProperty, new System.Windows.Data.Binding(nameof(panel.Name))
+            {
+                Source = panel, Mode = System.Windows.Data.BindingMode.TwoWay,
+                UpdateSourceTrigger = System.Windows.Data.UpdateSourceTrigger.PropertyChanged, Delay = 300,
+            });
+            name.Text = "Event boss";
+            Assert.Equal(boss.Name, panel.Name);
+            panel.Remove.AskCommand.Execute(null);
+            panel.Remove.ConfirmCommand.Execute(null);
+            services.Undo.UndoCommand.Execute(null);
+            Assert.Equal("Event boss", services.Timers.Current.Timers.Single(t => t.Id == boss.Id).Name);
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void Boss_grid_refreshes_when_an_event_boss_date_limit_changes() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.BossDates." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var boss = services.Timers.AddBoss();
+            services.Timers.Modify(boss.Id, t => t with
+            {
+                Scheduled = new ScheduledSpec { TimeZoneId = "UTC", Slots = [new(DayOfWeek.Thursday, new(20, 0))] },
+            });
+            var now = new DateTimeOffset(2026, 10, 7, 12, 0, 0, TimeSpan.Zero);
+            var board = new BossesViewModel(services, new PanelHost());
+            board.Refresh(now);
+            Assert.Contains(board.Rows.SelectMany(r => r.Cells).SelectMany(c => c.Entries), e => e.Name == boss.Name);
+            services.Timers.SetWeeklyDateRange(boss.Id, null, new DateOnly(2026, 10, 7));
+            board.Refresh(now);
+            Assert.DoesNotContain(board.Rows.SelectMany(r => r.Cells).SelectMany(c => c.Entries), e => e.Name == boss.Name);
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
@@ -130,10 +185,11 @@ public sealed class RepeatTimerTests
     });
 
     sealed class FixedClock : IClock { public DateTimeOffset UtcNow => DateTimeOffset.UtcNow; }
-    sealed class PanelHost : IPanelHost
+    sealed class PanelHost(Action? complete = null) : IPanelHost
     {
         public void OpenPanel(object panel) { }
         public void ClosePanel() { }
         public bool IsOpen(object panel) => true;
+        public void CompletePanelEdits() => complete?.Invoke();
     }
 }

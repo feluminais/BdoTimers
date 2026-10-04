@@ -23,6 +23,7 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
     [ObservableProperty, NotifyPropertyChangedFor(nameof(CanFinish))] private bool _nameInvalid;
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images;
     [ObservableProperty] private bool _hasPicture;
+    [ObservableProperty] private string? _pictureError;
     [ObservableProperty] private string _startDateText = "";
     [ObservableProperty] private string _endDateText = "";
     [ObservableProperty] private bool _startDateInvalid;
@@ -104,11 +105,17 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
     [RelayCommand]
     void ChoosePicture()
     {
-        if (_services.ChoosePicture() is { } file) ReplacePicture(file);
+        var (file, error) = _services.ChoosePicture();
+        PictureError = error;
+        if (file is not null) ReplacePicture(file);
     }
 
     [RelayCommand]
-    void RemovePicture() => ReplacePicture(null);
+    void RemovePicture()
+    {
+        PictureError = null;
+        ReplacePicture(null);
+    }
 
     void ReplacePicture(string? file)
     {
@@ -121,6 +128,7 @@ public sealed partial class BossPanelViewModel : ObservableObject, IPanel
 
     void RemoveBoss()
     {
+        _host.CompletePanelEdits();
         _services.Undo.DeleteBoss(_id);
         _host.ClosePanel();
     }

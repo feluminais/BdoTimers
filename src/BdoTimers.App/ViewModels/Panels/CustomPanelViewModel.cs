@@ -73,7 +73,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
     public bool IsStopwatch { get; }
     public bool IsWeekly { get; }
     public bool HasWeekAnchor => int.TryParse(EveryWeeksText, out var weeks) && weeks > 1;
-    public bool IsWarOfTheRoses => Timer.Preset == Presets.WarOfTheRoses;
+    public bool IsWarOfTheRoses { get; }
     public string ResetTimesLabel => $"Reset to {_services.Region.ShortLabel} times";
     public Confirmation ResetTimes { get; }
     public string WeeklyHeading => Timer.Preset == Presets.GuildBosses ? "Weekly time" : "Weekly times";
@@ -105,6 +105,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         _alertsOn = timer.Enabled;
         IsCountdown = timer.Kind == TimerKind.Countdown;
         IsWeekly = timer.Kind == TimerKind.Scheduled;
+        IsWarOfTheRoses = timer.Preset == Presets.WarOfTheRoses;
         IsOneTime = timer.Kind == TimerKind.OneTime;
         IsFarm = timer.Preset == Presets.Farm && IsCountdown;
         IsHorseTemplate = timer.Preset == Presets.HorseRegistration;
@@ -137,9 +138,18 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IPanel
         }
         Alerts = new AlertRowsViewModel(services, timer);
         Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
-        if (Slots is not null) Slots.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
     }
+
+    partial void OnSlotsChanged(SlotListViewModel? oldValue, SlotListViewModel? newValue)
+    {
+        if (oldValue is not null) oldValue.PropertyChanged -= OnSlotsValidityChanged;
+        if (newValue is not null) newValue.PropertyChanged += OnSlotsValidityChanged;
+        OnPropertyChanged(nameof(CanFinish));
+    }
+
+    void OnSlotsValidityChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) =>
+        OnPropertyChanged(nameof(CanFinish));
 
     partial void OnNameChanged(string value)
     {

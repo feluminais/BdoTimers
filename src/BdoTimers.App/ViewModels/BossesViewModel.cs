@@ -104,6 +104,7 @@ public sealed partial class BossesViewModel : ObservableObject
         _gridData = data;
         return _gridContent = string.Join('\n', bosses
             .Select(b => $"{b.Id}|{b.Name}|{b.Enabled}|{b.Alerts.OverridesDefaults}|{b.Scheduled!.TimeZoneId}|"
+                + $"{b.Scheduled.StartDate}|{b.Scheduled.EndDate}|{b.Scheduled.EveryWeeks}|{b.Scheduled.WeekAnchor}|"
                 + string.Join(",", b.Scheduled.Slots.Select(s => $"{s.Day} {s.Time.Ticks}")))
             .Concat(data.Muted.Where(m => ids.Contains(m.TimerId)).Select(m => $"{m.TimerId}@{m.OccurrenceUtc.UtcTicks}")));
     }
