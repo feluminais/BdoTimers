@@ -1,5 +1,6 @@
 # Backlog (post-v1)
 
+- **Calendar** - a screen with every boss spawn, timer, event and reset by month; see [the plan](docs/calendar-plan.md).
 - **Session tracker** - stopwatch + log of farming sessions: spot, duration, notes, silver earned, screenshot uploads
   (stored under the app's Data\sessions\). History view with totals.
 - **Farm on the overlay follows its Alerts switch** - hide Farm's overlay row while its alerts are Off, even with the
