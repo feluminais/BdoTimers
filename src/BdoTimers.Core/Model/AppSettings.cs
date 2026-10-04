@@ -28,4 +28,5 @@ public sealed record AppSettings
     public WindowPlacement? Window { get; init; }
     public TodoSchedule DailyTodoReset { get; init; } = new();
     public TodoSchedule WeeklyTodoReset { get; init; } = new();
+    public CalendarSettings Calendar { get; init; } = new();
 }

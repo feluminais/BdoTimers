@@ -23,6 +23,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     public BossesViewModel Bosses { get; }
     public CustomViewModel Custom { get; }
     public TodoViewModel Todo { get; }
+    public CalendarViewModel Calendar { get; }
     public UndoService Undo => _services.Undo;
 
     public MainViewModel(AppServices services)
@@ -31,6 +32,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
         Bosses = new BossesViewModel(services, this);
         Custom = new CustomViewModel(services, this);
         Todo = new TodoViewModel(services, this);
+        Calendar = new CalendarViewModel(services, this);
         RefreshPaused(services.Clock.UtcNow);
         services.Updates.Changed += UpdatesChanged;
         RefreshUpdate();
@@ -83,6 +85,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
         Bosses.Refresh(now);
         Custom.Refresh(now);
         Todo.UpdateResetLabels();
+        Calendar.Refresh(now);
         RefreshPaused(now);
     }
 

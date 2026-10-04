@@ -7,6 +7,7 @@ with alerts that reach you in game.
 - **Timers**: Farm growth (through overgrowth to 200%), Fishing stopwatch, Horse registration (up to ten 10-minute
   waits), Guild bosses and Guild war, plus your own countdowns, weekly timers and one-time events
 - **To-do**: daily and weekly checklists with child rows that clear at the game's reset
+- **Calendar**: a month of boss spawns, your timers and events and the to-do resets, with each day's full list
 - **Alerts**: sound, urgent Windows notification (gets through gaming Do Not Disturb), a spoken alert in an offline
   voice (Kokoro) and an in-game overlay you can pin, call up with a hotkey or have pop up before guild bosses
 - Optional start with Windows, minimized to the tray; local backup and restore
@@ -48,6 +49,8 @@ No. BDO Timers never opens the game's process, reads its memory, injects anythin
 - Bosses → Add boss adds your own boss, such as an event boss, with its spawn times in server time and optional start
   and end dates. Any boss can be removed from its panel; Settings → Bosses → Reset bosses brings back the timetable's
   bosses and times and keeps the ones you added.
+- Calendar: a day cell lists your own timers and events and counts its boss spawns; click it for every item. Click an
+  item to edit it, right-click a boss or weekly timer to skip that one, and use New event for a one-time event that day.
 - When a release changes spawn times, Settings → Bosses lets you review the changes before they apply.
 - Settings → Data exports or restores a backup ZIP of your timers, lists, settings, sounds and pictures.
 - Settings → About → Check for updates. Release builds also check once a day at startup and show a green icon in the

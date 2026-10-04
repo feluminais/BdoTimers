@@ -50,6 +50,7 @@ internal static class SavedDataValidation
         FileName(settings.Overlay.BackgroundImage);
         Schedule(settings.DailyTodoReset);
         Schedule(settings.WeeklyTodoReset);
+        Require(settings.Calendar is not null);
     }
 
     static void Timers(AppData timers)

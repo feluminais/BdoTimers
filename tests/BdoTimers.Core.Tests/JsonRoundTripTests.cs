@@ -107,6 +107,7 @@ public class JsonRoundTripTests
         Window = new WindowPlacement(10, 20, 960, 720),
         DailyTodoReset = new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5, Minute = 30, LocalTime = true },
         WeeklyTodoReset = new TodoSchedule { Day = DayOfWeek.Friday, Hour = 12, Minute = 15, LocalTime = true },
+        Calendar = new CalendarSettings { ShowBosses = false, ShowTimers = false, ShowEvents = false, ShowResets = false },
     };
 
     static readonly TodoData Todos = new()

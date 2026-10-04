@@ -40,6 +40,8 @@
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
                     <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" Content="To-do"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <RadioButton x:Name="CalendarTab" Style="{StaticResource TabButton}" Content="Calendar"
+                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
@@ -85,6 +87,8 @@
                                   Visibility="{Binding IsChecked, ElementName=CustomTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:TodoView DataContext="{Binding Todo}"
                                 Visibility="{Binding IsChecked, ElementName=TodoTab, Converter={StaticResource BoolToVisibility}}" />
+                <views:CalendarView DataContext="{Binding Calendar}"
+                                    Visibility="{Binding IsChecked, ElementName=CalendarTab, Converter={StaticResource BoolToVisibility}}" />
                </Grid>
                </Grid>
               </ScrollViewer>
