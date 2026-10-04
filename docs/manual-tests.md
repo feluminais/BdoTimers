@@ -284,3 +284,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     leaves the draft open for retry. Start a countdown by hotkey while its editor is open, edit its duration and Save:
     its end follows the new duration without restarting it. On a fresh install, default boss and preset lines play
     from the bundled files. Saved custom lines still work after more than 30 days without use.
+
+74. [ ] Time fields (Guild bosses, One-time event, Settings → To-do): type 9 and a space: it reads 09: with the caret after
+    the colon, and 3 then gives 09:3. Type 9 and press Enter: it reads 09:00, is saved and the panel closes.
+    Type 134, 13 40 or 13.40 and click another field: 13:40; 14 reads 14:00, 24 and 2 4 read 02:40.
+    Type 97 and press Enter: it stays red and is not saved. Discard a completed time edit: the saved time stays.

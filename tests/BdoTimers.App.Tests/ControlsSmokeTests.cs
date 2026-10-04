@@ -94,6 +94,40 @@ public sealed class ControlsSmokeTests
     }
 
     [Fact]
+    public void Time_field_completes_the_time_on_Enter_and_on_leaving_past_the_binding_delay()
+    {
+        WpfTest.Run(() =>
+        {
+            var model = new DateModel();
+            var box = new TextBox();
+            Ui.SetTimeEntry(box, true);
+            box.SetBinding(TextBox.TextProperty, new Binding(nameof(DateModel.Text))
+                { Source = model, UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged, Delay = 300 });
+            var window = new Window { Content = box, Width = 200, Height = 80, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                box.Text = "9 ";
+                Assert.Equal("09:", box.Text);
+                Assert.Equal(3, box.CaretIndex);
+                box.Text = "134";
+                Assert.Equal("13:4", box.Text);
+                Key(box, window, System.Windows.Input.Key.Enter, Keyboard.PreviewKeyDownEvent);
+                Assert.Equal("13:40", box.Text);
+                Assert.Equal("13:40", model.Text);
+                box.Text = "9";
+                box.RaiseEvent(new KeyboardFocusChangedEventArgs(Keyboard.PrimaryDevice, 0, box, null)
+                    { RoutedEvent = Keyboard.LostKeyboardFocusEvent });
+                Assert.Equal("09:00", model.Text);
+                box.Text = "25:00";
+                Key(box, window, System.Windows.Input.Key.Enter, Keyboard.PreviewKeyDownEvent);
+                Assert.Equal("25:00", box.Text);
+            }
+            finally { window.Close(); }
+        });
+    }
+
+    [Fact]
     public void Calendar_popup_keeps_arrow_navigation_open_and_Enter_confirms()
     {
         WpfTest.Run(() =>
