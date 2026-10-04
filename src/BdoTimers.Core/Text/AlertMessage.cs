@@ -7,11 +7,13 @@ public sealed record AlertMessage(string Title, string Body, string Speech)
 {
     public static AlertMessage Build(AlertEvent alert)
     {
-        var names = alert.Timers.Select(t => t.Name).ToList();
+        var names = alert.Timers.Select(t => OccurrenceSource.NameAt(t, alert.OccurrenceUtc)).ToList();
+        // A pause reads better than "dot" between a timer and its time's label.
+        var spoken = alert.Timers.Select(t => OccurrenceSource.NameAt(t, alert.OccurrenceUtc, ", ")).ToList();
         // A shared spawn speaks once, with the phrasing of the first timer that has voice on.
         var tts = (alert.Timers.FirstOrDefault(t => t.Alerts.Tts.Enabled) ?? alert.Timers[0]).Alerts.Tts;
         var isNow = alert.MinutesLeft <= 0;
-        var speech = Fill(isNow ? tts.NowTemplate : tts.Template, JoinNames(names), alert.MinutesLeft);
+        var speech = Fill(isNow ? tts.NowTemplate : tts.Template, JoinNames(spoken), alert.MinutesLeft);
         var local = alert.OccurrenceUtc.ToLocalTime();
         var body = isNow ? $"Now ({local:HH:mm})" : $"In {alert.MinutesLeft} min, at {local:HH:mm}";
         return new AlertMessage(string.Join(" · ", names), body, speech);

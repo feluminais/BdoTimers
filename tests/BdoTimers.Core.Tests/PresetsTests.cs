@@ -13,7 +13,7 @@ public class PresetsTests
         var own = new TimerDef { Name = "Buff", Kind = TimerKind.Countdown, Countdown = new CountdownSpec() };
         var data = Presets.Ensure(new AppData { Timers = [own] });
 
-        Assert.Equal(["Farm", "Fishing", "Guild bosses", "Guild war", "Buff"], data.Timers.Select(t => t.Name));
+        Assert.Equal(["Farm", "Fishing", "Guild bosses", "Guild war", "War of the Roses", "Buff"], data.Timers.Select(t => t.Name));
         var farm = data.Timers[0];
         Assert.Equal(TimerKind.Countdown, farm.Kind);
         Assert.Equal(TimeSpan.FromHours(22), farm.Countdown!.Duration);
@@ -44,11 +44,11 @@ public class PresetsTests
 
         var upgraded = Presets.Ensure(new AppData { Timers = [own, .. old] });
 
-        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.GuildBosses, Presets.GuildWar, null],
+        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.GuildBosses, Presets.GuildWar, Presets.WarOfTheRoses, null],
             upgraded.Timers.Select(t => t.Preset));
         Assert.Same(old[0], upgraded.Timers[0]);
         Assert.Same(old[1], upgraded.Timers[1]);
-        Assert.Same(own, upgraded.Timers[4]);
+        Assert.Same(own, upgraded.Timers[5]);
         Assert.Same(upgraded, Presets.Ensure(upgraded));
     }
 

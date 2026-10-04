@@ -12,10 +12,15 @@
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE711;" FontSize="10" ToolTip="Remove"
                                     Command="{Binding DataContext.RemoveCommand, ElementName=Root}" CommandParameter="{Binding}" />
-                            <controls:CycleSelector ItemsSource="{Binding Days}" SelectedItem="{Binding Day}" ValueWidth="96" />
+                            <controls:CycleSelector DockPanel.Dock="Left" ItemsSource="{Binding Days}" SelectedItem="{Binding Day}" ValueWidth="96" />
                             <TextBox Text="{Binding TimeText, UpdateSourceTrigger=PropertyChanged}" Width="64" Margin="18,0,0,0"
-                                     HorizontalAlignment="Left" VerticalAlignment="Center" controls:Ui.HasError="{Binding Invalid}"
+                                     DockPanel.Dock="Left" VerticalAlignment="Center" controls:Ui.HasError="{Binding Invalid}"
                                      ToolTip="24-hour time, e.g. 21:15" />
+                            <!-- Shown after the timer's name in alerts and lists: "War of the Roses · Battle" -->
+                            <TextBox Text="{Binding LabelText, UpdateSourceTrigger=PropertyChanged, Delay=300}" Margin="14,0,10,0"
+                                     VerticalAlignment="Center" ToolTip="Name of this time, such as Battle; optional"
+                                     AutomationProperties.Name="Label"
+                                     Visibility="{Binding DataContext.HasLabels, ElementName=Root, Converter={StaticResource BoolToVisibility}}" />
                         </DockPanel>
                     </Border>
                 </DataTemplate>

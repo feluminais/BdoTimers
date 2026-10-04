@@ -13,6 +13,10 @@ public static class Presets
     public const string HorseRegistrationRun = "horse-registration-run";
     public const string GuildBosses = "guild-bosses";
     public const string GuildWar = "guild-war";
+    public const string WarOfTheRoses = "war-of-the-roses";
+
+    /// <summary>A War of the Roses Sunday in both regions; it runs every other week from there.</summary>
+    public static readonly DateOnly WarOfTheRosesWeek = new(2026, 9, 20);
 
     /// <summary>Default temperature estimate; offline time and crop care can delay the harvest.</summary>
     public static readonly TimeSpan CropGrowth = TimeSpan.FromHours(22);
@@ -20,8 +24,9 @@ public static class Presets
     /// <summary>From the game's notice that a horse was registered on the Horse Market until the horse goes on sale.</summary>
     public static readonly TimeSpan HorseMarketWait = TimeSpan.FromMinutes(10);
 
-    /// <summary>The presets that can't be deleted; <see cref="Ensure"/> adds them back.</summary>
-    public static IReadOnlyList<TimerDef> Create() =>
+    /// <summary>The presets that can't be deleted; <see cref="Ensure"/> adds them back. War of the Roses follows
+    /// <paramref name="regionId"/>'s server times.</summary>
+    public static IReadOnlyList<TimerDef> Create(string regionId = BossRegions.Europe) =>
     [
         new TimerDef
         {
@@ -51,7 +56,33 @@ public static class Presets
             Preset = GuildWar,
             Scheduled = new ScheduledSpec { TimeZoneId = TimeZoneInfo.Local.Id },
         },
+        new TimerDef
+        {
+            Name = "War of the Roses",
+            Kind = TimerKind.Scheduled,
+            Preset = WarOfTheRoses,
+            Scheduled = WarOfTheRosesSchedule(regionId),
+        },
     ];
+
+    /// <summary>The region's War of the Roses: its applications deadline and battle, every other Sunday.</summary>
+    public static ScheduledSpec WarOfTheRosesSchedule(string regionId)
+    {
+        var region = BossRegions.Find(regionId);
+        return new ScheduledSpec
+        {
+            TimeZoneId = region.TimeZoneId, Slots = region.WarOfTheRoses, EveryWeeks = 2, WeekAnchor = WarOfTheRosesWeek,
+        };
+    }
+
+    /// <summary>Whether <paramref name="spec"/> is still <paramref name="regionId"/>'s War of the Roses as bundled.</summary>
+    public static bool IsDefaultWarOfTheRoses(ScheduledSpec? spec, string regionId)
+    {
+        var bundled = WarOfTheRosesSchedule(regionId);
+        return spec is not null && spec.TimeZoneId == bundled.TimeZoneId && spec.EveryWeeks == bundled.EveryWeeks
+            && spec.WeekAnchor == bundled.WeekAnchor && spec.StartDate is null && spec.EndDate is null
+            && spec.Slots.ToHashSet().SetEquals(bundled.Slots);
+    }
 
     /// <summary>
     /// Can be deleted like the user's own timers, so only new data starts with it (<see cref="SeedService.NewData"/>);
@@ -83,7 +114,7 @@ public static class Presets
     /// <summary>Adds any preset that can't be deleted and the data lacks, ahead of the other timers.</summary>
     public static AppData Ensure(AppData data)
     {
-        var missing = Create().Where(p => data.Timers.All(t => t.Preset != p.Preset)).ToList();
+        var missing = Create(data.SelectedBossRegion).Where(p => data.Timers.All(t => t.Preset != p.Preset)).ToList();
         return missing.Count == 0 ? data : data with { Timers = missing.Concat(data.Timers).OrderBy(t => Rank(t.Preset)).ToList() };
     }
 
@@ -101,7 +132,8 @@ public static class Presets
         HorseRegistration or HorseRegistrationRun => 2,
         GuildBosses => 3,
         GuildWar => 4,
-        _ => 5,
+        WarOfTheRoses => 5,
+        _ => 6,
     };
 
     /// <summary>Guild presets may be unset; other weekly timers keep a time.</summary>

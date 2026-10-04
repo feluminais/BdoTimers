@@ -4,10 +4,38 @@ namespace BdoTimers.Core.Scheduling;
 
 public static class ScheduleMath
 {
+    public const int MaxEveryWeeks = 52;
+
     public static void ValidateDateRange(DateOnly? start, DateOnly? end)
     {
         if (start is { } first && end is { } last && last < first)
             throw new ArgumentException("End date must be on or after start date.");
+    }
+
+    public static void ValidateEveryWeeks(int everyWeeks)
+    {
+        if (everyWeeks is < 1 or > MaxEveryWeeks)
+            throw new ArgumentException($"Repeat every 1 to {MaxEveryWeeks} weeks.");
+    }
+
+    /// <summary>The Monday of <paramref name="date"/>'s week.</summary>
+    public static DateOnly WeekStart(DateOnly date) => date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
+
+    /// <summary>Whether the schedule runs in <paramref name="date"/>'s week.</summary>
+    public static bool RunsInWeekOf(ScheduledSpec spec, DateOnly date)
+    {
+        if (spec.EveryWeeks <= 1) return true;
+        var anchor = WeekStart(spec.WeekAnchor ?? spec.StartDate ?? new DateOnly(2001, 1, 1));
+        var weeks = (WeekStart(date).DayNumber - anchor.DayNumber) / 7;
+        return (weeks % spec.EveryWeeks + spec.EveryWeeks) % spec.EveryWeeks == 0;
+    }
+
+    /// <summary>The slot that <paramref name="occurrenceUtc"/> is an occurrence of, if any.</summary>
+    public static Slot? SlotAt(ScheduledSpec spec, DateTimeOffset occurrenceUtc)
+    {
+        var local = TimeZoneInfo.ConvertTime(occurrenceUtc, TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId));
+        var time = TimeOnly.FromDateTime(local.DateTime);
+        return spec.Slots.Where(s => s.Day == local.DayOfWeek && s.Time == time).Cast<Slot?>().FirstOrDefault();
     }
 
     public static bool IsExpired(ScheduledSpec spec, DateTimeOffset now) =>
@@ -52,6 +80,7 @@ public static class ScheduleMath
         // Slots come from an editable file; a day outside DayOfWeek would never match and loop forever.
         if (!spec.Slots.Any(s => Enum.IsDefined(s.Day))) yield break;
         ValidateDateRange(spec.StartDate, spec.EndDate);
+        ValidateEveryWeeks(spec.EveryWeeks);
 
         var tz = TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId);
         // Start a day early: a late slot on the previous local day that falls in a spring-forward gap
@@ -63,6 +92,14 @@ public static class ScheduleMath
         for (var day = first; day <= last;)
         {
             var date = day;
+            if (!RunsInWeekOf(spec, date))
+            {
+                // Straight to the next Monday: nothing in this week counts.
+                var monday = WeekStart(date).AddDays(7);
+                if (monday > last || monday < day) yield break;
+                day = monday;
+                continue;
+            }
             var occurrences = spec.Slots
                 .Where(s => s.Day == date.DayOfWeek)
                 .Select(s => LocalToUtc(date.ToDateTime(s.Time), tz))

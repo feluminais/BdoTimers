@@ -35,10 +35,10 @@ public class SeedServiceTests
     {
         var data = SeedService.NewData(Seed);
 
-        Assert.Equal(["Farm", "Fishing", "Horse registration", "Guild bosses", "Guild war", "Kzarka", "Nouver"], data.Timers.Select(t => t.Name));
-        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.HorseRegistration, Presets.GuildBosses, Presets.GuildWar, null, null],
+        Assert.Equal(["Farm", "Fishing", "Horse registration", "Guild bosses", "Guild war", "War of the Roses", "Kzarka", "Nouver"], data.Timers.Select(t => t.Name));
+        Assert.Equal([Presets.Farm, Presets.Fishing, Presets.HorseRegistration, Presets.GuildBosses, Presets.GuildWar, Presets.WarOfTheRoses, null, null],
             data.Timers.Select(t => t.Preset));
-        Assert.All(data.Timers.Skip(5), t => Assert.True(t.IsBuiltIn));
+        Assert.All(data.Timers.Skip(6), t => Assert.True(t.IsBuiltIn));
         Assert.Equal(DataMigrations.Current, data.DataVersion);
         Assert.Same(data, Presets.Ensure(DataMigrations.Apply(data)));
     }
