@@ -47,7 +47,9 @@ after the app has been closed.
 
 ## Alerts and overlay
 
-![Compact overlay showing the next boss spawn, Farm growth, Fishing and a custom countdown](docs/images/overlay.png)
+| Card layout | List layout |
+| --- | --- |
+| ![Card overlay with boss artwork, spawn countdowns, clocks and a horse registration timer](docs/images/overlay-card.png) | ![List overlay with boss spawn countdowns, clocks and a horse registration timer](docs/images/overlay-list.png) |
 
 Sound, Windows notifications, offline speech and overlay pop-ups for boss spawns and timed events.
 Windows notifications need priority access to appear during Do Not Disturb.
