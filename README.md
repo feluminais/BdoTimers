@@ -66,8 +66,10 @@ Windows window; the app does not read game memory, inject code or send keyboard 
 
 ## Install
 
-Installers will be published on [Releases](https://github.com/feluminais/BdoTimers/releases). No release is published
-yet; [build from source](CONTRIBUTING.md) to try the app.
+Download the latest **BdoTimers-Setup-<version>.exe** from
+[Releases](https://github.com/feluminais/BdoTimers/releases/latest) and run it.
+
+The first release is unsigned, so Windows may show an unknown-publisher or SmartScreen warning.
 
 The installer requires no admin rights and includes the .NET runtime.
 
