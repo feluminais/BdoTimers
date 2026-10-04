@@ -6,6 +6,7 @@
 
 <p align="center">World bosses, life skill timers and checklists for Black Desert Online.</p>
 <p align="center">Windows 10 / 11 &nbsp; · &nbsp; x64 &nbsp; · &nbsp; Europe &amp; North America</p>
+<p align="center">Most of the app is customizable, from timers and alerts to shortcuts and the overlay.</p>
 
 <p align="center">
   <a href="https://github.com/feluminais/BdoTimers/releases"><strong>Releases</strong></a>
@@ -19,52 +20,40 @@
 
 ## Bosses
 
-See the previous, next and following spawn above a weekly timetable in your local time. Switch between EU and NA;
-each region keeps its own alert settings and edited spawn times.
-
-Choose which bosses you hear about, set how early to alert, or skip a single spawn. When an app update changes the
-timetable, review the changes before applying them. [Timetable sources](docs/boss-region-sources.md).
-
-Add event bosses with their own spawn times and date limits, or remove bosses from their panels. Settings can restore
-removed bosses and their bundled spawn times while keeping the bosses you added.
+World boss schedules for EU and NA, shown in your local time with countdowns to upcoming spawns.
+Event bosses can be added alongside the built-in timetable. [Timetable sources](docs/boss-region-sources.md).
 
 ## Timers
 
 ![Timers screen with Farm, Fishing, Horse registration, Guild bosses, War of the Roses and a custom countdown](docs/images/timers.png)
 
-- **Farm:** track estimated crop growth, including overgrowth up to 200%. Set an earlier start time or the current
-  growth percentage if you planted before opening the app.
-- **Fishing:** count how long you've been fishing, with pause and resume.
-- **Horse registration:** start a ten-minute wait when the game announces a registration. Run up to ten at once.
-- **Guild bosses:** set your guild's schedule and have the overlay appear before it starts.
-- **War of the Roses:** application deadline and battle reminders on an editable two-week schedule, with EU/NA times.
+- **Farm:** estimated crop growth, including overgrowth up to 200%.
+- **Fishing:** elapsed fishing time, with pause and resume.
+- **Horse registration:** ten-minute countdowns, with up to ten running at once.
+- **Guild bosses:** reminders for your guild's boss runs.
+- **War of the Roses:** application deadline and battle reminders on a two-week schedule, with EU/NA times.
 
-Add your own countdowns, repeating schedules and one-time events. Schedules can repeat every 1 to 52 weeks, with
-date limits and labels for individual times. Give a countdown a hotkey to start, pause and resume it while playing,
-or control it from the tray menu. Pictures, sounds and spoken alert lines are customizable.
+Custom timers cover countdowns, repeating schedules and one-time events.
 
-Check official notices for War of the Roses battle-week changes or cancellations, then adjust its schedule or turn
-alerts off. **Reset to EU/NA times** restores the selected region's defaults. [Schedule sources](docs/boss-region-sources.md).
+War of the Roses reminders don't automatically track game cancellations or date changes.
+[Schedule sources](docs/boss-region-sources.md).
 
 ## To-do
 
 ![To-do screen with weekly quest groups, daily tasks and completed rows](docs/images/todo.png)
 
-Daily and weekly lists clear at their configured reset times, including resets that passed while the app was closed.
-Start with the included quests and tasks, edit them, or make your own lists. Group tasks into child rows; checking a
-parent checks the group. Completed tasks move to the bottom.
+Daily and weekly checklists for quests and life skills, with grouped tasks and automatic resets that catch up
+after the app has been closed.
 
 ## Alerts and overlay
 
 ![Compact overlay showing the next boss spawn, Farm growth, Fishing and a custom countdown](docs/images/overlay.png)
 
-Alerts can use sound, Windows notifications, offline speech and overlay pop-ups. Choose channels and lead times for
-individual bosses and timed events. Speech uses the bundled Kokoro voice model. Add BDO Timers to Windows priority
-notifications to allow alerts while Do Not Disturb is on.
+Sound, Windows notifications, offline speech and overlay pop-ups for boss spawns and timed events.
+Windows notifications need priority access to appear during Do Not Disturb.
 
-The overlay shows boss spawns and running timers in a List, Card or Bar layout. Choose its size, opacity and sections,
-including local, server and in-game time. Pin it, show it briefly with a hotkey, or let it appear for an alert. It can
-fade or hide when the pointer gets close.
+The overlay shows boss spawns, running timers and local, server or in-game time in List, Card or Bar layouts.
+It can stay pinned, appear briefly for an alert or hotkey, and fade or hide when the pointer gets close.
 
 | Default shortcut | Action |
 | --- | --- |
@@ -72,7 +61,7 @@ fade or hide when the pointer gets close.
 | Ctrl+Shift+F9 | Show the overlay for ten seconds |
 | Ctrl+Shift+F10 | Start a horse registration timer |
 
-Shortcuts can be changed or cleared. **The overlay needs borderless window mode.** It is a separate, click-through
+**The overlay needs borderless window mode.** It is a separate, click-through
 Windows window; the app does not read game memory, inject code or send keyboard or mouse input to BDO.
 
 ## Install
@@ -80,31 +69,16 @@ Windows window; the app does not read game memory, inject code or send keyboard 
 Installers will be published on [Releases](https://github.com/feluminais/BdoTimers/releases). No release is published
 yet; [build from source](CONTRIBUTING.md) to try the app.
 
-The installer is `BdoTimers-Setup-<version>.exe`. It installs for your user, requires no admin rights and includes the
-.NET runtime. The default folder is `%LocalAppData%\Programs\BdoTimers`; you can choose another writable folder.
+The installer requires no admin rights and includes the .NET runtime.
 
-Enable **Close to tray** to keep timers and alerts running after closing the window. **Start with Windows** launches
-the app in the tray. Both are optional. Updates are offered as a link to the release page.
+Optional tray mode keeps timers and alerts running after closing the window. The app can also start with Windows.
 
 <details>
 <summary>Data, backups and uninstalling</summary>
 
-Timers, lists, settings, sounds, pictures and logs live in `Data` beside the app's executable. **Settings → Data**
-exports or restores a backup ZIP. A restore keeps the previous data folder beside the restored one.
+App data lives in `Data` beside the executable. Backups can be exported and restored in **Settings → Data**.
 
-Run the installer again, or use **Windows Settings → Apps**, to repair or uninstall. Uninstall keeps your data unless
-you clear **Keep my timers, lists and settings**.
-
-For unattended installation, from a folder containing one installer:
-
-```powershell
-$setup = (Get-Item .\BdoTimers-Setup-*.exe).FullName
-& $setup /quiet InstallRoot=D:\Games
-& $setup /quiet /uninstall
-```
-
-`InstallRoot` is the parent folder; the example installs into `D:\Games\BdoTimers`. Silent uninstall keeps data;
-add `DeleteData=1` to remove it.
+Uninstall keeps timers, lists and settings unless you choose to delete them.
 
 </details>
 
