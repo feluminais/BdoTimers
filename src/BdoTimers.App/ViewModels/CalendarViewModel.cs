@@ -191,7 +191,7 @@ public sealed partial class CalendarDayViewModel(Action<DateOnly> select) : Obse
         if (!Lines.SequenceEqual(lines)) Lines = lines;
         More = own.Count > lines.Count ? $"+{own.Count - lines.Count} more" : null;
         var spawns = items.Where(i => i.Kind == CalendarKind.Boss).Select(i => i.AtUtc).Distinct().Count();
-        BossSummary = spawns switch { 0 => null, 1 => "1 boss spawn", _ => $"{spawns} boss spawns" };
+        BossSummary = spawns switch { 0 => null, 1 => "1 spawn", _ => $"{spawns} spawns" };
         AutomationName = day.Date.ToString("dddd d MMMM", CultureInfo.InvariantCulture);
     }
 }

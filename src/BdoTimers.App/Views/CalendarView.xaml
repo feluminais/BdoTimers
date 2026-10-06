@@ -23,19 +23,19 @@
             </Style.Triggers>
         </Style>
 
-        <!-- A day of the month: today is filled, the chosen day gold-outlined, other months' days dimmed -->
+        <!-- A day of the month: a card, today filled, the chosen day gold-outlined, other months' days dimmed -->
         <Style x:Key="DayButton" TargetType="Button">
             <Setter Property="OverridesDefaultStyle" Value="True" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Margin" Value="1" />
             <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
-            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
-                                Padding="6,4" ClipToBounds="True">
+                                CornerRadius="6" Padding="6,4" ClipToBounds="True">
                             <ContentPresenter />
                         </Border>
                     </ControlTemplate>
@@ -52,7 +52,7 @@
                     <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding InMonth}" Value="False">
-                    <Setter Property="Opacity" Value="0.45" />
+                    <Setter Property="Opacity" Value="0.38" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -80,9 +80,12 @@
                     <ItemsControl ItemsSource="{Binding Lines}" Margin="0,2,0,0" Focusable="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:CalendarLine}">
-                                <TextBlock FontSize="11" TextTrimming="CharacterEllipsis" Style="{StaticResource StateText}">
-                                    <Run Text="{Binding Time, Mode=OneWay}" Foreground="{DynamicResource SubtleBrush}" /> <Run Text="{Binding Name, Mode=OneWay}" />
-                                </TextBlock>
+                                <DockPanel ToolTip="{Binding Time}">
+                                    <Ellipse DockPanel.Dock="Left" Width="5" Height="5" Margin="0,0,5,0" VerticalAlignment="Center"
+                                             Fill="{Binding Foreground, ElementName=LineName}" />
+                                    <TextBlock x:Name="LineName" Text="{Binding Name}" FontSize="11" TextTrimming="CharacterEllipsis"
+                                               Style="{StaticResource StateText}" />
+                                </DockPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -128,7 +131,7 @@
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource IconButton}" Content="&#xE76B;" FontSize="11" ToolTip="Previous month"
                             AutomationProperties.Name="Previous month" Command="{Binding PreviousMonthCommand}" />
-                    <TextBlock Text="{Binding Title}" Style="{StaticResource DisplayText}" FontSize="16" Width="150" TextAlignment="Center"
+                    <TextBlock Text="{Binding Title}" Style="{StaticResource DisplayText}" FontSize="20" Width="200" TextAlignment="Center"
                                VerticalAlignment="Center" />
                     <Button Style="{StaticResource IconButton}" Content="&#xE76C;" FontSize="11" ToolTip="Next month"
                             AutomationProperties.Name="Next month" Command="{Binding NextMonthCommand}" />
@@ -166,8 +169,8 @@
 
         <DockPanel Grid.Column="2">
             <DockPanel DockPanel.Dock="Top" Margin="0,4,0,8">
-                <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="New event" VerticalAlignment="Center"
-                        Command="{Binding NewEventCommand}" IsEnabled="{Binding CanAddEvent}" />
+                <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="New event" FontSize="12" Padding="12,4"
+                        VerticalAlignment="Center" Command="{Binding NewEventCommand}" IsEnabled="{Binding CanAddEvent}" />
                 <TextBlock Text="{Binding SelectedTitle}" Style="{StaticResource DisplayText}" FontSize="14" TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center" />
             </DockPanel>
