@@ -246,10 +246,8 @@
                     <TextBlock DockPanel.Dock="Right" Text="{Binding Row.PartialProgress}" FontSize="11" Margin="6,4,0,0"
                                Foreground="{DynamicResource SubtleBrush}" />
                     <Grid>
-                        <Button x:Name="OpenList" Style="{StaticResource TodoOpenButton}" Command="{Binding Row.OpenCommand}"
-                                HorizontalContentAlignment="Left" AutomationProperties.Name="{Binding Row.AutomationName}">
-                            <TextBlock DataContext="{Binding Row}" Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
-                        </Button>
+                        <TextBlock x:Name="PlainName" DataContext="{Binding Row}" Text="{Binding Text}" Style="{StaticResource TodoRowText}"
+                                   Margin="6,4,0,2" />
                         <Button x:Name="OpenTask" Style="{StaticResource TodoOpenButton}" Command="{Binding ToggleExpandedCommand}"
                                 HorizontalContentAlignment="Left" AutomationProperties.Name="{Binding Row.AutomationName}" Visibility="Collapsed">
                             <TextBlock DataContext="{Binding Row}" Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
@@ -262,7 +260,7 @@
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding HasChildren}" Value="True">
                     <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
-                    <Setter TargetName="OpenList" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="PlainName" Property="Visibility" Value="Collapsed" />
                     <Setter TargetName="OpenTask" Property="Visibility" Value="Visible" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsExpanded}" Value="True">
@@ -281,24 +279,24 @@
                               Command="{Binding ToggleCommand}" AutomationProperties.Name="{Binding AutomationName}" />
                     <TextBlock DockPanel.Dock="Right" Text="{Binding PartialProgress}" FontSize="11" Margin="6,4,0,0"
                                Foreground="{DynamicResource SubtleBrush}" />
-                    <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}" HorizontalContentAlignment="Left"
-                            AutomationProperties.Name="{Binding AutomationName}">
-                        <TextBlock Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
-                    </Button>
+                    <TextBlock Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
                 </DockPanel>
                 <ItemsControl ItemsSource="{Binding Children}" Margin="24,0,0,0" Focusable="False" />
             </StackPanel>
         </DataTemplate>
 
-        <!-- A task panel: its heading and how far along it is, what is still open, and the way on to To-do -->
+        <!-- A task panel: its heading, which opens the list, and how far along it is; what is still open, and the way on to To-do -->
         <DataTemplate DataType="{x:Type vm:TaskPanelViewModel}">
             <StackPanel>
-                <DockPanel>
-                    <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource GoodBrush}"
-                               Typography.NumeralAlignment="Tabular" VerticalAlignment="Center"
-                               Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
-                    <TextBlock Text="{Binding Heading}" Style="{StaticResource PanelHeading}" />
-                </DockPanel>
+                <Button Style="{StaticResource NameButton}" HorizontalAlignment="Stretch" Command="{Binding OpenListCommand}"
+                        ToolTip="{Binding HeadingTip}" AutomationProperties.Name="{Binding Heading}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource GoodBrush}"
+                                   Typography.NumeralAlignment="Tabular" VerticalAlignment="Center"
+                                   Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding Heading}" Style="{StaticResource PanelHeading}" />
+                    </DockPanel>
+                </Button>
                 <ProgressBar Style="{StaticResource TodoProgress}" Value="{Binding Fraction, Mode=OneWay}" Margin="0,10,0,6"
                              AutomationProperties.Name="Progress" Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
                 <ItemsControl ItemsSource="{Binding Tasks}" Focusable="False" />

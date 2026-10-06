@@ -324,8 +324,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     opens Timers; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
     six), ticking one removes it and moves the line; Weekly tasks does the same for the weekly lists, a task with
     sub-tasks on one line saying how far along it is (ticking it ticks them all); its name or its arrow opens the
-    sub-tasks under it, each ticked there, and it stays open as they are ticked. The panel is gone while no weekly
-    list is on. Either panel says "+n more ›" when tasks don't fit, and that opens To-do. Below 820 px wide the screen is one
+    sub-tasks under it, each ticked there, and it stays open as they are ticked. A task's text opens nothing; the heading
+    with its count is the button, hover lights it: with one list on it opens that list's editor, with several it opens
+    To-do. The panel is gone while no weekly list is on. Either panel says "+n more ›" when tasks don't fit, and that opens To-do. Below 820 px wide the screen is one
     column: hero, Running, Coming up, Daily tasks, Weekly tasks.
 80. [ ] The top bar's next-boss chip shows on Schedule, Timers and To-do (not on Today) with the next spawn's names and
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs

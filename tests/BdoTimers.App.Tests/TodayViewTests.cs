@@ -1,10 +1,14 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
 using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
+using BdoTimers.Core.Model;
 
 namespace BdoTimers.App.Tests;
 
@@ -12,7 +16,8 @@ public class TodayViewTests
 {
     sealed class Host : IPanelHost
     {
-        public void OpenPanel(object panel) { }
+        public object? Opened;
+        public void OpenPanel(object panel) => Opened = panel;
         public void ClosePanel() { }
         public bool IsOpen(object panel) => true;
     }
@@ -115,7 +120,6 @@ public class TodayViewTests
                 // Closed: the line says how far along it is, and its name and arrow are what opens it.
                 Assert.True(Part(weekly, parent, "Arrow").IsVisible);
                 Assert.True(Part(weekly, parent, "OpenTask").IsVisible);
-                Assert.False(Part(weekly, parent, "OpenList").IsVisible);
                 Assert.All(Sub(weekly, parent), box => Assert.False(box.IsVisible));
 
                 Part(weekly, parent, "Arrow").Command.Execute(null);
@@ -124,6 +128,8 @@ public class TodayViewTests
                 var boxes = Sub(weekly, parent);
                 Assert.Equal(parent.Row.Children.Count, boxes.Length);
                 Assert.All(boxes, box => Assert.True(box.IsVisible));
+                Assert.DoesNotContain(PanelFocusScope.Descendants(weekly).OfType<Button>(),
+                    b => b.IsVisible && parent.Row.Children.Any(child => ReferenceEquals(child, b.DataContext)));
                 Assert.Equal("Hide sub-tasks", Part(weekly, parent, "Arrow").ToolTip);
                 UiCapture.Save(window, "today-weekly-open.png");
 
@@ -146,12 +152,71 @@ public class TodayViewTests
                 Assert.All(Sub(weekly, parent), box => Assert.False(box.IsVisible));
                 Assert.Equal("Show sub-tasks", Part(weekly, parent, "Arrow").ToolTip);
 
-                // A task with no sub-tasks has no arrow, and its name opens the list as before.
+                // A task with no sub-tasks has no arrow, and nothing in its line is a button.
                 var daily = (FrameworkElement)view.FindName("DailyPanel");
                 var plain = today.Daily.Tasks.First(task => !task.HasChildren);
                 Assert.False(Part(daily, plain, "Arrow").IsVisible);
-                Assert.True(Part(daily, plain, "OpenList").IsVisible);
                 Assert.False(Part(daily, plain, "OpenTask").IsVisible);
+                Assert.DoesNotContain(PanelFocusScope.Descendants(daily).OfType<Button>(), b => b.IsVisible && ReferenceEquals(b.DataContext, plain));
+            }
+            finally { window.Close(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void A_task_panel_heading_is_the_button_that_opens_its_list_and_the_text_of_a_task_is_not() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Today." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
+            var host = new Host();
+            var todo = new TodoViewModel(services, host);
+            var shownTodo = 0;
+            var today = new TodayViewModel(services, host, new CustomViewModel(services, host), todo, () => { }, () => shownTodo++, () => { });
+            var view = new TodayView { DataContext = today };
+            var window = new Window { Content = new Border { Padding = new Thickness(22, 18, 22, 20), Child = view }, Width = 960, Height = 900,
+                Left = -10000, Top = -10000, ShowInTaskbar = false, FontSize = 13 };
+            window.SetResourceReference(Control.BackgroundProperty, "BgBrush");
+            window.SetResourceReference(Control.ForegroundProperty, "TextBrush");
+            window.SetResourceReference(Control.FontFamilyProperty, "UiFont");
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                var daily = (FrameworkElement)view.FindName("DailyPanel");
+
+                // The button a click in the middle of an element reaches, if any.
+                ButtonBase? ButtonAt(FrameworkElement element)
+                {
+                    var point = element.TransformToAncestor(view).Transform(new Point(element.ActualWidth / 2, element.ActualHeight / 2));
+                    return VisualTree.FindAncestor<ButtonBase>(VisualTreeHelper.HitTest(view, point)?.VisualHit, view);
+                }
+                Button Heading(string name) => PanelFocusScope.Descendants(view).OfType<Button>().Single(b => AutomationProperties.GetName(b) == name);
+
+                // With one list on, the heading opens it.
+                var heading = Heading("Daily tasks");
+                Assert.Same(heading, ButtonAt(PanelFocusScope.Descendants(daily).OfType<TextBlock>().First(t => t.Text == "Daily tasks")));
+                Assert.Equal("Edit list", heading.ToolTip);
+                heading.Command.Execute(null);
+                Assert.Equal(services.Todos.Current.Lists.Single(l => l.Cadence == TodoCadence.Daily).Name,
+                    Assert.IsType<TodoListPanelViewModel>(host.Opened).Name);
+
+                // The text of a task is only text.
+                var plain = today.Daily.Tasks.First(task => !task.HasChildren);
+                Assert.Null(ButtonAt(PanelFocusScope.Descendants(daily).OfType<TextBlock>().First(t => t.IsVisible && t.Text == plain.Row.Text)));
+
+                // With several lists on there is no one list to open, and the heading goes to To-do.
+                services.Todos.SetEnabled(services.Todos.CreateList(TodoCadence.Weekly, services.Settings.Current), true);
+                WpfTest.Drain();
+                host.Opened = null;
+                heading = Heading("Weekly tasks");
+                Assert.Equal("To-do", heading.ToolTip);
+                heading.Command.Execute(null);
+                Assert.Equal(1, shownTodo);
+                Assert.Null(host.Opened);
             }
             finally { window.Close(); }
         }

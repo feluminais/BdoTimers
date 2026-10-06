@@ -29,7 +29,7 @@ public sealed partial class ListedTask : ObservableObject
 
 /// <summary>
 /// One of Today's task panels, Daily or Weekly: what is still open in the active lists of its cadence, how far along they
-/// are, and a way on to the To-do screen.
+/// are, and a way on to the To-do screen. Its heading opens the list when there is just the one, else the To-do screen.
 /// </summary>
 public sealed partial class TaskPanelViewModel : ObservableObject
 {
@@ -40,6 +40,7 @@ public sealed partial class TaskPanelViewModel : ObservableObject
     readonly TodoCadence _cadence;
     readonly TodoViewModel _todo;
     readonly Action _showTodo;
+    Guid? _onlyList;
 
     public ObservableCollection<ListedTask> Tasks { get; } = [];
     [ObservableProperty] private bool _hasLists;
@@ -47,6 +48,7 @@ public sealed partial class TaskPanelViewModel : ObservableObject
     [ObservableProperty] private double _fraction;
     /// <summary>"+2 more" when open tasks don't fit; "To-do" when no list is on; otherwise nothing. It opens the To-do screen.</summary>
     [ObservableProperty] private string? _footer;
+    [ObservableProperty] private string _headingTip = "To-do";
 
     public TaskPanelViewModel(AppServices services, TodoViewModel todo, Action showTodo, TodoCadence cadence)
     {
@@ -63,11 +65,20 @@ public sealed partial class TaskPanelViewModel : ObservableObject
     [RelayCommand]
     void ShowTodo() => _showTodo();
 
+    [RelayCommand]
+    void OpenList()
+    {
+        if (_onlyList is { } id) _todo.Open(id);
+        else _showTodo();
+    }
+
     void Rebuild()
     {
         var lists = _services.Todos.Current.Lists.Where(l => !l.Deleted && l.Enabled && l.Cadence == _cadence).ToList();
         var (done, total) = Count(lists);
         HasLists = lists.Count > 0;
+        _onlyList = lists.Count == 1 ? lists[0].Id : null;
+        HeadingTip = _onlyList is null ? "To-do" : "Edit list";
         Summary = $"{done}/{total}";
         Fraction = total == 0 ? 0 : (double)done / total;
 
