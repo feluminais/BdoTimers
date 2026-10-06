@@ -97,17 +97,31 @@
             </Grid>
           </Grid>
 
-            <!-- Panel layer: dims the whole window and centres one panel; the panel itself can't be moved -->
-            <Grid x:Name="PanelLayer" Visibility="Collapsed" Opacity="0" WindowChrome.IsHitTestVisibleInChrome="True">
-                <Border Background="{DynamicResource DimBrush}" MouseLeftButtonDown="Dim_MouseLeftButtonDown" />
-                <!-- A tall panel is held to the viewport, so its own list scrolls between its header and Done;
-                     the layer scrolls only when the viewport is shorter than the minimum height. -->
-                <ScrollViewer x:Name="PanelScroller" Margin="16,24" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                              Focusable="False" LayoutTransform="{DynamicResource UiScaleTransform}"
-                              MouseLeftButtonDown="PanelScroller_MouseLeftButtonDown">
-                <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource AccentSoftBrush}" BorderThickness="1"
-                        HorizontalAlignment="Center" VerticalAlignment="Center"
-                        MaxHeight="{Binding ViewportHeight, ElementName=PanelScroller, Converter={StaticResource AtLeast}, ConverterParameter=300}">
+            <!-- Panel layer: a drawer from the right edge, or a centred sheet, over a scrim; the panel can't be moved -->
+            <Grid x:Name="PanelLayer" Visibility="Collapsed" WindowChrome.IsHitTestVisibleInChrome="True"
+                  SizeChanged="PanelLayer_SizeChanged">
+                <Border x:Name="Scrim" Background="{DynamicResource DimBrush}" Opacity="0" MouseLeftButtonDown="Dim_MouseLeftButtonDown" />
+                <!-- Laid out in unscaled units under the UI scale, so MainWindow.xaml.cs caps it to the window. -->
+                <Border x:Name="PanelFrame" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource HairlineStrongBrush}"
+                        LayoutTransform="{DynamicResource UiScaleTransform}">
+                    <Border.RenderTransform><TranslateTransform x:Name="FrameShift" /></Border.RenderTransform>
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Width" Value="440" />
+                            <Setter Property="HorizontalAlignment" Value="Right" />
+                            <Setter Property="VerticalAlignment" Value="Stretch" />
+                            <Setter Property="BorderThickness" Value="1,0,0,0" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding PanelPresentation}" Value="Sheet">
+                                    <Setter Property="Width" Value="760" />
+                                    <Setter Property="Height" Value="560" />
+                                    <Setter Property="HorizontalAlignment" Value="Center" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                    <Setter Property="BorderThickness" Value="1" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
                     <Grid>
                         <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                         <ContentControl x:Name="PanelContent" Focusable="False">
@@ -138,7 +152,6 @@
                         </Border>
                     </Grid>
                 </Border>
-                </ScrollViewer>
             </Grid>
         </Grid>
     </Border>

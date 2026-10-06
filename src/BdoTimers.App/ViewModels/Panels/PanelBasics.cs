@@ -12,10 +12,14 @@ public interface IPanelHost
     void CompletePanelEdits() { }
 }
 
+/// <summary>How a panel shows: a drawer from the right edge, or a centred sheet.</summary>
+public enum PanelPresentation { Drawer, Sheet }
+
 /// <summary>Optional draft validation and cleanup for a modal panel.</summary>
 public interface IPanel
 {
     bool CanFinish => true;
+    PanelPresentation Presentation => PanelPresentation.Drawer;
     void OnClosed() { }
 }
 

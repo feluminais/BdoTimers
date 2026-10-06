@@ -252,6 +252,52 @@ public class DraftPanelTests
 
     static void Capture(Window window, string name) => UiCapture.Save(window, name);
 
+    [Fact]
+    public void Panels_open_as_a_drawer_and_settings_as_a_sheet() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            using var main = new MainViewModel(services);
+            Assert.Equal(PanelPresentation.Drawer, ((IPanel)new DirtyPanel()).Presentation);
+            main.OpenSettingsCommand.Execute(null);
+            Assert.Equal(PanelPresentation.Sheet, main.PanelPresentation);
+            main.ClosePanel();
+            Assert.Equal(PanelPresentation.Sheet, main.PanelPresentation);
+            main.OpenPanel(new QuietPanel());
+            Assert.Equal(PanelPresentation.Drawer, main.PanelPresentation);
+        });
+    });
+
+    [Fact]
+    public void The_drawer_sits_at_the_right_edge_and_the_sheet_in_the_middle() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            using var main = new MainViewModel(services);
+            var window = new MainWindow(main, services) { Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                main.OpenPanel(new QuietPanel());
+                WpfTest.Drain();
+                var frame = (FrameworkElement)window.FindName("PanelFrame");
+                Assert.Equal(HorizontalAlignment.Right, frame.HorizontalAlignment);
+                Assert.Equal(VerticalAlignment.Stretch, frame.VerticalAlignment);
+                main.ClosePanel();
+                WpfTest.Drain();
+                main.OpenSettingsCommand.Execute(null);
+                WpfTest.Drain();
+                Assert.Equal(HorizontalAlignment.Center, frame.HorizontalAlignment);
+                Assert.Equal(VerticalAlignment.Center, frame.VerticalAlignment);
+            }
+            finally
+            {
+                typeof(AppServices).GetField("<IsQuitting>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(services, true);
+                window.Close();
+            }
+        });
+    });
+
     static TimerDef Timer() => new() { Name = "Old title", Kind = TimerKind.Countdown, Countdown = new(), Alerts = new() { Tts = new() { Enabled = false } } };
     static void WithServices(Action<AppServices> test)
     {
@@ -259,6 +305,7 @@ public class DraftPanelTests
         try { using var services = new AppServices(Application.Current, root); test(services); }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     }
+    sealed class QuietPanel : IPanel { }
     sealed class DirtyPanel : IDraftPanel
     {
         public bool HasChanges => true;

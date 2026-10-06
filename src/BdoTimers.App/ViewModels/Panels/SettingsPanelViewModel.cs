@@ -164,6 +164,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     }
 
     public bool CanFinish => !DailyTodoReset.InvalidTime && !WeeklyTodoReset.InvalidTime;
+    public PanelPresentation Presentation => PanelPresentation.Sheet;
 
     public async Task SaveAsync()
     {

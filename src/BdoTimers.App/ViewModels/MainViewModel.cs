@@ -18,6 +18,8 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [ObservableProperty] private bool _askingDiscard;
 
     [ObservableProperty] private object? _panel;
+    /// <summary>How the open panel shows; kept while a panel leaves, so it leaves the way it came.</summary>
+    [ObservableProperty] private PanelPresentation _panelPresentation;
     [ObservableProperty] private bool _isPaused;
     [ObservableProperty] private string _pausedText = "";
     [ObservableProperty]
@@ -92,6 +94,11 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
         Todo.UpdateResetLabels();
         Calendar.Refresh(now);
         RefreshPaused(now);
+    }
+
+    partial void OnPanelChanged(object? value)
+    {
+        if (value is not null) PanelPresentation = (value as IPanel)?.Presentation ?? PanelPresentation.Drawer;
     }
 
     public void OpenPanel(object panel)

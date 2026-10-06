@@ -2,8 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
-             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
-             Width="600">
+             xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels">
     <UserControl.Resources>
         <DataTemplate DataType="{x:Type pvm:TodoEditRowViewModel}">
             <StackPanel Margin="{Binding Indent}">
@@ -85,7 +84,7 @@
                 </StackPanel>
             </StackPanel>
         </DockPanel>
-        <ScrollViewer x:Name="RowsScrollViewer" MaxHeight="475" VerticalScrollBarVisibility="Auto" Focusable="False">
+        <ScrollViewer x:Name="RowsScrollViewer" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Active" Margin="0,0,0,10">
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Enabled}"

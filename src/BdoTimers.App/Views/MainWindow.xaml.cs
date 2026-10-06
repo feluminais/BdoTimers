@@ -10,6 +10,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Shell;
 using System.Windows.Threading;
 using BdoTimers.App.ViewModels;
+using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Storage;
@@ -18,7 +19,9 @@ namespace BdoTimers.App.Views;
 
 public partial class MainWindow : Window
 {
-    static readonly Duration Fade = TimeSpan.FromMilliseconds(120);
+    static readonly Duration Quick = TimeSpan.FromMilliseconds(167), Slide = TimeSpan.FromMilliseconds(250);
+    // Windows' motion curves: fast out and slow in for what enters, the reverse for what leaves.
+    static readonly KeySpline Entering = new(0, 0, 0, 1), Leaving = new(1, 0, 1, 1);
     const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 40;
 
     static readonly DependencyProperty UiScaleProperty = DependencyProperty.Register(nameof(UiScale), typeof(ScaleTransform),
@@ -86,38 +89,75 @@ public partial class MainWindow : Window
         EcoQos.Set(!shown);
     }
 
+    static DoubleAnimationUsingKeyFrames Move(double from, double to, Duration length, KeySpline spline) => new()
+    {
+        KeyFrames =
+        {
+            new DiscreteDoubleKeyFrame(from, KeyTime.FromPercent(0)),
+            new SplineDoubleKeyFrame(to, KeyTime.FromPercent(1), spline),
+        },
+        Duration = length,
+    };
+
     void ShowPanel(object? panel)
     {
+        var animate = SystemParameters.ClientAreaAnimation;
+        var sheet = _vm.PanelPresentation == PanelPresentation.Sheet;
         if (panel is not null)
         {
+            var wasVisible = PanelLayer.Visibility == Visibility.Visible;
             PanelContent.Content = panel;
             PanelContent.ClearValue(IsEnabledProperty);
             PanelLayer.Visibility = Visibility.Visible;
+            PanelLayer.UpdateLayout();
+            ApplyPanelBounds();
             _panelFocus.Open();
-            PanelLayer.BeginAnimation(OpacityProperty, new DoubleAnimation(1, Fade));
+            // A panel that replaces another stays where it is; only a layer that was closed slides or fades in.
+            FrameShift.BeginAnimation(TranslateTransform.XProperty, null);
+            PanelFrame.BeginAnimation(OpacityProperty, null);
+            Scrim.BeginAnimation(OpacityProperty, null);
+            FrameShift.X = 0;
+            PanelFrame.Opacity = 1;
+            Scrim.Opacity = 1;
+            if (wasVisible || !animate) return;
+            Scrim.BeginAnimation(OpacityProperty, Move(0, 1, Quick, Entering));
+            if (sheet) PanelFrame.BeginAnimation(OpacityProperty, Move(0, 1, Quick, Entering));
+            else FrameShift.BeginAnimation(TranslateTransform.XProperty, Move(PanelFrame.ActualWidth * UiScale, 0, Slide, Entering));
             return;
         }
-        // Keep the old content on screen while it fades out.
+        // Keep the old content on screen while it leaves.
         PanelContent.IsEnabled = false;
-        var fadeOut = new DoubleAnimation(0, Fade);
-        fadeOut.Completed += (_, _) =>
+        void Finished()
         {
             if (_vm.Panel is not null) return;
             PanelLayer.Visibility = Visibility.Collapsed;
             PanelContent.Content = null;
             _panelFocus.Close();
-        };
-        PanelLayer.BeginAnimation(OpacityProperty, fadeOut);
+        }
+        if (!animate)
+        {
+            Scrim.Opacity = 0;
+            Finished();
+            return;
+        }
+        var leave = Move(1, 0, Quick, Leaving);
+        leave.Completed += (_, _) => Finished();
+        Scrim.BeginAnimation(OpacityProperty, leave);
+        if (sheet) PanelFrame.BeginAnimation(OpacityProperty, Move(1, 0, Quick, Leaving));
+        else FrameShift.BeginAnimation(TranslateTransform.XProperty, Move(0, PanelFrame.ActualWidth * UiScale, Quick, Leaving));
+    }
+
+    void PanelLayer_SizeChanged(object sender, SizeChangedEventArgs e) => ApplyPanelBounds();
+
+    /// <summary>The frame lays out in unscaled units under the UI scale, so its caps are the window's size over the scale.</summary>
+    void ApplyPanelBounds()
+    {
+        var sheet = _vm.PanelPresentation == PanelPresentation.Sheet;
+        PanelFrame.MaxWidth = Math.Max(300, (PanelLayer.ActualWidth - 48) / UiScale);
+        PanelFrame.MaxHeight = sheet ? Math.Max(160, (PanelLayer.ActualHeight - 48) / UiScale) : double.PositiveInfinity;
     }
 
     void Dim_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _vm.ClosePanel();
-
-    /// <summary>The scroller's content presenter takes hits across its whole area, so most of the dim around the panel
-    /// is under it; a press that lands on the presenter itself is outside the panel.</summary>
-    void PanelScroller_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.OriginalSource is ScrollContentPresenter presenter && presenter.TemplatedParent == PanelScroller) _vm.ClosePanel();
-    }
 
     void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 
@@ -147,6 +187,7 @@ public partial class MainWindow : Window
     /// <summary>The window grows and shrinks with the text, so each screen keeps its layout.</summary>
     void UiScaleChanged(ScaleTransform? previous)
     {
+        ApplyPanelBounds();
         WindowChrome.GetWindowChrome(this).CaptionHeight = BaseCaptionHeight * UiScale;
         if (_source is null || previous is not { ScaleX: > 0 } || WindowState != WindowState.Normal)
         {
