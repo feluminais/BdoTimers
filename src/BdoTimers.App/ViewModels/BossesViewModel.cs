@@ -54,7 +54,21 @@ public sealed partial class BossesViewModel : ObservableObject
         {
             _tooltipMinute = now.Minute;
             foreach (var entry in Rows.SelectMany(r => r.Cells).SelectMany(c => c.Entries)) entry.RefreshTooltip(now);
+            UpdateNowRule(now);
         }
+    }
+
+    /// <summary>The gold rule on today's column sits above the first spawn still to come, or below the last one when none is.</summary>
+    void UpdateNowRule(DateTimeOffset now)
+    {
+        var time = now.LocalDateTime.ToString("HH:mm", CultureInfo.InvariantCulture);
+        var upcoming = Rows.ToList().FindIndex(row => string.CompareOrdinal(row.Time, time) > 0);
+        for (var i = 0; i < Rows.Count; i++)
+            foreach (var cell in Rows[i].Cells.Where(c => c.IsToday))
+            {
+                cell.NowAbove = i == upcoming;
+                cell.NowBelow = upcoming < 0 && i == Rows.Count - 1;
+            }
     }
 
     /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
@@ -176,6 +190,9 @@ public sealed partial class GridCellViewModel(bool isToday, bool isNext, IReadOn
     : ObservableObject
 {
     [ObservableProperty] private bool _isNext = isNext;
+    /// <summary>Today's column only: the gold "now" rule runs along the top or bottom of this cell.</summary>
+    [ObservableProperty] private bool _nowAbove;
+    [ObservableProperty] private bool _nowBelow;
 
     public bool IsToday { get; } = isToday;
     public IReadOnlyList<GridEntryViewModel> Entries { get; } = entries;

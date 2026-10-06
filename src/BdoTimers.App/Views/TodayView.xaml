@@ -250,9 +250,15 @@
                         <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipCommand}" />
                     </ContextMenu>
                 </controls:ClippingBorder.ContextMenu>
+                <!-- The text has the top row, the Previous pill the bottom one, so a narrow hero never overlaps them -->
                 <Grid>
-                    <controls:ArtImage Sources="{Binding Next.Images}" Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}" />
-                    <Rectangle IsHitTestVisible="False">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <controls:ArtImage Grid.RowSpan="2" Sources="{Binding Next.Images}"
+                                       Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}" />
+                    <Rectangle Grid.RowSpan="2" IsHitTestVisible="False">
                         <Rectangle.Fill>
                             <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
                                 <GradientStop Color="#F0000000" Offset="0" />
@@ -286,7 +292,7 @@
                         <Button Style="{StaticResource GhostButton}" Content="Following" Margin="0,12,0,0" HorizontalAlignment="Center"
                                 Command="{Binding OpenFollowingCommand}" />
                     </StackPanel>
-                    <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="18,0,0,14" Padding="10,4" CornerRadius="12"
+                    <Border Grid.Row="1" HorizontalAlignment="Left" Margin="18,0,0,14" Padding="10,4" CornerRadius="12"
                             Background="#9E000000" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
                             Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}">
                         <TextBlock Text="{Binding Previous}" FontSize="11.5" Foreground="{DynamicResource SubtleBrush}" />

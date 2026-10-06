@@ -160,6 +160,33 @@ public sealed class RepeatTimerTests
     });
 
     [Fact]
+    public void The_week_grid_draws_its_now_rule_above_the_next_row_and_below_the_last_when_none_is_left() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Rule." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var board = new BossesViewModel(services, new PanelHost());
+            var day = new DateTimeOffset(new DateTime(2026, 10, 7), TimeZoneInfo.Local.GetUtcOffset(new DateTime(2026, 10, 7)));
+
+            board.Refresh(day.AddMinutes(1));
+            var today = board.Rows.Select(row => row.Cells.Single(cell => cell.IsToday)).ToList();
+            Assert.True(today[0].NowAbove);
+            Assert.Equal(1, today.Count(cell => cell.NowAbove) + today.Count(cell => cell.NowBelow));
+
+            board.Refresh(day.AddHours(23).AddMinutes(59));
+            Assert.True(today[^1].NowBelow);
+            Assert.DoesNotContain(today, cell => cell.NowAbove);
+
+            board.Refresh(day.AddHours(12));
+            var above = today.FindIndex(cell => cell.NowAbove);
+            Assert.True(above > 0 && string.CompareOrdinal(board.Rows[above].Time, "12:00") > 0
+                && string.CompareOrdinal(board.Rows[above - 1].Time, "12:00") <= 0);
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
     public void Timer_tile_identifies_the_next_label_and_empty_schedule() => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
