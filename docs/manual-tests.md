@@ -11,10 +11,10 @@ installer. The WPF tests use actual controls on an STA dispatcher for panel focu
 bindings and automation names. Release packaging and signing: [releasing.md](releasing.md).
 1. [ ] First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
 2. [ ] Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
-3. [ ] Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; hover the tile, press play → alert at 1:00
-   and at 0:00, then it shows Ready again.
+3. [ ] Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; press the round play button on its card → alert
+   at 1:00 and at 0:00, then it shows Ready again.
 4. [ ] Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
-5. [ ] Top bar → Overlay: the overlay shows as a framed preview; drag it, close the panel; restart the app, open the panel:
+5. [ ] Settings → Overlay: the overlay shows as a framed preview; drag it, close the panel; restart the app, open the panel:
    same place. Outside the panel, clicks pass through.
 6. [ ] With BDO in borderless and the app in the tray, Ctrl+Shift+F8 pins and unpins the overlay; the panel's switch
    follows. Ctrl+Shift+F9 shows it for 10 s and a second press hides it early. With Always show off, a countdown set
@@ -26,13 +26,14 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
    Open the panel while proximity-hidden: the preview returns immediately and remains draggable in either mode.
    Restart: the chosen mode persists. Off keeps the normal appearance even with the pointer over the overlay.
 7. [ ] Right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip restores it.
-8. [ ] Bosses, under the table → click a boss tile → panel: set Alerts to Off → the tile says "Alerts off", the boss dims
-   in the grid and leaves the strip.
-9. [ ] Tray → Pause alerts for 1 hour: "Alerts paused" shows in the top bar; no alerts; Resume clears it.
+8. [ ] Bosses → Following → switch a boss off: its row dims and says "Alerts off", the boss dims in the grid and leaves
+   the strip; switch it on again. Click its name: its panel opens.
+9. [ ] Bell (top bar) or tray → Pause alerts for 1 hour: the bell turns amber and "Alerts paused" with Resume shows in the
+   top bar; no alerts; Resume clears it. Pause alerts until resumed: the same, without a time.
 10. [ ] Close window → app quits by default. Enable Settings → Close to tray → close window → stays in tray; launch the exe again → existing window comes to front at the same size and position. Tray → Quit always exits.
 11. [ ] Settings → Start with Windows On, reboot → app starts minimized in the tray. Off → it no longer starts.
 12. [ ] Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
-13. [ ] Timer panel → click the picture (badge "Change picture") → Choose picture…: the tile shows it, fading into black.
+13. [ ] Timer panel → click the picture (badge "Change picture") → Choose picture…: the card shows it, fading into black.
     Choose a file that isn't a picture, here and in Overlay → Picture: "Couldn't add …" shows and the picture stays.
 14. [ ] Boss panel → Sound: stepping plays nothing; ▶ plays the choice. + → pick a WAV or MP3: it's selected and listed in
     Settings → Your sounds. A file that isn't audio shows "Couldn't play …".
@@ -44,10 +45,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 18. [ ] Boss panel → Spawn times opens the list below it; the same header closes it.
 19. [ ] Settings → Bosses → Reset EU/NA boss alert settings → Reset: the selected region's pencils are gone and bosses
     with alerts off are on again; spawn times and the other region's choices stay as saved.
-20. [ ] Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → clock icon → pick a time 2 h ago → Start:
-    it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
-    Farm → clock → a time over 22 h ago: it starts overgrown, shows negative time and growth above 100% on the tile
-    and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. The square
+20. [ ] Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → the clock icon above its
+    round button → pick a time 2 h ago → Start: it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
+    Farm → clock → a time over 22 h ago: it starts overgrown, shows negative time and growth above 100% on the card
+    and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. ⋯ → Stop
     resets a timer.
 21. [ ] Timers: Horse registration is third, 10:00, and its (i) explains when to start. Press Ctrl+Shift+F10 twice: two
     numbered registration tiles appear with independent countdowns, and each press speaks
@@ -55,9 +56,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Start ten at once: the next press adds none and shows the limit notice. Stop one and a new press can start another.
     With horse registrations enabled in Overlay → Sections, the newest two appear with their time left and "+8 more
     running" at ten. Delete the preset, restart, and check that its hotkey no longer starts registrations.
-22. [ ] To-do: Weekly quests and Daily tasks start Off, with grey struck rows. Turn Weekly quests on, tick a Garmoth child;
-    it moves to the bottom of its group and its parent shows partial. Tick the parent; all three children become done and
-    the group moves down. Untick it; the saved order returns. Repeat with Space and check that focus stays on the row.
+22. [ ] To-do: Weekly quests and Daily tasks start Off, one dashed row each. Turn Weekly quests on with its switch: its card
+    appears, with a progress line. Tick a Garmoth child; the line grows, it moves to the bottom of its group and its
+    parent shows partial. Tick the parent; all three children become done and the group moves down.
+    Untick it; the saved order returns. Repeat with Space and check that focus stays on the row.
 23. [ ] To-do: click row text to open the editor. Rename a row, Enter to add, Tab to make a child, Shift+Tab to move it out,
     Backspace on a blank row to remove it, and Alt+arrows or the grip to reorder. Close and reopen; names, order and
     checks survive. Make a new list with +, then close it untouched; it disappears.
@@ -99,17 +101,15 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Settings during a check and confirm the current status returns without a second concurrent request. A controlled HTTP
     fixture/proxy returning 403, 429, 500 or malformed JSON should produce the same concise failure with no immediate retry.
 35. [ ] Start a Release build normally and with `--minimized`: it stays responsive and no Windows update notification appears.
-    When an update is available, open the app: a green update icon appears immediately before Overlay settings. Hover:
-    “Update available, click to open GitHub”. Click: a small centered dialog shows the version, official release URL and
-    “Download the .exe to update.” Cancel, Escape, the close button or clicking outside dismisses it without opening a browser;
-    Open GitHub opens the shown release page and closes the dialog. A manual check finding an update also shows the icon.
-    Up-to-date and failed checks show no icon. Restart within 24 hours, including after an offline failure or manual check:
-    no automatic request. After 24 hours a startup can check again. A Debug build makes no automatic request, and its manual
+    When an update is available, open the app: a green dot sits on the gear (tooltip “Settings · update available”)
+    and on About in Settings, whose page shows Update available, the version and View release; View release opens the
+    shown release page. A manual check finding an update also shows the dots. Up-to-date and failed checks show none.
+    Restart within 24 hours, including after an offline failure or manual check: no automatic request. After 24 hours a startup can check again. A Debug build makes no automatic request, and its manual
     check still works. Verify that no installer or release asset was downloaded by any check.
 36. [ ] Upgrade a copy of existing EU data containing disabled bosses, own alert settings, edited spawn times, skipped
     future spawns and an accepted baseline. EU stays selected, with the same bosses and choices; no new duplicate
     bosses or timetable changes appear. To-do checks, list order and next reset times stay as saved.
-37. [ ] Settings → Bosses → Region → North America: the strip, grid, tiles and pinned/hotkey overlay show NA in local
+37. [ ] Settings → Bosses → Region → North America: the strip, grid, Following list and pinned/hotkey overlay show NA in local
     time. Verify Quint/Muraka at Thursday 14:00 and Saturday 17:00 Pacific, Vell at Wednesday 17:00 and Sunday 14:00.
     EU bosses do not alert or start overlay pop-ups. Custom countdowns and scheduled timers still alert at their own times.
 38. [ ] Edit NA Kzarka's spawn times, alert leads, sound/voice and Alerts state; make different edits to EU Kzarka. Switch
@@ -150,14 +150,14 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     2026-10-25 02:30: the spring occurrence is 01:30 UTC and the autumn occurrence is 00:30 UTC, firing once.
     Check a weekly Pacific Friday 23:30 with the same start/end Friday: its Saturday occurrence in Europe is included.
     Upgrade existing JSON without date fields: countdowns, presets, boss profiles, weekly slots and alerts are retained.
-49. [ ] Keyboard, each panel: open Settings, Overlay, boss, timer, New timer, Update and To-do from a focused control.
+49. [ ] Keyboard, each panel: open Settings, Overlay, Following, boss, timer, New timer and To-do from a focused control.
     Focus moves to a meaningful field/action, Tab and Shift+Tab stay inside, and dimmed screen/caption controls cannot
-    activate. Escape and the close button dismiss; after the 120 ms fade, focus returns to the opener. Change panels
+    activate. Escape and the close button dismiss; after the panel has left, focus returns to the opener. Change panels
     quickly and close during opening; no stale focus or blank modal layer remains. Preserve Ctrl+C/X/V/A/Z, caret
     keys and native selection in text fields; Ctrl+Z outside an editor undoes the last eligible action. Hotkey capture
     retains its own Escape cancel behavior and existing system-wide shortcuts continue to work. Open Overlay and
     Settings with the mouse, close each panel and move the pointer away: their caption buttons keep no bright frame.
-    Repeat with timer tiles, picture actions and to-do checkboxes; Tab still gives a visible keyboard focus cue.
+    Repeat with timer cards, picture actions and to-do checkboxes; Tab still gives a visible keyboard focus cue.
     Open Settings with the mouse, then close it with Escape: no focus frame appears on the Settings button. Typing
     in a mouse-focused search field also leaves focus frames hidden. Tab or keyboard button activation shows them.
     Tab to Timers, then click that same tab and click empty space: the focus frame disappears without changing the
@@ -166,7 +166,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Repeat with names/links at the largest Text size;
     no focus frame crosses a label. Switch away from the app: no lingering keyboard frame remains.
 50. [ ] Narrator: tabs, window caption buttons, panel Close/Done, tile actions, alert toggles, cycle selectors, date
-    fields and Undo announce concise useful names, roles, state and values. Tile actions are reachable without hover;
+    fields and Undo announce concise useful names, roles, state and values. Card actions are reachable without hover (Tab shows them);
     focus remains visible on each action. Change a selector with arrows/Home/End and hear the new value.
 51. [ ] Windows High Contrast: switch on/off while the app and a panel are open; text, icons, borders, selected tabs,
     errors and focus indicators remain visible. Set Windows text size and app Text size to their largest supported
@@ -240,17 +240,17 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     time-zone typing still matches words such as Kyiv. Ctrl+F and keyboard hotkey capture show a focus cue; mouse
     interaction hides it. Setup: a long install root scrolls inside its field while the BdoTimers suffix stays visible,
     and Tab to Launch BDO Timers shows its focus cue.
-65. [ ] Bosses → Add boss: a "New boss" panel opens with its spawn times expanded in server time. Name it, set a time 20
-    minutes ahead and a picture: its tile, the grid, the strip and the pinned overlay show it, and it alerts at its leads.
+65. [ ] Bosses → Following → Add boss: a "New boss" panel opens with its spawn times expanded in server time. Name it, set a time 20
+    minutes ahead and a picture: its Following row, the grid, the strip and the pinned overlay show it, and it alerts at its leads.
     A name another boss of the region has turns the field red and keeps the old name. Set an end date of yesterday: it
-    leaves the grid, strip and tile's next spawn. Switch region: it shows only in the region it was added to.
+    leaves the grid and strip, and its row loses the next spawn. Switch region: it shows only in the region it was added to.
 66. [ ] Open a timetable boss: no Name or date rows, but its picture can be changed and removed. Remove it → Yes: the
-    panel closes, the boss leaves the tile list and grid, and Undo brings it back with its alerts and skipped spawns.
+    panel closes, the boss leaves the Following list and grid, and Undo brings it back with its alerts and skipped spawns.
     Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
     boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.
 67. [ ] Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
     Day cells list own weekly timers, running countdowns, events and the weekly reset, with "+N more" past three, and
-    "N boss spawns"; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
+    "N spawns" for the bosses; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
     time, coloured as in the week grid. Click a boss or timer: its panel opens. Right-click an upcoming boss or weekly
     timer → Skip this one: it is struck through here and in the Bosses grid; Unskip restores it. Turn each filter chip
     off and on; restart and confirm they are kept. New event on a future day opens a one-time event on that date; it
@@ -289,3 +289,15 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     the colon, and 3 then gives 09:3. Type 9 and press Enter: it reads 09:00, is saved and the panel closes.
     Type 134, 13 40 or 13.40 and click another field: 13:40; 14 reads 14:00, 24 and 2 4 read 02:40.
     Type 97 and press Enter: it stays red and is not saved. Discard a completed time edit: the saved time stays.
+75. [ ] Panels: the boss, timer, New timer, Following and to-do list panels open as a drawer from the right over a dimmed
+    window; Esc, the dimmed area and ✕ close it, and the discard question shows inside the drawer. Settings opens as a
+    two-pane sheet: categories on the left, Ctrl+F searches every category, and Overlay in the list opens the Overlay
+    panel. At Text size 150% the drawer and the sheet fit the window; with Windows animation effects off they appear without sliding.
+76. [ ] Timers: each countdown and stopwatch card shows its round Start / Pause at rest, in blue while running. Hovering a
+    card shows Started earlier above it and ⋯ below it; Tab reaches both and shows them. ⋯ → Stop; a weekly card's ⋯
+    and its right-click offer Skip next / Unskip next. A card without a menu has no ⋯. New timer is the button in the
+    header.
+77. [ ] Following: switch a boss off and on; the list is busy while its voice lines are made, and a failed save puts the
+    switch back with a note. The name opens the boss panel; Done closes the list.
+78. [ ] To-do: an Off list is one dashed row with a switch that turns it on; a card's ⋯ (on hover) opens its editor, as the
+    name does; the editor's Active switch turns it off again and the card collapses to the dashed row.
