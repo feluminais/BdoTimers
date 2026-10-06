@@ -63,6 +63,11 @@ public class UiShots
                 main.OpenPanel(new BossPanelViewModel(services, main, boss));
                 WpfTest.Drain();
                 UiCapture.Save(window, "boss-panel.png");
+                main.ClosePanel();
+                WpfTest.Drain();
+                main.OpenPanel(new FollowingPanelViewModel(services, main));
+                WpfTest.Drain();
+                UiCapture.Save(window, "following.png");
             }
             finally
             {

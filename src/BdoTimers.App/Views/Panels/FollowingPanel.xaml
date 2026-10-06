@@ -1,0 +1,76 @@
+<UserControl x:Class="BdoTimers.App.Views.Panels.FollowingPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BdoTimers.App.Controls">
+    <DockPanel>
+        <Grid DockPanel.Dock="Top" Margin="22,18,10,10">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Following" Style="{StaticResource DisplayText}" FontSize="20" VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Summary}" Style="{StaticResource LabelText}" Margin="12,3,0,0" VerticalAlignment="Center" />
+            </StackPanel>
+            <Button Style="{StaticResource PanelCloseButton}" HorizontalAlignment="Right" VerticalAlignment="Top" />
+        </Grid>
+
+        <DockPanel DockPanel.Dock="Bottom" Margin="22,10,22,16">
+            <Button Style="{StaticResource PanelDoneButton}" />
+            <Button Style="{StaticResource LinkButton}" Content="Add boss" HorizontalAlignment="Left" VerticalAlignment="Center"
+                    Command="{Binding AddBossCommand}" />
+        </DockPanel>
+        <StackPanel DockPanel.Dock="Bottom" Margin="22,0">
+            <ProgressBar Height="3" IsIndeterminate="{Binding Saving.IsBusy}"
+                         Visibility="{Binding Saving.IsBusy, Converter={StaticResource BoolToVisibility}}" AutomationProperties.Name="Saving" />
+            <TextBlock Text="{Binding Saving.Error}" Style="{StaticResource ErrorText}"
+                       Visibility="{Binding Saving.Error, Converter={StaticResource NullToCollapsed}}" />
+        </StackPanel>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+            <ItemsControl ItemsSource="{Binding Bosses}" Margin="22,0,22,8">
+                <ItemsControl.Style>
+                    <Style TargetType="ItemsControl">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Saving.IsBusy}" Value="True"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </ItemsControl.Style>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0" Padding="0,8">
+                            <DockPanel>
+                                <ToggleButton DockPanel.Dock="Right" Style="{StaticResource OnOffSwitch}" Width="36" VerticalAlignment="Center"
+                                              IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                              AutomationProperties.Name="{Binding Name, StringFormat='Alerts {0}'}" />
+                                <DockPanel>
+                                    <DockPanel.Style>
+                                        <Style TargetType="DockPanel">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsOn}" Value="False"><Setter Property="Opacity" Value="0.5" /></DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </DockPanel.Style>
+                                    <controls:ClippingBorder DockPanel.Dock="Left" Width="32" Height="32" CornerRadius="16" Margin="0,0,12,0"
+                                                             VerticalAlignment="Center">
+                                        <controls:FocusImage Picture="{Binding Images[0]}" />
+                                    </controls:ClippingBorder>
+                                    <Button controls:Ui.InitialFocus="True" Style="{StaticResource NameButton}" Command="{Binding OpenCommand}"
+                                            HorizontalAlignment="Left" VerticalAlignment="Center" AutomationProperties.Name="{Binding Name}">
+                                        <StackPanel>
+                                            <DockPanel HorizontalAlignment="Left">
+                                                <TextBlock DockPanel.Dock="Right" Text="&#xE70F;" Style="{StaticResource IconText}" FontSize="9"
+                                                           Foreground="{DynamicResource AccentBrush}" Margin="6,0,0,0" VerticalAlignment="Center"
+                                                           ToolTip="Own alert settings"
+                                                           Visibility="{Binding OwnSettings, Converter={StaticResource BoolToVisibility}}" />
+                                                <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="14"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </DockPanel>
+                                            <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" />
+                                        </StackPanel>
+                                    </Button>
+                                </DockPanel>
+                            </DockPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

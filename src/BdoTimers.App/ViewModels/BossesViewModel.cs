@@ -13,7 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>Bosses screen: the previous / next / followed-by strip, this week's spawn grid and a tile per boss.</summary>
+/// <summary>Bosses screen: the previous / next / followed-by strip and this week's spawn grid.</summary>
 public sealed partial class BossesViewModel : ObservableObject
 {
     readonly AppServices _services;
@@ -23,8 +23,6 @@ public sealed partial class BossesViewModel : ObservableObject
     string _gridContent = "";
     DateOnly _gridWeekStart;
     DateOnly _gridToday;
-    /// <summary>The data the tiles last showed; cleared each minute so their next-spawn times move on.</summary>
-    AppData? _tilesData;
     int _tooltipMinute = -1;
 
     public StripTileViewModel Previous { get; } = new("Previous", elapsed: true);
@@ -32,8 +30,6 @@ public sealed partial class BossesViewModel : ObservableObject
     public StripTileViewModel FollowedBy { get; } = new("Followed by", elapsed: false);
     public ObservableCollection<DayHeaderViewModel> Days { get; } = [];
     public ObservableCollection<GridRowViewModel> Rows { get; } = [];
-    /// <summary>Boss tiles followed by this view model itself, which the view renders as the "+ Add boss" tile.</summary>
-    public ObservableCollection<object> Tiles { get; } = [];
 
     public BossesViewModel(AppServices services, IPanelHost host)
     {
@@ -64,35 +60,12 @@ public sealed partial class BossesViewModel : ObservableObject
         {
             _tooltipMinute = now.Minute;
             foreach (var entry in Rows.SelectMany(r => r.Cells).SelectMany(c => c.Entries)) entry.RefreshTooltip(now);
-            _tilesData = null;
-        }
-        if (!ReferenceEquals(data, _tilesData))
-        {
-            _tilesData = data;
-            SyncTiles(data, now);
         }
     }
 
-    static IEnumerable<TimerDef> BuiltInBosses(AppData data) =>
-        data.Timers.Where(t => BossRegions.IsSelected(data, t));
-
-    /// <summary>Keeps each boss's tile, with Morning Light bosses first, and updates it in place; the "+ Add boss" tile stays last.</summary>
-    void SyncTiles(AppData data, DateTimeOffset now)
-    {
-        if (Tiles.Count == 0) Tiles.Add(this);
-        Tiles.Sync(BossOrder.Sort(BuiltInBosses(data)),
-            (item, boss) => item is BossTileViewModel tile && tile.Id == boss.Id,
-            boss => new BossTileViewModel(boss, _services.Art.For(boss), OpenBoss, now),
-            (item, boss) => ((BossTileViewModel)item).Show(boss, _services.Art.For(boss), now), keepLast: 1);
-    }
-
-    /// <summary>Adds a boss to the selected region and opens it to be named and timed.</summary>
+    /// <summary>Which bosses to follow, each with its alerts, and a way to add one.</summary>
     [RelayCommand]
-    void AddBoss()
-    {
-        var boss = _services.Timers.AddBoss();
-        _host.OpenPanel(new BossPanelViewModel(_services, _host, boss));
-    }
+    void OpenFollowing() => _host.OpenPanel(new FollowingPanelViewModel(_services, _host));
 
     /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
     /// and own-settings marks, and their skipped spawns.</summary>

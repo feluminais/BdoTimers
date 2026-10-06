@@ -13,19 +13,19 @@
             <Setter Property="ToolTip" Value="Own alert settings" />
             <Setter Property="Visibility" Value="{Binding OwnSettings, Converter={StaticResource BoolToVisibility}}" />
         </Style>
-        <!-- Strip tile. The ContentControl's Tag "Next" makes it the large, gold-outlined tile. -->
+        <!-- Strip tile. The ContentControl's Tag "Next" makes it the large tile with the gold outline. -->
         <DataTemplate x:Key="StripTile" DataType="{x:Type vm:StripTileViewModel}">
-            <Border BorderThickness="1" Background="{DynamicResource BgBrush}">
-                <Border.Style>
+            <controls:ClippingBorder CornerRadius="8" BorderThickness="1" Background="{DynamicResource CardBrush}">
+                <controls:ClippingBorder.Style>
                     <Style TargetType="Border">
                         <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContentControl}}" Value="Next">
-                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Border.Style>
+                </controls:ClippingBorder.Style>
                 <!-- Text hugs the right edge, in the black the picture fades into; it may reach back only into the faded end -->
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -153,7 +153,7 @@
                                    Visibility="{Binding Skipped, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
                 </Grid>
-            </Border>
+            </controls:ClippingBorder>
         </DataTemplate>
 
         <!-- A boss name in the week grid, coloured by its state -->
@@ -179,58 +179,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-
-        <!-- Boss tile under the table: the whole tile opens the boss panel; the corner gear says so -->
-        <Style x:Key="BossTileButton" TargetType="Button" BasedOn="{StaticResource TileButton}">
-            <Setter Property="Height" Value="52" />
-            <Setter Property="Margin" Value="0,0,8,8" />
-            <Setter Property="ToolTip" Value="Alerts, sound and spawn times" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{DynamicResource BgBrush}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1"
-                                ClipToBounds="True">
-                            <Grid>
-                                <ContentPresenter />
-                                <TextBlock x:Name="Gear" Style="{StaticResource IconText}" Text="&#xE713;" FontSize="11" Opacity="0.55"
-                                           Foreground="{DynamicResource SubtleBrush}" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,6,7,0" />
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Gear" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
-                                <Setter TargetName="Gear" Property="Opacity" Value="1" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <DataTemplate DataType="{x:Type vm:BossTileViewModel}">
-            <Button Style="{StaticResource BossTileButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}">
-                <Grid>
-                    <Grid.Style>
-                        <Style TargetType="Grid">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsOff}" Value="True">
-                                    <Setter Property="Opacity" Value="0.45" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Grid.Style>
-                    <controls:ArtImage Sources="{Binding Images}" Width="96" HorizontalAlignment="Left" />
-                    <!-- Right-aligned in the black; the left margin keeps long names off the picture -->
-                    <StackPanel Margin="80,0,24,0" VerticalAlignment="Center" HorizontalAlignment="Right" TextBlock.TextAlignment="Right">
-                        <DockPanel HorizontalAlignment="Right">
-                            <TextBlock DockPanel.Dock="Left" Style="{StaticResource OwnSettingsMark}" Margin="0,0,5,0" />
-                            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" TextTrimming="CharacterEllipsis" />
-                        </DockPanel>
-                        <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
-                </Grid>
-            </Button>
-        </DataTemplate>
     </UserControl.Resources>
 
     <DockPanel>
@@ -247,8 +195,16 @@
             <ContentControl Grid.Column="4" Content="{Binding FollowedBy}" ContentTemplate="{StaticResource StripTile}" Focusable="False" />
         </Grid>
 
-        <!-- The week table and the Bosses section scroll together under the pinned strip -->
-        <ScrollViewer Margin="0,22,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
+        <Button DockPanel.Dock="Top" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" Margin="0,14,0,0"
+                Command="{Binding OpenFollowingCommand}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE716;" Style="{StaticResource IconText}" FontSize="12" VerticalAlignment="Center" Margin="0,0,7,0" />
+                <TextBlock Text="Following" />
+            </StackPanel>
+        </Button>
+
+        <!-- The week table scrolls under the pinned strip -->
+        <ScrollViewer Margin="0,10,0,0" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel>
                 <DockPanel Margin="0,0,0,6">
                     <FrameworkElement Width="56" DockPanel.Dock="Left" />
@@ -300,7 +256,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate DataType="{x:Type vm:GridCellViewModel}">
-                                                <Border Margin="1,2" Padding="4,5" MinHeight="46" BorderThickness="1">
+                                                <Border Margin="1,2" Padding="4,5" MinHeight="46" BorderThickness="1" CornerRadius="4">
                                                     <Border.Style>
                                                         <Style TargetType="Border">
                                                             <Setter Property="BorderBrush" Value="Transparent" />
@@ -355,31 +311,6 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
                 <Border BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,0,0" />
-
-                <!-- As many columns of 215 px or more as fit; the negative margin absorbs the last tile's gap -->
-                <ItemsControl ItemsSource="{Binding Tiles}" Margin="0,22,-8,0" Focusable="False">
-                    <ItemsControl.Resources>
-                        <!-- The last tile adds a boss -->
-                        <DataTemplate DataType="{x:Type vm:BossesViewModel}">
-                            <Button Style="{StaticResource TileButton}" Height="52" Margin="0,0,8,8" BorderBrush="Transparent"
-                                    Command="{Binding AddBossCommand}" AutomationProperties.Name="Add a boss">
-                                <Grid>
-                                    <Rectangle Stroke="{DynamicResource HairlineStrongBrush}" StrokeThickness="1" StrokeDashArray="4 3" />
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
-                                        <TextBlock Text="Add boss" Style="{StaticResource DisplayText}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
-                                                   Margin="8,0,0,0" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </Grid>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.Resources>
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <UniformGrid Columns="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType=ItemsControl}, Converter={StaticResource WidthToColumns}, ConverterParameter=215}" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                </ItemsControl>
             </StackPanel>
         </ScrollViewer>
     </DockPanel>
