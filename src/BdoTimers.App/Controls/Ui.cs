@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using BdoTimers.Core.Text;
 
 namespace BdoTimers.App.Controls;
@@ -89,6 +90,13 @@ public static class Ui
 
     public static CornerRadius GetCornerRadius(DependencyObject d) => (CornerRadius)d.GetValue(CornerRadiusProperty);
     public static void SetCornerRadius(DependencyObject d, CornerRadius value) => d.SetValue(CornerRadiusProperty, value);
+
+    /// <summary>The colour of a section's tab: its dot, and the line under it while it is chosen.</summary>
+    public static readonly DependencyProperty SectionBrushProperty = DependencyProperty.RegisterAttached(
+        "SectionBrush", typeof(Brush), typeof(Ui), new FrameworkPropertyMetadata(null));
+
+    public static Brush? GetSectionBrush(DependencyObject d) => (Brush?)d.GetValue(SectionBrushProperty);
+    public static void SetSectionBrush(DependencyObject d, Brush? value) => d.SetValue(SectionBrushProperty, value);
 
     /// <summary>Marks a text field as invalid; the theme draws its hairline in the danger colour.</summary>
     public static readonly DependencyProperty HasErrorProperty = DependencyProperty.RegisterAttached(

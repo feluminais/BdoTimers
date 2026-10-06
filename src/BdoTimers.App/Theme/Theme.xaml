@@ -328,6 +328,7 @@
         <Setter Property="Margin" Value="0,1,8,0" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="Opacity" Value="0.9" />
+        <Setter Property="Fill" Value="{Binding (controls:Ui.SectionBrush), RelativeSource={RelativeSource AncestorType=RadioButton}}" />
     </Style>
 
     <!-- The next boss in the top bar: a pill that takes the urgency colour of its clock. -->
@@ -385,7 +386,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{Binding (controls:Ui.SectionBrush), RelativeSource={RelativeSource TemplatedParent}}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">

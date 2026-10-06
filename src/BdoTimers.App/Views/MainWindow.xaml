@@ -40,31 +40,31 @@
                                RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
                         <Rectangle.RenderTransform><RotateTransform Angle="45" /></Rectangle.RenderTransform>
                     </Rectangle>
-                    <RadioButton x:Name="TodayTab" Style="{StaticResource TabButton}" IsChecked="True" Tag="Today"
+                    <RadioButton x:Name="TodayTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource AccentBrush}" IsChecked="True" Tag="Today"
                                  AutomationProperties.Name="Today" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource AccentBrush}" />
+                            <Ellipse Style="{StaticResource TabDot}" />
                             <TextBlock Text="Today" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton x:Name="ScheduleTab" Style="{StaticResource TabButton}" Tag="Schedule"
+                    <RadioButton x:Name="ScheduleTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource AccentTextBrush}" Tag="Schedule"
                                  AutomationProperties.Name="Schedule" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource AccentTextBrush}" />
+                            <Ellipse Style="{StaticResource TabDot}" />
                             <TextBlock Text="Schedule" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" Tag="Timers"
+                    <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource TimersAccentBrush}" Tag="Timers"
                                  AutomationProperties.Name="Timers" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource TimersAccentBrush}" />
+                            <Ellipse Style="{StaticResource TabDot}" />
                             <TextBlock Text="Timers" />
                         </StackPanel>
                     </RadioButton>
-                    <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" Tag="Todo"
+                    <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource GoodBrush}" Tag="Todo"
                                  AutomationProperties.Name="To-do" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
-                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource GoodBrush}" />
+                            <Ellipse Style="{StaticResource TabDot}" />
                             <TextBlock Text="To-do" />
                         </StackPanel>
                     </RadioButton>
