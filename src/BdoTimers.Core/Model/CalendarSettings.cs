@@ -1,6 +1,6 @@
 namespace BdoTimers.Core.Model;
 
-/// <summary>What the Calendar screen shows.</summary>
+/// <summary>What the Schedule's Month shows.</summary>
 public sealed record CalendarSettings
 {
     public bool ShowBosses { get; init; } = true;

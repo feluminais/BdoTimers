@@ -18,7 +18,7 @@ public sealed record CalendarDay(DateOnly Date, bool InMonth, IReadOnlyList<Cale
 /// <summary>Six Monday-first weeks covering a month, in local time.</summary>
 public sealed record CalendarMonth(int Year, int Month, IReadOnlyList<CalendarDay> Days);
 
-/// <summary>Everything the app schedules, for the Calendar screen. States follow the Bosses week grid.</summary>
+/// <summary>Everything the app schedules, for Today and the Schedule's Month. States follow the Week grid.</summary>
 public static class CalendarQuery
 {
     /// <summary>The month of <paramref name="year"/>/<paramref name="month"/> as 42 local days from the Monday on or before

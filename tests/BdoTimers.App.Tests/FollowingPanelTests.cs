@@ -53,21 +53,22 @@ public class FollowingPanelTests
     });
 
     [Fact]
-    public void The_Bosses_screen_opens_the_list_from_a_named_button() => WpfTest.Run(() =>
+    public void The_Schedule_header_opens_the_list_from_a_named_button() => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Follow." + Guid.NewGuid().ToString("N"));
         try
         {
             using var services = new AppServices(Application.Current, path);
             var host = new Host();
-            var bosses = new BossesViewModel(services, host);
-            var view = new BossesView { DataContext = bosses };
+            var schedule = new ScheduleViewModel(new BossesViewModel(services, host), new CalendarViewModel(services, host),
+                () => host.OpenPanel(new FollowingPanelViewModel(services, host)));
+            var view = new ScheduleView { DataContext = schedule };
             var window = new Window { Content = view, Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
             try
             {
                 window.Show();
                 WpfTest.Drain();
-                var button = VisualTree.FindDescendant<Button>(view, b => b.Command == bosses.OpenFollowingCommand)!;
+                var button = VisualTree.FindDescendant<Button>(view, b => b.Command == schedule.OpenFollowingCommand)!;
                 Assert.Equal("Following", new ButtonAutomationPeer(button).GetName());
                 button.Command!.Execute(null);
                 Assert.IsType<FollowingPanelViewModel>(host.Opened);

@@ -8,6 +8,9 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
+/// <summary>The screens of the top bar, in order.</summary>
+public enum MainTab { Today, Schedule, Timers, Todo }
+
 public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDisposable
 {
     readonly AppServices _services;
@@ -24,20 +27,23 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [ObservableProperty] private string _pausedText = "";
     /// <summary>A newer release is available; the gear shows a dot, and Settings → About has the release.</summary>
     [ObservableProperty] private bool _hasUpdate;
+    /// <summary>The window opens on Today.</summary>
+    [ObservableProperty] private MainTab _selectedTab = MainTab.Today;
 
-    public BossesViewModel Bosses { get; }
+    public TodayViewModel Today { get; }
+    public ScheduleViewModel Schedule { get; }
     public CustomViewModel Custom { get; }
     public TodoViewModel Todo { get; }
-    public CalendarViewModel Calendar { get; }
     public UndoService Undo => _services.Undo;
 
     public MainViewModel(AppServices services)
     {
         _services = services;
-        Bosses = new BossesViewModel(services, this);
         Custom = new CustomViewModel(services, this);
         Todo = new TodoViewModel(services, this);
-        Calendar = new CalendarViewModel(services, this);
+        Schedule = new ScheduleViewModel(new BossesViewModel(services, this), new CalendarViewModel(services, this), OpenFollowing);
+        Today = new TodayViewModel(services, this, Custom, Todo, () => SelectedTab = MainTab.Timers, () => SelectedTab = MainTab.Todo,
+            OpenFollowing);
         RefreshPaused(services.Clock.UtcNow);
         services.Updates.Changed += UpdatesChanged;
         RefreshUpdate();
@@ -81,10 +87,11 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
 
     void Tick(DateTimeOffset now)
     {
-        Bosses.Refresh(now);
+        Today.Refresh(now);
+        Schedule.Week.Refresh(now);
+        Schedule.Month.Refresh(now);
         Custom.Refresh(now);
         Todo.UpdateResetLabels();
-        Calendar.Refresh(now);
         RefreshPaused(now);
     }
 
@@ -166,6 +173,13 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
 
     [RelayCommand]
     void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services, this));
+
+    /// <summary>Which bosses to follow, each with its alerts, and a way to add one.</summary>
+    [RelayCommand]
+    void OpenFollowing() => OpenPanel(new FollowingPanelViewModel(_services, this));
+
+    [RelayCommand]
+    void ShowToday() => SelectedTab = MainTab.Today;
 
     /// <summary>Unlike <see cref="OpenPanel"/>, closes the open panel before making the new one: the Overlay panel
     /// starts the overlay preview when it's made, which an open Overlay panel would end on closing.</summary>

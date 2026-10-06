@@ -63,10 +63,20 @@ public partial class MainWindow : Window
         viewModel.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(MainViewModel.Panel)) ShowPanel(viewModel.Panel);
+            if (e.PropertyName == nameof(MainViewModel.SelectedTab))
+            {
+                TabOf(viewModel.SelectedTab).IsChecked = true;
+                UpdateChip();
+            }
             if (e.PropertyName == nameof(MainViewModel.AskingDiscard) && viewModel.AskingDiscard)
                 Dispatcher.BeginInvoke(() => PanelFocusScope.Descendants(PanelLayer).OfType<Button>()
                     .FirstOrDefault(b => Equals(b.Content, "Keep editing"))?.Focus());
         };
+        viewModel.Today.Hero.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(HeroViewModel.HasNext)) UpdateChip();
+        };
+        SizeChanged += (_, _) => UpdateChip();
         StateChanged += (_, _) =>
         {
             // A maximized frameless window overhangs the screen by the resize border.
@@ -158,6 +168,30 @@ public partial class MainWindow : Window
     }
 
     void Dim_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _vm.ClosePanel();
+
+    /// <summary>The tab is the user's pick; a command that shows another screen picks it by setting the view model.</summary>
+    void Tab_Checked(object sender, RoutedEventArgs e)
+    {
+        if (_vm is null) return;
+        _vm.SelectedTab = Enum.Parse<MainTab>((string)((RadioButton)sender).Tag);
+        UpdateChip();
+    }
+
+    RadioButton TabOf(MainTab tab) => tab switch
+    {
+        MainTab.Today => TodayTab,
+        MainTab.Schedule => ScheduleTab,
+        MainTab.Timers => CustomTab,
+        _ => TodoTab,
+    };
+
+    /// <summary>The next boss shows in the top bar on every screen but Today, when the window is wide enough for it.</summary>
+    void UpdateChip()
+    {
+        if (_vm is null) return;
+        var wide = ActualWidth / UiScale >= 760;
+        NextChip.Visibility = wide && _vm.SelectedTab != MainTab.Today && _vm.Today.Hero.HasNext ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     /// <summary>The alerts menu opens under the bell on a click, not only on a right click.</summary>
     void Bell_Click(object sender, RoutedEventArgs e)

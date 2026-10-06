@@ -13,7 +13,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>Bosses screen: the previous / next / followed-by strip and this week's spawn grid.</summary>
+/// <summary>The Schedule screen's Week: this week's boss spawn grid.</summary>
 public sealed partial class BossesViewModel : ObservableObject
 {
     readonly AppServices _services;
@@ -25,9 +25,6 @@ public sealed partial class BossesViewModel : ObservableObject
     DateOnly _gridToday;
     int _tooltipMinute = -1;
 
-    public StripTileViewModel Previous { get; } = new("Previous", elapsed: true);
-    public StripTileViewModel Next { get; } = new("Next", elapsed: false);
-    public StripTileViewModel FollowedBy { get; } = new("Followed by", elapsed: false);
     public ObservableCollection<DayHeaderViewModel> Days { get; } = [];
     public ObservableCollection<GridRowViewModel> Rows { get; } = [];
 
@@ -44,9 +41,6 @@ public sealed partial class BossesViewModel : ObservableObject
     {
         var data = _services.Timers.Current;
         var board = _services.Boards.Get(data, now);
-        Previous.Update(board.Previous, now, _services.Art, OpenBoss);
-        Next.Update(board.Next, now, _services.Art, OpenBoss);
-        FollowedBy.Update(board.FollowedBy, now, _services.Art, OpenBoss);
 
         // The grid only changes with what it shows of the bosses, the next spawn or the local day; a countdown or a horse
         // registration starting leaves it alone.
@@ -62,10 +56,6 @@ public sealed partial class BossesViewModel : ObservableObject
             foreach (var entry in Rows.SelectMany(r => r.Cells).SelectMany(c => c.Entries)) entry.RefreshTooltip(now);
         }
     }
-
-    /// <summary>Which bosses to follow, each with its alerts, and a way to add one.</summary>
-    [RelayCommand]
-    void OpenFollowing() => _host.OpenPanel(new FollowingPanelViewModel(_services, _host));
 
     /// <summary>What the grid draws from <paramref name="data"/>: the built-in bosses' names, spawn times, alerts on or off
     /// and own-settings marks, and their skipped spawns.</summary>
@@ -149,20 +139,17 @@ public sealed partial class BossLink(Guid id, string name, Action<Guid> open, Ar
     void Open() => open(id);
 }
 
+/// <summary>The hero's spawn: the bosses' names and pictures, a label with the time and the clock.</summary>
 public sealed partial class StripTileViewModel(string caption, bool elapsed) : ObservableObject
 {
     string _signature = "";
 
     [ObservableProperty] private bool _hasSpawn;
     [ObservableProperty] private string _label = "";
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasMultipleBosses))]
-    private IReadOnlyList<BossLink> _names = [];
+    [ObservableProperty] private IReadOnlyList<BossLink> _names = [];
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
     [ObservableProperty] private string _clock = "";
     [ObservableProperty] private bool _skipped;
-
-    public bool HasMultipleBosses => Names.Count > 1;
 
     public void Update(SpawnGroup? group, DateTimeOffset now, ArtLibrary art, Action<Guid> open)
     {

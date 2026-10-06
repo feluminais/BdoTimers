@@ -47,7 +47,7 @@ public class TodayViewTests
                 Assert.Equal(today.Hero.Next.Names.Count, buttons.Count);
                 Assert.Contains(PanelFocusScope.Descendants(hero).OfType<TextBlock>(), t => t.IsVisible && t.Text == today.Hero.Next.Clock);
                 Assert.NotEmpty(today.ComingUp.Rows);
-                UiCapture.Save(window, "today.png");
+                UiCapture.Save(window, "today-view.png");
 
                 var side = (FrameworkElement)view.FindName("SideHost");
                 var narrow = (FrameworkElement)view.FindName("NarrowHost");
@@ -60,7 +60,7 @@ public class TodayViewTests
                 Assert.False(side.IsVisible);
                 Assert.True(narrow.IsVisible);
                 Assert.True(((FrameworkElement)view.FindName("NarrowStack")).IsAncestorOf(hero));
-                UiCapture.Save(window, "today-narrow.png");
+                UiCapture.Save(window, "today-view-narrow.png");
 
                 window.Width = 960;
                 WpfTest.Drain();

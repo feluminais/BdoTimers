@@ -321,6 +321,53 @@
         </Style.Triggers>
     </Style>
 
+    <!-- The coloured dot before a tab's name, one colour per section -->
+    <Style x:Key="TabDot" TargetType="Ellipse">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="Margin" Value="0,1,8,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Opacity" Value="0.9" />
+    </Style>
+
+    <!-- The next boss in the top bar: a pill that takes the urgency colour of its clock. -->
+    <Style x:Key="NextChip" TargetType="Button" BasedOn="{StaticResource BareButton}">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="4,0,12,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="controls:Ui.CornerRadius" Value="14" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            </Trigger>
+            <DataTrigger Binding="{Binding Level}" Value="Imminent">
+                <Setter Property="BorderBrush" Value="{DynamicResource AmberBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Level}" Value="Now">
+                <Setter Property="BorderBrush" Value="{DynamicResource EmberBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="NextChipClock" TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
+        <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding Level}" Value="Imminent">
+                <Setter Property="Foreground" Value="{DynamicResource AmberBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Level}" Value="Now">
+                <Setter Property="Foreground" Value="{DynamicResource EmberBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
     <Style x:Key="TabButton" TargetType="RadioButton">
         <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
         <Setter Property="FontWeight" Value="Medium" />
@@ -342,6 +389,34 @@
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- One of a few choices side by side in a rounded track, such as Week | Month. -->
+    <Style x:Key="SegmentButton" TargetType="RadioButton">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Bd" CornerRadius="5" Background="Transparent" Padding="13,4">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RaisedBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>

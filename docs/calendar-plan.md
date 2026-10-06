@@ -1,7 +1,7 @@
 # Calendar screen
 
-The fourth screen beside Bosses, Timers and To-do: everything BDO Timers knows will happen, on a month in local time,
-with the chosen day's full list beside it. It adds no new kind of data: it is a view over what the app already
+The Month of the Schedule screen (beside Today, Timers and To-do): everything BDO Timers knows will happen, on a month
+in local time, with the chosen day's full list beside it. It adds no new kind of data: it is a view over what the app already
 schedules, plus shortcuts into the existing panels.
 
 ## What it shows

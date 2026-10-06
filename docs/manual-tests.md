@@ -9,7 +9,8 @@ Automated checks: `dotnet test tests/BdoTimers.Core.Tests`, `dotnet build src/Bd
 `pwsh scripts/test-windows.ps1`. Windows CI runs these without downloading the speech model or publishing an
 installer. The WPF tests use actual controls on an STA dispatcher for panel focus, keyboard navigation, command
 bindings and automation names. Release packaging and signing: [releasing.md](releasing.md).
-1. [ ] First launch: Bosses screen shows the strip and this week's grid in local time; a "priority notifications" toast appears once.
+1. [ ] First launch: the window opens on Today, with the next spawn, Coming up and the daily tasks in local time; Schedule
+   shows this week's grid; a "priority notifications" toast appears once.
 2. [ ] Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
 3. [ ] Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; press the round play button on its card → alert
    at 1:00 and at 0:00, then it shows Ready again.
@@ -25,9 +26,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
    pointer nearby until a hotkey show or pop-up expires: moving away must not bring the expired overlay back.
    Open the panel while proximity-hidden: the preview returns immediately and remains draggable in either mode.
    Restart: the chosen mode persists. Off keeps the normal appearance even with the pointer over the overlay.
-7. [ ] Right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip restores it.
-8. [ ] Bosses → Following → switch a boss off: its row dims and says "Alerts off", the boss dims in the grid and leaves
-   the strip; switch it on again. Click its name: its panel opens.
+7. [ ] Schedule → Week: right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip
+   restores it. On Today, Skip on the hero (on hover, or right-click) skips every boss of the next spawn at once; the
+   hero shows them struck through and "Skipped", and Unskip brings them back.
+8. [ ] Schedule → Following → switch a boss off: its row dims and says "Alerts off", the boss dims in the grid and leaves
+   Today's hero and Coming up; switch it on again. Click its name: its panel opens.
 9. [ ] Bell (top bar) or tray → Pause alerts for 1 hour: the bell turns amber and "Alerts paused" with Resume shows in the
    top bar; no alerts; Resume clears it. Pause alerts until resumed: the same, without a time.
 10. [ ] Close window → app quits by default. Enable Settings → Close to tray → close window → stays in tray; launch the exe again → existing window comes to front at the same size and position. Tray → Quit always exits.
@@ -109,7 +112,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 36. [ ] Upgrade a copy of existing EU data containing disabled bosses, own alert settings, edited spawn times, skipped
     future spawns and an accepted baseline. EU stays selected, with the same bosses and choices; no new duplicate
     bosses or timetable changes appear. To-do checks, list order and next reset times stay as saved.
-37. [ ] Settings → Bosses → Region → North America: the strip, grid, Following list and pinned/hotkey overlay show NA in local
+37. [ ] Settings → Bosses → Region → North America: Today, the Week grid, the Following list and the pinned/hotkey overlay show NA in local
     time. Verify Quint/Muraka at Thursday 14:00 and Saturday 17:00 Pacific, Vell at Wednesday 17:00 and Sunday 14:00.
     EU bosses do not alert or start overlay pop-ups. Custom countdowns and scheduled timers still alert at their own times.
 38. [ ] Edit NA Kzarka's spawn times, alert leads, sound/voice and Alerts state; make different edits to EU Kzarka. Switch
@@ -202,8 +205,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     spaces, launch-at-finish, running-app upgrade and offline use after installation. Start, timers, to-do and alerts
     work offline; updates fail concisely as in step 34. Local unsigned artifacts must be explicitly built with
     `pwsh scripts/publish.ps1 -AllowUnsigned` and are not a signed release.
-57. [ ] Mouse wheel over the Bosses table, Timers, both To-do lists and each tall panel (Settings, Overlay, boss,
-    timer, to-do list) scrolls that list; the boss strip, list headings and each panel's header and Done stay in place.
+57. [ ] Mouse wheel over the Week grid, Coming up, Timers, both To-do lists and each tall panel (Settings, Overlay,
+    boss, timer, to-do list) scrolls that list; the Schedule header, list headings and each panel's header and Done stay in place.
     Shrink the window to its minimum with the largest Text size: only then does the screen or panel scroll as a whole.
     Clicking anywhere in the dimmed area (beside, above or below a panel, near or far from it) closes it; clicking
     inside the panel, on its scroll bar, or in a list or calendar dropping out past its edge does not.
@@ -240,25 +243,25 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     time-zone typing still matches words such as Kyiv. Ctrl+F and keyboard hotkey capture show a focus cue; mouse
     interaction hides it. Setup: a long install root scrolls inside its field while the BdoTimers suffix stays visible,
     and Tab to Launch BDO Timers shows its focus cue.
-65. [ ] Bosses → Following → Add boss: a "New boss" panel opens with its spawn times expanded in server time. Name it, set a time 20
-    minutes ahead and a picture: its Following row, the grid, the strip and the pinned overlay show it, and it alerts at its leads.
+65. [ ] Schedule → Following → Add boss: a "New boss" panel opens with its spawn times expanded in server time. Name it, set a time 20
+    minutes ahead and a picture: its Following row, the grid, Today and the pinned overlay show it, and it alerts at its leads.
     A name another boss of the region has turns the field red and keeps the old name. Set an end date of yesterday: it
-    leaves the grid and strip, and its row loses the next spawn. Switch region: it shows only in the region it was added to.
+    leaves the grid and Today, and its row loses the next spawn. Switch region: it shows only in the region it was added to.
 66. [ ] Open a timetable boss: no Name or date rows, but its picture can be changed and removed. Remove it → Yes: the
     panel closes, the boss leaves the Following list and grid, and Undo brings it back with its alerts and skipped spawns.
     Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
     boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.
-67. [ ] Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
-    Day cells list own weekly timers, running countdowns, events and the weekly reset, with "+N more" past three, and
-    "N spawns" for the bosses; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
+67. [ ] Schedule → Month: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
+    Day cells list own weekly timers, running countdowns, events and the weekly reset by name (the time is the tooltip),
+    with "+N more" past three, and "N spawns" for the bosses; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
     time, coloured as in the week grid. Click a boss or timer: its panel opens. Right-click an upcoming boss or weekly
-    timer → Skip this one: it is struck through here and in the Bosses grid; Unskip restores it. Turn each filter chip
+    timer → Skip this one: it is struck through here and in the Week grid; Unskip restores it. Turn each filter chip
     off and on; restart and confirm they are kept. New event on a future day opens a one-time event on that date; it
-    is off for past days. Switch boss region: the calendar follows. Around 25 October, Berlin's clock change keeps
+    is off for past days. Switch boss region: the month follows. Around 25 October, Berlin's clock change keeps
     Sunday and Monday spawns on their own days.
 68. [ ] War of the Roses appears once in Timers, with Applications close and Battle in the same panel. EU defaults
     are Sunday 15:05 and 17:00 Berlin; NA defaults are 13:05 and 15:00 Pacific. Repeat is 2, From week of is
-    2026-09-20, and Calendar shows both on 4 and 18 October, neither on 11 October. Opening and closing its panel
+    2026-09-20, and Schedule → Month shows both on 4 and 18 October, neither on 11 October. Opening and closing its panel
     leaves the saved schedule untouched. Switch region: defaults move, edited slots/repeat/date limits stay.
 69. [ ] Edit a War of the Roses time, label, repeat, anchor and date limits; restart and confirm they persist. Reset
     to EU/NA times → No keeps edits; Yes restores the current region's slots, labels, repeat, anchor, date limits and
@@ -269,7 +272,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     corrected; editing another valid field must not clear an existing error. Pick 3 weeks and any Wednesday anchor:
     the whole Monday–Sunday week runs, the next two skip, then it repeats. Repeat 1 hides the anchor. Confirm start
     and end dates still bound the results, and the schedule survives restart and backup/restore.
-71. [ ] Add labels to two times in one timer. The tile says Next <label>, Calendar cells and day rows show
+71. [ ] Add labels to two times in one timer. The tile says Next <label>, Month cells and day rows show
     <timer> · <label>, and the overlay pop-up, notification and speech identify the time that fires. Blank labels
     show the timer's name only. Two different labels at the same day/time are rejected; fixing the duplicate saves
     both. A timer in a DST spring gap retains its label when the occurrence moves forward.
@@ -301,3 +304,14 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     switch back with a note. The name opens the boss panel; Done closes the list.
 78. [ ] To-do: an Off list is one dashed row with a switch that turns it on; a card's ⋯ (on hover) opens its editor, as the
     name does; the editor's Active switch turns it off again and the card collapses to the dashed row.
+79. [ ] Today: the hero counts down to the next spawn, in the text colour, gold within 30 minutes, amber within 10 and ember
+    within 1; "Then" names the following spawn and the alert times, "Previous" the last one. A name opens that boss. Coming
+    up lists the next 24 hours under a gold rule with the time now: bosses a filled dot, timers a ring, resets a small dot;
+    a boss with alerts off is missing, a skipped spawn is struck through, and the times to each update as time passes.
+    Running shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "All timers ›"
+    opens Timers; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
+    six), ticking one removes it and moves the line; "Weekly 1/16 ›" opens To-do. Below 820 px wide the screen is one
+    column: hero, Running, Coming up, Daily tasks.
+80. [ ] The top bar's next-boss chip shows on Schedule, Timers and To-do (not on Today) with the next spawn's names and
+    clock in the same colours as the hero, and a click goes to Today. It is gone when the window is narrower than 760 px
+    and when no boss is followed.

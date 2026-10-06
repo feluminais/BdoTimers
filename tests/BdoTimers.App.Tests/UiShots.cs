@@ -30,7 +30,7 @@ public class UiShots
             {
                 window.Show();
                 main.SetShown(true);
-                foreach (var (tab, name) in new[] { ("BossesTab", "bosses"), ("CustomTab", "timers"), ("TodoTab", "todo"), ("CalendarTab", "calendar") })
+                foreach (var (tab, name) in new[] { ("TodayTab", "today"), ("ScheduleTab", "schedule"), ("CustomTab", "timers"), ("TodoTab", "todo") })
                 {
                     ((RadioButton)window.FindName(tab)).IsChecked = true;
                     WpfTest.Drain();
@@ -46,6 +46,15 @@ public class UiShots
                         WpfTest.Drain();
                     }
                     UiCapture.Save(window, $"{name}.png");
+                    if (name == "schedule")
+                    {
+                        var month = PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "MonthToggle");
+                        month.IsChecked = true;
+                        WpfTest.Drain();
+                        UiCapture.Save(window, "schedule-month.png");
+                        PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
+                        WpfTest.Drain();
+                    }
                 }
                 main.OpenSettingsCommand.Execute(null);
                 WpfTest.Drain();

@@ -47,7 +47,7 @@ public sealed class AppServices : IDisposable
     public BossRegion Region => BossRegions.Find(Timers.Current.SelectedBossRegion);
     public BossSeed Seed => _seeds[Timers.Current.SelectedBossRegion];
     public UiClock UiClock { get; }
-    /// <summary>The boss board shared by the overlay and the Bosses screen.</summary>
+    /// <summary>The boss board shared by the overlay, Today and the Schedule.</summary>
     public BossBoardCache Boards { get; } = new();
     public IClock Clock { get; } = new SystemClock();
     public TtsChannel Tts { get; }

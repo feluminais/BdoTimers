@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels;
 
 /// <summary>
-/// Calendar screen: a month of everything the app schedules, in local time, and the chosen day's list. Month cells show
+/// The Schedule screen's Month: a month of everything the app schedules, in local time, and the chosen day's list. Month cells show
 /// the user's own timers and events with a count of boss spawns; the day list shows every item.
 /// </summary>
 public sealed partial class CalendarViewModel : ObservableObject

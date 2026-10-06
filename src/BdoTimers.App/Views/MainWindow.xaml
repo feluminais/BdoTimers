@@ -40,16 +40,49 @@
                                RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
                         <Rectangle.RenderTransform><RotateTransform Angle="45" /></Rectangle.RenderTransform>
                     </Rectangle>
-                    <RadioButton x:Name="BossesTab" Style="{StaticResource TabButton}" Content="Bosses" IsChecked="True"
-                                 WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" Content="Timers"
-                                 WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" Content="To-do"
-                                 WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <RadioButton x:Name="CalendarTab" Style="{StaticResource TabButton}" Content="Calendar"
-                                 WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <RadioButton x:Name="TodayTab" Style="{StaticResource TabButton}" IsChecked="True" Tag="Today"
+                                 AutomationProperties.Name="Today" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource AccentBrush}" />
+                            <TextBlock Text="Today" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="ScheduleTab" Style="{StaticResource TabButton}" Tag="Schedule"
+                                 AutomationProperties.Name="Schedule" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource AccentTextBrush}" />
+                            <TextBlock Text="Schedule" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" Tag="Timers"
+                                 AutomationProperties.Name="Timers" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource TimersAccentBrush}" />
+                            <TextBlock Text="Timers" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" Tag="Todo"
+                                 AutomationProperties.Name="To-do" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Style="{StaticResource TabDot}" Fill="{DynamicResource GoodBrush}" />
+                            <TextBlock Text="To-do" />
+                        </StackPanel>
+                    </RadioButton>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- The next boss, on every screen but Today; a click goes to Today -->
+                    <Button x:Name="NextChip" Style="{StaticResource NextChip}" Margin="0,0,10,0" Visibility="Collapsed"
+                            DataContext="{Binding Today.Hero}" Command="{Binding DataContext.ShowTodayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            AutomationProperties.Name="Next boss" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <StackPanel Orientation="Horizontal">
+                            <controls:ClippingBorder Width="20" Height="20" CornerRadius="10" Margin="0,0,8,0">
+                                <controls:FocusImage Picture="{Binding Next.Images[0]}" />
+                            </controls:ClippingBorder>
+                            <TextBlock Text="{Binding NamesText}" Style="{StaticResource DisplayText}" FontSize="12" Margin="0,0,10,0"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Next.Clock}" Style="{StaticResource NextChipClock}" />
+                        </StackPanel>
+                    </Button>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
                                 Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="{Binding PausedText}" Foreground="{DynamicResource AmberBrush}" FontSize="12" VerticalAlignment="Center" />
@@ -102,14 +135,14 @@
                <Grid Width="{Binding ViewportWidth, ElementName=ScreenScroller}" Height="{Binding ViewportHeight, ElementName=ScreenScroller}"
                      MinWidth="640" MinHeight="300">
                <Grid Margin="22,18,22,20">
-                <views:BossesView DataContext="{Binding Bosses}"
-                                  Visibility="{Binding IsChecked, ElementName=BossesTab, Converter={StaticResource BoolToVisibility}}" />
+                <views:TodayView DataContext="{Binding Today}"
+                                 Visibility="{Binding IsChecked, ElementName=TodayTab, Converter={StaticResource BoolToVisibility}}" />
+                <views:ScheduleView DataContext="{Binding Schedule}"
+                                    Visibility="{Binding IsChecked, ElementName=ScheduleTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:CustomView DataContext="{Binding Custom}"
                                   Visibility="{Binding IsChecked, ElementName=CustomTab, Converter={StaticResource BoolToVisibility}}" />
                 <views:TodoView DataContext="{Binding Todo}"
                                 Visibility="{Binding IsChecked, ElementName=TodoTab, Converter={StaticResource BoolToVisibility}}" />
-                <views:CalendarView DataContext="{Binding Calendar}"
-                                    Visibility="{Binding IsChecked, ElementName=CalendarTab, Converter={StaticResource BoolToVisibility}}" />
                </Grid>
                </Grid>
               </ScrollViewer>

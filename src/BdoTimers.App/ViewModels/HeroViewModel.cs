@@ -20,6 +20,8 @@ public sealed partial class HeroViewModel(AppServices services, Action<Guid> ope
     /// <summary>"Previous Golden Pig King · Kutum −08:00:02".</summary>
     [ObservableProperty] private string? _previous;
     [ObservableProperty] private string _skipLabel = "Skip";
+    /// <summary>"Muraka · Quint", for the top-bar chip.</summary>
+    [ObservableProperty] private string? _namesText;
 
     public void Update(BossBoardState board, DateTimeOffset now, IReadOnlyList<int> defaultLeads)
     {
@@ -27,6 +29,7 @@ public sealed partial class HeroViewModel(AppServices services, Action<Guid> ope
         HasNext = board.Next is not null;
         Next.Update(board.Next, now, services.Art, openBoss);
         SkipLabel = board.Next is { Skipped: true } ? "Unskip" : "Skip";
+        NamesText = board.Next is { } shown ? Names(shown) : null;
         Level = board.Next is { } next ? Urgency.Of(next.AtUtc - now) : UrgencyLevel.Normal;
         var parts = new List<string>();
         if (board.FollowedBy is { } then) parts.Add($"Then {Names(then)} {DurationFormat.Clock(then.AtUtc - now)}");
