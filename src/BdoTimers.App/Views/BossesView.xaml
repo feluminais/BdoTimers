@@ -196,7 +196,7 @@
         </Grid>
 
         <Button DockPanel.Dock="Top" Style="{StaticResource GhostButton}" HorizontalAlignment="Right" Margin="0,14,0,0"
-                Command="{Binding OpenFollowingCommand}">
+                AutomationProperties.Name="Following" Command="{Binding OpenFollowingCommand}">
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="&#xE716;" Style="{StaticResource IconText}" FontSize="12" VerticalAlignment="Center" Margin="0,0,7,0" />
                 <TextBlock Text="Following" />

@@ -248,7 +248,8 @@
 
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,14">
-            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Command="{Binding NewTimerCommand}">
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" AutomationProperties.Name="New timer"
+                    Command="{Binding NewTimerCommand}">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <TextBlock Text="New timer" />

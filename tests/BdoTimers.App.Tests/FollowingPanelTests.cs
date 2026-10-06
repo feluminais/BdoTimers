@@ -1,6 +1,11 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Controls;
+using BdoTimers.App.Controls;
+using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
+using BdoTimers.App.Views;
 
 namespace BdoTimers.App.Tests;
 
@@ -43,6 +48,31 @@ public class FollowingPanelTests
             WpfTest.Drain();
             Assert.True(services.Timers.Current.Timers.Single(t => t.Id == row.Id).Enabled);
             Assert.NotEqual("Alerts off", row.Detail);
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void The_Bosses_screen_opens_the_list_from_a_named_button() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Follow." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var host = new Host();
+            var bosses = new BossesViewModel(services, host);
+            var view = new BossesView { DataContext = bosses };
+            var window = new Window { Content = view, Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                var button = VisualTree.FindDescendant<Button>(view, b => b.Command == bosses.OpenFollowingCommand)!;
+                Assert.Equal("Following", new ButtonAutomationPeer(button).GetName());
+                button.Command!.Execute(null);
+                Assert.IsType<FollowingPanelViewModel>(host.Opened);
+            }
+            finally { window.Close(); }
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });

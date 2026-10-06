@@ -194,7 +194,8 @@ public sealed class RepeatTimerTests
             {
                 window.Show();
                 WpfTest.Drain();
-                Assert.NotNull(BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == timers.NewTimerCommand));
+                var newTimer = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == timers.NewTimerCommand)!;
+                Assert.Equal("New timer", new ButtonAutomationPeer(newTimer).GetName());
                 foreach (var tile in tiles.Where(t => t.HasControls))
                 {
                     var start = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == tile.StartPauseCommand)!;
