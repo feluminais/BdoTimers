@@ -11,7 +11,7 @@
         FontFamily="{StaticResource UiFont}" FontSize="13" controls:Ui.TrackKeyboardFocus="True">
     <WindowChrome.WindowChrome>
         <!-- GlassFrameThickness 0,0,0,1 keeps the system drop shadow on a frameless window. -->
-        <WindowChrome CaptionHeight="40" ResizeBorderThickness="6" GlassFrameThickness="0,0,0,1"
+        <WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="0,0,0,1"
                       CornerRadius="0" UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
     <Window.Resources>
@@ -33,8 +33,13 @@
             </Grid.RowDefinitions>
 
             <!-- Top bar: the empty area drags the window -->
-            <Grid Margin="22,0,0,0" Height="40" LayoutTransform="{DynamicResource UiScaleTransform}">
+            <Grid Margin="22,0,0,0" Height="44" LayoutTransform="{DynamicResource UiScaleTransform}">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- A gold diamond, the app's mark -->
+                    <Rectangle Width="9" Height="9" Margin="0,0,22,0" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5"
+                               RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
+                        <Rectangle.RenderTransform><RotateTransform Angle="45" /></Rectangle.RenderTransform>
+                    </Rectangle>
                     <RadioButton x:Name="BossesTab" Style="{StaticResource TabButton}" Content="Bosses" IsChecked="True"
                                  WindowChrome.IsHitTestVisibleInChrome="True" />
                     <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" Content="Timers"
@@ -47,20 +52,35 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
                                 Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding PausedText}" Foreground="{DynamicResource AccentTextBrush}" FontSize="12" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding PausedText}" Foreground="{DynamicResource AmberBrush}" FontSize="12" VerticalAlignment="Center" />
                         <Button Style="{StaticResource LinkButton}" Content="Resume" Margin="10,0,0,0" Command="{Binding ResumeCommand}"
                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                     </StackPanel>
-                    <Button Style="{StaticResource CaptionButton}" Content="&#xE895;" FontSize="15" Foreground="{DynamicResource UpdateBrush}"
-                            ToolTip="Update available" AutomationProperties.Name="Update available"
-                            Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}"
-                            Command="{Binding OpenUpdateDetailsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <Button Style="{StaticResource CaptionButton}" Content="&#xE7F4;" FontSize="13" ToolTip="Overlay"
-                            AutomationProperties.Name="Overlay"
-                            Command="{Binding OpenOverlaySettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
-                    <Button Style="{StaticResource CaptionButton}" Content="&#xE713;" FontSize="13" ToolTip="Settings"
-                            AutomationProperties.Name="Settings"
-                            Command="{Binding OpenSettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button x:Name="BellButton" Style="{StaticResource BellButton}" ToolTip="Alerts" AutomationProperties.Name="Alerts"
+                            Click="Bell_Click" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Pause alerts for 1 hour" Command="{Binding PauseHourCommand}" />
+                                <MenuItem Header="Pause alerts until resumed" Command="{Binding PauseUntilResumedCommand}" />
+                                <Separator />
+                                <MenuItem Header="Resume alerts" Command="{Binding ResumeCommand}" />
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                        <Grid>
+                            <TextBlock Text="&#xEA8F;" Style="{StaticResource IconText}" FontSize="14" />
+                            <Line X1="0" Y1="15" X2="15" Y2="0" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                  Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}"
+                                  Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibility}}" />
+                        </Grid>
+                    </Button>
+                    <Grid>
+                        <Button Style="{StaticResource GearButton}" Content="&#xE713;" FontSize="13" ToolTip="Settings"
+                                AutomationProperties.Name="Settings"
+                                Command="{Binding OpenSettingsCommand}" WindowChrome.IsHitTestVisibleInChrome="True" />
+                        <Ellipse Width="7" Height="7" Fill="{DynamicResource UpdateBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                 Margin="0,12,11,0" IsHitTestVisible="False"
+                                 Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
+                    </Grid>
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimize"
                             AutomationProperties.Name="Minimize"
                             Click="Minimize_Click" WindowChrome.IsHitTestVisibleInChrome="True" />

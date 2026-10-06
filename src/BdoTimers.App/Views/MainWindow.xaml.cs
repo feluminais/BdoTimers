@@ -22,7 +22,7 @@ public partial class MainWindow : Window
     static readonly Duration Quick = TimeSpan.FromMilliseconds(167), Slide = TimeSpan.FromMilliseconds(250);
     // Windows' motion curves: fast out and slow in for what enters, the reverse for what leaves.
     static readonly KeySpline Entering = new(0, 0, 0, 1), Leaving = new(1, 0, 1, 1);
-    const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 40;
+    const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 44;
 
     static readonly DependencyProperty UiScaleProperty = DependencyProperty.Register(nameof(UiScale), typeof(ScaleTransform),
         typeof(MainWindow), new PropertyMetadata(null, (d, e) => ((MainWindow)d).UiScaleChanged((ScaleTransform?)e.OldValue)));
@@ -158,6 +158,15 @@ public partial class MainWindow : Window
     }
 
     void Dim_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _vm.ClosePanel();
+
+    /// <summary>The alerts menu opens under the bell on a click, not only on a right click.</summary>
+    void Bell_Click(object sender, RoutedEventArgs e)
+    {
+        if (BellButton.ContextMenu is not { } menu) return;
+        menu.PlacementTarget = BellButton;
+        menu.Placement = PlacementMode.Bottom;
+        menu.IsOpen = true;
+    }
 
     void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
 

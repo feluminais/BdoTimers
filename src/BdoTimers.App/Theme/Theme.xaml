@@ -197,13 +197,31 @@
     <Style x:Key="CaptionButton" TargetType="Button" BasedOn="{StaticResource IconButton}">
         <Setter Property="FontSize" Value="10" />
         <Setter Property="Width" Value="46" />
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Height" Value="44" />
         <Setter Property="controls:Ui.CornerRadius" Value="0" />
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
                 <Setter Property="Foreground" Value="{DynamicResource HoverTextBrush}" />
             </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- The alerts bell: amber while alerts are paused. -->
+    <Style x:Key="BellButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource AmberBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- The settings gear; a green dot beside it says an update is waiting. -->
+    <Style x:Key="GearButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasUpdate}" Value="True">
+                <Setter Property="ToolTip" Value="Settings · update available" />
+            </DataTrigger>
         </Style.Triggers>
     </Style>
 
@@ -291,10 +309,11 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Margin" Value="0,0,26,0" />
+        <Setter Property="Height" Value="44" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,1" Padding="0,4">
+                    <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="0,2,0,0">
                         <ContentPresenter VerticalAlignment="Center" />
                     </Border>
                     <ControlTemplate.Triggers>

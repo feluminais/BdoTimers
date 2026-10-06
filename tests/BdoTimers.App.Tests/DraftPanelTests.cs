@@ -298,6 +298,26 @@ public class DraftPanelTests
         });
     });
 
+    [Fact]
+    public void The_bell_pauses_for_an_hour_or_until_resumed_and_resumes() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            using var main = new MainViewModel(services);
+            Assert.False(main.IsPaused);
+            main.PauseHourCommand.Execute(null);
+            Assert.True(main.IsPaused);
+            Assert.StartsWith("Alerts paused", main.PausedText);
+            Assert.NotEqual("Alerts paused", main.PausedText);
+            main.ResumeCommand.Execute(null);
+            Assert.False(main.IsPaused);
+            Assert.Equal("", main.PausedText);
+            main.PauseUntilResumedCommand.Execute(null);
+            Assert.True(main.IsPaused);
+            Assert.Equal("Alerts paused", main.PausedText);
+        });
+    });
+
     static TimerDef Timer() => new() { Name = "Old title", Kind = TimerKind.Countdown, Countdown = new(), Alerts = new() { Tts = new() { Enabled = false } } };
     static void WithServices(Action<AppServices> test)
     {

@@ -184,7 +184,25 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     }
 
     [RelayCommand]
-    void Resume() => _services.ResumeAlerts();
+    void PauseHour()
+    {
+        _services.PauseAlerts(TimeSpan.FromHours(1));
+        RefreshPaused(_services.Clock.UtcNow);
+    }
+
+    [RelayCommand]
+    void PauseUntilResumed()
+    {
+        _services.PauseAlerts(null);
+        RefreshPaused(_services.Clock.UtcNow);
+    }
+
+    [RelayCommand]
+    void Resume()
+    {
+        _services.ResumeAlerts();
+        RefreshPaused(_services.Clock.UtcNow);
+    }
 
     void RefreshPaused(DateTimeOffset now)
     {
