@@ -34,11 +34,16 @@ public sealed class ThemePreferences : IDisposable
     public static ThemePreferences Initialize(Application application, PersistentState<AppSettings> settings) =>
         new(application, settings);
 
-    static readonly string[] PaletteKeys =
+    /// <summary>Every brush of Tokens.xaml: High Contrast replaces each with a system colour.</summary>
+    internal static readonly string[] PaletteKeys =
     [
-        "BgBrush", "PanelBrush", "HairlineBrush", "HairlineStrongBrush", "HoverFillBrush", "TextBrush",
-        "SubtleBrush", "PastBrush", "AccentBrush", "AccentSoftBrush", "AccentFillBrush", "AccentTextBrush",
-        "DangerBrush", "DangerFillBrush", "DimBrush", "FocusBrush", "HoverTextBrush", "UpdateBrush",
+        "BgBrush", "CardBrush", "PanelBrush", "RaisedBrush", "ControlFillBrush", "HairlineBrush", "HairlineStrongBrush",
+        "HairlineHoverBrush", "HoverFillBrush", "HoverTextBrush", "TextBrush", "SubtleBrush", "PastBrush", "AccentBrush",
+        "AccentSoftBrush", "AccentFillBrush", "AccentTextBrush", "DangerBrush", "DangerFillBrush", "DimBrush", "FocusBrush",
+        "UpdateBrush", "AmberBrush", "EmberBrush", "GoodBrush", "TimersAccentBrush", "BronzeBrush", "OnBronzeBrush",
+        "IndigoCardBrush", "IndigoRaisedBrush", "IndigoLineBrush", "IndigoLineStrongBrush", "IndigoLineHoverBrush",
+        "IndigoHoverFillBrush", "ForestCardBrush", "ForestRaisedBrush", "ForestLineBrush", "ForestLineStrongBrush",
+        "ForestLineHoverBrush", "ForestHoverFillBrush",
     ];
 
     void SystemParametersChanged(object? sender, PropertyChangedEventArgs e) => RefreshSystemPreferences();
@@ -80,10 +85,12 @@ public sealed class ThemePreferences : IDisposable
 
     static Brush ContrastBrush(string key) => key switch
     {
-        "BgBrush" or "PanelBrush" or "DimBrush" => SystemColors.WindowBrush,
-        "HoverFillBrush" or "AccentFillBrush" or "DangerFillBrush" => SystemColors.HighlightBrush,
-        "HoverTextBrush" => SystemColors.HighlightTextBrush,
-        "FocusBrush" or "AccentBrush" or "AccentSoftBrush" => SystemColors.HighlightBrush,
+        "BgBrush" or "PanelBrush" or "DimBrush" or "CardBrush" or "RaisedBrush" or "ControlFillBrush"
+            or "IndigoCardBrush" or "IndigoRaisedBrush" or "ForestCardBrush" or "ForestRaisedBrush" => SystemColors.WindowBrush,
+        "HoverFillBrush" or "AccentFillBrush" or "DangerFillBrush" or "IndigoHoverFillBrush" or "ForestHoverFillBrush"
+            or "BronzeBrush" => SystemColors.HighlightBrush,
+        "HoverTextBrush" or "OnBronzeBrush" => SystemColors.HighlightTextBrush,
+        "FocusBrush" or "AccentBrush" or "AccentSoftBrush" or "TimersAccentBrush" => SystemColors.HighlightBrush,
         _ => SystemColors.WindowTextBrush,
     };
 

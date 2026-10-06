@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Page Include="..\..\src\BdoTimers.App\Theme\Theme.xaml" Link="Theme\Theme.xaml" />
+    <Page Include="..\..\src\BdoTimers.App\Theme\Tokens.xaml" Link="Theme\Tokens.xaml" />
     <Page Include="..\..\src\BdoTimers.App\Controls\ArtImage.xaml" Link="Controls\ArtImage.xaml" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\ArtImage.xaml.cs" Link="Controls\ArtImage.xaml.cs" />
     <Compile Include="..\..\src\BdoTimers.App\Controls\FocusImage.cs" Link="Controls\FocusImage.cs" />

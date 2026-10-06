@@ -2,30 +2,9 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:controls="clr-namespace:BdoTimers.App.Controls">
 
-    <!-- Palette -->
-    <Color x:Key="BgColor">#0B0B0C</Color>
-    <Color x:Key="PanelColor">#101012</Color>
-    <Color x:Key="TextColor">#E8E2D6</Color>
-    <Color x:Key="AccentColor">#B89A5E</Color>
-    <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
-    <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}" />
-    <SolidColorBrush x:Key="HairlineBrush" Color="#24E8E2D6" />
-    <SolidColorBrush x:Key="HairlineStrongBrush" Color="#48E8E2D6" />
-    <SolidColorBrush x:Key="HoverFillBrush" Color="#10E8E2D6" />
-    <SolidColorBrush x:Key="HoverTextBrush" Color="#E8E2D6" />
-    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
-    <SolidColorBrush x:Key="SubtleBrush" Color="#9A9284" />
-    <SolidColorBrush x:Key="PastBrush" Color="#5C574E" />
-    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
-    <SolidColorBrush x:Key="AccentSoftBrush" Color="#99B89A5E" />
-    <SolidColorBrush x:Key="AccentFillBrush" Color="#14B89A5E" />
-    <SolidColorBrush x:Key="AccentTextBrush" Color="#E8C98A" />
-    <SolidColorBrush x:Key="DangerBrush" Color="#EF8A78" />
-    <SolidColorBrush x:Key="DangerFillBrush" Color="#923B30" />
-    <SolidColorBrush x:Key="FocusBrush" Color="#E8C98A" />
-    <SolidColorBrush x:Key="UpdateBrush" Color="#78C99A" />
-    <SolidColorBrush x:Key="DimBrush" Color="#99000000" />
-    <ScaleTransform x:Key="UiScaleTransform" ScaleX="1" ScaleY="1" />
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Tokens.xaml" />
+    </ResourceDictionary.MergedDictionaries>
 
     <!-- Draw outside the hit area so borderless labels retain space around their text. -->
     <Style x:Key="KeyboardFocusVisual" TargetType="Control">
@@ -48,11 +27,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <!-- Palatino Linotype if Cinzel can't load. -->
-    <FontFamily x:Key="DisplayFont">./Fonts/#Cinzel, Palatino Linotype</FontFamily>
-    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
-    <FontFamily x:Key="ClockFont">Segoe UI</FontFamily>
 
     <!-- Text -->
     <Style x:Key="DisplayText" TargetType="TextBlock">

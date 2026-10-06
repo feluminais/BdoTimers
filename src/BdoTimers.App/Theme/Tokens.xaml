@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- True-black window; every fill is a dark tint and every line is tinted, never neutral grey. Warm is the default
+         tint; Indigo belongs to Timers and Forest to To-do. Plain WPF XAML only: the setup window (.NET Framework 4.8)
+         links this file too. -->
+    <Color x:Key="BgColor">#000000</Color>
+    <Color x:Key="PanelColor">#100B06</Color>
+    <Color x:Key="TextColor">#EEE7D8</Color>
+    <Color x:Key="AccentColor">#B89A5E</Color>
+    <SolidColorBrush x:Key="BgBrush" Color="{StaticResource BgColor}" />
+    <SolidColorBrush x:Key="CardBrush" Color="#0A0704" />
+    <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource PanelColor}" />
+    <SolidColorBrush x:Key="RaisedBrush" Color="#17110A" />
+    <SolidColorBrush x:Key="ControlFillBrush" Color="#221A0F" />
+    <SolidColorBrush x:Key="HairlineBrush" Color="#24CDAA69" />
+    <SolidColorBrush x:Key="HairlineStrongBrush" Color="#42CDAA69" />
+    <SolidColorBrush x:Key="HairlineHoverBrush" Color="#70CDAA69" />
+    <SolidColorBrush x:Key="HoverFillBrush" Color="#14CDAA69" />
+    <SolidColorBrush x:Key="HoverTextBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource TextColor}" />
+    <SolidColorBrush x:Key="SubtleBrush" Color="#B3A585" />
+    <SolidColorBrush x:Key="PastBrush" Color="#7A6A4E" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#99B89A5E" />
+    <SolidColorBrush x:Key="AccentFillBrush" Color="#1FB89A5E" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#E8C98A" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#EF8A78" />
+    <SolidColorBrush x:Key="DangerFillBrush" Color="#923B30" />
+    <SolidColorBrush x:Key="FocusBrush" Color="#E8C98A" />
+    <SolidColorBrush x:Key="UpdateBrush" Color="#7CC495" />
+    <SolidColorBrush x:Key="DimBrush" Color="#8C000000" />
+
+    <!-- Colours that mean something: soon, imminent, running or done, the Timers section. -->
+    <SolidColorBrush x:Key="AmberBrush" Color="#E9AD52" />
+    <SolidColorBrush x:Key="EmberBrush" Color="#E7673F" />
+    <SolidColorBrush x:Key="GoodBrush" Color="#7CC495" />
+    <SolidColorBrush x:Key="TimersAccentBrush" Color="#7FA3E0" />
+
+    <!-- The one primary button of a context. -->
+    <LinearGradientBrush x:Key="BronzeBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#AD8B53" Offset="0" />
+        <GradientStop Color="#8F714A" Offset="1" />
+    </LinearGradientBrush>
+    <SolidColorBrush x:Key="OnBronzeBrush" Color="#17120A" />
+
+    <!-- Section tints: Timers (indigo) and To-do (forest). -->
+    <SolidColorBrush x:Key="IndigoCardBrush" Color="#04060E" />
+    <SolidColorBrush x:Key="IndigoRaisedBrush" Color="#0E1428" />
+    <SolidColorBrush x:Key="IndigoLineBrush" Color="#2B8CA0E6" />
+    <SolidColorBrush x:Key="IndigoLineStrongBrush" Color="#4D8CA0E6" />
+    <SolidColorBrush x:Key="IndigoLineHoverBrush" Color="#7A8CA0E6" />
+    <SolidColorBrush x:Key="IndigoHoverFillBrush" Color="#178CA0E6" />
+    <SolidColorBrush x:Key="ForestCardBrush" Color="#030D07" />
+    <SolidColorBrush x:Key="ForestRaisedBrush" Color="#0C1D12" />
+    <SolidColorBrush x:Key="ForestLineBrush" Color="#2B78C896" />
+    <SolidColorBrush x:Key="ForestLineStrongBrush" Color="#4D78C896" />
+    <SolidColorBrush x:Key="ForestLineHoverBrush" Color="#7A78C896" />
+    <SolidColorBrush x:Key="ForestHoverFillBrush" Color="#1778C896" />
+
+    <ScaleTransform x:Key="UiScaleTransform" ScaleX="1" ScaleY="1" />
+
+    <!-- Palatino Linotype if Cinzel can't load; Segoe UI if Inter can't. -->
+    <FontFamily x:Key="DisplayFont">./Fonts/#Cinzel, Palatino Linotype</FontFamily>
+    <FontFamily x:Key="UiFont">./Fonts/#Inter, Segoe UI</FontFamily>
+    <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
+    <FontFamily x:Key="ClockFont">./Fonts/#Inter, Segoe UI</FontFamily>
+</ResourceDictionary>
