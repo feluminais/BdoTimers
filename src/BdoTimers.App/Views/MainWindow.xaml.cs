@@ -42,6 +42,8 @@ public partial class MainWindow : Window
         DataContext = _vm = viewModel;
         _services = services;
         _panelFocus = new PanelFocusScope(this, MainContent, PanelLayer, _vm.ClosePanel);
+        HandlePanelCommand(PanelCommands.Close, _vm.ClosePanelCommand);
+        HandlePanelCommand(PanelCommands.Finish, _vm.FinishPanelCommand);
         viewModel.CompletingPanelEdits += () => PanelEdits.Complete(PanelContent);
         // Button commands (including previews) use the current draft, even inside a binding's debounce interval.
         AddHandler(ButtonBase.ClickEvent, new RoutedEventHandler((_, e) =>
@@ -90,6 +92,9 @@ public partial class MainWindow : Window
         };
         IsVisibleChanged += (_, _) => { FollowShown(); if (IsVisible) QueuePlacementCheck(); };
     }
+
+    void HandlePanelCommand(RoutedCommand routed, ICommand command) => CommandBindings.Add(new CommandBinding(routed,
+        (_, _) => command.Execute(null), (_, e) => e.CanExecute = command.CanExecute(null)));
 
     /// <summary>Hidden to the tray or minimized, the window's screens stop ticking and the process runs with EcoQoS.</summary>
     void FollowShown()

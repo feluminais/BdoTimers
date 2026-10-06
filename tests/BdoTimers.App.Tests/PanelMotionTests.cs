@@ -1,5 +1,7 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Automation.Peers;
+using System.Windows.Automation.Provider;
 using System.Windows.Controls;
 using System.Windows.Media;
 using BdoTimers.App.ViewModels;
@@ -258,6 +260,35 @@ public class PanelMotionTests
 
         Assert.IsType<FollowingPanel>(content.Content);
         Assert.Equal(0, window.IdlePanelViews);
+    });
+
+    /// <summary>A view built while the window is idle is not in the window yet, and its buttons must still reach it when pressed.</summary>
+    [Fact]
+    public void A_panel_built_ahead_of_time_closes_from_its_close_and_Done_buttons_and_Save() => WithWindow((services, main, window) =>
+    {
+        void Press(Func<Button, bool> match)
+        {
+            var button = PanelFocusScope.Descendants(Named<ContentControl>(window, "PanelContent")).OfType<Button>().First(b => b.IsVisible && match(b));
+            ((IInvokeProvider)new ButtonAutomationPeer(button).GetPattern(PatternInterface.Invoke)).Invoke();
+            WpfTest.Wait(900);
+        }
+        foreach (var type in new[] { typeof(FollowingPanelViewModel), typeof(SettingsPanelViewModel) }) window.BuildPanelView(type);
+        WpfTest.Drain();
+
+        main.OpenPanel(new FollowingPanelViewModel(services, main));
+        WpfTest.Wait(500);
+        Press(b => b.ToolTip is "Close");
+        Assert.Null(main.Panel);
+
+        main.OpenPanel(new FollowingPanelViewModel(services, main));
+        WpfTest.Wait(500);
+        Press(b => Equals(b.Content, "Done"));
+        Assert.Null(main.Panel);
+
+        main.OpenSettingsCommand.Execute(null);
+        WpfTest.Wait(500);
+        Press(b => Equals(b.Content, "Save"));
+        Assert.Null(main.Panel);
     });
 
     [Fact]

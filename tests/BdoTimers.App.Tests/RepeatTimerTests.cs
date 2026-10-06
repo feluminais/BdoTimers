@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Controls;
+using System.Windows.Input;
 using BdoTimers.App.Views;
 using BdoTimers.App.Views.Panels;
 using BdoTimers.App.Art;
@@ -36,6 +37,8 @@ public sealed class RepeatTimerTests
             var panel = new CustomPanelViewModel(services, new PanelHost(), timer);
             var view = new CustomPanel { DataContext = panel };
             var window = new Window { Content = view, Width = 460, Height = 900, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            // The window stands in for the main window, which is what Save is routed to.
+            window.CommandBindings.Add(new CommandBinding(PanelCommands.Finish, (_, _) => { }));
             try
             {
                 window.Show();
