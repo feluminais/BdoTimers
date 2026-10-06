@@ -102,7 +102,7 @@
                         <DockPanel>
                             <controls:HotkeyBox DockPanel.Dock="Right" Chord="True" Combo="{Binding MoveHotkey}" Taken="{Binding TakenForMove}" Hotkeys="{Binding Hotkeys}"
                                                 Target="{Binding MoveTarget}" AutomationProperties.Name="Drag to move hotkey"
-                                                ToolTip="Hold to drag the overlay where it shows. Mouse proximity still applies." />
+                                                ToolTip="Hold to drag the overlay. Mouse proximity still applies." />
                             <TextBlock Text="Drag to move" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         </DockPanel>
                     </Border>
