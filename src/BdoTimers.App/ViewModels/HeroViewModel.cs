@@ -16,9 +16,9 @@ public sealed partial class HeroViewModel(AppServices services, Action<Guid> ope
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(ToggleSkipCommand))] private bool _hasNext;
     [ObservableProperty] private UrgencyLevel _level;
     /// <summary>"Then Garmoth 03:59:58 · Alerts 15 · 5 · at spawn".</summary>
-    [ObservableProperty] private string _then = "";
+    [ObservableProperty] private string? _then;
     /// <summary>"Previous Golden Pig King · Kutum −08:00:02".</summary>
-    [ObservableProperty] private string _previous = "";
+    [ObservableProperty] private string? _previous;
     [ObservableProperty] private string _skipLabel = "Skip";
 
     public void Update(BossBoardState board, DateTimeOffset now, IReadOnlyList<int> defaultLeads)
@@ -31,8 +31,8 @@ public sealed partial class HeroViewModel(AppServices services, Action<Guid> ope
         var parts = new List<string>();
         if (board.FollowedBy is { } then) parts.Add($"Then {Names(then)} {DurationFormat.Clock(then.AtUtc - now)}");
         if (board.Next is { } coming && Leads(coming, defaultLeads) is { Length: > 0 } leads) parts.Add("Alerts " + leads);
-        Then = string.Join(" · ", parts);
-        Previous = board.Previous is { } previous ? $"Previous {Names(previous)} −{DurationFormat.Clock(now - previous.AtUtc)}" : "";
+        Then = parts.Count == 0 ? null : string.Join(" · ", parts);
+        Previous = board.Previous is { } previous ? $"Previous {Names(previous)} −{DurationFormat.Clock(now - previous.AtUtc)}" : null;
     }
 
     /// <summary>Skips every boss of the next spawn at once, or brings them all back.</summary>

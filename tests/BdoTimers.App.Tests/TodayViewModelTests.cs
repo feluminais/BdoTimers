@@ -54,8 +54,8 @@ public class TodayViewModelTests
         Assert.Equal(UrgencyLevel.Imminent, hero.Level);
         hero.Update(new BossBoardState(null, null, null), now, [15, 5, 0]);
         Assert.False(hero.HasNext);
-        Assert.Equal("", hero.Then);
-        Assert.Equal("", hero.Previous);
+        Assert.Null(hero.Then);
+        Assert.Null(hero.Previous);
     });
 
     [Fact]

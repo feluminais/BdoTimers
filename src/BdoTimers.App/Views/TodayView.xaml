@@ -1,0 +1,393 @@
+<UserControl x:Class="BdoTimers.App.Views.TodayView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:BdoTimers.App.Controls"
+             xmlns:vm="clr-namespace:BdoTimers.App.ViewModels"
+             SizeChanged="Root_SizeChanged">
+    <UserControl.Resources>
+        <!-- A panel of the screen: a card with a tinted hairline -->
+        <Style x:Key="TodayPanel" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="16,14" />
+        </Style>
+        <Style x:Key="IndigoPanel" TargetType="Border" BasedOn="{StaticResource TodayPanel}">
+            <Setter Property="Background" Value="{DynamicResource IndigoCardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource IndigoLineBrush}" />
+        </Style>
+        <Style x:Key="ForestPanel" TargetType="Border" BasedOn="{StaticResource TodayPanel}">
+            <Setter Property="Background" Value="{DynamicResource ForestCardBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource ForestLineBrush}" />
+        </Style>
+        <Style x:Key="PanelHeading" TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!-- The hero: gold-lined, amber then ember as the spawn nears -->
+        <Style x:Key="HeroCard" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Imminent">
+                    <Setter Property="BorderBrush" Value="{DynamicResource AmberBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Now">
+                    <Setter Property="BorderBrush" Value="{DynamicResource EmberBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="HeroClock" TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
+            <Setter Property="FontSize" Value="60" />
+            <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Level}" Value="Soon">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Imminent">
+                    <Setter Property="Foreground" Value="{DynamicResource AmberBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Level}" Value="Now">
+                    <Setter Property="Foreground" Value="{DynamicResource EmberBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Next.Skipped}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="HeroNameText" TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
+            <Setter Property="FontSize" Value="26" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding DataContext.Hero.Next.Skipped, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="TextDecorations" Value="Strikethrough" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <!-- The skip button stays out of sight until the hero is hovered or has the keyboard -->
+        <Style x:Key="HeroAction" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Opacity" Value="0" />
+            <Setter Property="IsHitTestVisible" Value="False" />
+            <Setter Property="Background" Value="#8C000000" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=controls:ClippingBorder}}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="IsHitTestVisible" Value="True" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsKeyboardFocusWithin, RelativeSource={RelativeSource AncestorType=controls:ClippingBorder}}" Value="True">
+                    <Setter Property="Opacity" Value="1" />
+                    <Setter Property="IsHitTestVisible" Value="True" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <DataTemplate x:Key="HeroName" DataType="{x:Type vm:BossLink}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="·" Style="{StaticResource HeroNameText}" Foreground="{DynamicResource PastBrush}" Margin="8,0"
+                           Visibility="{Binding Follows, Converter={StaticResource BoolToVisibility}}" />
+                <Button Style="{StaticResource NameButton}" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Name}">
+                    <TextBlock Text="{Binding Name}" Style="{StaticResource HeroNameText}" />
+                </Button>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- One item of Coming up. The marker says what it is without colour: a filled dot a boss, a ring a timer, a small dot a reset. -->
+        <DataTemplate DataType="{x:Type vm:ComingUpRowViewModel}">
+            <Button x:Name="RowButton" Style="{StaticResource NameButton}" Command="{Binding Row.OpenCommand}" HorizontalAlignment="Stretch"
+                    IsHitTestVisible="{Binding Row.CanOpen}" Focusable="{Binding Row.CanOpen}" ToolTip="{Binding Row.Tooltip}"
+                    ContextMenuService.IsEnabled="{Binding Row.CanSkip}" AutomationProperties.Name="{Binding Row.Name}">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{Binding Row.SkipLabel}" Command="{Binding Row.ToggleSkipCommand}" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+                <Grid MinHeight="30" Margin="0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="68" />
+                        <ColumnDefinition Width="14" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="TimeText" Text="{Binding Time}" Style="{StaticResource ClockText}" FontWeight="Normal" FontSize="12"
+                               Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
+                    <Rectangle Grid.Column="1" Width="1" HorizontalAlignment="Center" Fill="{DynamicResource HairlineStrongBrush}" />
+                    <Ellipse x:Name="TimerMarker" Grid.Column="1" Width="9" Height="9" Fill="{DynamicResource CardBrush}"
+                             Stroke="{DynamicResource TimersAccentBrush}" StrokeThickness="2" />
+                    <Ellipse x:Name="BossMarker" Grid.Column="1" Width="9" Height="9" Fill="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+                    <Ellipse x:Name="ResetMarker" Grid.Column="1" Width="5" Height="5" Fill="{DynamicResource PastBrush}" Visibility="Collapsed" />
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="8,0">
+                        <TextBlock x:Name="NameText" Text="{Binding Row.Name}" Style="{StaticResource DisplayText}" FontSize="14"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Sub}" Style="{StaticResource LabelText}"
+                                   Visibility="{Binding Sub, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="3" Text="{Binding Until}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
+                               Typography.NumeralAlignment="Tabular" VerticalAlignment="Center" />
+                </Grid>
+            </Button>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Kind}" Value="Boss">
+                    <Setter TargetName="TimerMarker" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="BossMarker" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="DailyReset">
+                    <Setter TargetName="TimerMarker" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="ResetMarker" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Kind}" Value="WeeklyReset">
+                    <Setter TargetName="TimerMarker" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="ResetMarker" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsNext}" Value="True">
+                    <Setter TargetName="BossMarker" Property="Fill" Value="{DynamicResource AccentTextBrush}" />
+                    <Setter TargetName="TimeText" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsSkipped}" Value="True">
+                    <Setter TargetName="NameText" Property="TextDecorations" Value="Strikethrough" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- A running or paused timer: its picture in a ring that fills as it runs, its clock and its Start / Pause -->
+        <DataTemplate x:Key="RunningRow" DataType="{x:Type vm:TimerTileViewModel}">
+            <Button Style="{StaticResource NameButton}" Command="{Binding OpenCommand}" HorizontalAlignment="Stretch"
+                    AutomationProperties.Name="{Binding Name}">
+                <Grid Margin="0,7">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="44" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="44" Height="44">
+                        <controls:ProgressRing Value="{Binding Progress, TargetNullValue=0}" Track="{DynamicResource IndigoLineStrongBrush}" Thickness="3">
+                            <controls:ProgressRing.Style>
+                                <Style TargetType="controls:ProgressRing">
+                                    <Setter Property="Stroke" Value="{DynamicResource TimersAccentBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsFarm}" Value="True">
+                                            <Setter Property="Stroke" Value="{DynamicResource GoodBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </controls:ProgressRing.Style>
+                        </controls:ProgressRing>
+                        <controls:ClippingBorder Margin="4" CornerRadius="18">
+                            <controls:FocusImage Picture="{Binding Images[0]}">
+                                <controls:FocusImage.Style>
+                                    <Style TargetType="controls:FocusImage">
+                                        <Setter Property="Opacity" Value="0.9" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                                <Setter Property="Opacity" Value="0.5" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </controls:FocusImage.Style>
+                            </controls:FocusImage>
+                        </controls:ClippingBorder>
+                    </Grid>
+                    <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Digits}" FontSize="19">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPaused}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </StackPanel>
+                    <Button Grid.Column="2" Style="{StaticResource TimerPlayButton}" Width="32" Height="32" FontSize="12" VerticalAlignment="Center"
+                            Content="{Binding PlayPauseGlyph}" ToolTip="{Binding PlayPauseTip}" Command="{Binding StartPauseCommand}" />
+                </Grid>
+            </Button>
+        </DataTemplate>
+
+        <!-- A daily task: the list's name above the first of its tasks when more than one list is on -->
+        <DataTemplate DataType="{x:Type vm:DailyTask}">
+            <StackPanel>
+                <TextBlock Text="{Binding ListName}" Style="{StaticResource LabelText}" Margin="0,6,0,0"
+                           Visibility="{Binding ListName, Converter={StaticResource NullToCollapsed}}" />
+                <DockPanel MinHeight="26" Margin="0,2" DataContext="{Binding Row}">
+                    <CheckBox DockPanel.Dock="Left" Style="{StaticResource TodoCheck}" IsThreeState="True"
+                              IsChecked="{Binding Checked, Mode=OneWay}" Command="{Binding ToggleCommand}"
+                              AutomationProperties.Name="{Binding AutomationName}" />
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding PartialProgress}" FontSize="11" Margin="6,4,0,0"
+                               Foreground="{DynamicResource SubtleBrush}" />
+                    <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}" HorizontalContentAlignment="Left"
+                            AutomationProperties.Name="{Binding AutomationName}">
+                        <TextBlock Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
+                    </Button>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <!-- Wide: the hero over Coming up, and Running over Daily tasks in a column of their own. Narrow: one column,
+         hero, Running, Coming up, Daily tasks. The code-behind moves the four panels between the hosts. -->
+    <Grid x:Name="Layout">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="16" />
+            <ColumnDefinition Width="316" />
+        </Grid.ColumnDefinitions>
+
+        <Grid x:Name="MainHost">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <controls:ClippingBorder x:Name="Hero" Height="208" CornerRadius="12" BorderThickness="1" Background="{DynamicResource CardBrush}"
+                                     Style="{StaticResource HeroCard}" DataContext="{Binding Hero}">
+                <controls:ClippingBorder.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipCommand}" />
+                    </ContextMenu>
+                </controls:ClippingBorder.ContextMenu>
+                <Grid>
+                    <controls:ArtImage Sources="{Binding Next.Images}" Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}" />
+                    <Rectangle IsHitTestVisible="False">
+                        <Rectangle.Fill>
+                            <LinearGradientBrush StartPoint="1,0" EndPoint="0,0">
+                                <GradientStop Color="#F0000000" Offset="0" />
+                                <GradientStop Color="#99000000" Offset="0.38" />
+                                <GradientStop Color="#00000000" Offset="0.7" />
+                            </LinearGradientBrush>
+                        </Rectangle.Fill>
+                    </Rectangle>
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Margin="24,0,26,0" TextBlock.TextAlignment="Right"
+                                Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding Next.Label}" FontSize="12" Foreground="{DynamicResource AccentBrush}" />
+                        <ItemsControl ItemsSource="{Binding Next.Names}" ItemTemplate="{StaticResource HeroName}" HorizontalAlignment="Right"
+                                      Margin="0,5,0,2" Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                        <!-- Shrinks to fit a narrow hero rather than lose its last digits -->
+                        <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding Next.Clock}" Style="{StaticResource HeroClock}" />
+                        </Viewbox>
+                        <TextBlock Text="Skipped" Style="{StaticResource LabelText}"
+                                   Visibility="{Binding Next.Skipped, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding Then}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" TextTrimming="CharacterEllipsis"
+                                   Margin="0,10,0,0" Visibility="{Binding Then, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Visibility="{Binding HasNext, Converter={StaticResource InverseBoolToVisibility}}">
+                        <TextBlock Text="No boss followed" Style="{StaticResource DisplayText}" FontSize="18" Foreground="{DynamicResource SubtleBrush}"
+                                   HorizontalAlignment="Center" />
+                        <Button Style="{StaticResource GhostButton}" Content="Following" Margin="0,12,0,0" HorizontalAlignment="Center"
+                                Command="{Binding OpenFollowingCommand}" />
+                    </StackPanel>
+                    <Border HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="18,0,0,14" Padding="10,4" CornerRadius="12"
+                            Background="#9E000000" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
+                            Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}">
+                        <TextBlock Text="{Binding Previous}" FontSize="11.5" Foreground="{DynamicResource SubtleBrush}" />
+                    </Border>
+                    <Button Style="{StaticResource HeroAction}" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="18,14,0,0"
+                            Command="{Binding ToggleSkipCommand}" Content="{Binding SkipLabel}"
+                            Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}" />
+                </Grid>
+            </controls:ClippingBorder>
+
+            <Border x:Name="ComingUpPanel" Grid.Row="1" Margin="0,16,0,0" Style="{StaticResource TodayPanel}" DataContext="{Binding ComingUp}">
+                <DockPanel>
+                    <DockPanel DockPanel.Dock="Top" Margin="0,0,0,8">
+                        <TextBlock DockPanel.Dock="Right" Text="Next 24 hours" Style="{StaticResource LabelText}" VerticalAlignment="Center" />
+                        <TextBlock Text="Coming up" Style="{StaticResource PanelHeading}" />
+                    </DockPanel>
+                    <TextBlock DockPanel.Dock="Top" Text="Nothing in the next 24 hours" Style="{StaticResource LabelText}" Margin="0,4,0,0"
+                               Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVisibility}}" />
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
+                        <StackPanel Margin="0,0,10,0">
+                            <!-- The time now heads the list as a gold rule -->
+                            <Grid Margin="0,2,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="68" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding NowText}" Style="{StaticResource ClockText}" FontWeight="Normal" FontSize="11"
+                                           Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center" />
+                                <Rectangle Grid.Column="1" Height="1" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                            <ItemsControl ItemsSource="{Binding Rows}" Focusable="False" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+        </Grid>
+
+        <ScrollViewer x:Name="SideHost" Grid.Column="2" VerticalScrollBarVisibility="Auto" Focusable="False">
+            <StackPanel x:Name="SideStack">
+                <Border x:Name="RunningPanel" Style="{StaticResource IndigoPanel}" Margin="0,0,0,16"
+                        Visibility="{Binding HasRunning, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="All timers ›" VerticalAlignment="Center"
+                                    Command="{Binding ShowTimersCommand}" />
+                            <TextBlock Text="Running" Style="{StaticResource PanelHeading}" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding Running}" ItemTemplate="{StaticResource RunningRow}" Focusable="False" />
+                    </StackPanel>
+                </Border>
+                <Border x:Name="DailyPanel" Style="{StaticResource ForestPanel}" DataContext="{Binding Daily}">
+                    <StackPanel>
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource GoodBrush}"
+                                       Typography.NumeralAlignment="Tabular" VerticalAlignment="Center"
+                                       Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="Daily tasks" Style="{StaticResource PanelHeading}" />
+                        </DockPanel>
+                        <ProgressBar Style="{StaticResource TodoProgress}" Value="{Binding Fraction, Mode=OneWay}" Margin="0,10,0,6"
+                                     AutomationProperties.Name="Progress" Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
+                        <ItemsControl ItemsSource="{Binding Tasks}" Focusable="False" />
+                        <TextBlock Text="No active list" Style="{StaticResource LabelText}" Margin="0,10,0,0"
+                                   Visibility="{Binding HasLists, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <Button Style="{StaticResource NameButton}" HorizontalAlignment="Stretch" Command="{Binding ShowTodoCommand}"
+                                AutomationProperties.Name="To-do">
+                            <DockPanel Margin="0,9,0,0">
+                                <TextBlock DockPanel.Dock="Right" Text="›" FontSize="14" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding Weekly}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Weekly}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Text="To-do" FontSize="12" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Weekly}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DockPanel>
+                        </Button>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Narrow: everything in one column; the panels move here -->
+        <ScrollViewer x:Name="NarrowHost" Grid.ColumnSpan="3" VerticalScrollBarVisibility="Auto" Focusable="False" Visibility="Collapsed">
+            <StackPanel x:Name="NarrowStack" />
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -141,6 +141,8 @@ public sealed partial class BossesViewModel : ObservableObject
 public sealed partial class BossLink(Guid id, string name, Action<Guid> open, ArtPicture picture)
 {
     public string Name => name;
+    /// <summary>Set on every name but the first of a spawn, which a line of names separates with a dot.</summary>
+    public bool Follows { get; init; }
     public IReadOnlyList<ArtPicture> Images { get; } = [picture];
 
     [RelayCommand]
@@ -170,7 +172,7 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
         if (signature != _signature)
         {
             _signature = signature;
-            Names = group.Bosses.Select(b => new BossLink(b.Id, b.Name, open, art.For(b))).ToList();
+            Names = group.Bosses.Select((b, i) => new BossLink(b.Id, b.Name, open, art.For(b)) { Follows = i > 0 }).ToList();
             Images = Names.SelectMany(b => b.Images).Take(2).ToList();
             Label = $"{caption} · {Formats.DayTime(group.AtUtc)}";
         }

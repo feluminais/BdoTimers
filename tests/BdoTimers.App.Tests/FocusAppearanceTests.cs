@@ -190,7 +190,7 @@ public sealed class FocusAppearanceTests
     [Fact]
     public void Todo_checkbox_does_not_keep_a_bright_outer_frame_after_click_focus() => WpfTest.Run(() =>
     {
-        var check = new CheckBox { Style = (Style)new TodoView().Resources["TodoCheck"] };
+        var check = new CheckBox { Style = (Style)Application.Current.FindResource("TodoCheck") };
         var window = new Window { Content = check, Width = 240, Height = 100, ShowInTaskbar = false };
         try
         {

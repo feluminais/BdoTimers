@@ -55,4 +55,88 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- To-do rows: used by the To-do screen and by Today's daily tasks -->
+    <Style x:Key="TodoOpenButton" TargetType="Button" BasedOn="{StaticResource NameButton}" />
+    <Style x:Key="TodoCheck" TargetType="CheckBox">
+        <Setter Property="Width" Value="26" />
+        <Setter Property="Height" Value="26" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalAlignment" Value="Top" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Border x:Name="Hit" Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
+                        <Border x:Name="Box" Width="16" Height="16" CornerRadius="4" BorderBrush="{DynamicResource SubtleBrush}"
+                                BorderThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock x:Name="Mark" FontSize="10" Text="" FontWeight="Bold"
+                                       Foreground="{DynamicResource OnBronzeBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Mark" Property="Text" Value="✓" />
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource GoodBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="{x:Null}">
+                            <Setter TargetName="Mark" Property="Text" Value="−" />
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource GoodBrush}" />
+                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Box" Property="Opacity" Value="0.45" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="TodoRowText" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsStruck}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource PastBrush}" />
+                <Setter Property="TextDecorations" Value="Strikethrough" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <!-- A list's progress: a green line over a hairline -->
+    <Style x:Key="TodoProgress" TargetType="ProgressBar">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="Maximum" Value="1" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Grid>
+                        <Border x:Name="PART_Track" Background="{DynamicResource ForestLineStrongBrush}" />
+                        <Border x:Name="PART_Indicator" Background="{DynamicResource GoodBrush}" HorizontalAlignment="Left" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Start / Pause takes the Timers blue while the timer runs -->
+    <Style x:Key="TimerPlayButton" TargetType="Button" BasedOn="{StaticResource RoundButton}">
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource TimersAccentBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource TimersAccentBrush}" />
+            </DataTrigger>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding IsRunning}" Value="True" />
+                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Background" Value="{DynamicResource IndigoHoverFillBrush}" />
+            </MultiDataTrigger>
+        </Style.Triggers>
+    </Style>
 </ResourceDictionary>

@@ -70,13 +70,13 @@ public sealed partial class ComingUpRowViewModel : ObservableObject
     public bool IsNext => _item.State == CellState.Next;
     public bool IsSkipped => _item.State == CellState.Skipped;
     /// <summary>What sort of timer it is, for anything but a boss, whose name says it.</summary>
-    public string Sub => _item.Kind switch
+    public string? Sub => _item.Kind switch
     {
         CalendarKind.Weekly => "Weekly",
         CalendarKind.Event => "Event",
         CalendarKind.Countdown => "Countdown",
         CalendarKind.DailyReset or CalendarKind.WeeklyReset => "To-do",
-        _ => "",
+        _ => null,
     };
 
     public bool Matches(CalendarItem item) =>
