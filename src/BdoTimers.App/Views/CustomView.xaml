@@ -161,10 +161,13 @@
                                     Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}" />
                             <Button Grid.Row="1" Style="{StaticResource TimerPlayButton}" Content="{Binding PlayPauseGlyph}" ToolTip="{Binding PlayPauseTip}"
                                     Command="{Binding StartPauseCommand}" Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}" />
-                            <Button Grid.Row="1" Style="{StaticResource TimerPlayButton}" Content="&#xE768;" ToolTip="{Binding HorseStartTip}"
+                            <!-- A registration is added, not started or paused, so its button is a plus -->
+                            <Button Grid.Row="1" Style="{StaticResource TimerPlayButton}" ToolTip="{Binding HorseStartTip}"
                                     Command="{Binding StartHorseRegistrationCommand}" IsEnabled="{Binding CanStartHorse}"
-                                    Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}" />
-                            <Button Grid.Row="2" Style="{StaticResource RailButton}" VerticalAlignment="Top" Margin="0,2,0,0" Content="&#xE71A;" ToolTip="Stop"
+                                    Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
+                                <controls:PlusIcon Size="14" />
+                            </Button>
+                            <Button Grid.Row="2" Style="{StaticResource RailButton}" VerticalAlignment="Top" Margin="0,2,0,0" Content="&#xE71A;" ToolTip="{Binding StopTip}"
                                     Command="{Binding ResetCommand}" Visibility="{Binding CanStop, Converter={StaticResource BoolToVisibility}}" />
                             <Button Grid.Row="1" Style="{StaticResource RailButton}" Content="{Binding SkipGlyph}" ToolTip="{Binding SkipLabel}"
                                     Command="{Binding ToggleSkipNextCommand}"

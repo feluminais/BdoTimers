@@ -58,9 +58,13 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Farm → clock → a time over 22 h ago: it starts overgrown, shows negative time and growth above 100% on the card
     and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. The square
     Stop on a started card resets a timer.
-21. [ ] Timers: Horse registration is third, 10:00, and its (i) explains when to start. Press Ctrl+Shift+F10 twice: two
-    numbered registration tiles appear with independent countdowns, and each press speaks
-    "Horse registration time started". The first alerts at 1:00 and 0:00, then disappears without stopping the second.
+21. [ ] Timers: Horse registration is third, 10:00, and its (i) explains when to start. Its round button is a plus.
+    Press Ctrl+Shift+F10 twice: the card stays one card, saying "2 of 10 active" with the soonest clock, and no
+    registration gets a card of its own, on Timers or in Today's Running (which lists Horse registration with the plus). Each press speaks
+    "Horse registration time started". The first alerts at 1:00 and 0:00, then ends without stopping the second. Today's
+    Coming up and the Month show one Horse registration entry, the next to end, and it opens the card's panel.
+    Click the card: Running lists Horse 1, Horse 2 with their times, each with a square Stop. The card's own square Stop
+    (on hover) ends the latest. Undo restores a stopped one.
     Start ten at once: the next press adds none and shows the limit notice. Stop one and a new press can start another.
     With horse registrations enabled in Overlay → Sections, the newest two appear with their time left and "+8 more
     running" at ten. Delete the preset, restart, and check that its hotkey no longer starts registrations.

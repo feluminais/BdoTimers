@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Windows;
 using BdoTimers.App.Controls;
 using BdoTimers.App.Overlay;
@@ -61,6 +62,9 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     public bool IsFarm { get; }
     public bool IsHorseTemplate { get; }
     public bool IsHorseRun { get; }
+    /// <summary>The horse registrations under way, soonest first; only the Horse registration panel has any.</summary>
+    public ObservableCollection<HorseRunRowViewModel> Runs { get; } = [];
+    public bool HasRuns => Runs.Count > 0;
     public bool IsCustomCountdown { get; }
     public bool CanChangePicture { get; }
     bool HasHotkey => IsHorseTemplate || IsCustomCountdown;
@@ -151,7 +155,36 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
         Alerts = new AlertRowsViewModel(services, timer, _editor);
         Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
+        if (IsHorseTemplate)
+        {
+            Runs.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRuns));
+            RefreshRuns(services.Clock.UtcNow);
+            services.Timers.Changed += OnRunsChanged;
+            services.UiClock.Tick += RefreshRuns;
+        }
     }
+
+    /// <summary>Starting or stopping a registration can happen on a hotkey's thread; the list follows on the UI thread.</summary>
+    void OnRunsChanged()
+    {
+        if (Application.Current.Dispatcher.CheckAccess()) RefreshRuns(_services.Clock.UtcNow);
+        else Application.Current.Dispatcher.BeginInvoke((Action)(() => RefreshRuns(_services.Clock.UtcNow)));
+    }
+
+    void RefreshRuns(DateTimeOffset now)
+    {
+        var runs = _services.Timers.Current.Timers.Where(Presets.IsActiveHorseRun).Where(t => t.Countdown?.EndsAtUtc is not null)
+            .OrderBy(t => t.Countdown!.EndsAtUtc).ToList();
+        HorseRunRowViewModel Show(HorseRunRowViewModel row, TimerDef run)
+        {
+            row.Name = run.HorseRunNumber is { } number ? $"Horse {number}" : run.Name;
+            row.Clock = DurationFormat.Clock(run.Countdown!.EndsAtUtc!.Value - now);
+            return row;
+        }
+        Runs.Sync(runs, (row, run) => row.Id == run.Id, run => Show(new HorseRunRowViewModel(run.Id, StopRun), run), (row, run) => Show(row, run));
+    }
+
+    void StopRun(Guid id) => _services.Undo.ResetTimer(id);
 
     partial void OnSlotsChanged(SlotListViewModel? oldValue, SlotListViewModel? newValue)
     {
@@ -200,6 +233,11 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
         _editor?.Close();
         if (IsWarOfTheRoses) _services.Timers.Changed -= OnRegionChanged;
         if (IsHorseRun) _services.Timers.Changed -= OnHorseRunChanged;
+        if (IsHorseTemplate)
+        {
+            _services.Timers.Changed -= OnRunsChanged;
+            _services.UiClock.Tick -= RefreshRuns;
+        }
         if (!HasHotkey) return;
         _services.Timers.Changed -= OnHotkeyConfigChanged;
         _services.Settings.Changed -= OnHotkeyConfigChanged;

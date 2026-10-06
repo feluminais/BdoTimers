@@ -39,7 +39,7 @@ public static class CalendarQuery
     }
 
     /// <summary>Items in [fromUtc, toUtc): the selected region's bosses, the user's timers and both to-do resets, ordered
-    /// by time, then kind, then name.</summary>
+    /// by time, then kind, then name. Horse registrations under way count as one.</summary>
     public static IReadOnlyList<CalendarItem> Between(AppData data, AppSettings settings, DateTimeOffset fromUtc,
         DateTimeOffset toUtc, DateTimeOffset now, TimeZoneInfo? local = null, BossBoardCache? boards = null)
     {
@@ -49,6 +49,7 @@ public static class CalendarQuery
         foreach (var timer in data.Timers.Where(t => BossRegions.IsEligible(data, t)))
             foreach (var (kind, at) in Occurrences(timer, fromUtc, toUtc))
                 items.Add(new(kind, at, timer, WeekGrid.StateOf(timer, at, now, kind == CalendarKind.Boss ? next : null, muted)));
+        OneForRegistrations(data, items);
         items.AddRange(Resets(CalendarKind.DailyReset, TodoCadence.Daily, settings.DailyTodoReset, fromUtc, toUtc, now, local));
         items.AddRange(Resets(CalendarKind.WeeklyReset, TodoCadence.Weekly, settings.WeeklyTodoReset, fromUtc, toUtc, now, local));
         return items
@@ -56,6 +57,19 @@ public static class CalendarQuery
             .ThenBy(i => i.Kind)
             .ThenBy(i => i.Timer?.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
+    }
+
+    /// <summary>
+    /// The horse registrations under way are one entry, the next to end, under the Horse registration timer: ten of them would
+    /// crowd out the rest, and the timer's panel lists them. Without that timer the next run stands as it is.
+    /// </summary>
+    static void OneForRegistrations(AppData data, List<CalendarItem> items)
+    {
+        var runs = items.Where(i => i.Timer?.Preset == Presets.HorseRegistrationRun).OrderBy(i => i.AtUtc).ToList();
+        if (runs.Count == 0) return;
+        items.RemoveAll(runs.Contains);
+        var template = data.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration);
+        items.Add(template is null ? runs[0] : runs[0] with { Timer = template });
     }
 
     static IEnumerable<(CalendarKind Kind, DateTimeOffset At)> Occurrences(TimerDef timer, DateTimeOffset fromUtc, DateTimeOffset toUtc)

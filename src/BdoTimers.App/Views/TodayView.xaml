@@ -203,7 +203,13 @@
                         </TextBlock>
                     </StackPanel>
                     <Button Grid.Column="2" Style="{StaticResource TimerPlayButton}" Width="32" Height="32" FontSize="12" VerticalAlignment="Center"
-                            Content="{Binding PlayPauseGlyph}" ToolTip="{Binding PlayPauseTip}" Command="{Binding StartPauseCommand}" />
+                            Content="{Binding PlayPauseGlyph}" ToolTip="{Binding PlayPauseTip}" Command="{Binding StartPauseCommand}"
+                            Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}" />
+                    <Button Grid.Column="2" Style="{StaticResource TimerPlayButton}" Width="32" Height="32" VerticalAlignment="Center"
+                            ToolTip="{Binding HorseStartTip}" Command="{Binding StartHorseRegistrationCommand}" IsEnabled="{Binding CanStartHorse}"
+                            Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
+                        <controls:PlusIcon Size="12" />
+                    </Button>
                 </Grid>
             </Button>
         </DataTemplate>

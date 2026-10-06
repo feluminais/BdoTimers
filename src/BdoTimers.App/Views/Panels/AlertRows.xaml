@@ -24,8 +24,10 @@
                             ToolTip="Play" Command="{Binding TestCommand}" />
                     <ComboBox DockPanel.Dock="Right" DisplayMemberPath="Label" ItemsSource="{Binding Choices}" SelectedItem="{Binding Selected}" Width="150"
                                             AutomationProperties.Name="Sound" />
-                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="11" Margin="0,0,4,0"
-                            ToolTip="Add your own sound (WAV or MP3)" Command="{Binding AddCommand}" />
+                    <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Margin="0,0,4,0"
+                            ToolTip="Add your own sound (WAV or MP3)" Command="{Binding AddCommand}">
+                        <controls:PlusIcon Size="11" />
+                    </Button>
                     <!-- Left of the others, so showing it moves nothing -->
                     <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="9"
                             ToolTip="Remove this sound" Command="{Binding RemoveCommand}"

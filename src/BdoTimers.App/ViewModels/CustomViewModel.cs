@@ -6,7 +6,10 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>Timers screen: Farm and Fishing, then the user's own timers in creation order.</summary>
+/// <summary>
+/// Timers screen: Farm and Fishing, then the user's own timers in creation order. A horse registration under way is not a
+/// timer of its own here: the Horse registration card counts them.
+/// </summary>
 public sealed partial class CustomViewModel
 {
     readonly AppServices _services;
@@ -37,7 +40,8 @@ public sealed partial class CustomViewModel
     /// </summary>
     void Sync()
     {
-        var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn).OrderBy(t => Presets.Rank(t.Preset)).ToList();
+        var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn && t.Preset != Presets.HorseRegistrationRun)
+            .OrderBy(t => Presets.Rank(t.Preset)).ToList();
         var now = _services.Clock.UtcNow;
         Items.Sync(timers, (tile, timer) => tile.Id == timer.Id, timer => new TimerTileViewModel(timer, _services, _host, now),
             (tile, timer) => tile.SetTimer(timer, now));

@@ -21,7 +21,7 @@ public sealed partial class TodayViewModel : ObservableObject
     public HeroViewModel Hero { get; }
     public ComingUpViewModel ComingUp { get; }
     public DailyTasksViewModel Daily { get; }
-    /// <summary>The Timers screen's countdowns and stopwatches that are running or paused.</summary>
+    /// <summary>The Timers screen's countdowns and stopwatches that are running or paused, and Horse registration while one is under way.</summary>
     public ObservableCollection<TimerTileViewModel> Running { get; } = [];
     [ObservableProperty] private bool _hasRunning;
 
@@ -42,7 +42,7 @@ public sealed partial class TodayViewModel : ObservableObject
         var data = _services.Timers.Current;
         Hero.Update(_services.Boards.Get(data, now), now, _services.Settings.Current.DefaultLeadTimesMinutes);
         ComingUp.Refresh(now);
-        var running = _custom.Items.Where(t => t.HasControls && (t.IsRunning || t.IsPaused)).Take(MaxRunning).ToList();
+        var running = _custom.Items.Where(t => t.CanStop).Take(MaxRunning).ToList();
         Running.Sync(running, ReferenceEquals, tile => tile, (_, _) => { });
         HasRunning = Running.Count > 0;
     }

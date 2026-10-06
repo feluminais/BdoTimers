@@ -127,6 +127,26 @@ public class CalendarQueryTests
     }
 
     [Fact]
+    public void Horse_registrations_under_way_are_one_entry_the_next_to_end_under_the_horse_timer()
+    {
+        var template = Presets.CreateHorseRegistration();
+        var runs = Enumerable.Range(1, 3).Select(n => Presets.HorseRun(template, n) with
+        {
+            Countdown = CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromMinutes(10) }, T0.AddMinutes(n)),
+        }).ToList();
+        var data = new AppData { Timers = [template, .. runs] };
+
+        var items = CalendarQuery.Between(data, Settings, T0, T0.AddHours(1), T0, Berlin).Where(i => i.Kind == CalendarKind.Countdown).ToList();
+
+        var next = Assert.Single(items);
+        Assert.Equal(T0.AddMinutes(11), next.AtUtc);
+        Assert.Equal(template.Id, next.Timer!.Id);
+        Assert.Equal(Presets.HorseRegistration, next.Timer.Preset);
+        var again = CalendarQuery.Between(data with { Timers = [.. runs] }, Settings, T0, T0.AddHours(1), T0, Berlin).Where(i => i.Kind == CalendarKind.Countdown).ToList();
+        Assert.Equal(runs[0].Id, Assert.Single(again).Timer!.Id);
+    }
+
+    [Fact]
     public void Items_of_a_day_are_in_time_order()
     {
         var data = new AppData { Timers = [Kzarka, Nouver, Scheduled("Guild war", DayOfWeek.Tuesday, 21, 0)] };

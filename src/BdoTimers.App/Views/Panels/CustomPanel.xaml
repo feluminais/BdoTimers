@@ -89,6 +89,26 @@
                     </DockPanel>
                 </Border>
 
+                <!-- The registrations under way, each to be stopped on its own -->
+                <StackPanel Visibility="{Binding HasRuns, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Text="Running" Style="{StaticResource SectionText}" />
+                    <ItemsControl ItemsSource="{Binding Runs}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Row}">
+                                    <DockPanel>
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE71A;" ToolTip="Stop" Margin="8,0,0,0"
+                                                Command="{Binding StopCommand}" />
+                                        <TextBlock DockPanel.Dock="Right" Text="{Binding Clock}" Style="{StaticResource ClockText}" FontSize="15"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource RowLabel}" />
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <Border Style="{StaticResource Row}" Visibility="{Binding IsCustomCountdown, Converter={StaticResource BoolToVisibility}}">
                     <DockPanel>
                         <controls:HotkeyBox DockPanel.Dock="Right" Combo="{Binding ControlHotkey}" Taken="{Binding OtherHotkeys}" Hotkeys="{Binding Hotkeys}" Target="{Binding HotkeyTarget}"

@@ -39,6 +39,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty, NotifyPropertyChangedFor(nameof(CanStop))] private bool _isPaused;
     /// <summary>How far along a countdown is, 0 to 1 (Farm's growth stops at the ring); null for what has no end.</summary>
     [ObservableProperty] private double? _progress;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanStop))] private bool _hasHorseRuns;
     [ObservableProperty] private bool _canStartHorse;
     [ObservableProperty] private string _horseStartTip = "Start registration";
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
@@ -61,8 +62,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
     public bool HasControls => !IsHorseTemplate && _timer.Kind is (TimerKind.Countdown or TimerKind.Stopwatch);
     public bool IsHorseTemplate => _timer.Preset == Presets.HorseRegistration;
-    /// <summary>A countdown or stopwatch that has been started has a Stop button; one at rest has nothing to stop.</summary>
-    public bool CanStop => HasControls && (IsRunning || IsPaused);
+    /// <summary>Something to stop: a countdown or stopwatch that has been started, or a horse registration that is under way.</summary>
+    public bool CanStop => (HasControls && (IsRunning || IsPaused)) || HasHorseRuns;
+    /// <summary>The Horse registration card stops its latest run; its panel lists every run.</summary>
+    public string StopTip => IsHorseTemplate ? "Stop the latest" : "Stop";
     public bool IsFarm => _timer.Preset == Presets.Farm;
     /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
     public bool HasPercent => _timer.Kind == TimerKind.Countdown;
@@ -97,11 +100,13 @@ public sealed partial class TimerTileViewModel : ObservableObject
         if (IsHorseTemplate && _timer.Countdown is { } horse)
         {
             var runs = _services.Timers.Current.Timers.Where(Presets.IsActiveHorseRun).ToList();
+            HasHorseRuns = runs.Count > 0;
             CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
             HorseStartTip = CanStartHorse ? "Start registration" : Formats.HorseRegistrations(runs.Count);
             var nextHorse = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
                 .MinBy(t => t.Countdown!.EndsAtUtc);
             Digits = nextHorse?.Countdown?.EndsAtUtc is { } end ? DurationFormat.Clock(end - now) : DurationFormat.Clock(horse.Duration);
+            Progress = nextHorse?.Countdown is { } soonest ? Math.Min((CountdownOps.Progress(soonest, now, false) ?? 0) / 100.0, 1) : 0;
             Detail = off + (runs.Count == 0 ? "Ready" : Formats.HorseRegistrations(runs.Count));
             IsDimmed = runs.Count == 0 || !_timer.Enabled;
             return;
@@ -318,7 +323,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [RelayCommand]
     void Reset()
     {
-        _services.Undo.ResetTimer(_timer.Id);
+        var id = IsHorseTemplate
+            ? _services.Timers.Current.Timers.Where(Presets.IsActiveHorseRun).MaxBy(t => t.Countdown!.StartedAtUtc)?.Id
+            : _timer.Id;
+        if (id is { } timerId) _services.Undo.ResetTimer(timerId);
     }
 
     [RelayCommand]
