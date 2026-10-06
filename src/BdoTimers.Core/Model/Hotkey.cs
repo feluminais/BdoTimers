@@ -23,6 +23,23 @@ public static class DefaultHotkeys
     public static readonly Hotkey AlwaysShow = new(Modifiers, F8);
     public static readonly Hotkey Show = new(Modifiers, F9);
     public static readonly Hotkey HorseRegistration = new(Modifiers, F10);
+    /// <summary>Held, not pressed, and no key with it: the overlay can be dragged while Ctrl and Shift are down.</summary>
+    public static readonly Hotkey Move = new(Modifiers, 0);
+}
+
+/// <summary>A combo that is held down rather than pressed. Its key is optional: Ctrl+Shift alone is one.</summary>
+public static class HotkeyChord
+{
+    const int Shift = 0x10, Control = 0x11, Menu = 0x12, LeftWindows = 0x5B, RightWindows = 0x5C;
+
+    /// <summary>True while every key of <paramref name="chord"/> is down. Other keys held with them don't count against it.</summary>
+    public static bool IsHeld(Hotkey chord, Func<int, bool> isDown) =>
+        (chord.Modifiers != HotkeyModifiers.None || chord.VirtualKey != 0)
+        && (!chord.Modifiers.HasFlag(HotkeyModifiers.Ctrl) || isDown(Control))
+        && (!chord.Modifiers.HasFlag(HotkeyModifiers.Alt) || isDown(Menu))
+        && (!chord.Modifiers.HasFlag(HotkeyModifiers.Shift) || isDown(Shift))
+        && (!chord.Modifiers.HasFlag(HotkeyModifiers.Win) || isDown(LeftWindows) || isDown(RightWindows))
+        && (chord.VirtualKey == 0 || isDown(chord.VirtualKey));
 }
 
 public static class HotkeyRules

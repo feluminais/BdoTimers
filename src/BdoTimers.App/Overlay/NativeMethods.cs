@@ -57,6 +57,10 @@ static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetCursorPos(out Point point);
 
+    /// <summary>The high bit is set while the key is down, whichever window has the keyboard.</summary>
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int virtualKey);
+
     [LibraryImport("user32.dll", EntryPoint = "GetWindowLongW")]
     public static partial int GetWindowLong(IntPtr hWnd, int nIndex);
 

@@ -39,11 +39,11 @@
                 </Style>
             </ContentControl.Style>
         </ContentControl>
-        <!-- Preview: a near-invisible fill keeps the overlay draggable even with its outline off -->
+        <!-- Preview or move keys held: a near-invisible fill keeps the overlay draggable even with its outline off -->
         <Border BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="{Binding OutlineThickness}" Background="#01000000">
             <Border.Style>
                 <Style TargetType="Border">
-                    <Setter Property="Visibility" Value="{Binding IsPreview, Converter={StaticResource BoolToVisibility}}" />
+                    <Setter Property="Visibility" Value="{Binding IsGrabbable, Converter={StaticResource BoolToVisibility}}" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Layout}" Value="Card">
                             <Setter Property="Visibility" Value="Collapsed" />

@@ -11,6 +11,7 @@ public static class HotkeyCatalog
         var keys = new Dictionary<HotkeyTarget, Hotkey>();
         if (overlay.AlwaysShowHotkey is { } always) keys[new(HotkeyAction.AlwaysShow)] = always;
         if (overlay.ShowHotkey is { } show) keys[new(HotkeyAction.Show)] = show;
+        if (overlay.MoveHotkey is { } move) keys[new(HotkeyAction.MoveOverlay)] = move;
         if (data.Timers.FirstOrDefault(t => t.Preset == Presets.HorseRegistration)?.StartHotkey is { } horse)
             keys[new(HotkeyAction.StartHorseRegistration)] = horse;
         foreach (var timer in data.Timers.Where(CustomCountdowns.Includes))
@@ -21,6 +22,7 @@ public static class HotkeyCatalog
     public static IReadOnlyList<Hotkey> OtherKeys(AppData data, OverlaySettings overlay, HotkeyTarget target) =>
         Configured(data, overlay).Where(pair => pair.Key != target).Select(pair => pair.Value).ToList();
 
+    /// <summary>The combos Windows is asked to hold. The move chord is not one: it is read while the overlay shows.</summary>
     public static IReadOnlyDictionary<HotkeyTarget, Hotkey> Active(AppData data, OverlaySettings overlay)
     {
         var configured = Configured(data, overlay);
@@ -28,6 +30,7 @@ public static class HotkeyCatalog
             {
                 HotkeyAction.AlwaysShow => overlay.Enabled,
                 HotkeyAction.Show => overlay.Enabled && overlay.ShowOnHotkey,
+                HotkeyAction.MoveOverlay => false,
                 _ => true,
             })
             .Where(pair => HotkeyRules.CheckAgainst(pair.Value,

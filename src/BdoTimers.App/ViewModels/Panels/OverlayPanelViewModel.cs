@@ -42,8 +42,10 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     /// <summary>The combos the other hotkeys hold, which each hotkey field may not repeat.</summary>
     public HotkeyTarget AlwaysShowTarget => new(HotkeyAction.AlwaysShow);
     public HotkeyTarget ShowTarget => new(HotkeyAction.Show);
+    public HotkeyTarget MoveTarget => new(HotkeyAction.MoveOverlay);
     public IReadOnlyList<Hotkey> TakenForAlwaysShow => HotkeyCatalog.OtherKeys(_services.Timers.Current, Current, AlwaysShowTarget);
     public IReadOnlyList<Hotkey> TakenForShow => HotkeyCatalog.OtherKeys(_services.Timers.Current, Current, ShowTarget);
+    public IReadOnlyList<Hotkey> TakenForMove => HotkeyCatalog.OtherKeys(_services.Timers.Current, Current, MoveTarget);
     /// <summary>The boss region whose server time the overlay shows.</summary>
     public string ServerRegion => _services.Region.Label;
 
@@ -71,6 +73,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public Hotkey? AlwaysShowHotkey { get => Current.AlwaysShowHotkey; set => Modify(o => o with { AlwaysShowHotkey = value }); }
     public bool ShowOnHotkey { get => Current.ShowOnHotkey; set => Modify(o => o with { ShowOnHotkey = value }); }
     public Hotkey? ShowHotkey { get => Current.ShowHotkey; set => Modify(o => o with { ShowHotkey = value }); }
+    public Hotkey? MoveHotkey { get => Current.MoveHotkey; set => Modify(o => o with { MoveHotkey = value }); }
     public Choice ShowSeconds
     {
         get => SecondsChoices.FirstOrDefault(c => (int)c.Value! == Current.ShowSeconds) ?? SecondsChoices[1];
@@ -133,6 +136,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         if (previous.ShowOnHotkey != next.ShowOnHotkey) OnPropertyChanged(nameof(ShowOnHotkey));
         if (previous.AlwaysShowHotkey != next.AlwaysShowHotkey) OnPropertyChanged(nameof(AlwaysShowHotkey));
         if (previous.ShowHotkey != next.ShowHotkey) OnPropertyChanged(nameof(ShowHotkey));
+        if (previous.MoveHotkey != next.MoveHotkey) OnPropertyChanged(nameof(MoveHotkey));
         if (previous.ShowSeconds != next.ShowSeconds) OnPropertyChanged(nameof(ShowSeconds));
         if (previous.GuildBosses != next.GuildBosses) OnPropertyChanged(nameof(GuildBosses));
         if (previous.Layout != next.Layout) OnPropertyChanged(nameof(Layout));
@@ -163,6 +167,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         }
         OnPropertyChanged(nameof(TakenForAlwaysShow));
         OnPropertyChanged(nameof(TakenForShow));
+        OnPropertyChanged(nameof(TakenForMove));
     }
 
     void Modify(Func<OverlaySettings, OverlaySettings> change) =>

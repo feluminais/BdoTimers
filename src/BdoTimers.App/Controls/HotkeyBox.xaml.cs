@@ -9,7 +9,7 @@ namespace BdoTimers.App.Controls;
 
 /// <summary>
 /// A field that listens for a key combo when clicked; Esc cancels and ✕ clears it. While it listens, the app's
-/// hotkeys are released so the combo reaches it.
+/// hotkeys are released so the combo reaches it. A <see cref="Chord"/> field also takes modifiers alone, once they are let go.
 /// </summary>
 public partial class HotkeyBox : UserControl
 {
@@ -31,8 +31,14 @@ public partial class HotkeyBox : UserControl
     public static readonly DependencyProperty TargetProperty = DependencyProperty.Register(
         nameof(Target), typeof(HotkeyTarget), typeof(HotkeyBox), new PropertyMetadata(default(HotkeyTarget), Changed));
 
+    /// <summary>A combo that is held rather than pressed, so Ctrl and Shift without a key will do.</summary>
+    public static readonly DependencyProperty ChordProperty = DependencyProperty.Register(
+        nameof(Chord), typeof(bool), typeof(HotkeyBox), new PropertyMetadata(false));
+
     string? _error;
     bool _listening;
+    // A chord is the modifiers that were down together, taken when the last of them comes up with no key pressed.
+    HotkeyModifiers _down, _together;
     // Released when listening starts and resumed exactly once when it ends, even if Hotkeys changed meanwhile.
     HotkeyService? _released;
     HotkeyService? _watched;
@@ -53,6 +59,12 @@ public partial class HotkeyBox : UserControl
     {
         get => (Hotkey?)GetValue(ComboProperty);
         set => SetValue(ComboProperty, value);
+    }
+
+    public bool Chord
+    {
+        get => (bool)GetValue(ChordProperty);
+        set => SetValue(ChordProperty, value);
     }
 
     public IEnumerable<Hotkey?>? Taken
@@ -100,6 +112,8 @@ public partial class HotkeyBox : UserControl
     {
         if (listening == _listening) return;
         _listening = listening;
+        _down = listening ? (HotkeyModifiers)(int)Keyboard.Modifiers : HotkeyModifiers.None;
+        _together = _down;
         if (listening) (_released = Hotkeys)?.Suspend();
         else
         {
@@ -137,6 +151,43 @@ public partial class HotkeyBox : UserControl
         if (HandleKeyDown(key, Keyboard.Modifiers)) e.Handled = true;
     }
 
+    protected override void OnPreviewKeyUp(KeyEventArgs e)
+    {
+        base.OnPreviewKeyUp(e);
+        var key = e.Key switch { Key.System => e.SystemKey, Key.ImeProcessed => e.ImeProcessedKey, _ => e.Key };
+        if (HandleKeyUp(key)) e.Handled = true;
+    }
+
+    static HotkeyModifiers ModifierOf(Key key) => key switch
+    {
+        Key.LeftCtrl or Key.RightCtrl => HotkeyModifiers.Ctrl,
+        Key.LeftAlt or Key.RightAlt => HotkeyModifiers.Alt,
+        Key.LeftShift or Key.RightShift => HotkeyModifiers.Shift,
+        Key.LWin or Key.RWin => HotkeyModifiers.Win,
+        _ => HotkeyModifiers.None,
+    };
+
+    /// <summary>A chord field takes the modifiers that were down together once the last of them comes up.</summary>
+    internal bool HandleKeyUp(Key key)
+    {
+        var modifier = ModifierOf(key);
+        if (!_listening || modifier == HotkeyModifiers.None) return false;
+        _down &= ~modifier;
+        if (!Chord || _down != HotkeyModifiers.None || _together == HotkeyModifiers.None) return true;
+        _error = null;
+        try
+        {
+            var combo = new Hotkey(_together, 0);
+            _error = HotkeyRules.CheckAgainst(combo, (Taken ?? []).OfType<Hotkey>());
+            if (_error is null) SetCurrentValue(ComboProperty, combo);
+        }
+        finally
+        {
+            Listen(false);
+        }
+        return true;
+    }
+
     internal bool HandleKeyDown(Key key, ModifierKeys pressedModifiers)
     {
         if (!_listening)
@@ -150,9 +201,13 @@ public partial class HotkeyBox : UserControl
             }
             return false;
         }
-        // Wait for the key the modifiers go with.
-        if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftAlt or Key.RightAlt or Key.LeftShift or Key.RightShift
-            or Key.LWin or Key.RWin) return true;
+        // Wait for the key the modifiers go with; a chord takes them alone when they are let go.
+        if (ModifierOf(key) is var modifier and not HotkeyModifiers.None)
+        {
+            _down |= modifier;
+            _together |= _down;
+            return true;
+        }
         var modifiers = (HotkeyModifiers)(int)pressedModifiers;
         _error = null;
         try

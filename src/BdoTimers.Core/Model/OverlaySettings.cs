@@ -18,6 +18,8 @@ public sealed record OverlaySettings
     public Hotkey? ShowHotkey { get; init; } = DefaultHotkeys.Show;
     public int ShowSeconds { get; init; } = 10;
     public OverlayMouseProximity MouseProximity { get; init; }
+    /// <summary>Held to drag the overlay where it shows, without the Overlay panel. Mouse proximity still applies meanwhile.</summary>
+    public Hotkey? MoveHotkey { get; init; } = DefaultHotkeys.Move;
     public OverlayLayout Layout { get; init; }
     public bool ShowOutline { get; init; }
     /// <summary>0.6 to 2.</summary>

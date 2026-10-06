@@ -15,6 +15,10 @@ public partial class OverlayWindow : Window
     bool _screenCheckPending;
     readonly DispatcherTimer _mouseCheck = new(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(75) };
     readonly Func<IntPtr, (WindowRect Bounds, double X, double Y)?> _readPointer;
+    readonly Func<Hotkey, bool> _isHeld;
+    readonly DispatcherTimer _moveCheck = new(DispatcherPriority.Input) { Interval = TimeSpan.FromMilliseconds(75) };
+    Hotkey? _moveHotkey;
+    bool _moving;
     OverlayMouseProximity _mouseProximity;
     OverlayMouseAvoidance _mouseAvoidance;
     double _targetOpacity = 1;
@@ -22,13 +26,20 @@ public partial class OverlayWindow : Window
 
     public OverlayWindow(OverlayViewModel model) : this(model, ReadPointer) { }
 
-    internal OverlayWindow(OverlayViewModel model, Func<IntPtr, (WindowRect Bounds, double X, double Y)?> readPointer)
+    internal OverlayWindow(OverlayViewModel model, Func<IntPtr, (WindowRect Bounds, double X, double Y)?> readPointer,
+        Func<Hotkey, bool>? isHeld = null)
     {
         _readPointer = readPointer;
+        _isHeld = isHeld ?? HeldNow;
         InitializeComponent();
         DataContext = Model = model;
         _mouseCheck.Tick += OnMouseCheck;
-        IsVisibleChanged += (_, _) => UpdateMouseTracking();
+        _moveCheck.Tick += (_, _) => CheckMoveKeys();
+        IsVisibleChanged += (_, _) =>
+        {
+            UpdateMouseTracking();
+            UpdateMoveTracking();
+        };
         SourceInitialized += (_, _) =>
         {
             ApplyStyles();
@@ -43,7 +54,7 @@ public partial class OverlayWindow : Window
         DpiChanged += (_, _) => QueueScreenCheck();
         MouseLeftButtonDown += (_, e) =>
         {
-            if (_clickThrough || e.ButtonState != MouseButtonState.Pressed) return;
+            if ((_clickThrough && !_moving) || e.ButtonState != MouseButtonState.Pressed) return;
             DragMove();
             Dropped?.Invoke();
         };
@@ -74,6 +85,7 @@ public partial class OverlayWindow : Window
     protected override void OnClosed(EventArgs e)
     {
         _mouseCheck.Stop();
+        _moveCheck.Stop();
         _mouseCheck.Tick -= OnMouseCheck;
         _source?.RemoveHook(ScreenMessages);
         _source = null;
@@ -129,7 +141,48 @@ public partial class OverlayWindow : Window
         _clickThrough = enabled;
         ApplyStyles();
         UpdateMouseTracking();
+        UpdateMoveTracking();
     }
+
+    /// <summary>
+    /// While these keys are held, whichever window has the keyboard, the overlay takes the mouse and can be dragged where it
+    /// shows. Mouse proximity goes on working meanwhile; null turns this off.
+    /// </summary>
+    public void SetMoveHotkey(Hotkey? hotkey)
+    {
+        if (_moveHotkey == hotkey) return;
+        _moveHotkey = hotkey;
+        UpdateMoveTracking();
+    }
+
+    /// <summary>The Overlay panel's preview is draggable already, so the keys are only read while the overlay shows and clicks pass through it.</summary>
+    void UpdateMoveTracking()
+    {
+        if (IsVisible && _clickThrough && _moveHotkey is not null)
+        {
+            CheckMoveKeys();
+            _moveCheck.Start();
+        }
+        else
+        {
+            _moveCheck.Stop();
+            SetMoving(false);
+        }
+    }
+
+    void CheckMoveKeys() => SetMoving(_moveHotkey is { } keys && _isHeld(keys));
+
+    void SetMoving(bool moving)
+    {
+        if (_moving == moving) return;
+        _moving = moving;
+        Model.IsMoveMode = moving;
+        Cursor = moving ? Cursors.SizeAll : null;
+        ApplyStyles();
+    }
+
+    static bool HeldNow(Hotkey chord) =>
+        HotkeyChord.IsHeld(chord, key => (NativeMethods.GetAsyncKeyState(key) & 0x8000) != 0);
 
     public void SetMouseProximity(OverlayMouseProximity mode)
     {
@@ -207,7 +260,7 @@ public partial class OverlayWindow : Window
         if (handle == IntPtr.Zero) return;
         var style = NativeMethods.GetWindowLong(handle, NativeMethods.GWL_EXSTYLE)
                     | NativeMethods.WS_EX_LAYERED | NativeMethods.WS_EX_TOOLWINDOW | NativeMethods.WS_EX_NOACTIVATE;
-        style = _clickThrough ? style | NativeMethods.WS_EX_TRANSPARENT : style & ~NativeMethods.WS_EX_TRANSPARENT;
+        style = _clickThrough && !_moving ? style | NativeMethods.WS_EX_TRANSPARENT : style & ~NativeMethods.WS_EX_TRANSPARENT;
         NativeMethods.SetWindowLong(handle, NativeMethods.GWL_EXSTYLE, style);
     }
 }

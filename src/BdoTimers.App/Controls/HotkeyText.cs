@@ -3,7 +3,7 @@ using BdoTimers.Core.Model;
 
 namespace BdoTimers.App.Controls;
 
-/// <summary>How a hotkey reads in its field: "Ctrl+Shift+O", "F9", "Num 5".</summary>
+/// <summary>How a hotkey reads in its field: "Ctrl+Shift+O", "F9", "Num 5"; a held chord of modifiers alone, "Ctrl+Shift".</summary>
 public static class HotkeyText
 {
     public static string Format(Hotkey hotkey)
@@ -13,7 +13,7 @@ public static class HotkeyText
         if (hotkey.Modifiers.HasFlag(HotkeyModifiers.Alt)) parts.Add("Alt");
         if (hotkey.Modifiers.HasFlag(HotkeyModifiers.Shift)) parts.Add("Shift");
         if (hotkey.Modifiers.HasFlag(HotkeyModifiers.Win)) parts.Add("Win");
-        parts.Add(KeyName(KeyInterop.KeyFromVirtualKey(hotkey.VirtualKey)));
+        if (hotkey.VirtualKey != 0) parts.Add(KeyName(KeyInterop.KeyFromVirtualKey(hotkey.VirtualKey)));
         return string.Join("+", parts);
     }
 

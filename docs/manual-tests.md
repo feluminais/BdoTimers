@@ -26,6 +26,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
    pointer nearby until a hotkey show or pop-up expires: moving away must not bring the expired overlay back.
    Open the panel while proximity-hidden: the preview returns immediately and remains draggable in either mode.
    Restart: the chosen mode persists. Off keeps the normal appearance even with the pointer over the overlay.
+   With the overlay showing, hold Ctrl+Shift (Overlay settings → Drag to move): the pointer over the overlay becomes the
+   move cursor and the overlay can be dragged, in BDO too; let go and clicks pass through it again. Mouse proximity
+   still applies while the keys are held: Fade keeps it faint under the pointer, Hide leaves nothing to grab, so use the
+   panel's preview then. The new place survives a restart. Clear the field and the keys do nothing; set Alt alone, or
+   Ctrl+Alt+D, and those keys do it.
 7. [ ] Schedule → Week: right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip
    restores it. On Today, Skip on the hero (on hover, or right-click) skips every boss of the next spawn at once; the
    hero shows them struck through and "Skipped", and Unskip brings them back.

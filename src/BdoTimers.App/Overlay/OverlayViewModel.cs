@@ -73,7 +73,9 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private Brush _background = Brushes.Black;
     [ObservableProperty] private double _backgroundOpacity = 0.85;
     [ObservableProperty] private double _textOpacity = 1;
-    [ObservableProperty] private bool _isPreview;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsGrabbable))] private bool _isPreview;
+    /// <summary>The move keys are held: the overlay takes the mouse, to be dragged where it shows.</summary>
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(IsGrabbable))] private bool _isMoveMode;
     [ObservableProperty] private string? _clock;
     [ObservableProperty] private string? _serverClock;
     [ObservableProperty] private string? _gameClock;
@@ -86,6 +88,9 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private string? _moreHorseRegistrations;
     [ObservableProperty] private bool _hasCustomTimers;
     [ObservableProperty] private bool _showDivider;
+
+    /// <summary>Drawn with a near-invisible fill, so a transparent overlay can still be picked up anywhere on it.</summary>
+    public bool IsGrabbable => IsPreview || IsMoveMode;
 
     public ObservableCollection<OverlayLine> PopUps { get; } = [];
     public ObservableCollection<OverlayLine> HorseRegistrations { get; } = [];

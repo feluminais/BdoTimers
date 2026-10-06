@@ -70,6 +70,7 @@ It can stay pinned, appear briefly for an alert or hotkey, and fade or hide when
 | Ctrl+Shift+F8 | Pin or unpin the overlay |
 | Ctrl+Shift+F9 | Show the overlay for ten seconds |
 | Ctrl+Shift+F10 | Start a horse registration timer |
+| Hold Ctrl+Shift | Drag the overlay to move it |
 
 **The overlay needs borderless window mode.** It is a separate, click-through
 Windows window; the app does not read game memory, inject code or send keyboard or mouse input to BDO.
