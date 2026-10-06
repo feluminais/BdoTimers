@@ -16,12 +16,20 @@
   <a href="CONTRIBUTING.md">Build &amp; contribute</a>
 </p>
 
-![Bosses screen showing upcoming spawns, the weekly timetable and individual boss settings](docs/images/bosses.png)
+![Today with the next boss spawn, the next 24 hours, running timers and daily tasks](docs/images/today.png)
 
-## Bosses
+## Today
 
-World boss schedules for EU and NA, shown in your local time with countdowns to upcoming spawns.
-Event bosses can be added alongside the built-in timetable. [Timetable sources](docs/boss-region-sources.md).
+The next boss spawn counts down at the top, with the one after it and the alert times. Below it, the next 24 hours of
+spawns, timers and resets; on the right, the timers that are running and your daily tasks.
+
+![Schedule with this week's boss spawns](docs/images/schedule.png)
+
+## Schedule
+
+World boss schedules for EU and NA, shown in your local time: this week's grid, and a month view with your timers and
+events. Choose which bosses to follow in **Following**; event bosses can be added alongside the built-in timetable.
+[Timetable sources](docs/boss-region-sources.md).
 
 ## Timers
 

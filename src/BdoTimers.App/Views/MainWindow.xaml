@@ -135,13 +135,13 @@
                <Grid Width="{Binding ViewportWidth, ElementName=ScreenScroller}" Height="{Binding ViewportHeight, ElementName=ScreenScroller}"
                      MinWidth="640" MinHeight="300">
                <Grid Margin="22,18,22,20">
-                <views:TodayView DataContext="{Binding Today}"
+                <views:TodayView x:Name="TodayScreen" DataContext="{Binding Today}"
                                  Visibility="{Binding IsChecked, ElementName=TodayTab, Converter={StaticResource BoolToVisibility}}" />
-                <views:ScheduleView DataContext="{Binding Schedule}"
+                <views:ScheduleView x:Name="ScheduleScreen" DataContext="{Binding Schedule}"
                                     Visibility="{Binding IsChecked, ElementName=ScheduleTab, Converter={StaticResource BoolToVisibility}}" />
-                <views:CustomView DataContext="{Binding Custom}"
+                <views:CustomView x:Name="CustomScreen" DataContext="{Binding Custom}"
                                   Visibility="{Binding IsChecked, ElementName=CustomTab, Converter={StaticResource BoolToVisibility}}" />
-                <views:TodoView DataContext="{Binding Todo}"
+                <views:TodoView x:Name="TodoScreen" DataContext="{Binding Todo}"
                                 Visibility="{Binding IsChecked, ElementName=TodoTab, Converter={StaticResource BoolToVisibility}}" />
                </Grid>
                </Grid>

@@ -175,6 +175,24 @@ public partial class MainWindow : Window
         if (_vm is null) return;
         _vm.SelectedTab = Enum.Parse<MainTab>((string)((RadioButton)sender).Tag);
         UpdateChip();
+        EaseIn(ScreenOf(_vm.SelectedTab));
+    }
+
+    FrameworkElement ScreenOf(MainTab tab) => tab switch
+    {
+        MainTab.Today => TodayScreen,
+        MainTab.Schedule => ScheduleScreen,
+        MainTab.Timers => CustomScreen,
+        _ => TodoScreen,
+    };
+
+    /// <summary>A screen eases in when its tab is picked: a quick fade with a short rise, unless Windows has animations off.</summary>
+    static void EaseIn(FrameworkElement screen)
+    {
+        if (!SystemParameters.ClientAreaAnimation || !screen.IsLoaded) return;
+        if (screen.RenderTransform is not TranslateTransform rise) screen.RenderTransform = rise = new TranslateTransform();
+        screen.BeginAnimation(OpacityProperty, Move(0, 1, Quick, Entering));
+        rise.BeginAnimation(TranslateTransform.YProperty, Move(5, 0, Quick, Entering));
     }
 
     RadioButton TabOf(MainTab tab) => tab switch
