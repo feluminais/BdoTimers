@@ -19,6 +19,7 @@ namespace BdoTimers.App.ViewModels.Panels;
 public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPanel
 {
     readonly AppServices _services;
+    readonly IPanelHost? _host;
     readonly EditDraft<AppSettings> _draft;
     public bool RegionSaved => (string)Region.Value! == _services.Timers.Current.SelectedBossRegion;
     public bool HasChanges => _draft.HasChanges || !RegionSaved;
@@ -77,9 +78,10 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     /// <summary>Opens scrolled to the Bosses section, whose Region sets the overlay's server time.</summary>
     public bool OpenAtRegion { get; init; }
 
-    public SettingsPanelViewModel(AppServices services)
+    public SettingsPanelViewModel(AppServices services, IPanelHost? host = null)
     {
         _services = services;
+        _host = host;
         services.Updates.Changed += UpdateCheckChanged;
         RefreshUpdateCheck();
         var s = services.Settings.Current;
@@ -411,6 +413,10 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
             UpdateStatus = "Couldn't open release";
         }
     }
+
+    /// <summary>The Overlay panel is separate: its changes apply at once, where these settings save with Save.</summary>
+    [RelayCommand]
+    void OpenOverlay() => _host?.OpenOverlaySettings();
 
     [RelayCommand]
     void OpenDataFolder() => _services.OpenDataFolder();

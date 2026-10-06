@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
+using BdoTimers.App.Views.Panels;
 using BdoTimers.Core.Seed;
 
 namespace BdoTimers.App.Tests;
@@ -36,7 +37,13 @@ public class UiShots
                 }
                 main.OpenSettingsCommand.Execute(null);
                 WpfTest.Drain();
-                UiCapture.Save(window, "settings.png");
+                var settings = PanelFocusScope.Descendants(window).OfType<SettingsPanel>().Single();
+                foreach (var (nav, name) in new[] { ("GeneralNav", "general"), ("AlertsNav", "alerts"), ("TodoNav", "todo"), ("BossesNav", "bosses"), ("DataNav", "data"), ("AboutNav", "about") })
+                {
+                    ((RadioButton)settings.FindName(nav)).IsChecked = true;
+                    WpfTest.Drain();
+                    UiCapture.Save(window, $"settings-{name}.png");
+                }
                 main.ClosePanel();
                 WpfTest.Drain();
                 var data = services.Timers.Current;

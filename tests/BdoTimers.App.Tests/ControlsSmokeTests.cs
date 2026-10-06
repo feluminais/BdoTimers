@@ -221,7 +221,15 @@ public sealed class ControlsSmokeTests
                 Assert.All(items.Children.OfType<FrameworkElement>(), row => Assert.Equal(Visibility.Collapsed, row.Visibility));
                 search.Clear();
                 Assert.Equal(Visibility.Collapsed, ((TextBlock)panel.FindName("NoResults")).Visibility);
-                Assert.All(items.Children.OfType<FrameworkElement>(), row => Assert.Equal(Visibility.Visible, row.Visibility));
+                var visible = items.Children.OfType<FrameworkElement>().Where(c => c.Visibility == Visibility.Visible).ToList();
+                Assert.NotEmpty(visible);
+                Assert.All(visible, row => Assert.Equal("General", SettingsFilter.GetCategory(row)));
+                Assert.DoesNotContain(visible, row => row is TextBlock);
+                ((RadioButton)panel.FindName("AlertsNav")).IsChecked = true;
+                Assert.Contains(items.Children.OfType<FrameworkElement>(),
+                    row => row.Visibility == Visibility.Visible && SettingsFilter.GetCategory(row) == "Alerts");
+                Assert.DoesNotContain(items.Children.OfType<FrameworkElement>(),
+                    row => row.Visibility == Visibility.Visible && SettingsFilter.GetCategory(row) == "General");
             }
             finally { window.Close(); }
         });

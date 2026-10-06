@@ -115,7 +115,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
 
     /// <summary>Closes this panel for Settings, scrolled to the boss region that sets the server time.</summary>
     [RelayCommand]
-    void OpenRegionSettings() => _host.OpenPanel(new SettingsPanelViewModel(_services) { OpenAtRegion = true });
+    void OpenRegionSettings() => _host.OpenPanel(new SettingsPanelViewModel(_services, _host) { OpenAtRegion = true });
 
     /// <summary>Settings also change from outside the panel: Always show by its hotkey.</summary>
     void OnSettingsChanged()

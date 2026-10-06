@@ -26,37 +26,115 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <!-- Left list of the sheet: the chosen category has a raised fill and a gold bar. -->
+        <Style x:Key="SettingsNavItem" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Bd" CornerRadius="6" Background="Transparent" />
+                            <Border x:Name="Bar" Width="2" Margin="0,9" HorizontalAlignment="Left" CornerRadius="1"
+                                    Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+                            <ContentPresenter VerticalAlignment="Center" Margin="14,0,8,0" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverFillBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource RaisedBrush}" />
+                                <Setter TargetName="Bar" Property="Visibility" Value="Visible" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SettingsNavButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Grid Background="Transparent">
+                            <Border x:Name="Bd" CornerRadius="6" Background="Transparent" />
+                            <DockPanel Margin="14,0,10,0" VerticalAlignment="Center">
+                                <TextBlock DockPanel.Dock="Right" Text="&#xE76C;" Style="{StaticResource IconText}" FontSize="9" VerticalAlignment="Center" />
+                                <ContentPresenter VerticalAlignment="Center" />
+                            </DockPanel>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverFillBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </UserControl.Resources>
-    <DockPanel>
-        <StackPanel DockPanel.Dock="Top">
-            <DockPanel Margin="22,16,12,4">
-                <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
-                <TextBlock Text="Settings" Style="{StaticResource DisplayText}" FontSize="18" VerticalAlignment="Center" />
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="190" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,0,1,0">
+            <DockPanel Margin="10,16,10,12">
+                <TextBlock DockPanel.Dock="Top" Text="Settings" Style="{StaticResource DisplayText}" FontSize="18" Margin="10,0,0,14" />
+                <StackPanel>
+                    <RadioButton x:Name="GeneralNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="General"
+                                 Tag="General" IsChecked="True" Checked="Category_Checked" />
+                    <RadioButton x:Name="AlertsNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Alerts"
+                                 Tag="Alerts" Checked="Category_Checked" />
+                    <Button x:Name="OverlayNav" Style="{StaticResource SettingsNavButton}" Content="Overlay" Command="{Binding OpenOverlayCommand}"
+                            AutomationProperties.Name="Overlay settings" />
+                    <RadioButton x:Name="TodoNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="To-do"
+                                 Tag="To-do" Checked="Category_Checked" />
+                    <RadioButton x:Name="BossesNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Bosses"
+                                 Tag="Bosses" Checked="Category_Checked" />
+                    <RadioButton x:Name="DataNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Data"
+                                 Tag="Data" Checked="Category_Checked" />
+                    <RadioButton x:Name="AboutNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="About"
+                                 Tag="About" Checked="Category_Checked" />
+                </StackPanel>
             </DockPanel>
-            <DockPanel Margin="22,0,22,8">
+        </Border>
+        <DockPanel Grid.Column="1">
+            <DockPanel DockPanel.Dock="Top" Margin="22,16,12,8">
+                <Button DockPanel.Dock="Right" Style="{StaticResource PanelCloseButton}" />
                 <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE894;" ToolTip="Clear search"
                         Width="28" Height="28" Click="ClearSearch_Click" />
                 <TextBlock Text="Search" Foreground="{DynamicResource SubtleBrush}" Margin="0,0,8,0" VerticalAlignment="Center" />
                 <TextBox controls:Ui.InitialFocus="True" x:Name="SearchBox" AutomationProperties.Name="Search settings" ToolTip="Search settings (Ctrl+F)"
                          TextChanged="SearchBox_TextChanged" />
             </DockPanel>
-        </StackPanel>
 
-        <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16" LastChildFill="False">
-            <Button Style="{StaticResource PanelDoneButton}" Content="Save" IsDefault="True" IsEnabled="{Binding CanFinish}" />
-        </DockPanel>
+            <DockPanel DockPanel.Dock="Bottom" Margin="22,8,22,16" LastChildFill="False">
+                <Button Style="{StaticResource PanelDoneButton}" Content="Save" IsDefault="True" IsEnabled="{Binding CanFinish}" />
+            </DockPanel>
 
         <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel Margin="22,0,22,4">
                 <TextBlock x:Name="NoResults" Text="No settings found" Foreground="{DynamicResource SubtleBrush}"
                            Margin="0,12,0,0" Visibility="Collapsed" AutomationProperties.LiveSetting="Polite" />
                 <StackPanel x:Name="SettingsItems">
-                <TextBlock Text="Appearance" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" />
+                <TextBlock Text="Appearance" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="General" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Text size" Tag="Text size display font accessibility scale Windows">
                     <controls:CycleSelector ItemsSource="{Binding TextSizes}" SelectedItem="{Binding TextSize}" ValueWidth="110"
                                             AutomationProperties.Name="Text size" />
                 </HeaderedContentControl>
-                <TextBlock Text="General" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" />
+                <TextBlock Text="General" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="General" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Close to tray" Tag="Close to tray">
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding CloseToTray}"
                                             Width="110" AutomationProperties.Name="Close to tray" />
@@ -72,6 +150,7 @@
                                    Visibility="{Binding AutostartError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
+                <TextBlock Text="Alerts" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Alerts" />
                 <Border Style="{StaticResource SearchRow}" Tag="Default alert times (minutes before)">
                     <StackPanel>
                         <TextBlock Text="Default alert times (minutes before)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
@@ -153,7 +232,12 @@
                     </StackPanel>
                 </HeaderedContentControl>
 
-                <TextBlock Text="To-do" Style="{StaticResource SearchHeading}" Tag="todo tasks" />
+                <Border Style="{StaticResource SearchRow}" Tag="Priority notifications">
+                    <Button Style="{StaticResource GhostButton}" Content="Priority notifications" HorizontalAlignment="Left" Margin="0,4,8,6"
+                            ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
+                </Border>
+
+                <TextBlock Text="To-do" Style="{StaticResource SearchHeading}" Tag="todo tasks" panels:SettingsFilter.Category="To-do" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily reset" Tag="Daily reset time UTC local">
                     <panels:TodoScheduleEditor DataContext="{Binding DailyTodoReset}" />
                 </HeaderedContentControl>
@@ -165,13 +249,7 @@
                             Command="{Binding RestoreTodoDefaultsCommand}" IsEnabled="{Binding HasDeletedTodoDefaults}" />
                 </Border>
 
-                <TextBlock Text="In game" Style="{StaticResource SearchHeading}" Tag="notification fullscreen priority" />
-                <Border Style="{StaticResource SearchRow}" Tag="Priority notifications">
-                    <Button Style="{StaticResource GhostButton}" Content="Priority notifications" HorizontalAlignment="Left" Margin="0,4,8,6"
-                            ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
-                </Border>
-
-                <TextBlock x:Name="BossesHeading" Text="Bosses" Style="{StaticResource SearchHeading}" />
+                <TextBlock x:Name="BossesHeading" Text="Bosses" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Bosses" />
                 <Border Style="{StaticResource SearchRow}" Tag="Boss region server Europe North America Asia">
                     <StackPanel>
                         <DockPanel>
@@ -250,7 +328,7 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Text="Data" Style="{StaticResource SearchHeading}" />
+                <TextBlock Text="Data" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Data" />
                 <Border Style="{StaticResource SearchRow}" Tag="Replace current data and restart? · Export backup… Restore backup… Open data folder Restore Cancel">
                     <StackPanel>
                         <WrapPanel>
@@ -272,7 +350,7 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock Text="Diagnostics" Style="{StaticResource SearchHeading}" />
+                <TextBlock Text="Diagnostics" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Data" />
                 <Border Style="{StaticResource SearchRow}" Tag="Health status errors logs copy diagnostics">
                     <StackPanel>
                         <TextBlock Text="{Binding Health.Status, TargetNullValue=No issues reported}" TextWrapping="Wrap" Style="{StaticResource LabelText}" AutomationProperties.LiveSetting="Polite" />
@@ -295,7 +373,7 @@
                                    AutomationProperties.LiveSetting="Polite" />
                     </StackPanel>
                 </Border>
-                <TextBlock Text="About" Style="{StaticResource SearchHeading}" />
+                <TextBlock Text="About" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="About" />
                 <Border Style="{StaticResource SearchRow}" Tag="BDO Timers © 2026 feluminais · Free software under GPL-3.0, with no warranty. Not affiliated with Pearl Abyss. Game artwork © Pearl Abyss. · Check for updates View release Source code Licenses version updates release licenses GPL source code">
                     <StackPanel>
                         <TextBlock FontSize="12">
@@ -322,5 +400,6 @@
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
-    </DockPanel>
+        </DockPanel>
+    </Grid>
 </UserControl>

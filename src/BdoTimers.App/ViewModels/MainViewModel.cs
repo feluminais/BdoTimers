@@ -173,7 +173,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     }
 
     [RelayCommand]
-    void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services));
+    void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services, this));
 
     /// <summary>Unlike <see cref="OpenPanel"/>, closes the open panel before making the new one: the Overlay panel
     /// starts the overlay preview when it's made, which an open Overlay panel would end on closing.</summary>
