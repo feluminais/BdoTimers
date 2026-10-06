@@ -227,6 +227,14 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         return d with { Muted = d.Muted.Contains(mute) ? d.Muted.Where(m => m != mute).ToList() : [.. d.Muted, mute] };
     });
 
+    /// <summary>Skips or unskips every one of <paramref name="items"/> in one update, as for a spawn of several bosses at once.</summary>
+    public void SetMuted(IEnumerable<(Guid Id, DateTimeOffset At)> items, bool muted) => Update(d =>
+    {
+        var changed = items.Select(i => new MutedOccurrence(i.Id, i.At)).ToHashSet();
+        var others = d.Muted.Where(m => !changed.Contains(m));
+        return d with { Muted = muted ? [.. others, .. changed] : others.ToList() };
+    });
+
     /// <summary>Timers that played <paramref name="key"/> go back to the app-wide sound.</summary>
     public void ForgetSound(string key) => Update(d => d with
     {
