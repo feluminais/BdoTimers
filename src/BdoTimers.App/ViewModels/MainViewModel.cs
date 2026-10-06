@@ -22,9 +22,8 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [ObservableProperty] private PanelPresentation _panelPresentation;
     [ObservableProperty] private bool _isPaused;
     [ObservableProperty] private string _pausedText = "";
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(OpenUpdateDetailsCommand))]
-    private bool _hasUpdate;
+    /// <summary>A newer release is available; the gear shows a dot, and Settings → About has the release.</summary>
+    [ObservableProperty] private bool _hasUpdate;
 
     public BossesViewModel Bosses { get; }
     public CustomViewModel Custom { get; }
@@ -54,13 +53,6 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     }
 
     void RefreshUpdate() => HasUpdate = _services.Updates.Current.Status == UpdateStatus.UpdateAvailable;
-
-    [RelayCommand(CanExecute = nameof(HasUpdate))]
-    void OpenUpdateDetails()
-    {
-        if (_services.Updates.Current.Release is { } release)
-            OpenPanel(new UpdatePanelViewModel(release, this));
-    }
 
     public void Dispose()
     {

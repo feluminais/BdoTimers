@@ -17,7 +17,6 @@
     <Window.Resources>
         <DataTemplate DataType="{x:Type pvm:OverlayPanelViewModel}"><panels:OverlayPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:SettingsPanelViewModel}"><panels:SettingsPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:UpdatePanelViewModel}"><panels:UpdatePanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:FollowingPanelViewModel}"><panels:FollowingPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:BossPanelViewModel}"><panels:BossPanel /></DataTemplate>
         <DataTemplate DataType="{x:Type pvm:CustomPanelViewModel}"><panels:CustomPanel /></DataTemplate>

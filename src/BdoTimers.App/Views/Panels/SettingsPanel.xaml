@@ -105,8 +105,15 @@
                                  Tag="Bosses" Checked="Category_Checked" />
                     <RadioButton x:Name="DataNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Data"
                                  Tag="Data" Checked="Category_Checked" />
-                    <RadioButton x:Name="AboutNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="About"
-                                 Tag="About" Checked="Category_Checked" />
+                    <RadioButton x:Name="AboutNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory"
+                                 AutomationProperties.Name="About" Tag="About" Checked="Category_Checked">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="About" />
+                            <!-- A newer release is waiting; its details are on the About page -->
+                            <Ellipse Width="6" Height="6" Margin="8,1,0,0" VerticalAlignment="Center" Fill="{DynamicResource UpdateBrush}"
+                                     ToolTip="Update available" Visibility="{Binding AvailableVersion, Converter={StaticResource NullToCollapsed}}" />
+                        </StackPanel>
+                    </RadioButton>
                 </StackPanel>
             </DockPanel>
         </Border>
