@@ -83,4 +83,78 @@ public class TodayViewTests
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
+
+    [Fact]
+    public void A_task_with_sub_tasks_opens_them_under_itself_and_they_are_ticked_there() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Today." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
+            var host = new Host();
+            var todo = new TodoViewModel(services, host);
+            var today = new TodayViewModel(services, host, new CustomViewModel(services, host), todo, () => { }, () => { }, () => { });
+            var view = new TodayView { DataContext = today };
+            var window = new Window { Content = new Border { Padding = new Thickness(22, 18, 22, 20), Child = view }, Width = 960, Height = 900,
+                Left = -10000, Top = -10000, ShowInTaskbar = false, FontSize = 13 };
+            window.SetResourceReference(Control.BackgroundProperty, "BgBrush");
+            window.SetResourceReference(Control.ForegroundProperty, "TextBrush");
+            window.SetResourceReference(Control.FontFamilyProperty, "UiFont");
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                var weekly = (FrameworkElement)view.FindName("WeeklyPanel");
+                var parent = today.Weekly.Tasks.First(task => task.HasChildren);
+                Button Part(FrameworkElement panel, ListedTask task, string name) =>
+                    PanelFocusScope.Descendants(panel).OfType<Button>().Single(b => b.Name == name && b.DataContext == task);
+                CheckBox[] Sub(FrameworkElement panel, ListedTask task) => PanelFocusScope.Descendants(panel).OfType<CheckBox>()
+                    .Where(c => task.Row.Children.Any(child => child.ToggleCommand == c.Command)).ToArray();
+
+                // Closed: the line says how far along it is, and its name and arrow are what opens it.
+                Assert.True(Part(weekly, parent, "Arrow").IsVisible);
+                Assert.True(Part(weekly, parent, "OpenTask").IsVisible);
+                Assert.False(Part(weekly, parent, "OpenList").IsVisible);
+                Assert.All(Sub(weekly, parent), box => Assert.False(box.IsVisible));
+
+                Part(weekly, parent, "Arrow").Command.Execute(null);
+                WpfTest.Drain();
+
+                var boxes = Sub(weekly, parent);
+                Assert.Equal(parent.Row.Children.Count, boxes.Length);
+                Assert.All(boxes, box => Assert.True(box.IsVisible));
+                Assert.Equal("Hide sub-tasks", Part(weekly, parent, "Arrow").ToolTip);
+                UiCapture.Save(window, "today-weekly-open.png");
+
+                // A sub-task is ticked in place; the task keeps its line and stays open.
+                var first = parent.Row.Children[0];
+                first.ToggleCommand.Execute(null);
+                WpfTest.Drain();
+
+                Assert.Same(parent, today.Weekly.Tasks.Single(task => task.Row.Id == parent.Row.Id));
+                Assert.True(parent.IsExpanded);
+                Assert.Equal($"1/{parent.Row.Children.Count}", parent.Row.PartialProgress);
+                Assert.Equal("1/16", today.Weekly.Summary);
+                Assert.All(Sub(weekly, parent), box => Assert.True(box.IsVisible));
+
+                // Its name closes it again.
+                Part(weekly, parent, "OpenTask").Command.Execute(null);
+                WpfTest.Drain();
+
+                Assert.False(parent.IsExpanded);
+                Assert.All(Sub(weekly, parent), box => Assert.False(box.IsVisible));
+                Assert.Equal("Show sub-tasks", Part(weekly, parent, "Arrow").ToolTip);
+
+                // A task with no sub-tasks has no arrow, and its name opens the list as before.
+                var daily = (FrameworkElement)view.FindName("DailyPanel");
+                var plain = today.Daily.Tasks.First(task => !task.HasChildren);
+                Assert.False(Part(daily, plain, "Arrow").IsVisible);
+                Assert.True(Part(daily, plain, "OpenList").IsVisible);
+                Assert.False(Part(daily, plain, "OpenTask").IsVisible);
+            }
+            finally { window.Close(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
 }

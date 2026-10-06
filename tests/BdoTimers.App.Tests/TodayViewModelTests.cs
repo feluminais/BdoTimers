@@ -217,6 +217,17 @@ public class TodayViewModelTests
 
         Assert.DoesNotContain(panel.Tasks, task => task.Row.Text == first.Text);
 
+        // A task that is opened stays the same line while its sub-tasks are ticked, so it stays open.
+        var second = weekly.Rows.First(row => row.Children.Count > 1 && row.Id != first.Id);
+        var opened = panel.Tasks.Single(task => task.Row.Text == second.Text);
+        opened.ToggleExpandedCommand.Execute(null);
+        services.Todos.Toggle(weekly.Id, second.Children[0].Id);
+        WpfTest.Drain();
+
+        Assert.Same(opened, Assert.Single(panel.Tasks, task => task.Row.Text == second.Text));
+        Assert.True(opened.IsExpanded);
+        Assert.True(opened.HasChildren);
+
         // Eight tasks of one line each: six show and the rest are counted.
         services.Todos.ReplaceRows(weekly.Id, Enumerable.Range(1, 8).Select(n => new TodoRow { Text = $"Task {n}" }).ToList());
         WpfTest.Drain();

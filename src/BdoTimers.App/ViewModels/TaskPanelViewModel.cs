@@ -5,12 +5,31 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>A task of a Today panel; the first of a list shows the list's name when more than one list is on.</summary>
-public sealed record ListedTask(string? ListName, TodoRowViewModel Row);
+/// <summary>
+/// A task of a Today panel; the first of a list shows the list's name when more than one list is on. A task with sub-tasks
+/// is one line, with how far along it is, and opens to show them under it.
+/// </summary>
+public sealed partial class ListedTask : ObservableObject
+{
+    public ListedTask(string? listName, TodoRowViewModel row)
+    {
+        _listName = listName;
+        Row = row;
+        row.Children.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasChildren));
+    }
+
+    public TodoRowViewModel Row { get; }
+    [ObservableProperty] private string? _listName;
+    [ObservableProperty] private bool _isExpanded;
+    public bool HasChildren => Row.Children.Count > 0;
+
+    [RelayCommand]
+    void ToggleExpanded() => IsExpanded = !IsExpanded;
+}
 
 /// <summary>
-/// One of Today's task panels, Daily or Weekly: what is still open in the active lists of its cadence (a task with
-/// sub-tasks is one line with how far along it is), how far along they are, and a way on to the To-do screen.
+/// One of Today's task panels, Daily or Weekly: what is still open in the active lists of its cadence, how far along they
+/// are, and a way on to the To-do screen.
 /// </summary>
 public sealed partial class TaskPanelViewModel : ObservableObject
 {
@@ -52,13 +71,14 @@ public sealed partial class TaskPanelViewModel : ObservableObject
         Summary = $"{done}/{total}";
         Fraction = total == 0 ? 0 : (double)done / total;
 
-        var tasks = new List<ListedTask>();
+        var open = new List<(string? ListName, TodoRowViewModel Row)>();
         foreach (var card in (_cadence == TodoCadence.Daily ? _todo.DailyOn : _todo.WeeklyOn))
             foreach (var row in card.Rows.Where(r => r.Checked != true))
-                tasks.Add(new ListedTask(lists.Count > 1 && tasks.All(t => t.ListName != card.Name) ? card.Name : null, row));
-        Tasks.Clear();
-        foreach (var task in tasks.Take(MaxTasks)) Tasks.Add(task);
-        Footer = !HasLists ? "To-do" : tasks.Count > MaxTasks ? $"+{tasks.Count - MaxTasks} more" : null;
+                open.Add((lists.Count > 1 && open.All(t => t.ListName != card.Name) ? card.Name : null, row));
+        // A task that stays keeps its line, so one that was opened stays open while its sub-tasks are ticked.
+        Tasks.Sync(open.Take(MaxTasks), (task, next) => ReferenceEquals(task.Row, next.Row),
+            next => new ListedTask(next.ListName, next.Row), (task, next) => task.ListName = next.ListName);
+        Footer = !HasLists ? "To-do" : open.Count > MaxTasks ? $"+{open.Count - MaxTasks} more" : null;
     }
 
     static (int Done, int Total) Count(IEnumerable<TodoList> lists)

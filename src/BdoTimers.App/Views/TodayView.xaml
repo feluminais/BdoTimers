@@ -230,15 +230,55 @@
             </Button>
         </DataTemplate>
 
-        <!-- A task: the list's name above the first of its tasks when more than one list is on -->
+        <!-- A task: the list's name above the first of its tasks when more than one list is on. A task with sub-tasks opens them
+             under itself, from its name or its arrow. -->
         <DataTemplate DataType="{x:Type vm:ListedTask}">
             <StackPanel>
                 <TextBlock Text="{Binding ListName}" Style="{StaticResource LabelText}" Margin="0,6,0,0"
                            Visibility="{Binding ListName, Converter={StaticResource NullToCollapsed}}" />
-                <DockPanel MinHeight="26" Margin="0,2" DataContext="{Binding Row}">
+                <DockPanel MinHeight="26" Margin="0,2">
                     <CheckBox DockPanel.Dock="Left" Style="{StaticResource TodoCheck}" IsThreeState="True"
-                              IsChecked="{Binding Checked, Mode=OneWay}" Command="{Binding ToggleCommand}"
-                              AutomationProperties.Name="{Binding AutomationName}" />
+                              IsChecked="{Binding Row.Checked, Mode=OneWay}" Command="{Binding Row.ToggleCommand}"
+                              AutomationProperties.Name="{Binding Row.AutomationName}" />
+                    <Button x:Name="Arrow" DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="24" Height="24" FontSize="10"
+                            Margin="2,0,0,0" Content="&#xE70D;" ToolTip="Show sub-tasks" Command="{Binding ToggleExpandedCommand}"
+                            Visibility="Collapsed" />
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding Row.PartialProgress}" FontSize="11" Margin="6,4,0,0"
+                               Foreground="{DynamicResource SubtleBrush}" />
+                    <Grid>
+                        <Button x:Name="OpenList" Style="{StaticResource TodoOpenButton}" Command="{Binding Row.OpenCommand}"
+                                HorizontalContentAlignment="Left" AutomationProperties.Name="{Binding Row.AutomationName}">
+                            <TextBlock DataContext="{Binding Row}" Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
+                        </Button>
+                        <Button x:Name="OpenTask" Style="{StaticResource TodoOpenButton}" Command="{Binding ToggleExpandedCommand}"
+                                HorizontalContentAlignment="Left" AutomationProperties.Name="{Binding Row.AutomationName}" Visibility="Collapsed">
+                            <TextBlock DataContext="{Binding Row}" Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
+                        </Button>
+                    </Grid>
+                </DockPanel>
+                <ItemsControl ItemsSource="{Binding Row.Children}" Margin="24,0,0,0" Focusable="False"
+                              Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVisibility}}" />
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding HasChildren}" Value="True">
+                    <Setter TargetName="Arrow" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="OpenList" Property="Visibility" Value="Collapsed" />
+                    <Setter TargetName="OpenTask" Property="Visibility" Value="Visible" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                    <Setter TargetName="Arrow" Property="Content" Value="&#xE70E;" />
+                    <Setter TargetName="Arrow" Property="ToolTip" Value="Hide sub-tasks" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- A sub-task of an open task, as the To-do screen draws it; its own sub-tasks sit under it -->
+        <DataTemplate DataType="{x:Type vm:TodoRowViewModel}">
+            <StackPanel>
+                <DockPanel MinHeight="26" Margin="0,2,0,2">
+                    <CheckBox DockPanel.Dock="Left" Style="{StaticResource TodoCheck}" IsThreeState="True"
+                              IsChecked="{Binding Checked, Mode=OneWay}" IsEnabled="{Binding Enabled}"
+                              Command="{Binding ToggleCommand}" AutomationProperties.Name="{Binding AutomationName}" />
                     <TextBlock DockPanel.Dock="Right" Text="{Binding PartialProgress}" FontSize="11" Margin="6,4,0,0"
                                Foreground="{DynamicResource SubtleBrush}" />
                     <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}" HorizontalContentAlignment="Left"
@@ -246,6 +286,7 @@
                         <TextBlock Text="{Binding Text}" Style="{StaticResource TodoRowText}" Margin="6,4,0,2" />
                     </Button>
                 </DockPanel>
+                <ItemsControl ItemsSource="{Binding Children}" Margin="24,0,0,0" Focusable="False" />
             </StackPanel>
         </DataTemplate>
 
