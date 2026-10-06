@@ -34,7 +34,8 @@
             </Setter>
         </Style>
 
-        <!-- A card is one button: an indigo tile whose hairline brightens on hover; keyboard focus uses the shared adorner -->
+        <!-- A card is one button: an indigo tile whose hairline turns gold on hover, and stays gold while its start is being
+             picked; keyboard focus uses the shared adorner -->
         <Style x:Key="TimerCard" TargetType="Button">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
@@ -48,19 +49,22 @@
                         </controls:ClippingBorder>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource IndigoLineHoverBrush}" />
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
                             </Trigger>
+                            <DataTrigger Binding="{Binding IsPickingStart}" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
+                            </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
 
-        <!-- Started earlier and the menu stay out of sight until the card is hovered or has the keyboard, its start is being
-             picked or its menu is open. Tab still reaches them, and that reveals them. -->
+        <!-- Started earlier, Stop and Skip next stay out of sight until the card is hovered or has the keyboard, or its start
+             is being picked. Tab still reaches them, and that reveals them. -->
         <Style x:Key="RailButton" TargetType="ButtonBase" BasedOn="{StaticResource IconButton}">
             <Setter Property="Width" Value="28" />
-            <Setter Property="Height" Value="26" />
+            <Setter Property="Height" Value="28" />
             <Setter Property="Opacity" Value="0" />
             <Setter Property="IsHitTestVisible" Value="False" />
             <Style.Triggers>
@@ -73,10 +77,6 @@
                     <Setter Property="IsHitTestVisible" Value="True" />
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsPickingStart}" Value="True">
-                    <Setter Property="Opacity" Value="1" />
-                    <Setter Property="IsHitTestVisible" Value="True" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding ContextMenu.IsOpen, RelativeSource={RelativeSource Self}}" Value="True">
                     <Setter Property="Opacity" Value="1" />
                     <Setter Property="IsHitTestVisible" Value="True" />
                 </DataTrigger>
@@ -109,18 +109,10 @@
             </Style.Triggers>
         </Style>
 
-        <!-- One menu for the card's right click and its ⋯ button -->
-        <ContextMenu x:Key="TimerMenu" x:Shared="False">
-            <MenuItem Header="Stop" Command="{Binding ResetCommand}" Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}" />
-            <MenuItem Header="{Binding SkipLabel}" Command="{Binding ToggleSkipNextCommand}"
-                      Visibility="{Binding HasNextOccurrence, Converter={StaticResource BoolToVisibility}}" />
-        </ContextMenu>
-
         <DataTemplate DataType="{x:Type vm:TimerTileViewModel}">
             <Grid>
                 <Button Style="{StaticResource TimerCard}" Height="108" Margin="0,0,12,12" Command="{Binding OpenCommand}"
-                        AutomationProperties.Name="{Binding Name}" ContextMenu="{StaticResource TimerMenu}"
-                        ContextMenuService.IsEnabled="{Binding HasMore}">
+                        AutomationProperties.Name="{Binding Name}">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="2*" />
@@ -156,7 +148,8 @@
                                              VerticalAlignment="Center" AutomationProperties.Name="Growth" />
                             </DockPanel>
                         </StackPanel>
-                        <!-- The round Start / Pause is always there; Started earlier above it and the menu below appear on hover -->
+                        <!-- The round Start / Pause is always there; Started earlier above it and Stop below it appear on hover. A weekly
+                             timer has no Start, so its Skip next takes the middle. -->
                         <Grid Grid.Column="2">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="*" />
@@ -171,9 +164,11 @@
                             <Button Grid.Row="1" Style="{StaticResource TimerPlayButton}" Content="&#xE768;" ToolTip="{Binding HorseStartTip}"
                                     Command="{Binding StartHorseRegistrationCommand}" IsEnabled="{Binding CanStartHorse}"
                                     Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}" />
-                            <Button Grid.Row="2" Style="{StaticResource RailButton}" VerticalAlignment="Top" Margin="0,2,0,0" Content="&#xE712;" ToolTip="More"
-                                    ContextMenu="{StaticResource TimerMenu}" Click="More_Click"
-                                    Visibility="{Binding HasMore, Converter={StaticResource BoolToVisibility}}" />
+                            <Button Grid.Row="2" Style="{StaticResource RailButton}" VerticalAlignment="Top" Margin="0,2,0,0" Content="&#xE71A;" ToolTip="Stop"
+                                    Command="{Binding ResetCommand}" Visibility="{Binding CanStop, Converter={StaticResource BoolToVisibility}}" />
+                            <Button Grid.Row="1" Style="{StaticResource RailButton}" Content="{Binding SkipGlyph}" ToolTip="{Binding SkipLabel}"
+                                    Command="{Binding ToggleSkipNextCommand}"
+                                    Visibility="{Binding HasNextOccurrence, Converter={StaticResource BoolToVisibility}}" />
                         </Grid>
                     </Grid>
                 </Button>

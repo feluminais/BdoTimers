@@ -11,16 +11,6 @@ public partial class CustomView : UserControl
 {
     public CustomView() => InitializeComponent();
 
-    /// <summary>The ⋯ button opens the card's menu under itself, where a right click on the card opens it at the pointer.</summary>
-    void More_Click(object sender, RoutedEventArgs e)
-    {
-        var more = (Button)sender;
-        if (more.ContextMenu is not { } menu) return;
-        menu.PlacementTarget = more;
-        menu.Placement = PlacementMode.Bottom;
-        menu.IsOpen = true;
-    }
-
     /// <summary>The hour field takes the keyboard as soon as the start picker opens.</summary>
     void StartPicker_Opened(object? sender, EventArgs e)
     {

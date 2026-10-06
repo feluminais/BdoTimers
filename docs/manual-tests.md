@@ -51,8 +51,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 20. [ ] Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → the clock icon above its
     round button → pick a time 2 h ago → Start: it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
     Farm → clock → a time over 22 h ago: it starts overgrown, shows negative time and growth above 100% on the card
-    and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. ⋯ → Stop
-    resets a timer.
+    and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. The square
+    Stop on a started card resets a timer.
 21. [ ] Timers: Horse registration is third, 10:00, and its (i) explains when to start. Press Ctrl+Shift+F10 twice: two
     numbered registration tiles appear with independent countdowns, and each press speaks
     "Horse registration time started". The first alerts at 1:00 and 0:00, then disappears without stopping the second.
@@ -297,9 +297,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     two-pane sheet: categories on the left, Ctrl+F searches every category, and Overlay in the list opens the Overlay
     panel. At Text size 150% the drawer and the sheet fit the window; with Windows animation effects off they appear without sliding.
 76. [ ] Timers: each countdown and stopwatch card shows its round Start / Pause at rest, in blue while running. Hovering a
-    card shows Started earlier above it and ⋯ below it; Tab reaches both and shows them. ⋯ → Stop; a weekly card's ⋯
-    and its right-click offer Skip next / Unskip next. A card without a menu has no ⋯. New timer is the button in the
-    header.
+    card shows Started earlier above it and, once it has been started, a square Stop below it; Tab reaches both and shows
+    them. A weekly card has Skip next / Unskip next in the middle instead. Cards have no menu; the border turns gold on
+    hover and stays gold while Started earlier is open. In the week grid and on Today, right-click a boss: its name stays
+    lit while the menu is open. New timer is the button in the header.
 77. [ ] Following: switch a boss off and on; the list is busy while its voice lines are made, and a failed save puts the
     switch back with a note. The name opens the boss panel; Done closes the list.
 78. [ ] To-do: an Off list is one dashed row with a switch that turns it on; a card's ⋯ (on hover) opens its editor, as the

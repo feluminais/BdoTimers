@@ -203,43 +203,77 @@ public sealed class RepeatTimerTests
     });
 
     [Fact]
-    public void Timer_cards_show_start_at_rest_and_keep_stop_and_skip_in_a_menu() => WpfTest.Run(() =>
+    public void Timer_cards_show_start_at_rest_and_stop_and_skip_next_are_buttons_that_appear_on_hover() => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Cards." + Guid.NewGuid().ToString("N"));
         try
         {
             using var services = new AppServices(Application.Current, path);
-            services.Timers.Upsert(new TimerDef { Name = "Buffs", Kind = TimerKind.Countdown, Countdown = new() });
+            var buffsTimer = new TimerDef { Name = "Buffs", Kind = TimerKind.Countdown, Countdown = new() };
+            services.Timers.Upsert(buffsTimer);
             var timers = new CustomViewModel(services, new PanelHost());
             var tiles = timers.Items.ToList();
-            Assert.All(tiles, tile => Assert.Equal(tile.HasControls || tile.HasNextOccurrence, tile.HasMore));
+            var buffs = tiles.Single(t => t.Name == "Buffs");
+            var weekly = tiles.First(t => t.HasNextOccurrence);
             Assert.Contains(tiles, tile => tile.HasControls);
-            Assert.Contains(tiles, tile => tile.HasNextOccurrence);
             var view = new CustomView { DataContext = timers };
             var window = new Window { Content = view, Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
             try
             {
                 window.Show();
                 WpfTest.Drain();
-                var newTimer = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == timers.NewTimerCommand)!;
+                Button Find(Func<Button, bool> match) => BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, match)!;
+                var newTimer = Find(b => b.Command == timers.NewTimerCommand);
                 Assert.Equal("New timer", new ButtonAutomationPeer(newTimer).GetName());
                 foreach (var tile in tiles.Where(t => t.HasControls))
                 {
-                    var start = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == tile.StartPauseCommand)!;
+                    var start = Find(b => b.Command == tile.StartPauseCommand);
                     Assert.True(start.IsVisible && start.Opacity == 1 && start.IsHitTestVisible, $"{tile.Name}: start is there without hover");
-                    var started = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == tile.PickStartCommand)!;
-                    Assert.Equal(0, started.Opacity);
+                    Assert.Equal(0, Find(b => b.Command == tile.PickStartCommand).Opacity);
                 }
-                var stoppable = tiles.First(t => t.HasControls);
-                var more = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view,
-                    b => b.DataContext == stoppable && System.Windows.Automation.AutomationProperties.GetName(b) == "More")!;
-                Assert.Equal(0, more.Opacity);
-                more.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                // A card has no menu: its actions are buttons.
+                Assert.All(tiles, tile => Assert.Null(Find(b => b.Command == tile.OpenCommand).ContextMenu));
+
+                // At rest there is nothing to stop; once it runs, Stop is a square button that waits for the pointer.
+                var stop = Find(b => b.Command == buffs.ResetCommand);
+                Assert.False(buffs.CanStop);
+                Assert.False(stop.IsVisible);
+                services.Timers.Start(buffsTimer.Id, services.Clock.UtcNow);
                 WpfTest.Drain();
-                Assert.True(more.ContextMenu!.IsOpen);
-                Assert.Equal(1, more.Opacity);
-                Assert.Contains(more.ContextMenu.Items.OfType<MenuItem>(), item => item.Command == stoppable.ResetCommand);
-                more.ContextMenu.IsOpen = false;
+                timers.Refresh(services.Clock.UtcNow);
+                WpfTest.Drain();
+                Assert.True(buffs.CanStop);
+                Assert.True(stop.IsVisible);
+                Assert.Equal(0, stop.Opacity);
+                Assert.Equal("Stop", stop.ToolTip);
+                Assert.Equal(stop.ActualWidth, stop.ActualHeight);
+                buffs.ResetCommand.Execute(null);
+                WpfTest.Drain();
+                timers.Refresh(services.Clock.UtcNow);
+                Assert.False(buffs.CanStop);
+
+                // A weekly card has no Start, so its Skip next sits in the middle and says what it will do.
+                var skip = Find(b => b.Command == weekly.ToggleSkipNextCommand);
+                Assert.True(skip.IsVisible);
+                Assert.Equal(0, skip.Opacity);
+                Assert.Equal("Skip next", skip.ToolTip);
+                var glyph = weekly.SkipGlyph;
+                weekly.ToggleSkipNextCommand.Execute(null);
+                WpfTest.Drain();
+                timers.Refresh(services.Clock.UtcNow);
+                WpfTest.Drain();
+                Assert.Equal("Unskip next", skip.ToolTip);
+                Assert.NotEqual(glyph, weekly.SkipGlyph);
+
+                // The card stays lit while its start is being picked, the pointer being in the picker.
+                var card = Find(b => b.Command == buffs.OpenCommand);
+                var border = (Border)card.Template.FindName("Card", card);
+                var rest = border.BorderBrush;
+                buffs.PickStartCommand.Execute(null);
+                WpfTest.Drain();
+                Assert.NotEqual(rest, border.BorderBrush);
+                Assert.Equal(Application.Current.Resources["AccentSoftBrush"], border.BorderBrush);
+                buffs.CancelStartCommand.Execute(null);
             }
             finally { window.Close(); }
         }

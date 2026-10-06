@@ -15,6 +15,9 @@ public sealed partial class TimerTileViewModel : ObservableObject
 {
     const string PlayGlyph = "";
     const string PauseGlyph = "";
+    // Icon font: Next and Undo.
+    const string SkipNextGlyph = "";
+    const string UnskipNextGlyph = "";
 
     readonly AppServices _services;
     readonly IPanelHost _host;
@@ -29,10 +32,11 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
-    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasMore))] private bool _hasNextOccurrence;
+    [ObservableProperty] private string _skipGlyph = SkipNextGlyph;
+    [ObservableProperty] private bool _hasNextOccurrence;
     /// <summary>The dot beside the name: green while a countdown or stopwatch runs, amber while it is paused.</summary>
-    [ObservableProperty] private bool _isRunning;
-    [ObservableProperty] private bool _isPaused;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanStop))] private bool _isRunning;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanStop))] private bool _isPaused;
     /// <summary>How far along a countdown is, 0 to 1 (Farm's growth stops at the ring); null for what has no end.</summary>
     [ObservableProperty] private double? _progress;
     [ObservableProperty] private bool _canStartHorse;
@@ -57,8 +61,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
     public bool HasControls => !IsHorseTemplate && _timer.Kind is (TimerKind.Countdown or TimerKind.Stopwatch);
     public bool IsHorseTemplate => _timer.Preset == Presets.HorseRegistration;
-    /// <summary>The card's ⋯ menu has something in it: Stop for a countdown or stopwatch, Skip next for a weekly timer.</summary>
-    public bool HasMore => HasControls || HasNextOccurrence;
+    /// <summary>A countdown or stopwatch that has been started has a Stop button; one at rest has nothing to stop.</summary>
+    public bool CanStop => HasControls && (IsRunning || IsPaused);
     public bool IsFarm => _timer.Preset == Presets.Farm;
     /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
     public bool HasPercent => _timer.Kind == TimerKind.Countdown;
@@ -159,6 +163,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
         Detail = $"{off}Next {named}{(_timer.Kind == TimerKind.OneTime ? next.ToLocalTime().ToString(format, CultureInfo.InvariantCulture) : Formats.DayTime(next))}{(skipped ? " · skipped" : "")}";
         IsDimmed = !_timer.Enabled || skipped;
         SkipLabel = skipped ? "Unskip next" : "Skip next";
+        SkipGlyph = skipped ? UnskipNextGlyph : SkipNextGlyph;
     }
 
     void ShowStatus(CountdownStatus status)
