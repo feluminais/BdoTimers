@@ -42,7 +42,9 @@
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="Margin" Value="0,3,0,0" />
     </Style>
-    <Style x:Key="SectionText" TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
+    <Style x:Key="SectionText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
         <Setter Property="Margin" Value="0,16,0,4" />
@@ -121,7 +123,8 @@
     </Style>
 
     <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource BareButton}">
-        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="10,5" />
         <Setter Property="BorderThickness" Value="1" />
@@ -135,7 +138,8 @@
     </Style>
 
     <Style x:Key="OutlineButton" TargetType="Button" BasedOn="{StaticResource BareButton}">
-        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="18,5" />
         <Setter Property="BorderThickness" Value="1" />
@@ -252,7 +256,8 @@
     </Style>
 
     <Style x:Key="TabButton" TargetType="RadioButton">
-        <Setter Property="FontFamily" Value="{StaticResource DisplayFont}" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontWeight" Value="Medium" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
         <Setter Property="Cursor" Value="Hand" />
@@ -393,6 +398,7 @@
 
     <!-- Menus and tooltips -->
     <Style TargetType="ContextMenu">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
         <Setter Property="LayoutTransform" Value="{DynamicResource UiScaleTransform}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="FontSize" Value="12" />
@@ -456,6 +462,7 @@
         </Setter>
     </Style>
     <Style TargetType="ToolTip">
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
         <Setter Property="LayoutTransform" Value="{DynamicResource UiScaleTransform}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="FontSize" Value="12" />

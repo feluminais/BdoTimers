@@ -33,6 +33,19 @@ public class ThemeTokensTests
         Assert.Equal(Colors.Black, ((SolidColorBrush)tokens["BgBrush"]).Color);
     });
 
+    [Fact]
+    public void Inter_regular_medium_and_semibold_resolve_from_the_bundled_family() => WpfTest.Run(() =>
+    {
+        var family = (FontFamily)Application.Current.FindResource("UiFont");
+        foreach (var weight in new[] { FontWeights.Normal, FontWeights.Medium, FontWeights.SemiBold })
+        {
+            var typeface = new Typeface(family, FontStyles.Normal, weight, FontStretches.Normal);
+            Assert.True(typeface.TryGetGlyphTypeface(out var glyphs));
+            Assert.Contains(glyphs.FamilyNames.Values, name => name.StartsWith("Inter"));
+            Assert.Equal(weight.ToOpenTypeWeight(), glyphs.Weight.ToOpenTypeWeight());
+        }
+    });
+
     static double Luminance(Color c)
     {
         static double Channel(byte v) { var s = v / 255d; return s <= .03928 ? s / 12.92 : Math.Pow((s + .055) / 1.055, 2.4); }

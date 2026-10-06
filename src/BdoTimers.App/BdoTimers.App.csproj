@@ -27,6 +27,7 @@
     <None Include="..\..\THIRD-PARTY-NOTICES.txt" Link="licenses\THIRD-PARTY-NOTICES.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- The SIL Open Font License asks for the licence to travel with the font. -->
     <None Include="Theme\Fonts\OFL.txt" Link="licenses\Cinzel-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Theme\Fonts\Inter-OFL.txt" Link="licenses\Inter-OFL.txt" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Assets\Sounds\SOURCES.txt" Link="licenses\Sounds.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- The Kokoro voice model, fetched by scripts/get-voice.ps1; without it alerts aren't spoken. -->
     <None Update="Voice\kokoro\**" CopyToOutputDirectory="PreserveNewest" />

@@ -66,6 +66,10 @@ NAudio 3.1.0 (NAudio.dll, NAudio.Core.dll, NAudio.WinMM.dll, NAudio.Wasapi.dll, 
 Cinzel font
   SIL Open Font License 1.1; licenses\Cinzel-OFL.txt
 
+Inter font
+  SIL Open Font License 1.1; licenses\Inter-OFL.txt
+  Source: https://github.com/rsms/inter
+
 Alert sounds
   CC0; sources in licenses\Sounds.txt
 
