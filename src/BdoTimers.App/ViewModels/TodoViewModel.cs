@@ -22,6 +22,8 @@ public sealed partial class TodoViewModel : ObservableObject
     public ObservableCollection<TodoListCardViewModel> DailyOn { get; } = [];
     public ObservableCollection<TodoListCardViewModel> DailyOff { get; } = [];
     public event Action<Guid>? RowSynced;
+    /// <summary>The cards follow the saved lists again.</summary>
+    public event Action? Synced;
 
     public TodoViewModel(AppServices services, IPanelHost host)
     {
@@ -72,6 +74,7 @@ public sealed partial class TodoViewModel : ObservableObject
             _focusRow = null;
             RowSynced?.Invoke(id);
         }
+        Synced?.Invoke();
     }
 
     void SyncCards(ObservableCollection<TodoListCardViewModel> cards, IEnumerable<TodoList> lists) =>

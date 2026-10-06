@@ -144,13 +144,7 @@ public sealed partial class CalendarViewModel : ObservableObject
         _host.OpenPanel(new CustomPanelViewModel(_services, _host, timer));
     }
 
-    void Open(Guid id)
-    {
-        if (_services.Timers.Current.Timers.FirstOrDefault(t => t.Id == id) is not { } timer) return;
-        _host.OpenPanel(timer.IsBuiltIn
-            ? new BossPanelViewModel(_services, _host, timer)
-            : new CustomPanelViewModel(_services, _host, timer));
-    }
+    void Open(Guid id) => TimerPanels.Open(_services, _host, id);
 
     void ToggleSkip(Guid id, DateTimeOffset at) => _services.Timers.ToggleMute(id, at);
 }

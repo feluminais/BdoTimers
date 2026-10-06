@@ -33,6 +33,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     /// <summary>The dot beside the name: green while a countdown or stopwatch runs, amber while it is paused.</summary>
     [ObservableProperty] private bool _isRunning;
     [ObservableProperty] private bool _isPaused;
+    /// <summary>How far along a countdown is, 0 to 1 (Farm's growth stops at the ring); null for what has no end.</summary>
+    [ObservableProperty] private double? _progress;
     [ObservableProperty] private bool _canStartHorse;
     [ObservableProperty] private string _horseStartTip = "Start registration";
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
@@ -112,6 +114,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
             Detail = off + Detail;
             IsDimmed |= !_timer.Enabled;
             Growth = IsFarm ? CountdownOps.Progress(c, now, overgrows: true) : null;
+            Progress = Math.Min((CountdownOps.Progress(c, now, IsFarm) ?? 0) / 100.0, 1);
             ShowStatus(c.Status);
             return;
         }
