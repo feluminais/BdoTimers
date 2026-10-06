@@ -317,11 +317,14 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 79. [ ] Today: the hero counts down to the next spawn, in the text colour, gold within 30 minutes, amber within 10 and ember
     within 1; "Then" names the following spawn and the alert times, "Previous" the last one. A name opens that boss. Coming
     up lists the next 24 hours under a gold rule with the time now: bosses a filled dot, timers a ring, resets a small dot;
-    a boss with alerts off is missing, a skipped spawn is struck through, and the times to each update as time passes.
+    bosses that spawn together are one line with a dot between their names, each name a button that opens that boss and,
+    on a right click, skips that boss's spawn; a boss with alerts off is missing, a skipped spawn is struck through, and the
+    times to each update as time passes.
     Running shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "All timers ›"
     opens Timers; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
     six), ticking one removes it and moves the line; "Weekly 1/16 ›" opens To-do. Below 820 px wide the screen is one
     column: hero, Running, Coming up, Daily tasks.
 80. [ ] The top bar's next-boss chip shows on Schedule, Timers and To-do (not on Today) with the next spawn's names and
-    clock in the same colours as the hero, and a click goes to Today. It is gone when the window is narrower than 760 px
-    and when no boss is followed.
+    clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
+    and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking
+    the room) and when no boss is followed. The paused notice shows from 830 px wide; below that the bell's slash says it.

@@ -32,8 +32,8 @@ public sealed partial class ComingUpViewModel(AppServices services, IPanelHost h
             _minute = now.Minute;
             var items = BdoTimers.Core.Scheduling.ComingUp.Between(data, settings, now, TimeZoneInfo.Local, services.Boards);
             _changesAt = items.Select(i => (DateTimeOffset?)i.AtUtc).FirstOrDefault(at => at > now) ?? DateTimeOffset.MaxValue;
-            Rows.Sync(items, (row, item) => row.Matches(item), item => new ComingUpRowViewModel(item, now, Open, ToggleSkip),
-                (row, item) => row.Show(item, now));
+            Rows.Sync(BdoTimers.Core.Scheduling.ComingUp.Rows(items), (row, group) => row.Matches(group),
+                group => new ComingUpRowViewModel(group, now, Open, ToggleSkip), (row, group) => row.Show(group, now));
             IsEmpty = Rows.Count == 0;
         }
         NowText = Formats.Time(now);
@@ -45,32 +45,29 @@ public sealed partial class ComingUpViewModel(AppServices services, IPanelHost h
     void ToggleSkip(Guid id, DateTimeOffset at) => services.Timers.ToggleMute(id, at);
 }
 
-/// <summary>One item of the list: its time, name, what kind it is and how long until it.</summary>
+/// <summary>
+/// One row of the list: its time, what is at it and how long until it. Bosses that spawn together share a row, each name a
+/// button that opens it; anything else has a row to itself.
+/// </summary>
 public sealed partial class ComingUpRowViewModel : ObservableObject
 {
-    readonly Action<Guid> _open;
-    readonly Action<Guid, DateTimeOffset> _toggleSkip;
-    CalendarItem _item;
+    IReadOnlyList<CalendarItem> _items;
 
-    /// <summary>The name, state and commands the Calendar's day list uses for the same item.</summary>
-    [ObservableProperty] private CalendarRowViewModel _row;
     [ObservableProperty] private string _time = "";
     [ObservableProperty] private string _until = "";
 
-    public ComingUpRowViewModel(CalendarItem item, DateTimeOffset now, Action<Guid> open, Action<Guid, DateTimeOffset> toggleSkip)
+    public ComingUpRowViewModel(IReadOnlyList<CalendarItem> items, DateTimeOffset now, Action<Guid> open, Action<Guid, DateTimeOffset> toggleSkip)
     {
-        _open = open;
-        _toggleSkip = toggleSkip;
-        _item = item;
-        _row = new CalendarRowViewModel(item, open, toggleSkip);
+        _items = items;
+        Names = items.Select((item, i) => new ComingUpName(item, i > 0, open, toggleSkip)).ToList();
         Update(now);
     }
 
-    public CalendarKind Kind => _item.Kind;
-    public bool IsNext => _item.State == CellState.Next;
-    public bool IsSkipped => _item.State == CellState.Skipped;
+    public IReadOnlyList<ComingUpName> Names { get; }
+    public CalendarKind Kind => _items[0].Kind;
+    public bool IsNext => _items.Any(i => i.State == CellState.Next);
     /// <summary>What sort of timer it is, for anything but a boss, whose name says it.</summary>
-    public string? Sub => _item.Kind switch
+    public string? Sub => Kind switch
     {
         CalendarKind.Weekly => "Weekly",
         CalendarKind.Event => "Event",
@@ -79,23 +76,42 @@ public sealed partial class ComingUpRowViewModel : ObservableObject
         _ => null,
     };
 
-    public bool Matches(CalendarItem item) =>
-        item.Kind == _item.Kind && item.Timer?.Id == _item.Timer?.Id && item.AtUtc == _item.AtUtc;
+    public bool Matches(IReadOnlyList<CalendarItem> items) =>
+        items.Count == _items.Count && items.Zip(_items).All(p =>
+            p.First.Kind == p.Second.Kind && p.First.AtUtc == p.Second.AtUtc && p.First.Timer?.Id == p.Second.Timer?.Id);
 
-    /// <summary>Takes the new state of an item it <see cref="Matches"/>.</summary>
-    public void Show(CalendarItem item, DateTimeOffset now)
+    /// <summary>Takes the new states of items it <see cref="Matches"/>.</summary>
+    public void Show(IReadOnlyList<CalendarItem> items, DateTimeOffset now)
     {
-        if (item.State != _item.State) Row = new CalendarRowViewModel(item, _open, _toggleSkip);
-        _item = item;
+        _items = items;
+        foreach (var (name, item) in Names.Zip(items)) name.Show(item);
         OnPropertyChanged(nameof(IsNext));
-        OnPropertyChanged(nameof(IsSkipped));
         Update(now);
     }
 
     public void Update(DateTimeOffset now)
     {
-        var sameDay = _item.AtUtc.ToLocalTime().Date == now.ToLocalTime().Date;
-        Time = sameDay ? Formats.Time(_item.AtUtc) : Formats.DayTime(_item.AtUtc);
-        Until = DurationFormat.Until(_item.AtUtc - now);
+        var at = _items[0].AtUtc;
+        var sameDay = at.ToLocalTime().Date == now.ToLocalTime().Date;
+        Time = sameDay ? Formats.Time(at) : Formats.DayTime(at);
+        Until = DurationFormat.Until(at - now);
+    }
+}
+
+/// <summary>A name in a row: a button that opens it, its skip in a menu, and a dot before it when it follows another.</summary>
+public sealed partial class ComingUpName(CalendarItem item, bool follows, Action<Guid> open, Action<Guid, DateTimeOffset> toggleSkip)
+    : ObservableObject
+{
+    CalendarItem _item = item;
+
+    /// <summary>The name, state and commands the Calendar's day list uses for the same item.</summary>
+    [ObservableProperty] private CalendarRowViewModel _row = new(item, open, toggleSkip);
+
+    public bool Follows { get; } = follows;
+
+    public void Show(CalendarItem next)
+    {
+        if (next.State != _item.State) Row = new CalendarRowViewModel(next, open, toggleSkip);
+        _item = next;
     }
 }

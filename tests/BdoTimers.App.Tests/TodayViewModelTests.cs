@@ -102,6 +102,37 @@ public class TodayViewModelTests
     });
 
     [Fact]
+    public void Bosses_that_spawn_together_share_one_row_with_a_button_per_name_and_a_skip_of_its_own() => WithServices(services =>
+    {
+        var host = new Host();
+        var list = new ComingUpViewModel(services, host);
+        var now = services.Clock.UtcNow;
+        list.Refresh(now);
+
+        var shared = list.Rows.First(row => row.Names.Count > 1);
+
+        Assert.Equal(CalendarKind.Boss, shared.Kind);
+        Assert.False(shared.Names[0].Follows);
+        Assert.All(shared.Names.Skip(1), name => Assert.True(name.Follows));
+        // No two bosses of one spawn are listed apart.
+        var bossRows = list.Rows.Where(row => row.Kind == CalendarKind.Boss).ToList();
+        Assert.Equal(bossRows.Count, bossRows.Select(row => row.Time).Distinct().Count());
+
+        shared.Names[0].Row.OpenCommand.Execute(null);
+        Assert.IsType<BossPanelViewModel>(host.Opened);
+
+        var skipped = shared.Names[1];
+        skipped.Row.ToggleSkipCommand.Execute(null);
+        list.Refresh(now.AddSeconds(5));
+
+        Assert.Single(services.Timers.Current.Muted);
+        var again = list.Rows.Single(row => ReferenceEquals(row, shared));
+        Assert.Equal(CellState.Skipped, again.Names[1].Row.State);
+        Assert.NotEqual(CellState.Skipped, again.Names[0].Row.State);
+        Assert.Equal(shared.Names.Count, again.Names.Count);
+    });
+
+    [Fact]
     public void Running_lists_started_and_paused_countdowns_with_their_progress() => WithServices(services =>
     {
         var host = new Host();

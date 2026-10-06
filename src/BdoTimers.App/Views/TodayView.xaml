@@ -90,40 +90,61 @@
             </StackPanel>
         </DataTemplate>
 
-        <!-- One item of Coming up. The marker says what it is without colour: a filled dot a boss, a ring a timer, a small dot a reset. -->
+        <!-- A name in Coming up: a button that opens it. Bosses that spawn together share a row, a dot between their names. -->
+        <DataTemplate x:Key="ComingUpName" DataType="{x:Type vm:ComingUpName}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#183;" FontSize="14" Foreground="{DynamicResource PastBrush}" Margin="7,0" VerticalAlignment="Center"
+                           Visibility="{Binding Follows, Converter={StaticResource BoolToVisibility}}" />
+                <Button Style="{StaticResource NameButton}" Command="{Binding Row.OpenCommand}" Padding="0,4"
+                        IsHitTestVisible="{Binding Row.CanOpen}" Focusable="{Binding Row.CanOpen}" ToolTip="{Binding Row.Tooltip}"
+                        ContextMenuService.IsEnabled="{Binding Row.CanSkip}" AutomationProperties.Name="{Binding Row.Name}">
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="{Binding Row.SkipLabel}" Command="{Binding Row.ToggleSkipCommand}" />
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                    <TextBlock x:Name="NameText" Text="{Binding Row.Name}" Style="{StaticResource DisplayText}" FontSize="14" />
+                </Button>
+            </StackPanel>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Row.State}" Value="Next">
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Row.State}" Value="Skipped">
+                    <Setter TargetName="NameText" Property="TextDecorations" Value="Strikethrough" />
+                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- One row of Coming up. The marker says what it is without colour: a filled dot a boss, a ring a timer, a small dot a reset. -->
         <DataTemplate DataType="{x:Type vm:ComingUpRowViewModel}">
-            <Button x:Name="RowButton" Style="{StaticResource NameButton}" Command="{Binding Row.OpenCommand}" HorizontalAlignment="Stretch"
-                    IsHitTestVisible="{Binding Row.CanOpen}" Focusable="{Binding Row.CanOpen}" ToolTip="{Binding Row.Tooltip}"
-                    ContextMenuService.IsEnabled="{Binding Row.CanSkip}" AutomationProperties.Name="{Binding Row.Name}">
-                <Button.ContextMenu>
-                    <ContextMenu>
-                        <MenuItem Header="{Binding Row.SkipLabel}" Command="{Binding Row.ToggleSkipCommand}" />
-                    </ContextMenu>
-                </Button.ContextMenu>
-                <Grid MinHeight="30" Margin="0,2">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="68" />
-                        <ColumnDefinition Width="14" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="TimeText" Text="{Binding Time}" Style="{StaticResource ClockText}" FontWeight="Normal" FontSize="12"
-                               Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
-                    <Rectangle Grid.Column="1" Width="1" HorizontalAlignment="Center" Fill="{DynamicResource HairlineStrongBrush}" />
-                    <Ellipse x:Name="TimerMarker" Grid.Column="1" Width="9" Height="9" Fill="{DynamicResource CardBrush}"
-                             Stroke="{DynamicResource TimersAccentBrush}" StrokeThickness="2" />
-                    <Ellipse x:Name="BossMarker" Grid.Column="1" Width="9" Height="9" Fill="{DynamicResource AccentBrush}" Visibility="Collapsed" />
-                    <Ellipse x:Name="ResetMarker" Grid.Column="1" Width="5" Height="5" Fill="{DynamicResource PastBrush}" Visibility="Collapsed" />
-                    <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="8,0">
-                        <TextBlock x:Name="NameText" Text="{Binding Row.Name}" Style="{StaticResource DisplayText}" FontSize="14"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Sub}" Style="{StaticResource LabelText}"
-                                   Visibility="{Binding Sub, Converter={StaticResource NullToCollapsed}}" />
-                    </StackPanel>
-                    <TextBlock Grid.Column="3" Text="{Binding Until}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
-                               Typography.NumeralAlignment="Tabular" VerticalAlignment="Center" />
-                </Grid>
-            </Button>
+            <Grid MinHeight="30" Margin="0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="68" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TimeText" Text="{Binding Time}" Style="{StaticResource ClockText}" FontWeight="Normal" FontSize="12"
+                           Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
+                <Rectangle Grid.Column="1" Width="1" HorizontalAlignment="Center" Fill="{DynamicResource HairlineStrongBrush}" />
+                <Ellipse x:Name="TimerMarker" Grid.Column="1" Width="9" Height="9" Fill="{DynamicResource CardBrush}"
+                         Stroke="{DynamicResource TimersAccentBrush}" StrokeThickness="2" />
+                <Ellipse x:Name="BossMarker" Grid.Column="1" Width="9" Height="9" Fill="{DynamicResource AccentBrush}" Visibility="Collapsed" />
+                <Ellipse x:Name="ResetMarker" Grid.Column="1" Width="5" Height="5" Fill="{DynamicResource PastBrush}" Visibility="Collapsed" />
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="8,0">
+                    <ItemsControl ItemsSource="{Binding Names}" ItemTemplate="{StaticResource ComingUpName}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                    <TextBlock Text="{Binding Sub}" Style="{StaticResource LabelText}"
+                               Visibility="{Binding Sub, Converter={StaticResource NullToCollapsed}}" />
+                </StackPanel>
+                <TextBlock Grid.Column="3" Text="{Binding Until}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
+                           Typography.NumeralAlignment="Tabular" VerticalAlignment="Center" />
+            </Grid>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding Kind}" Value="Boss">
                     <Setter TargetName="TimerMarker" Property="Visibility" Value="Collapsed" />
@@ -140,11 +161,6 @@
                 <DataTrigger Binding="{Binding IsNext}" Value="True">
                     <Setter TargetName="BossMarker" Property="Fill" Value="{DynamicResource AccentTextBrush}" />
                     <Setter TargetName="TimeText" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
-                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
-                </DataTrigger>
-                <DataTrigger Binding="{Binding IsSkipped}" Value="True">
-                    <Setter TargetName="NameText" Property="TextDecorations" Value="Strikethrough" />
-                    <Setter TargetName="NameText" Property="Foreground" Value="{DynamicResource SubtleBrush}" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>

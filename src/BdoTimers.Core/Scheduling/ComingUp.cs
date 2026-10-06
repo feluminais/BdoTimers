@@ -16,4 +16,21 @@ public static class ComingUp
         CalendarQuery.Between(data, settings, now, now + Window, now, local, boards)
             .Where(i => i is not { Kind: CalendarKind.Boss, State: CellState.Unfollowed })
             .ToList();
+
+    /// <summary>
+    /// The items as rows: bosses that spawn at the same time share one, and everything else has its own. The items are in
+    /// time order, so the bosses of one spawn are next to each other.
+    /// </summary>
+    public static IReadOnlyList<IReadOnlyList<CalendarItem>> Rows(IEnumerable<CalendarItem> items)
+    {
+        var rows = new List<List<CalendarItem>>();
+        foreach (var item in items)
+        {
+            if (item.Kind == CalendarKind.Boss && rows.Count > 0 && rows[^1][0] is { Kind: CalendarKind.Boss } last && last.AtUtc == item.AtUtc)
+                rows[^1].Add(item);
+            else
+                rows.Add([item]);
+        }
+        return rows.Select(row => (IReadOnlyList<CalendarItem>)row).ToList();
+    }
 }

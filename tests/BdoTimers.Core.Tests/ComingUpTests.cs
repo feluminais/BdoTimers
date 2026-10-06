@@ -39,6 +39,34 @@ public class ComingUpTests
     }
 
     [Fact]
+    public void Bosses_that_spawn_together_share_a_row_and_anything_else_keeps_its_own()
+    {
+        var nouver = Boss("Nouver", DayOfWeek.Tuesday, 16);
+        var garmoth = Boss("Garmoth", DayOfWeek.Tuesday, 17);
+        var guild = Scheduled("Guild bosses", DayOfWeek.Tuesday, 18, 0);
+        var farm = Countdown(T0.AddHours(4));
+
+        var rows = ComingUp.Rows(At(T0, Kzarka, nouver, garmoth, guild, farm));
+
+        var bosses = rows.Where(row => row[0].Kind == CalendarKind.Boss).ToList();
+        Assert.Equal([["Kzarka", "Nouver"], ["Garmoth"]], bosses.Select(row => row.Select(i => i.Timer!.Name).ToArray()));
+        Assert.All(rows, row => Assert.Single(row.Select(i => i.AtUtc).Distinct()));
+        Assert.All(rows.Where(row => row[0].Kind != CalendarKind.Boss), row => Assert.Single(row));
+        Assert.Equal(rows.SelectMany(row => row).Select(i => i.AtUtc).Order(), rows.SelectMany(row => row).Select(i => i.AtUtc));
+        Assert.Equal(At(T0, Kzarka, nouver, garmoth, guild, farm).Count, rows.Sum(row => row.Count));
+    }
+
+    [Fact]
+    public void A_boss_and_a_timer_at_the_same_time_stay_in_separate_rows()
+    {
+        var weekly = Scheduled("Guild bosses", DayOfWeek.Tuesday, 16, 0);
+
+        var rows = ComingUp.Rows(At(T0, Kzarka, weekly)).Where(row => row[0].AtUtc == T0.AddHours(2)).ToList();
+
+        Assert.Equal([CalendarKind.Boss, CalendarKind.Weekly], rows.Select(row => Assert.Single(row).Kind));
+    }
+
+    [Fact]
     public void The_next_boss_is_marked_next()
     {
         var item = Assert.Single(At(T0, Kzarka), i => i.Kind == CalendarKind.Boss);

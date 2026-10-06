@@ -47,6 +47,11 @@ public class TodayViewTests
                 Assert.Equal(today.Hero.Next.Names.Count, buttons.Count);
                 Assert.Contains(PanelFocusScope.Descendants(hero).OfType<TextBlock>(), t => t.IsVisible && t.Text == today.Hero.Next.Clock);
                 Assert.NotEmpty(today.ComingUp.Rows);
+                // Every name of Coming up is a button, and bosses that spawn together are one row of them.
+                var panel = (FrameworkElement)view.FindName("ComingUpPanel");
+                var listed = PanelFocusScope.Descendants(panel).OfType<Button>().Where(b => b.DataContext is ComingUpName).ToList();
+                Assert.Equal(today.ComingUp.Rows.Sum(row => row.Names.Count), listed.Count);
+                Assert.Contains(today.ComingUp.Rows, row => row.Names.Count > 1);
                 UiCapture.Save(window, "today-view.png");
 
                 var side = (FrameworkElement)view.FindName("SideHost");
