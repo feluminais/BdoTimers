@@ -14,20 +14,25 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="CheckBox">
                         <Border x:Name="Hit" Background="Transparent" BorderBrush="Transparent" BorderThickness="1">
-                            <Border x:Name="Box" Width="14" Height="14" BorderBrush="{DynamicResource SubtleBrush}"
-                                    BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <TextBlock x:Name="Mark" FontSize="11" Text="" FontWeight="Bold"
-                                           Foreground="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Border x:Name="Box" Width="16" Height="16" CornerRadius="4" BorderBrush="{DynamicResource SubtleBrush}"
+                                    BorderThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock x:Name="Mark" FontSize="10" Text="" FontWeight="Bold"
+                                           Foreground="{DynamicResource OnBronzeBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                             </Border>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
+                            </Trigger>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Mark" Property="Text" Value="✓" />
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource GoodBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
                             </Trigger>
                             <Trigger Property="IsChecked" Value="{x:Null}">
                                 <Setter TargetName="Mark" Property="Text" Value="−" />
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource GoodBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource GoodBrush}" />
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Box" Property="Opacity" Value="0.45" />
@@ -47,15 +52,21 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="TodoActiveToggle" TargetType="ToggleButton" BasedOn="{StaticResource Chip}">
-            <Setter Property="Content" Value="Off" />
-            <Setter Property="MinWidth" Value="42" />
-            <Setter Property="Margin" Value="8,0,0,0" />
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Content" Value="On" />
-                </Trigger>
-            </Style.Triggers>
+        <!-- A list's progress: a green line over a hairline -->
+        <Style x:Key="TodoProgress" TargetType="ProgressBar">
+            <Setter Property="Height" Value="2" />
+            <Setter Property="Maximum" Value="1" />
+            <Setter Property="SnapsToDevicePixels" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ProgressBar">
+                        <Grid>
+                            <Border x:Name="PART_Track" Background="{DynamicResource ForestLineStrongBrush}" />
+                            <Border x:Name="PART_Indicator" Background="{DynamicResource GoodBrush}" HorizontalAlignment="Left" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
         <DataTemplate DataType="{x:Type vm:TodoRowViewModel}">
             <StackPanel>
@@ -74,36 +85,54 @@
                 <ItemsControl ItemsSource="{Binding Children}" Margin="24,0,0,0" />
             </StackPanel>
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:TodoListCardViewModel}">
-            <Border Background="Transparent" BorderThickness="0,1,0,0"
-                    Padding="0,9,0,16" MouseLeftButtonUp="List_MouseLeftButtonUp" Cursor="Hand">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="BorderBrush" Value="{DynamicResource HairlineBrush}" />
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
+        <!-- A list that is on: its rows under a name, its count and a progress line; the card opens the editor -->
+        <DataTemplate x:Key="TodoListCard">
+            <Border x:Name="Card" Background="{DynamicResource ForestCardBrush}" BorderBrush="{DynamicResource ForestLineBrush}" BorderThickness="1"
+                    CornerRadius="8" Padding="14,12,14,8" Margin="0,0,0,12" Cursor="Hand" MouseLeftButtonUp="List_MouseLeftButtonUp">
                 <StackPanel>
-                    <DockPanel Margin="0,0,0,6">
-                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource AccentBrush}" Margin="8,0,0,0"
-                                       VerticalAlignment="Center" Visibility="{Binding IsOn, Converter={StaticResource BoolToVisibility}}" />
-                            <ToggleButton Style="{StaticResource TodoActiveToggle}" IsChecked="{Binding IsOn, Mode=TwoWay}"
-                                          AutomationProperties.Name="{Binding Name, StringFormat='Active {0}'}" />
-                        </StackPanel>
+                    <DockPanel Margin="0,0,0,9">
+                        <Button x:Name="More" DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="24" Height="24" Content="&#xE712;"
+                                ToolTip="Edit list" Command="{Binding OpenCommand}" Opacity="0" IsHitTestVisible="False" />
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" Foreground="{DynamicResource GoodBrush}" FontSize="12"
+                                   Typography.NumeralAlignment="Tabular" VerticalAlignment="Center" Margin="10,0,6,0" />
                         <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}"
                                 HorizontalAlignment="Left" AutomationProperties.Name="{Binding Name}">
-                            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="15"
+                            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="14"
                                        TextTrimming="CharacterEllipsis" />
                         </Button>
                     </DockPanel>
+                    <ProgressBar Style="{StaticResource TodoProgress}" Value="{Binding Fraction, Mode=OneWay}" Margin="0,0,0,8"
+                                 AutomationProperties.Name="Progress" />
                     <ItemsControl ItemsSource="{Binding Rows}" />
                 </StackPanel>
             </Border>
+            <DataTemplate.Triggers>
+                <Trigger SourceName="Card" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource ForestLineHoverBrush}" />
+                    <Setter TargetName="More" Property="Opacity" Value="1" />
+                    <Setter TargetName="More" Property="IsHitTestVisible" Value="True" />
+                </Trigger>
+                <Trigger SourceName="Card" Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter TargetName="More" Property="Opacity" Value="1" />
+                    <Setter TargetName="More" Property="IsHitTestVisible" Value="True" />
+                </Trigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- A list that is off: one dashed row, with the switch that turns it on -->
+        <DataTemplate x:Key="TodoOffRow">
+            <Grid Margin="0,0,0,12">
+                <Rectangle Stroke="{DynamicResource ForestLineStrongBrush}" StrokeThickness="1" StrokeDashArray="4 3" RadiusX="8" RadiusY="8" />
+                <DockPanel Margin="14,8,12,8" TextElement.Foreground="{DynamicResource SubtleBrush}">
+                    <ToggleButton DockPanel.Dock="Right" Style="{StaticResource OnOffSwitch}" Width="36" IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                  AutomationProperties.Name="{Binding Name, StringFormat='Active {0}'}" />
+                    <TextBlock DockPanel.Dock="Right" Text="Off" FontSize="12" VerticalAlignment="Center" Margin="10,0,10,0" />
+                    <Button Style="{StaticResource TodoOpenButton}" Command="{Binding OpenCommand}" HorizontalAlignment="Left" VerticalAlignment="Center"
+                            AutomationProperties.Name="{Binding Name}">
+                        <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                    </Button>
+                </DockPanel>
+            </Grid>
         </DataTemplate>
     </UserControl.Resources>
     <Grid>
@@ -114,30 +143,32 @@
         </Grid.ColumnDefinitions>
         <DockPanel Grid.Column="0">
             <DockPanel DockPanel.Dock="Top" Margin="0,0,8,12">
-                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="16"
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="24" Height="24" Content="&#xE710;" FontSize="13"
                         ToolTip="New weekly list" Command="{Binding NewWeeklyCommand}" />
                 <TextBlock DockPanel.Dock="Right" Text="{Binding WeeklyResetLabel}" Style="{StaticResource LabelText}"
-                           VerticalAlignment="Center" Margin="4,0,6,0" />
-                <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="21" VerticalAlignment="Center" />
+                           VerticalAlignment="Center" Margin="4,0,8,0" />
+                <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="19" VerticalAlignment="Center" />
             </DockPanel>
-            <Border DockPanel.Dock="Top" Height="1" Margin="0,0,8,0" Background="{DynamicResource HairlineBrush}"
-                    Visibility="{Binding HasItems, ElementName=WeeklyLists, Converter={StaticResource InverseBoolToVisibility}}" />
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="WeeklyLists" ItemsSource="{Binding Weekly}" Margin="0,0,8,0" />
+                <StackPanel Margin="0,0,8,0">
+                    <ItemsControl ItemsSource="{Binding WeeklyOn}" ItemTemplate="{StaticResource TodoListCard}" />
+                    <ItemsControl ItemsSource="{Binding WeeklyOff}" ItemTemplate="{StaticResource TodoOffRow}" />
+                </StackPanel>
             </ScrollViewer>
         </DockPanel>
         <DockPanel Grid.Column="2">
             <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
-                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE710;" FontSize="16"
+                <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Width="24" Height="24" Content="&#xE710;" FontSize="13"
                         ToolTip="New daily list" Command="{Binding NewDailyCommand}" />
                 <TextBlock DockPanel.Dock="Right" Text="{Binding DailyResetLabel}" Style="{StaticResource LabelText}"
-                           VerticalAlignment="Center" Margin="4,0,6,0" />
-                <TextBlock Text="Daily" Style="{StaticResource DisplayText}" FontSize="21" VerticalAlignment="Center" />
+                           VerticalAlignment="Center" Margin="4,0,8,0" />
+                <TextBlock Text="Daily" Style="{StaticResource DisplayText}" FontSize="19" VerticalAlignment="Center" />
             </DockPanel>
-            <Border DockPanel.Dock="Top" Height="1" Background="{DynamicResource HairlineBrush}"
-                    Visibility="{Binding HasItems, ElementName=DailyLists, Converter={StaticResource InverseBoolToVisibility}}" />
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl x:Name="DailyLists" ItemsSource="{Binding Daily}" />
+                <StackPanel>
+                    <ItemsControl ItemsSource="{Binding DailyOn}" ItemTemplate="{StaticResource TodoListCard}" />
+                    <ItemsControl ItemsSource="{Binding DailyOff}" ItemTemplate="{StaticResource TodoOffRow}" />
+                </StackPanel>
             </ScrollViewer>
         </DockPanel>
     </Grid>

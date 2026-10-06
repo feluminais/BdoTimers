@@ -5,6 +5,7 @@ using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
 using BdoTimers.App.Views.Panels;
+using BdoTimers.Core.Model;
 using BdoTimers.Core.Seed;
 
 namespace BdoTimers.App.Tests;
@@ -33,6 +34,17 @@ public class UiShots
                 {
                     ((RadioButton)window.FindName(tab)).IsChecked = true;
                     WpfTest.Drain();
+                    if (name == "todo")
+                    {
+                        UiCapture.Save(window, "todo-off.png");
+                        foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
+                        var weekly = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly);
+                        var daily = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Daily);
+                        services.Todos.Toggle(weekly.Id, weekly.Rows[0].Id);
+                        services.Todos.Toggle(weekly.Id, weekly.Rows[1].Children[0].Id);
+                        services.Todos.Toggle(daily.Id, daily.Rows[0].Id);
+                        WpfTest.Drain();
+                    }
                     UiCapture.Save(window, $"{name}.png");
                 }
                 main.OpenSettingsCommand.Execute(null);

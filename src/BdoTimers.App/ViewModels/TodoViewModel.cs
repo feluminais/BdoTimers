@@ -16,8 +16,11 @@ public sealed partial class TodoViewModel : ObservableObject
 
     [ObservableProperty] private string _weeklyResetLabel = "";
     [ObservableProperty] private string _dailyResetLabel = "";
-    public ObservableCollection<TodoListCardViewModel> Weekly { get; } = [];
-    public ObservableCollection<TodoListCardViewModel> Daily { get; } = [];
+    /// <summary>Lists that are on show their rows; lists that are off are one quiet row under them.</summary>
+    public ObservableCollection<TodoListCardViewModel> WeeklyOn { get; } = [];
+    public ObservableCollection<TodoListCardViewModel> WeeklyOff { get; } = [];
+    public ObservableCollection<TodoListCardViewModel> DailyOn { get; } = [];
+    public ObservableCollection<TodoListCardViewModel> DailyOff { get; } = [];
     public event Action<Guid>? RowSynced;
 
     public TodoViewModel(AppServices services, IPanelHost host)
@@ -60,8 +63,10 @@ public sealed partial class TodoViewModel : ObservableObject
     void Sync()
     {
         var lists = _services.Todos.Current.Lists.Where(list => !list.Deleted).ToList();
-        SyncCards(Weekly, lists.Where(l => l.Cadence == TodoCadence.Weekly));
-        SyncCards(Daily, lists.Where(l => l.Cadence == TodoCadence.Daily));
+        SyncCards(WeeklyOn, lists.Where(l => l.Cadence == TodoCadence.Weekly && l.Enabled));
+        SyncCards(WeeklyOff, lists.Where(l => l.Cadence == TodoCadence.Weekly && !l.Enabled));
+        SyncCards(DailyOn, lists.Where(l => l.Cadence == TodoCadence.Daily && l.Enabled));
+        SyncCards(DailyOff, lists.Where(l => l.Cadence == TodoCadence.Daily && !l.Enabled));
         if (_focusRow is { } id)
         {
             _focusRow = null;
@@ -81,6 +86,8 @@ public sealed partial class TodoListCardViewModel : ObservableObject
     public Guid Id { get; }
     [ObservableProperty] private string _name = "";
     [ObservableProperty] private string _summary = "";
+    /// <summary>Done over total, for the progress line under the name.</summary>
+    [ObservableProperty] private double _fraction;
     [ObservableProperty] private bool _isOn;
     public ObservableCollection<TodoRowViewModel> Rows { get; } = [];
 
@@ -115,6 +122,7 @@ public sealed partial class TodoListCardViewModel : ObservableObject
         _syncingEnabled = false;
         var (done, total) = TodoOps.Progress(list.Rows);
         Summary = $"{done}/{total}";
+        Fraction = total == 0 ? 0 : (double)done / total;
         TodoRowViewModel.Sync(Rows, TodoOps.OpenFirst(list.Rows), list.Enabled, _owner, Id);
     }
 }
