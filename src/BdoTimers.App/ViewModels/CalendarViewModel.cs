@@ -11,7 +11,7 @@ namespace BdoTimers.App.ViewModels;
 
 /// <summary>
 /// The Schedule screen's Month: a month of everything the app schedules, in local time, and the chosen day's list. Month cells show
-/// the user's own timers and events with a count of boss spawns; the day list shows every item.
+/// the user's own timers and events with a count of bosses; the day list shows every item.
 /// </summary>
 public sealed partial class CalendarViewModel : ObservableObject
 {
@@ -184,8 +184,8 @@ public sealed partial class CalendarDayViewModel(Action<DateOnly> select) : Obse
             .Select(i => new CalendarLine(Formats.Time(i.AtUtc), CalendarRowViewModel.NameOf(i), i.State)).ToList();
         if (!Lines.SequenceEqual(lines)) Lines = lines;
         More = own.Count > lines.Count ? $"+{own.Count - lines.Count} more" : null;
-        var spawns = items.Where(i => i.Kind == CalendarKind.Boss).Select(i => i.AtUtc).Distinct().Count();
-        BossSummary = spawns switch { 0 => null, 1 => "1 spawn", _ => $"{spawns} spawns" };
+        var bosses = items.Count(i => i.Kind == CalendarKind.Boss);
+        BossSummary = bosses switch { 0 => null, 1 => "1 boss", _ => $"{bosses} bosses" };
         AutomationName = day.Date.ToString("dddd d MMMM", CultureInfo.InvariantCulture);
     }
 }
