@@ -31,7 +31,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
    still applies while the keys are held: Fade keeps it faint under the pointer, Hide leaves nothing to grab, so use the
    panel's preview then. The new place survives a restart. Clear the field and the keys do nothing; set Alt alone, or
    Ctrl+Alt+D, and those keys do it.
-7. [ ] Schedule → Week: right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip
+7. [ ] Schedule → Bosses: right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip
    restores it. On Today, Skip on the hero (on hover, or right-click) skips every boss of the next spawn at once; the
    hero shows them struck through and "Skipped", and Unskip brings them back.
 8. [ ] Schedule → Following → switch a boss off: its row dims and says "Alerts off", the boss dims in the grid and leaves
@@ -260,7 +260,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     panel closes, the boss leaves the Following list and grid, and Undo brings it back with its alerts and skipped spawns.
     Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
     boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.
-67. [ ] Schedule → Month: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
+67. [ ] Schedule → Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
     Day cells list own weekly timers, running countdowns, events and the weekly reset by name (the time is the tooltip),
     with "+N more" past three, and "N bosses"; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
     time, coloured as in the week grid. Click a boss or timer: its panel opens. Right-click an upcoming boss or weekly
@@ -270,7 +270,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Sunday and Monday spawns on their own days.
 68. [ ] War of the Roses appears once in Timers, with Applications close and Battle in the same panel. EU defaults
     are Sunday 15:05 and 17:00 Berlin; NA defaults are 13:05 and 15:00 Pacific. Repeat is 2, From week of is
-    2026-09-20, and Schedule → Month shows both on 4 and 18 October, neither on 11 October. Opening and closing its panel
+    2026-09-20, and Schedule → Calendar shows both on 4 and 18 October, neither on 11 October. Opening and closing its panel
     leaves the saved schedule untouched. Switch region: defaults move, edited slots/repeat/date limits stay.
 69. [ ] Edit a War of the Roses time, label, repeat, anchor and date limits; restart and confirm they persist. Reset
     to EU/NA times → No keeps edits; Yes restores the current region's slots, labels, repeat, anchor, date limits and

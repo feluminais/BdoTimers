@@ -73,6 +73,21 @@ public class MainWindowTabsTests
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
 
+    /// <summary>The first view is only the bosses and the second everything, so the Schedule says which is which.</summary>
+    [Fact]
+    public void The_schedule_names_its_two_views_for_what_they_show() => WpfTest.Run(() =>
+    {
+        var view = new ScheduleView();
+        var window = new Window { Content = view, Width = 600, Height = 300, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            Assert.Equal("Bosses", ((RadioButton)view.FindName("WeekToggle")).Content);
+            Assert.Equal("Calendar", ((RadioButton)view.FindName("MonthToggle")).Content);
+        }
+        finally { window.Close(); }
+    });
+
     [Fact]
     public void The_window_opens_on_Today_and_the_next_boss_chip_shows_on_the_other_tabs_when_there_is_room() => WpfTest.Run(() =>
     {

@@ -15,8 +15,8 @@
             <Border Margin="18,0,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Padding="2" CornerRadius="7" BorderThickness="1"
                     Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource HairlineBrush}">
                 <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="WeekToggle" Style="{StaticResource SegmentButton}" GroupName="ScheduleMode" Content="Week" IsChecked="True" />
-                    <RadioButton x:Name="MonthToggle" Style="{StaticResource SegmentButton}" GroupName="ScheduleMode" Content="Month" />
+                    <RadioButton x:Name="WeekToggle" Style="{StaticResource SegmentButton}" GroupName="ScheduleMode" Content="Bosses" IsChecked="True" />
+                    <RadioButton x:Name="MonthToggle" Style="{StaticResource SegmentButton}" GroupName="ScheduleMode" Content="Calendar" />
                 </StackPanel>
             </Border>
         </DockPanel>
