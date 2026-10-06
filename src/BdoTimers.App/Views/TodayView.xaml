@@ -230,8 +230,8 @@
             </Button>
         </DataTemplate>
 
-        <!-- A daily task: the list's name above the first of its tasks when more than one list is on -->
-        <DataTemplate DataType="{x:Type vm:DailyTask}">
+        <!-- A task: the list's name above the first of its tasks when more than one list is on -->
+        <DataTemplate DataType="{x:Type vm:ListedTask}">
             <StackPanel>
                 <TextBlock Text="{Binding ListName}" Style="{StaticResource LabelText}" Margin="0,6,0,0"
                            Visibility="{Binding ListName, Converter={StaticResource NullToCollapsed}}" />
@@ -248,10 +248,34 @@
                 </DockPanel>
             </StackPanel>
         </DataTemplate>
+
+        <!-- A task panel: its heading and how far along it is, what is still open, and the way on to To-do -->
+        <DataTemplate DataType="{x:Type vm:TaskPanelViewModel}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource GoodBrush}"
+                               Typography.NumeralAlignment="Tabular" VerticalAlignment="Center"
+                               Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Heading}" Style="{StaticResource PanelHeading}" />
+                </DockPanel>
+                <ProgressBar Style="{StaticResource TodoProgress}" Value="{Binding Fraction, Mode=OneWay}" Margin="0,10,0,6"
+                             AutomationProperties.Name="Progress" Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
+                <ItemsControl ItemsSource="{Binding Tasks}" Focusable="False" />
+                <TextBlock Text="No active list" Style="{StaticResource LabelText}" Margin="0,10,0,0"
+                           Visibility="{Binding HasLists, Converter={StaticResource InverseBoolToVisibility}}" />
+                <Button Style="{StaticResource NameButton}" HorizontalAlignment="Stretch" Command="{Binding ShowTodoCommand}"
+                        AutomationProperties.Name="To-do" Visibility="{Binding Footer, Converter={StaticResource NullToCollapsed}}">
+                    <DockPanel Margin="0,9,0,0">
+                        <TextBlock DockPanel.Dock="Right" Text="&#8250;" FontSize="14" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Footer}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center" />
+                    </DockPanel>
+                </Button>
+            </StackPanel>
+        </DataTemplate>
     </UserControl.Resources>
 
-    <!-- Wide: the hero over Coming up, and Running over Daily tasks in a column of their own. Narrow: one column,
-         hero, Running, Coming up, Daily tasks. The code-behind moves the four panels between the hosts. -->
+    <!-- Wide: the hero over Coming up, and Running over the daily and weekly tasks in a column of their own. Narrow: one
+         column, hero, Running, Coming up, Daily tasks, Weekly tasks. The code-behind moves the panels between the hosts. -->
     <Grid x:Name="Layout">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -365,50 +389,13 @@
                         <ItemsControl ItemsSource="{Binding Running}" ItemTemplate="{StaticResource RunningRow}" Focusable="False" />
                     </StackPanel>
                 </Border>
-                <Border x:Name="DailyPanel" Style="{StaticResource ForestPanel}" DataContext="{Binding Daily}">
-                    <StackPanel>
-                        <DockPanel>
-                            <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource GoodBrush}"
-                                       Typography.NumeralAlignment="Tabular" VerticalAlignment="Center"
-                                       Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
-                            <TextBlock Text="Daily tasks" Style="{StaticResource PanelHeading}" />
-                        </DockPanel>
-                        <ProgressBar Style="{StaticResource TodoProgress}" Value="{Binding Fraction, Mode=OneWay}" Margin="0,10,0,6"
-                                     AutomationProperties.Name="Progress" Visibility="{Binding HasLists, Converter={StaticResource BoolToVisibility}}" />
-                        <ItemsControl ItemsSource="{Binding Tasks}" Focusable="False" />
-                        <TextBlock Text="No active list" Style="{StaticResource LabelText}" Margin="0,10,0,0"
-                                   Visibility="{Binding HasLists, Converter={StaticResource InverseBoolToVisibility}}" />
-                        <Button Style="{StaticResource NameButton}" HorizontalAlignment="Stretch" Command="{Binding ShowTodoCommand}"
-                                AutomationProperties.Name="To-do">
-                            <DockPanel Margin="0,9,0,0">
-                                <TextBlock DockPanel.Dock="Right" Text="›" FontSize="14" VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding Weekly}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Weekly}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Text="To-do" FontSize="12" Foreground="{DynamicResource SubtleBrush}" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding Weekly}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                            </DockPanel>
-                        </Button>
-                    </StackPanel>
+                <Border x:Name="DailyPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16">
+                    <ContentControl Content="{Binding Daily}" Focusable="False" />
+                </Border>
+                <!-- Off when no weekly list is on -->
+                <Border x:Name="WeeklyPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16"
+                        Visibility="{Binding Weekly.HasLists, Converter={StaticResource BoolToVisibility}}">
+                    <ContentControl Content="{Binding Weekly}" Focusable="False" />
                 </Border>
             </StackPanel>
         </ScrollViewer>

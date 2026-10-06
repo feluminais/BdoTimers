@@ -1,13 +1,14 @@
 using System.Collections.ObjectModel;
 using BdoTimers.App.ViewModels.Panels;
+using BdoTimers.Core.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
 /// <summary>
-/// The Today screen: the next spawn, what comes in the next 24 hours, the timers that are running and the daily tasks,
-/// put together from what the other screens already keep. The 1 Hz tick refreshes it while the window is shown.
+/// The Today screen: the next spawn, what comes in the next 24 hours, the timers that are running and the daily and weekly
+/// tasks, put together from what the other screens already keep. The 1 Hz tick refreshes it while the window is shown.
 /// </summary>
 public sealed partial class TodayViewModel : ObservableObject
 {
@@ -20,7 +21,8 @@ public sealed partial class TodayViewModel : ObservableObject
 
     public HeroViewModel Hero { get; }
     public ComingUpViewModel ComingUp { get; }
-    public DailyTasksViewModel Daily { get; }
+    public TaskPanelViewModel Daily { get; }
+    public TaskPanelViewModel Weekly { get; }
     /// <summary>The Timers screen's countdowns and stopwatches that are running or paused, and Horse registration while one is under way.</summary>
     public ObservableCollection<TimerTileViewModel> Running { get; } = [];
     [ObservableProperty] private bool _hasRunning;
@@ -33,7 +35,8 @@ public sealed partial class TodayViewModel : ObservableObject
         _showTimers = showTimers;
         Hero = new HeroViewModel(services, id => TimerPanels.Open(services, host, id), openFollowing);
         ComingUp = new ComingUpViewModel(services, host);
-        Daily = new DailyTasksViewModel(services, todo, showTodo);
+        Daily = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Daily);
+        Weekly = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Weekly);
         Refresh(services.Clock.UtcNow);
     }
 

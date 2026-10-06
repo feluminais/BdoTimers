@@ -9,7 +9,7 @@ Automated checks: `dotnet test tests/BdoTimers.Core.Tests`, `dotnet build src/Bd
 `pwsh scripts/test-windows.ps1`. Windows CI runs these without downloading the speech model or publishing an
 installer. The WPF tests use actual controls on an STA dispatcher for panel focus, keyboard navigation, command
 bindings and automation names. Release packaging and signing: [releasing.md](releasing.md).
-1. [ ] First launch: the window opens on Today, with the next spawn, Coming up and the daily tasks in local time; Schedule
+1. [ ] First launch: the window opens on Today, with the next spawn, Coming up and the daily and weekly tasks in local time; Schedule
    shows this week's grid; a "priority notifications" toast appears once.
 2. [ ] Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
 3. [ ] Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; press the round play button on its card → alert
@@ -322,8 +322,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     times to each update as time passes.
     Running shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "All timers ›"
     opens Timers; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
-    six), ticking one removes it and moves the line; "Weekly 1/16 ›" opens To-do. Below 820 px wide the screen is one
-    column: hero, Running, Coming up, Daily tasks.
+    six), ticking one removes it and moves the line; Weekly tasks does the same for the weekly lists, a task with
+    sub-tasks on one line saying how far along it is (ticking it ticks them all), and is gone while no weekly list is
+    on. Either panel says "+n more ›" when tasks don't fit, and that opens To-do. Below 820 px wide the screen is one
+    column: hero, Running, Coming up, Daily tasks, Weekly tasks.
 80. [ ] The top bar's next-boss chip shows on Schedule, Timers and To-do (not on Today) with the next spawn's names and
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
     and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking

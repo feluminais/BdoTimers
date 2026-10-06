@@ -165,18 +165,19 @@ public class TodayViewModelTests
     public void Daily_tasks_show_the_open_rows_of_the_active_daily_lists_and_count_the_progress() => WithServices(services =>
     {
         var daily = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Daily);
-        var weekly = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly);
-        var tasks = new DailyTasksViewModel(services, new TodoViewModel(services, new Host()), () => { });
+        var tasks = new TaskPanelViewModel(services, new TodoViewModel(services, new Host()), () => { }, TodoCadence.Daily);
         Assert.False(tasks.HasLists);
+        Assert.Equal("To-do", tasks.Footer);
+        Assert.Equal("Daily tasks", tasks.Heading);
 
         services.Todos.SetEnabled(daily.Id, true);
         var todo = new TodoViewModel(services, new Host());
-        tasks = new DailyTasksViewModel(services, todo, () => { });
+        tasks = new TaskPanelViewModel(services, todo, () => { }, TodoCadence.Daily);
 
         Assert.True(tasks.HasLists);
         Assert.Equal(3, tasks.Tasks.Count);
         Assert.Equal("0/3", tasks.Summary);
-        Assert.Null(tasks.Weekly);
+        Assert.Null(tasks.Footer);
 
         services.Todos.Toggle(daily.Id, daily.Rows[0].Id);
         WpfTest.Drain();
@@ -184,10 +185,45 @@ public class TodayViewModelTests
         Assert.Equal(2, tasks.Tasks.Count);
         Assert.Equal("1/3", tasks.Summary);
         Assert.Equal(1.0 / 3, tasks.Fraction, 3);
+    });
+
+    [Fact]
+    public void Weekly_tasks_show_the_open_top_level_tasks_with_how_far_along_each_is_and_count_what_does_not_fit() => WithServices(services =>
+    {
+        var weekly = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly);
+        var todo = new TodoViewModel(services, new Host());
+        var panel = new TaskPanelViewModel(services, todo, () => { }, TodoCadence.Weekly);
+        Assert.False(panel.HasLists);
+        Assert.Equal("Weekly tasks", panel.Heading);
 
         services.Todos.SetEnabled(weekly.Id, true);
         WpfTest.Drain();
 
-        Assert.Equal("Weekly 0/16", tasks.Weekly);
+        Assert.True(panel.HasLists);
+        Assert.Equal("0/16", panel.Summary);
+        Assert.Equal(weekly.Rows.Select(row => row.Text), panel.Tasks.Select(task => task.Row.Text));
+        Assert.Null(panel.Footer);
+
+        // A task with sub-tasks stays on one line, saying how far along it is, until all of them are done.
+        var first = weekly.Rows.First(row => row.Children.Count > 1);
+        services.Todos.Toggle(weekly.Id, first.Children[0].Id);
+        WpfTest.Drain();
+
+        var line = Assert.Single(panel.Tasks, task => task.Row.Text == first.Text).Row;
+        Assert.Equal($"1/{first.Children.Count}", line.PartialProgress);
+        Assert.Equal("1/16", panel.Summary);
+        foreach (var child in first.Children.Skip(1)) services.Todos.Toggle(weekly.Id, child.Id);
+        WpfTest.Drain();
+
+        Assert.DoesNotContain(panel.Tasks, task => task.Row.Text == first.Text);
+
+        // Eight tasks of one line each: six show and the rest are counted.
+        services.Todos.ReplaceRows(weekly.Id, Enumerable.Range(1, 8).Select(n => new TodoRow { Text = $"Task {n}" }).ToList());
+        WpfTest.Drain();
+
+        Assert.Equal(6, panel.Tasks.Count);
+        Assert.Equal("+2 more", panel.Footer);
+        Assert.Equal("0/8", panel.Summary);
+        panel.ShowTodoCommand.Execute(null);
     });
 }

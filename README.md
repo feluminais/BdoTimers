@@ -16,12 +16,12 @@
   <a href="CONTRIBUTING.md">Build &amp; contribute</a>
 </p>
 
-![Today with the next boss spawn, the next 24 hours, running timers and daily tasks](docs/images/today.png)
+![Today with the next boss spawn, the next 24 hours, running timers and daily and weekly tasks](docs/images/today.png)
 
 ## Today
 
 The next boss spawn counts down at the top, with the one after it and the alert times. Below it, the next 24 hours of
-spawns, timers and resets; on the right, the timers that are running and your daily tasks.
+spawns, timers and resets; on the right, the timers that are running and your daily and weekly tasks.
 
 ![Schedule with this week's boss spawns](docs/images/schedule.png)
 

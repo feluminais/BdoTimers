@@ -64,7 +64,10 @@ public class TodayViewTests
 
                 Assert.False(side.IsVisible);
                 Assert.True(narrow.IsVisible);
-                Assert.True(((FrameworkElement)view.FindName("NarrowStack")).IsAncestorOf(hero));
+                var narrowStack = (FrameworkElement)view.FindName("NarrowStack");
+                Assert.True(narrowStack.IsAncestorOf(hero));
+                Assert.True(narrowStack.IsAncestorOf((FrameworkElement)view.FindName("DailyPanel")));
+                Assert.True(narrowStack.IsAncestorOf((FrameworkElement)view.FindName("WeeklyPanel")));
                 UiCapture.Save(window, "today-view-narrow.png");
 
                 window.Width = 960;
@@ -72,6 +75,9 @@ public class TodayViewTests
 
                 Assert.True(side.IsVisible);
                 Assert.True(((FrameworkElement)view.FindName("MainHost")).IsAncestorOf(hero));
+                var sideStack = (FrameworkElement)view.FindName("SideStack");
+                Assert.True(sideStack.IsAncestorOf((FrameworkElement)view.FindName("DailyPanel")));
+                Assert.True(sideStack.IsAncestorOf((FrameworkElement)view.FindName("WeeklyPanel")));
             }
             finally { window.Close(); }
         }
