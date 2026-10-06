@@ -73,7 +73,7 @@
                     <!-- The next boss, on every screen but Today; a click goes to Today -->
                     <Button x:Name="NextChip" Style="{StaticResource NextChip}" Margin="0,0,10,0" Visibility="Collapsed"
                             DataContext="{Binding Today.Hero}" Command="{Binding DataContext.ShowTodayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                            AutomationProperties.Name="Next boss" WindowChrome.IsHitTestVisibleInChrome="True">
+                            AutomationProperties.Name="{Binding NamesText, StringFormat='Next boss {0}'}" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
                             <controls:ClippingBorder Width="20" Height="20" CornerRadius="10" Margin="0,0,8,0">
                                 <controls:FocusImage Picture="{Binding Next.Images[0]}" />
