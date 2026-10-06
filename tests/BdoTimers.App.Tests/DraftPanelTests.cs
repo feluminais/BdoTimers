@@ -250,17 +250,7 @@ public class DraftPanelTests
         });
     });
 
-    static void Capture(Window window, string name)
-    {
-        if (Environment.GetEnvironmentVariable("BDOTIMERS_VOICE_CAPTURE") is not { Length: > 0 } destination) return;
-        Directory.CreateDirectory(destination);
-        var image = new System.Windows.Media.Imaging.RenderTargetBitmap((int)window.ActualWidth, (int)window.ActualHeight, 96, 96, System.Windows.Media.PixelFormats.Pbgra32);
-        image.Render(window);
-        var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
-        encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(image));
-        using var file = File.Create(Path.Combine(destination, name));
-        encoder.Save(file);
-    }
+    static void Capture(Window window, string name) => UiCapture.Save(window, name);
 
     static TimerDef Timer() => new() { Name = "Old title", Kind = TimerKind.Countdown, Countdown = new(), Alerts = new() { Tts = new() { Enabled = false } } };
     static void WithServices(Action<AppServices> test)
