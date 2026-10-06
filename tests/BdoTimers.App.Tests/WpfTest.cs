@@ -56,6 +56,16 @@ internal static class WpfTest
     public static void Run(Action action) => Ui.Value.Invoke(action);
 
 
+    /// <summary>Runs the dispatcher for a while, so animations and timers can progress.</summary>
+    public static void Wait(int milliseconds)
+    {
+        var frame = new DispatcherFrame();
+        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(milliseconds) };
+        timer.Tick += (_, _) => { timer.Stop(); frame.Continue = false; };
+        timer.Start();
+        Dispatcher.PushFrame(frame);
+    }
+
     public static void Drain()
     {
         var frame = new DispatcherFrame();

@@ -83,6 +83,13 @@ public static class Ui
     }
     static void HideInactiveFocusCue(object? sender, EventArgs e) => SetShowKeyboardFocus((Window)sender!, false);
 
+    /// <summary>The corner radius a button style gives its template's border; square when unset.</summary>
+    public static readonly DependencyProperty CornerRadiusProperty = DependencyProperty.RegisterAttached(
+        "CornerRadius", typeof(CornerRadius), typeof(Ui), new FrameworkPropertyMetadata(new CornerRadius(0)));
+
+    public static CornerRadius GetCornerRadius(DependencyObject d) => (CornerRadius)d.GetValue(CornerRadiusProperty);
+    public static void SetCornerRadius(DependencyObject d, CornerRadius value) => d.SetValue(CornerRadiusProperty, value);
+
     /// <summary>Marks a text field as invalid; the theme draws its hairline in the danger colour.</summary>
     public static readonly DependencyProperty HasErrorProperty = DependencyProperty.RegisterAttached(
         "HasError", typeof(bool), typeof(Ui), new FrameworkPropertyMetadata(false));

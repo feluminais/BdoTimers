@@ -238,6 +238,25 @@ public class UiRegressionTests
     });
 
     [Fact]
+    public void Switch_draws_a_track_and_a_thumb_that_moves_when_checked() => WpfTest.Run(() =>
+    {
+        var button = new ToggleButton { Style = (Style)Application.Current.FindResource("OnOffSwitch"), Width = 110 };
+        var window = new Window { Content = button, Width = 240, Height = 100, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            WpfTest.Drain();
+            Assert.NotNull(button.Template.FindName("Track", button));
+            var thumb = (FrameworkElement)button.Template.FindName("Thumb", button);
+            var off = thumb.TransformToAncestor(button).Transform(default).X;
+            button.IsChecked = true;
+            WpfTest.Wait(400);
+            Assert.True(thumb.TransformToAncestor(button).Transform(default).X > off + 10);
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
     public void HotkeyKeyboardActivationStartsFocusCues() => WpfTest.Run(() =>
     {
         var hotkey = new HotkeyBox();

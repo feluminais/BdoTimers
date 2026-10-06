@@ -2,7 +2,6 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 namespace BdoTimers.App.Tests;
 
@@ -14,7 +13,7 @@ internal static class UiCapture
     {
         if (Environment.GetEnvironmentVariable("BDOTIMERS_SHOTS") is not { Length: > 0 } folder) return;
         Directory.CreateDirectory(folder);
-        Settle();
+        WpfTest.Wait(450);
         element.UpdateLayout();
         var image = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth), (int)Math.Ceiling(element.ActualHeight),
             96, 96, PixelFormats.Pbgra32);
@@ -23,15 +22,5 @@ internal static class UiCapture
         encoder.Frames.Add(BitmapFrame.Create(image));
         using var file = File.Create(Path.Combine(folder, name));
         encoder.Save(file);
-    }
-
-    /// <summary>Lets running animations finish, so a panel is captured at rest and not mid-fade.</summary>
-    static void Settle()
-    {
-        var frame = new DispatcherFrame();
-        var timer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(450) };
-        timer.Tick += (_, _) => { timer.Stop(); frame.Continue = false; };
-        timer.Start();
-        Dispatcher.PushFrame(frame);
     }
 }

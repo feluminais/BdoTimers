@@ -16,7 +16,7 @@
         <Setter Property="ToolTip" Value="Close" />
         <Setter Property="Command" Value="{Binding DataContext.ClosePanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
     </Style>
-    <Style x:Key="PanelDoneButton" TargetType="Button" BasedOn="{StaticResource OutlineButton}">
+    <Style x:Key="PanelDoneButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
         <Setter Property="Content" Value="Done" />
         <Setter Property="DockPanel.Dock" Value="Right" />
         <Setter Property="Command" Value="{Binding DataContext.FinishPanelCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
