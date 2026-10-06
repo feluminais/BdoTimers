@@ -34,6 +34,11 @@
 
             <!-- Top bar: the empty area drags the window -->
             <Grid Margin="22,0,0,0" Height="44" LayoutTransform="{DynamicResource UiScaleTransform}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- A gold diamond, the app's mark -->
                     <Rectangle Width="9" Height="9" Margin="0,0,9,0" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5"
@@ -69,24 +74,27 @@
                         </StackPanel>
                     </RadioButton>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <!-- The room between the tabs and the buttons, which the next boss takes, trimmed to fit -->
+                <Grid x:Name="ChipHost" Grid.Column="1" SizeChanged="ChipHost_SizeChanged">
                     <!-- The next boss, on every screen but Today; a click goes to Today -->
-                    <Button x:Name="NextChip" Style="{StaticResource NextChip}" Margin="0,0,10,0" Visibility="Collapsed"
+                    <Button x:Name="NextChip" Style="{StaticResource NextChip}" Visibility="Collapsed" HorizontalAlignment="Right"
                             DataContext="{Binding Today.Hero}" Command="{Binding DataContext.ShowTodayCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                             AutomationProperties.Name="{Binding NamesText, StringFormat='Next boss {0}'}" WindowChrome.IsHitTestVisibleInChrome="True">
-                        <StackPanel Orientation="Horizontal">
-                            <controls:ClippingBorder Width="20" Height="20" CornerRadius="10" Margin="0,0,8,0">
+                        <DockPanel>
+                            <controls:ClippingBorder DockPanel.Dock="Left" Width="20" Height="20" CornerRadius="10" Margin="0,0,8,0">
                                 <controls:FocusImage Picture="{Binding Next.Images[0]}" />
                             </controls:ClippingBorder>
+                            <TextBlock DockPanel.Dock="Right" Text="{Binding Next.Clock}" Style="{StaticResource NextChipClock}" />
                             <TextBlock Text="{Binding NamesText}" Style="{StaticResource DisplayText}" FontSize="12" Margin="0,0,10,0"
-                                       VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding Next.Clock}" Style="{StaticResource NextChipClock}" />
-                        </StackPanel>
+                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        </DockPanel>
                     </Button>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,14,0"
-                                Visibility="{Binding IsPaused, Converter={StaticResource BoolToVisibility}}">
+                </Grid>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- Shown when the window is wide enough for it beside the tabs and the buttons -->
+                    <StackPanel x:Name="PausedBlock" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
                         <TextBlock Text="{Binding PausedText}" Foreground="{DynamicResource AmberBrush}" FontSize="12" VerticalAlignment="Center" />
-                        <Button Style="{StaticResource LinkButton}" Content="Resume" Margin="10,0,0,0" Command="{Binding ResumeCommand}"
+                        <Button Style="{StaticResource LinkButton}" Content="Resume" Height="44" Padding="10,0,14,0" Command="{Binding ResumeCommand}"
                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                     </StackPanel>
                     <Button x:Name="BellButton" Style="{StaticResource BellButton}" ToolTip="Alerts" AutomationProperties.Name="Alerts"

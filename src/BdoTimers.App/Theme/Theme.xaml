@@ -331,9 +331,10 @@
         <Setter Property="Fill" Value="{Binding (controls:Ui.SectionBrush), RelativeSource={RelativeSource AncestorType=RadioButton}}" />
     </Style>
 
-    <!-- The next boss in the top bar: a pill that takes the urgency colour of its clock. -->
+    <!-- The next boss in the top bar: a pill that takes the urgency colour of its clock. The button is as tall as the bar and
+         reaches the next control, so a click beside the pill still lands. -->
     <Style x:Key="NextChip" TargetType="Button" BasedOn="{StaticResource BareButton}">
-        <Setter Property="Height" Value="28" />
+        <Setter Property="Height" Value="44" />
         <Setter Property="Padding" Value="4,0,12,0" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="controls:Ui.CornerRadius" Value="14" />
@@ -341,6 +342,26 @@
         <Setter Property="BorderBrush" Value="{DynamicResource AccentSoftBrush}" />
         <Setter Property="Background" Value="{DynamicResource AccentFillBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="Transparent">
+                        <Border Height="28" Margin="0,0,10,0" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}"
+                                CornerRadius="{Binding (controls:Ui.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" RecognizesAccessKey="True" />
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.4" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />

@@ -23,6 +23,8 @@ public partial class MainWindow : Window
     // Windows' motion curves: fast out and slow in for what enters, the reverse for what leaves.
     static readonly KeySpline Entering = new(0, 0, 0, 1), Leaving = new(1, 0, 1, 1);
     const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 44;
+    // In unscaled units: the window width from which the paused notice fits, and the room the next boss needs.
+    const double PausedNoticeWidth = 830, ChipRoom = 170;
 
     static readonly DependencyProperty UiScaleProperty = DependencyProperty.Register(nameof(UiScale), typeof(ScaleTransform),
         typeof(MainWindow), new PropertyMetadata(null, (d, e) => ((MainWindow)d).UiScaleChanged((ScaleTransform?)e.OldValue)));
@@ -66,17 +68,18 @@ public partial class MainWindow : Window
             if (e.PropertyName == nameof(MainViewModel.SelectedTab))
             {
                 TabOf(viewModel.SelectedTab).IsChecked = true;
-                UpdateChip();
+                UpdateTopBar();
             }
+            if (e.PropertyName == nameof(MainViewModel.IsPaused)) UpdateTopBar();
             if (e.PropertyName == nameof(MainViewModel.AskingDiscard) && viewModel.AskingDiscard)
                 Dispatcher.BeginInvoke(() => PanelFocusScope.Descendants(PanelLayer).OfType<Button>()
                     .FirstOrDefault(b => Equals(b.Content, "Keep editing"))?.Focus());
         };
         viewModel.Today.Hero.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(HeroViewModel.HasNext)) UpdateChip();
+            if (e.PropertyName == nameof(HeroViewModel.HasNext)) UpdateTopBar();
         };
-        SizeChanged += (_, _) => UpdateChip();
+        SizeChanged += (_, _) => UpdateTopBar();
         StateChanged += (_, _) =>
         {
             // A maximized frameless window overhangs the screen by the resize border.
@@ -174,7 +177,7 @@ public partial class MainWindow : Window
     {
         if (_vm is null) return;
         _vm.SelectedTab = Enum.Parse<MainTab>((string)((RadioButton)sender).Tag);
-        UpdateChip();
+        UpdateTopBar();
         EaseIn(ScreenOf(_vm.SelectedTab));
     }
 
@@ -203,13 +206,19 @@ public partial class MainWindow : Window
         _ => TodoTab,
     };
 
-    /// <summary>The next boss shows in the top bar on every screen but Today, when the window is wide enough for it.</summary>
-    void UpdateChip()
+    /// <summary>
+    /// The paused notice shows when the window is wide enough for it beside the tabs and the buttons. The next boss shows on
+    /// every screen but Today, in the room that is left.
+    /// </summary>
+    void UpdateTopBar()
     {
         if (_vm is null) return;
-        var wide = ActualWidth / UiScale >= 760;
-        NextChip.Visibility = wide && _vm.SelectedTab != MainTab.Today && _vm.Today.Hero.HasNext ? Visibility.Visible : Visibility.Collapsed;
+        PausedBlock.Visibility = _vm.IsPaused && ActualWidth / UiScale >= PausedNoticeWidth ? Visibility.Visible : Visibility.Collapsed;
+        NextChip.Visibility = _vm.SelectedTab != MainTab.Today && _vm.Today.Hero.HasNext && ChipHost.ActualWidth >= ChipRoom
+            ? Visibility.Visible : Visibility.Collapsed;
     }
+
+    void ChipHost_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateTopBar();
 
     /// <summary>The alerts menu opens under the bell on a click, not only on a right click.</summary>
     void Bell_Click(object sender, RoutedEventArgs e)

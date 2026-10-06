@@ -8,6 +8,71 @@ namespace BdoTimers.App.Tests;
 
 public class MainWindowTabsTests
 {
+    /// <summary>A miss beside a button is a click that does nothing, and a notice that runs into the tabs is worse; the buttons fill the bar and touch.</summary>
+    [Fact]
+    public void The_top_bar_buttons_fill_the_bar_touch_and_never_run_into_the_tabs() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Tabs." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            using var main = new MainViewModel(services);
+            var window = new MainWindow(main, services) { Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                main.SetShown(true);
+                ((RadioButton)window.FindName("ScheduleTab")).IsChecked = true;
+                WpfTest.Drain();
+                Rect Bounds(FrameworkElement e) => e.TransformToAncestor(window).TransformBounds(new Rect(0, 0, e.ActualWidth, e.ActualHeight));
+                var tabs = new[] { "TodayTab", "ScheduleTab", "CustomTab", "TodoTab" }.Select(name => (FrameworkElement)window.FindName(name)).ToArray();
+                var chip = (FrameworkElement)window.FindName("NextChip");
+                var paused = (FrameworkElement)window.FindName("PausedBlock");
+                var buttons = (Panel)paused.Parent;
+                var bell = (FrameworkElement)window.FindName("BellButton");
+                var resume = PanelFocusScope.Descendants(paused).OfType<Button>().Single();
+                var lastTab = Bounds(tabs[^1]);
+
+                // Room to spare: the next boss fits whole and reaches the buttons.
+                Assert.True(chip.IsVisible);
+                Assert.False(paused.IsVisible);
+                Assert.All(tabs.Append(chip).Concat(buttons.Children.OfType<FrameworkElement>().Where(c => c.IsVisible)), e => Assert.Equal(44, e.ActualHeight));
+                for (var i = 0; i + 1 < tabs.Length; i++) Assert.Equal(Bounds(tabs[i]).Right, Bounds(tabs[i + 1]).Left, 0.01);
+                var cluster = buttons.Children.OfType<FrameworkElement>().Where(c => c.IsVisible).ToArray();
+                Assert.Equal(Bounds(chip).Right, Bounds(cluster[0]).Left, 0.01);
+                for (var i = 0; i + 1 < cluster.Length; i++) Assert.Equal(Bounds(cluster[i]).Right, Bounds(cluster[i + 1]).Left, 0.01);
+
+                // Paused: the notice takes room first, and the next boss gives way rather than run into the tabs.
+                main.PauseHourCommand.Execute(null);
+                WpfTest.Drain();
+                Assert.True(paused.IsVisible);
+                Assert.Equal(44, resume.ActualHeight);
+                Assert.Equal(Bounds(resume).Right, Bounds(bell).Left, 0.01);
+                Assert.True(Bounds(paused).Left >= lastTab.Right);
+                Assert.True(!chip.IsVisible || Bounds(chip).Left >= lastTab.Right);
+
+                // Narrower: the next boss shrinks to the room that is left, and the notice leaves the bar to the bell.
+                main.ResumeCommand.Execute(null);
+                window.Width = 800;
+                WpfTest.Drain();
+                Assert.True(chip.IsVisible);
+                Assert.True(Bounds(chip).Left >= lastTab.Right);
+                Assert.True(Bounds(chip).Right <= Bounds(cluster[0]).Left + 0.01);
+                main.PauseHourCommand.Execute(null);
+                window.Width = 700;
+                WpfTest.Drain();
+                Assert.False(paused.IsVisible);
+                Assert.False(chip.IsVisible);
+            }
+            finally
+            {
+                typeof(AppServices).GetField("<IsQuitting>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(services, true);
+                window.Close();
+            }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
     [Fact]
     public void The_window_opens_on_Today_and_the_next_boss_chip_shows_on_the_other_tabs_when_there_is_room() => WpfTest.Run(() =>
     {
