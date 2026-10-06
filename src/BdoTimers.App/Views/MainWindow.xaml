@@ -28,11 +28,13 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- A gold diamond, the app's mark -->
-                    <Rectangle Width="9" Height="9" Margin="0,0,9,0" Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.5"
-                               RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
-                        <Rectangle.RenderTransform><RotateTransform Angle="45" /></Rectangle.RenderTransform>
-                    </Rectangle>
+                    <!-- The app icon in its small-size form: one gold diamond with an hourglass in it -->
+                    <Viewbox Width="30" Height="30" Margin="0,0,7,0" IsHitTestVisible="False">
+                        <Canvas Width="64" Height="64">
+                            <Path Data="M32,7 L57,32 L32,57 L7,32 Z" Stroke="{DynamicResource AccentBrush}" StrokeThickness="4" />
+                            <Path Data="M25,20 L39,20 L32,32 L39,44 L25,44 L32,32 Z" Fill="{DynamicResource AccentTextBrush}" />
+                        </Canvas>
+                    </Viewbox>
                     <RadioButton x:Name="TodayTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource AccentBrush}" IsChecked="True" Tag="Today"
                                  AutomationProperties.Name="Today" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
