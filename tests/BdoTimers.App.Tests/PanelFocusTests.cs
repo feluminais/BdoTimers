@@ -53,6 +53,33 @@ public class PanelFocusTests
     });
 
     [Fact]
+    public void The_background_can_stay_enabled_until_it_is_told_to_go_dim_and_a_closed_panel_ignores_that() => WpfTest.Run(() =>
+    {
+        var background = new Button { Content = "Open" };
+        var panel = new Grid { Visibility = Visibility.Collapsed };
+        panel.Children.Add(new TextBox());
+        var root = new Grid();
+        root.Children.Add(background);
+        root.Children.Add(panel);
+        var window = new Window { Width = 300, Height = 180, Content = root };
+        try
+        {
+            var focus = new PanelFocusScope(window, background, panel, () => { });
+            window.Show();
+            panel.Visibility = Visibility.Visible;
+            focus.Open(disableBackground: false);
+            Assert.True(background.IsEnabled);
+            focus.DisableBackground();
+            Assert.False(background.IsEnabled);
+            focus.Close();
+            Assert.True(background.IsEnabled);
+            focus.DisableBackground();
+            Assert.True(background.IsEnabled);
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
     public void EscapeDismissesPanelAndTextUndoIsNotIntercepted() => WpfTest.Run(() =>
     {
         var background = new Button { Content = "Open" };

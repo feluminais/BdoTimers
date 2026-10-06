@@ -239,6 +239,7 @@ public sealed class AppServices : IDisposable
         {
             _mainViewModel = new MainViewModel(this);
             _main = new MainWindow(_mainViewModel, this);
+            _main.StartWarmUp();
         }
         return _main;
     }

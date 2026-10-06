@@ -12,12 +12,20 @@ public partial class SettingsPanel : UserControl
     public SettingsPanel()
     {
         InitializeComponent();
-        Loaded += (_, _) =>
-        {
-            ApplySearch();
-            if (DataContext is SettingsPanelViewModel { OpenAtRegion: true }) BossesNav.IsChecked = true;
-        };
-        DataContextChanged += (_, _) => Dispatcher.BeginInvoke(ApplySearch);
+        // Only the first category's rows take part in the first layout, and the same goes for each panel shown in this view.
+        ApplySearch();
+        DataContextChanged += (_, _) => Restart();
+    }
+
+    /// <summary>Starts over at the first category, or at the boss regions when the panel was opened for them, with no search.</summary>
+    void Restart()
+    {
+        var nav = DataContext is SettingsPanelViewModel { OpenAtRegion: true } ? BossesNav : GeneralNav;
+        _category = (string)nav.Tag;
+        nav.IsChecked = true;
+        SearchBox.Clear();
+        ApplySearch();
+        Scroller.ScrollToTop();
     }
 
     /// <summary>Shows one category; picking one also ends a search.</summary>

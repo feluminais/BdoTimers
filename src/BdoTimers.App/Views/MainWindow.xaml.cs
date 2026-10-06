@@ -19,9 +19,6 @@ namespace BdoTimers.App.Views;
 
 public partial class MainWindow : Window
 {
-    static readonly Duration Quick = TimeSpan.FromMilliseconds(167), Slide = TimeSpan.FromMilliseconds(250);
-    // Windows' motion curves: fast out and slow in for what enters, the reverse for what leaves.
-    static readonly KeySpline Entering = new(0, 0, 0, 1), Leaving = new(1, 0, 1, 1);
     const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 44;
     // In unscaled units: the window width from which the paused notice fits, and the room the next boss needs.
     const double PausedNoticeWidth = 830, ChipRoom = 170;
@@ -100,74 +97,20 @@ public partial class MainWindow : Window
         var shown = IsVisible && WindowState != WindowState.Minimized;
         _vm.SetShown(shown);
         EcoQos.Set(!shown);
-    }
-
-    static DoubleAnimationUsingKeyFrames Move(double from, double to, Duration length, KeySpline spline) => new()
-    {
-        KeyFrames =
-        {
-            new DiscreteDoubleKeyFrame(from, KeyTime.FromPercent(0)),
-            new SplineDoubleKeyFrame(to, KeyTime.FromPercent(1), spline),
-        },
-        Duration = length,
-    };
-
-    void ShowPanel(object? panel)
-    {
-        var animate = SystemParameters.ClientAreaAnimation;
-        var sheet = _vm.PanelPresentation == PanelPresentation.Sheet;
-        if (panel is not null)
-        {
-            var wasVisible = PanelLayer.Visibility == Visibility.Visible;
-            PanelContent.Content = panel;
-            PanelContent.ClearValue(IsEnabledProperty);
-            PanelLayer.Visibility = Visibility.Visible;
-            PanelLayer.UpdateLayout();
-            ApplyPanelBounds();
-            _panelFocus.Open();
-            // A panel that replaces another stays where it is; only a layer that was closed slides or fades in.
-            FrameShift.BeginAnimation(TranslateTransform.XProperty, null);
-            PanelFrame.BeginAnimation(OpacityProperty, null);
-            Scrim.BeginAnimation(OpacityProperty, null);
-            FrameShift.X = 0;
-            PanelFrame.Opacity = 1;
-            Scrim.Opacity = 1;
-            if (wasVisible || !animate) return;
-            Scrim.BeginAnimation(OpacityProperty, Move(0, 1, Quick, Entering));
-            if (sheet) PanelFrame.BeginAnimation(OpacityProperty, Move(0, 1, Quick, Entering));
-            else FrameShift.BeginAnimation(TranslateTransform.XProperty, Move(PanelFrame.ActualWidth * UiScale, 0, Slide, Entering));
-            return;
-        }
-        // Keep the old content on screen while it leaves.
-        PanelContent.IsEnabled = false;
-        void Finished()
-        {
-            if (_vm.Panel is not null) return;
-            PanelLayer.Visibility = Visibility.Collapsed;
-            PanelContent.Content = null;
-            _panelFocus.Close();
-        }
-        if (!animate)
-        {
-            Scrim.Opacity = 0;
-            Finished();
-            return;
-        }
-        var leave = Move(1, 0, Quick, Leaving);
-        leave.Completed += (_, _) => Finished();
-        Scrim.BeginAnimation(OpacityProperty, leave);
-        if (sheet) PanelFrame.BeginAnimation(OpacityProperty, Move(1, 0, Quick, Leaving));
-        else FrameShift.BeginAnimation(TranslateTransform.XProperty, Move(0, PanelFrame.ActualWidth * UiScale, Quick, Leaving));
+        if (shown) ResumeWarmUp();
     }
 
     void PanelLayer_SizeChanged(object sender, SizeChangedEventArgs e) => ApplyPanelBounds();
 
-    /// <summary>The frame lays out in unscaled units under the UI scale, so its caps are the window's size over the scale.</summary>
+    /// <summary>
+    /// The frame lays out in unscaled units under the UI scale, so its caps are the window's size over the scale. It's read
+    /// from the content the layer covers, which has a size while the layer doesn't.
+    /// </summary>
     void ApplyPanelBounds()
     {
         var sheet = _vm.PanelPresentation == PanelPresentation.Sheet;
-        PanelFrame.MaxWidth = Math.Max(300, (PanelLayer.ActualWidth - 48) / UiScale);
-        PanelFrame.MaxHeight = sheet ? Math.Max(160, (PanelLayer.ActualHeight - 48) / UiScale) : double.PositiveInfinity;
+        PanelFrame.MaxWidth = Math.Max(300, (MainContent.ActualWidth - 48) / UiScale);
+        PanelFrame.MaxHeight = sheet ? Math.Max(160, (MainContent.ActualHeight - 48) / UiScale) : double.PositiveInfinity;
     }
 
     void Dim_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => _vm.ClosePanel();
@@ -188,15 +131,6 @@ public partial class MainWindow : Window
         MainTab.Timers => CustomScreen,
         _ => TodoScreen,
     };
-
-    /// <summary>A screen eases in when its tab is picked: a quick fade with a short rise, unless Windows has animations off.</summary>
-    static void EaseIn(FrameworkElement screen)
-    {
-        if (!SystemParameters.ClientAreaAnimation || !screen.IsLoaded) return;
-        if (screen.RenderTransform is not TranslateTransform rise) screen.RenderTransform = rise = new TranslateTransform();
-        screen.BeginAnimation(OpacityProperty, Move(0, 1, Quick, Entering));
-        rise.BeginAnimation(TranslateTransform.YProperty, Move(5, 0, Quick, Entering));
-    }
 
     RadioButton TabOf(MainTab tab) => tab switch
     {

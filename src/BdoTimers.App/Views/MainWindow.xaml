@@ -3,8 +3,6 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:BdoTimers.App.Views"
         xmlns:controls="clr-namespace:BdoTimers.App.Controls"
-        xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
-        xmlns:pvm="clr-namespace:BdoTimers.App.ViewModels.Panels"
         Title="BDO Timers" Width="960" Height="720" MinWidth="640" MinHeight="360"
         WindowStartupLocation="CenterScreen" UseLayoutRounding="True"
         Background="{DynamicResource BgBrush}" Foreground="{DynamicResource TextBrush}"
@@ -14,16 +12,6 @@
         <WindowChrome CaptionHeight="44" ResizeBorderThickness="6,3,6,6" GlassFrameThickness="0,0,0,1"
                       CornerRadius="0" UseAeroCaptionButtons="False" />
     </WindowChrome.WindowChrome>
-    <Window.Resources>
-        <DataTemplate DataType="{x:Type pvm:OverlayPanelViewModel}"><panels:OverlayPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:SettingsPanelViewModel}"><panels:SettingsPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:FollowingPanelViewModel}"><panels:FollowingPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:BossPanelViewModel}"><panels:BossPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:CustomPanelViewModel}"><panels:CustomPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:NewTimerPanelViewModel}"><panels:NewTimerPanel /></DataTemplate>
-        <DataTemplate DataType="{x:Type pvm:TodoListPanelViewModel}"><panels:TodoListPanel /></DataTemplate>
-    </Window.Resources>
-
     <Border x:Name="Frame" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1">
         <Grid>
           <Grid x:Name="MainContent">

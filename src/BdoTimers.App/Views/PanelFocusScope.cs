@@ -39,11 +39,12 @@ internal sealed class PanelFocusScope
         return true;
     }
 
-    public void Open()
+    /// <param name="disableBackground">False leaves the background enabled until <see cref="DisableBackground"/>, so that it can go dim under a scrim that is still fading in.</param>
+    public void Open(bool disableBackground = true)
     {
         if (!_open) _opener = Keyboard.FocusedElement;
         _open = true;
-        _background.IsEnabled = false;
+        if (disableBackground) DisableBackground();
         var revision = ++_revision;
         _panel.Dispatcher.BeginInvoke(DispatcherPriority.Input, () =>
         {
@@ -54,6 +55,11 @@ internal sealed class PanelFocusScope
             var target = controls.FirstOrDefault(Ui.GetInitialFocus) ?? controls.FirstOrDefault();
             target?.Focus();
         });
+    }
+
+    public void DisableBackground()
+    {
+        if (_open) _background.IsEnabled = false;
     }
 
     public void Close()

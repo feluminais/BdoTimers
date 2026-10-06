@@ -13,7 +13,8 @@ internal static class UiCapture
     {
         if (Environment.GetEnvironmentVariable("BDOTIMERS_SHOTS") is not { Length: > 0 } folder) return;
         Directory.CreateDirectory(folder);
-        WpfTest.Wait(450);
+        // A panel opens after a short wait for the first frames and then slides in.
+        WpfTest.Wait(750);
         element.UpdateLayout();
         var image = new RenderTargetBitmap((int)Math.Ceiling(element.ActualWidth), (int)Math.Ceiling(element.ActualHeight),
             96, 96, PixelFormats.Pbgra32);
