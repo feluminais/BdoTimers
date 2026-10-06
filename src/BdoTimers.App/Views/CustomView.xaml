@@ -234,7 +234,7 @@
             <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" AutomationProperties.Name="New timer"
                     Command="{Binding NewTimerCommand}">
                 <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xE710;" Style="{StaticResource IconText}" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0" />
+                    <controls:PlusIcon Size="10" VerticalAlignment="Center" Margin="0,0,8,0" />
                     <TextBlock Text="New timer" />
                 </StackPanel>
             </Button>
