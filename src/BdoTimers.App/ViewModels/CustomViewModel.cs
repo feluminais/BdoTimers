@@ -6,14 +6,13 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels;
 
-/// <summary>Timers screen: Farm and Fishing, then the user's own timers in creation order, then the "+ New timer" tile.</summary>
+/// <summary>Timers screen: Farm and Fishing, then the user's own timers in creation order.</summary>
 public sealed partial class CustomViewModel
 {
     readonly AppServices _services;
     readonly IPanelHost _host;
 
-    /// <summary>Timer tiles followed by this view model itself, which the view renders as the "+ New timer" tile.</summary>
-    public ObservableCollection<object> Items { get; } = [];
+    public ObservableCollection<TimerTileViewModel> Items { get; } = [];
 
     public CustomViewModel(AppServices services, IPanelHost host)
     {
@@ -26,7 +25,7 @@ public sealed partial class CustomViewModel
 
     public void Refresh(DateTimeOffset now)
     {
-        foreach (var tile in Items.OfType<TimerTileViewModel>()) tile.Refresh(now);
+        foreach (var tile in Items) tile.Refresh(now);
     }
 
     [RelayCommand]
@@ -34,15 +33,13 @@ public sealed partial class CustomViewModel
 
     /// <summary>
     /// Keeps each timer's tile and updates it in place, so a new or finished timer doesn't rebuild every tile and hover
-    /// state and visuals survive. The "+ New timer" tile stays last.
+    /// state and visuals survive.
     /// </summary>
     void Sync()
     {
         var timers = _services.Timers.Current.Timers.Where(t => !t.IsBuiltIn).OrderBy(t => Presets.Rank(t.Preset)).ToList();
         var now = _services.Clock.UtcNow;
-        if (Items.Count == 0) Items.Add(this);
-        Items.Sync(timers, (item, timer) => item is TimerTileViewModel tile && tile.Id == timer.Id,
-            timer => new TimerTileViewModel(timer, _services, _host, now),
-            (item, timer) => ((TimerTileViewModel)item).SetTimer(timer, now), keepLast: 1);
+        Items.Sync(timers, (tile, timer) => tile.Id == timer.Id, timer => new TimerTileViewModel(timer, _services, _host, now),
+            (tile, timer) => tile.SetTimer(timer, now));
     }
 }

@@ -175,6 +175,49 @@ public sealed class RepeatTimerTests
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
 
+    [Fact]
+    public void Timer_cards_show_start_at_rest_and_keep_stop_and_skip_in_a_menu() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Cards." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            services.Timers.Upsert(new TimerDef { Name = "Buffs", Kind = TimerKind.Countdown, Countdown = new() });
+            var timers = new CustomViewModel(services, new PanelHost());
+            var tiles = timers.Items.ToList();
+            Assert.All(tiles, tile => Assert.Equal(tile.HasControls || tile.HasNextOccurrence, tile.HasMore));
+            Assert.Contains(tiles, tile => tile.HasControls);
+            Assert.Contains(tiles, tile => tile.HasNextOccurrence);
+            var view = new CustomView { DataContext = timers };
+            var window = new Window { Content = view, Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                Assert.NotNull(BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == timers.NewTimerCommand));
+                foreach (var tile in tiles.Where(t => t.HasControls))
+                {
+                    var start = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == tile.StartPauseCommand)!;
+                    Assert.True(start.IsVisible && start.Opacity == 1 && start.IsHitTestVisible, $"{tile.Name}: start is there without hover");
+                    var started = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, b => b.Command == tile.PickStartCommand)!;
+                    Assert.Equal(0, started.Opacity);
+                }
+                var stoppable = tiles.First(t => t.HasControls);
+                var more = BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view,
+                    b => b.DataContext == stoppable && System.Windows.Automation.AutomationProperties.GetName(b) == "More")!;
+                Assert.Equal(0, more.Opacity);
+                more.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                WpfTest.Drain();
+                Assert.True(more.ContextMenu!.IsOpen);
+                Assert.Equal(1, more.Opacity);
+                Assert.Contains(more.ContextMenu.Items.OfType<MenuItem>(), item => item.Command == stoppable.ResetCommand);
+                more.ContextMenu.IsOpen = false;
+            }
+            finally { window.Close(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
     [Theory]
     [InlineData(Presets.WarOfTheRoses, 351, 318)]
     [InlineData(Presets.GuildBosses, 960, 540)]

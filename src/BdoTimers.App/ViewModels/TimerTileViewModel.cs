@@ -29,7 +29,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
-    [ObservableProperty] private bool _hasNextOccurrence;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasMore))] private bool _hasNextOccurrence;
+    /// <summary>The dot beside the name: green while a countdown or stopwatch runs, amber while it is paused.</summary>
+    [ObservableProperty] private bool _isRunning;
+    [ObservableProperty] private bool _isPaused;
     [ObservableProperty] private bool _canStartHorse;
     [ObservableProperty] private string _horseStartTip = "Start registration";
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
@@ -52,6 +55,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
     public bool HasControls => !IsHorseTemplate && _timer.Kind is (TimerKind.Countdown or TimerKind.Stopwatch);
     public bool IsHorseTemplate => _timer.Preset == Presets.HorseRegistration;
+    /// <summary>The card's ⋯ menu has something in it: Stop for a countdown or stopwatch, Skip next for a weekly timer.</summary>
+    public bool HasMore => HasControls || HasNextOccurrence;
     public bool IsFarm => _timer.Preset == Presets.Farm;
     /// <summary>Only a countdown has an end, so only it can be started from a percent.</summary>
     public bool HasPercent => _timer.Kind == TimerKind.Countdown;
@@ -156,6 +161,8 @@ public sealed partial class TimerTileViewModel : ObservableObject
     void ShowStatus(CountdownStatus status)
     {
         var running = status == CountdownStatus.Running;
+        IsRunning = running;
+        IsPaused = status == CountdownStatus.Paused;
         PlayPauseGlyph = running ? PauseGlyph : PlayGlyph;
         PlayPauseTip = running ? "Pause" : status == CountdownStatus.Paused ? "Resume" : "Start";
     }
