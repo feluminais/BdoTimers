@@ -21,6 +21,7 @@ public sealed record OverlaySettings
     /// <summary>Held to drag the overlay where it shows, without the Overlay panel. Mouse proximity still applies meanwhile.</summary>
     public Hotkey? MoveHotkey { get; init; } = DefaultHotkeys.Move;
     public OverlayLayout Layout { get; init; }
+    public bool BossIcons { get; init; }
     public bool ShowOutline { get; init; }
     /// <summary>0.6 to 2.</summary>
     public double Scale { get; init; } = 1.0;

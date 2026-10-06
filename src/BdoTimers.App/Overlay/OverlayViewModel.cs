@@ -16,14 +16,21 @@ namespace BdoTimers.App.Overlay;
 /// Kept from tick to tick and updated in place, so only the text that changed is drawn again.</summary>
 public sealed partial class OverlaySpawn : ObservableObject
 {
-    [ObservableProperty] private string _names = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(Label))] private string _names = "";
+    [ObservableProperty] private IReadOnlyList<BossIcon>? _icons;
     [ObservableProperty] private string _time = "";
     [ObservableProperty] private bool _skipped;
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
     [ObservableProperty] private bool _isSample;
 
-    public OverlaySpawn Show(string names, string time, bool skipped, IReadOnlyList<ArtPicture> images, bool isSample)
+    public string Label => Names;
+
+    public OverlaySpawn Show(string names, string time, bool skipped, IReadOnlyList<ArtPicture> images, bool isSample,
+        IEnumerable<string>? iconNames = null)
     {
+        if (iconNames is null) Icons = null;
+        else if (Icons is null || !iconNames.SequenceEqual(Icons.Select(i => i.Name)))
+            Icons = iconNames.Select(BossIcon.For).ToArray();
         Names = names;
         Time = time;
         Skipped = skipped;
@@ -37,14 +44,18 @@ public sealed partial class OverlaySpawn : ObservableObject
 /// what it stands for, so a list keeps the row from tick to tick and only its text changes.</summary>
 public sealed partial class OverlayLine(object key) : ObservableObject
 {
-    [ObservableProperty] private string _name = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(Label))] private string _name = "";
+    [ObservableProperty] private IReadOnlyList<BossIcon>? _icons;
     [ObservableProperty] private string _time = "";
     [ObservableProperty] private bool _isSample;
 
     public object Key { get; } = key;
+    public string Label => Name;
 
-    public OverlayLine Show(string name, string time, bool isSample)
+    public OverlayLine Show(string name, string time, bool isSample, bool bossIcon = false)
     {
+        if (Name != name || (Icons is not null) != bossIcon)
+            Icons = bossIcon ? [BossIcon.For(name)] : null;
         Name = name;
         Time = time;
         IsSample = isSample;
@@ -68,6 +79,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     string? _backgroundKey;
 
     [ObservableProperty] private OverlayLayout _layout;
+    [ObservableProperty] private bool _bossIcons;
     [ObservableProperty] private double _scale = 1;
     [ObservableProperty] private Thickness _outlineThickness = new(1);
     [ObservableProperty] private Brush _background = Brushes.Black;
@@ -99,6 +111,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     public void Update(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
     {
         Layout = settings.Layout;
+        BossIcons = settings.BossIcons;
         Scale = settings.Scale;
         OutlineThickness = new Thickness(settings.ShowOutline ? 1 : 0);
         BackgroundOpacity = settings.BackgroundOpacity;
@@ -112,30 +125,35 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         IsNight = content.GameTime?.IsNight == true;
         HasClocks = Clock is not null || ServerClock is not null || GameClock is not null;
         Previous = content.Previous is { } previous
-            ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false)
-            : preview && settings.ShowPrevious ? _previousRow.Show("Kzarka", "−00:12:05", false, NoImages, true) : null;
+            ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false,
+                settings.BossIcons ? previous.Bosses.Select(b => b.Name) : null)
+            : preview && settings.ShowPrevious ? _previousRow.Show("Kzarka", "−00:12:05", false, NoImages, true,
+                settings.BossIcons ? ["Kzarka"] : null) : null;
         Next = content.Next is { } next
-            ? _nextRow.Show(Names(next), DurationFormat.Clock(next.AtUtc - now), next.Skipped, ImagesFor(next), false)
-            : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true) : null;
+            ? _nextRow.Show(Names(next), DurationFormat.Clock(next.AtUtc - now), next.Skipped, ImagesFor(next), false,
+                settings.BossIcons ? next.Bosses.Select(b => b.Name) : null)
+            : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true,
+                settings.BossIcons ? ["Nouver"] : null) : null;
         var popUps = content.PopUps
-            .Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc), DurationFormat.Clock(i.AtUtc - now), false)).ToList();
+            .Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc), DurationFormat.Clock(i.AtUtc - now), false,
+                settings.BossIcons && i.Timer.IsBuiltIn)).ToList();
         if (preview && settings.GuildBosses.Enabled && !content.PopUps.Any(i => i.Timer.Preset == Presets.GuildBosses))
-            popUps.Add((SampleKey, "Guild bosses", DurationFormat.Clock(TimeSpan.FromMinutes(settings.GuildBosses.ShowMinutesBefore)), true));
+            popUps.Add((SampleKey, "Guild bosses", DurationFormat.Clock(TimeSpan.FromMinutes(settings.GuildBosses.ShowMinutesBefore)), true, false));
         Sync(PopUps, popUps);
         Farm = content.FarmLeft is { } farmLeft
             ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
             : preview && settings.ShowFarm ? _farmRow.Show("Farm", "21:59:59 · 0%", true) : null;
         Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
         var horse = content.HorseRegistrations
-            .Select(r => ((object)r.Id, r.Name, DurationFormat.Clock(r.EndsAtUtc - now), false)).ToList();
+            .Select(r => ((object)r.Id, r.Name, DurationFormat.Clock(r.EndsAtUtc - now), false, false)).ToList();
         if (horse.Count == 0 && preview && settings.ShowHorseRegistrations)
-            horse.Add((SampleKey, "Horse 1", "00:08:30", true));
+            horse.Add((SampleKey, "Horse 1", "00:08:30", true, false));
         Sync(HorseRegistrations, horse);
         MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
         var custom = content.CustomTimers.Select(t =>
-            ((object)t.Id, t.Name, DurationFormat.Clock(t.Remaining) + (t.Paused ? " · Paused" : ""), false)).ToList();
+            ((object)t.Id, t.Name, DurationFormat.Clock(t.Remaining) + (t.Paused ? " · Paused" : ""), false, false)).ToList();
         if (custom.Count == 0 && preview && settings.ShowCustomTimers)
-            custom.Add((SampleKey, "Custom timer", "00:15:00", true));
+            custom.Add((SampleKey, "Custom timer", "00:15:00", true, false));
         Sync(CustomTimers, custom);
         HasCustomTimers = CustomTimers.Count > 0;
         ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
@@ -152,10 +170,10 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     /// <summary>Keeps the row of each key that is still wanted, so the overlay only redraws its text rather than
     /// regenerating every row each second.</summary>
     static void Sync(ObservableCollection<OverlayLine> rows,
-        IEnumerable<(object Key, string Name, string Time, bool IsSample)> wanted) =>
+        IEnumerable<(object Key, string Name, string Time, bool IsSample, bool BossIcon)> wanted) =>
         rows.Sync(wanted, (row, line) => Equals(row.Key, line.Key),
-            line => new OverlayLine(line.Key).Show(line.Name, line.Time, line.IsSample),
-            (row, line) => row.Show(line.Name, line.Time, line.IsSample));
+            line => new OverlayLine(line.Key).Show(line.Name, line.Time, line.IsSample, line.BossIcon),
+            (row, line) => row.Show(line.Name, line.Time, line.IsSample, line.BossIcon));
 
     /// <summary>The same list while the spawn stays the same, so the banner isn't reloaded every second.</summary>
     IReadOnlyList<ArtPicture> ImagesFor(SpawnGroup group)

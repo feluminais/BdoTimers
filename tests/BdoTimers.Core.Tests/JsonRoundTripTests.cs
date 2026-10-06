@@ -87,6 +87,7 @@ public class JsonRoundTripTests
             MouseProximity = OverlayMouseProximity.Hide,
             MoveHotkey = new Hotkey(HotkeyModifiers.Alt | HotkeyModifiers.Shift, 0),
             Layout = OverlayLayout.Card,
+            BossIcons = true,
             ShowOutline = true,
             Scale = 1.5,
             ShowClock = false,

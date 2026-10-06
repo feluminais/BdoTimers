@@ -332,3 +332,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
     and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking
     the room) and when no boss is followed. The paused notice shows from 830 px wide; below that the bell's slash says it.
+81. [ ] Overlay → Look → Boss icons: turn on; previous and next bosses and world-boss pop-ups show outline faces in
+    List, Card and Bar. Paired bosses show two icons; an unfamiliar added boss keeps its name. Skipped bosses stay dim.
+    Farm, Fishing and custom timers keep their labels. Hover an icon in preview: its boss name appears. Change Size:
+    icons stay sharp. Close the panel and restart: the setting persists; turn it off to restore boss names.

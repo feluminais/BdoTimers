@@ -96,6 +96,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     }
     public double Scale { get => Current.Scale; set => Modify(o => o with { Scale = Math.Round(value, 2) }); }
     public bool Outline { get => Current.ShowOutline; set => Modify(o => o with { ShowOutline = value }); }
+    public bool BossIcons { get => Current.BossIcons; set => Modify(o => o with { BossIcons = value }); }
     public bool ShowClock { get => Current.ShowClock; set => Modify(o => o with { ShowClock = value }); }
     public bool ShowServerTime { get => Current.ShowServerTime; set => Modify(o => o with { ShowServerTime = value }); }
     public bool ShowGameTime { get => Current.ShowGameTime; set => Modify(o => o with { ShowGameTime = value }); }
@@ -143,6 +144,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         if (previous.MouseProximity != next.MouseProximity) OnPropertyChanged(nameof(MouseProximity));
         if (previous.Scale != next.Scale) OnPropertyChanged(nameof(Scale));
         if (previous.ShowOutline != next.ShowOutline) OnPropertyChanged(nameof(Outline));
+        if (previous.BossIcons != next.BossIcons) OnPropertyChanged(nameof(BossIcons));
         if (previous.ShowClock != next.ShowClock) OnPropertyChanged(nameof(ShowClock));
         if (previous.ShowServerTime != next.ShowServerTime) OnPropertyChanged(nameof(ShowServerTime));
         if (previous.ShowGameTime != next.ShowGameTime) OnPropertyChanged(nameof(ShowGameTime));

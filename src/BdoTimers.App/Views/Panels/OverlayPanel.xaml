@@ -115,6 +115,10 @@
                         <Slider Width="170" Minimum="0.6" Maximum="2" VerticalAlignment="Center"
                                 Value="{Binding Scale, Delay=100}" AutomationProperties.Name="Size" />
                     </HeaderedContentControl>
+                    <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Boss icons">
+                        <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding BossIcons}" Width="60"
+                                      AutomationProperties.Name="Boss icons" />
+                    </HeaderedContentControl>
                     <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Outline">
                         <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Outline}" Width="60"
                                                 AutomationProperties.Name="Outline" />

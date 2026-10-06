@@ -11,12 +11,65 @@
             </DataTrigger>
         </Style.Triggers>
     </Style>
-    <Style x:Key="SpawnName" TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
+    <Style x:Key="OverlayLabel" TargetType="ContentControl">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Content" Value="{Binding}" />
+        <Setter Property="Tag" Value="False" />
+        <Setter Property="AutomationProperties.Name" Value="{Binding Label}" />
         <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Grid>
+                        <TextBlock x:Name="Name" Text="{Binding Label}" Style="{StaticResource DisplayText}"
+                                   TextTrimming="CharacterEllipsis" Visibility="Collapsed" VerticalAlignment="Center" />
+                        <ItemsControl ItemsSource="{Binding Icons}" Focusable="False"
+                                      Visibility="{Binding Icons, Converter={StaticResource NullToCollapsed}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,0,5,0" ToolTip="{Binding Name}" AutomationProperties.Name="{Binding Name}">
+                                        <Path x:Name="Icon" Data="{Binding Outline}" Width="24" Height="24" Stretch="Uniform"
+                                              Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ContentControl}}"
+                                              StrokeThickness="1.6" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                                        <TextBlock x:Name="Fallback" Text="{Binding Name}" Style="{StaticResource DisplayText}"
+                                                   VerticalAlignment="Center" Visibility="Collapsed" />
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Outline}" Value="{x:Null}">
+                                            <Setter TargetName="Icon" Property="Visibility" Value="Collapsed" />
+                                            <Setter TargetName="Fallback" Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Icons}" Value="{x:Null}">
+                            <Setter TargetName="Name" Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Tag, RelativeSource={RelativeSource AncestorType=ContentControl}}" Value="True">
+                            <Setter TargetName="Name" Property="TextDecorations" Value="Strikethrough" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="SpawnName" TargetType="ContentControl" BasedOn="{StaticResource OverlayLabel}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Tag" Value="{Binding Skipped}" />
         <Style.Triggers>
-            <DataTrigger Binding="{Binding Skipped}" Value="True">
-                <Setter Property="TextDecorations" Value="Strikethrough" />
-            </DataTrigger>
+            <MultiDataTrigger>
+                <MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding Skipped}" Value="True" />
+                    <Condition Binding="{Binding DataContext.BossIcons, RelativeSource={RelativeSource AncestorType=Window}}" Value="True" />
+                </MultiDataTrigger.Conditions>
+                <Setter Property="Opacity" Value="0.45" />
+            </MultiDataTrigger>
         </Style.Triggers>
     </Style>
     <Style x:Key="ClockIcon" TargetType="TextBlock" BasedOn="{StaticResource IconText}">
@@ -94,7 +147,7 @@
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12"
                        Foreground="{DynamicResource SubtleBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
             <Path Style="{StaticResource SpawnArrow}" Data="M 4,0 L 0,3 L 4,6" Stroke="{DynamicResource AccentSoftBrush}" />
-            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
+            <ContentControl Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="NextRow" DataType="{x:Type overlay:OverlaySpawn}">
@@ -102,15 +155,14 @@
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="16"
                        Foreground="{DynamicResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
             <Path Style="{StaticResource SpawnArrow}" Data="M 0,0 L 4,3 L 0,6" Stroke="{DynamicResource AccentBrush}" Height="8" />
-            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="14" />
+            <ContentControl Style="{StaticResource SpawnName}" FontSize="14" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="LineRow" DataType="{x:Type overlay:OverlayLine}">
         <DockPanel Style="{StaticResource SampleDim}" Margin="12,2,0,2">
             <TextBlock DockPanel.Dock="Right" Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="13"
                        Foreground="{DynamicResource AccentTextBrush}" Margin="14,0,0,0" VerticalAlignment="Center" />
-            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis" />
+            <ContentControl Style="{StaticResource OverlayLabel}" FontSize="13" VerticalAlignment="Center" />
         </DockPanel>
     </DataTemplate>
     <DataTemplate x:Key="ChipLine" DataType="{x:Type overlay:OverlayLine}">
@@ -118,7 +170,7 @@
                 BorderThickness="{Binding DataContext.OutlineThickness, RelativeSource={RelativeSource AncestorType=Window}}"
                 Padding="6,1" Margin="0,0,6,0">
             <StackPanel Orientation="Horizontal">
-                <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="12" VerticalAlignment="Center" />
+                <ContentControl Style="{StaticResource OverlayLabel}" FontSize="12" VerticalAlignment="Center" />
                 <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{DynamicResource AccentTextBrush}"
                            Margin="6,0,0,0" VerticalAlignment="Center" />
             </StackPanel>
@@ -128,7 +180,7 @@
         <Grid Style="{StaticResource SampleDim}" Height="72">
             <controls:ArtImage Sources="{Binding Images}" />
             <StackPanel VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,10,5">
-                <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="15" HorizontalAlignment="Right" />
+                <ContentControl Style="{StaticResource SpawnName}" FontSize="15" HorizontalAlignment="Right" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Path Style="{StaticResource SpawnArrow}" Data="M 0,0 L 4,3 L 0,6" Stroke="{DynamicResource AccentBrush}"
                           Height="8" Margin="0,0,6,2" />
@@ -141,7 +193,7 @@
     <DataTemplate x:Key="BarPrevious" DataType="{x:Type overlay:OverlaySpawn}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
             <Path Style="{StaticResource SpawnArrow}" Data="M 4,0 L 0,3 L 4,6" Stroke="{DynamicResource AccentSoftBrush}" Margin="0,0,4,2" />
-            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
+            <ContentControl Style="{StaticResource SpawnName}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" />
             <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="12" Foreground="{DynamicResource SubtleBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
@@ -150,14 +202,14 @@
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
             <Path Style="{StaticResource SpawnArrow}" Data="M 0,0 L 4,3 L 0,6" Stroke="{DynamicResource AccentBrush}"
                   Height="8" Margin="0,0,4,2" />
-            <TextBlock Text="{Binding Names}" Style="{StaticResource SpawnName}" FontSize="14" />
+            <ContentControl Style="{StaticResource SpawnName}" FontSize="14" />
             <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="15" Foreground="{DynamicResource AccentTextBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
     </DataTemplate>
     <DataTemplate x:Key="BarLine" DataType="{x:Type overlay:OverlayLine}">
         <StackPanel Style="{StaticResource SampleDim}" Orientation="Horizontal" Margin="0,0,14,0">
-            <TextBlock Text="{Binding Name}" Style="{StaticResource DisplayText}" FontSize="13" VerticalAlignment="Center" />
+            <ContentControl Style="{StaticResource OverlayLabel}" FontSize="13" VerticalAlignment="Center" />
             <TextBlock Text="{Binding Time}" Style="{StaticResource ClockText}" FontSize="13" Foreground="{DynamicResource AccentTextBrush}"
                        Margin="6,0,0,0" VerticalAlignment="Center" />
         </StackPanel>
@@ -166,7 +218,17 @@
     <!-- Layouts. Sections are ContentControls: a ContentPresenter takes its Content as DataContext, so a Visibility
          binding on it would miss the view model and an empty section would keep its space. -->
     <DataTemplate x:Key="ListLayout" DataType="{x:Type overlay:OverlayViewModel}">
-        <StackPanel Margin="12,8" MinWidth="200" Opacity="{Binding TextOpacity}">
+        <StackPanel Margin="12,8" Opacity="{Binding TextOpacity}">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="MinWidth" Value="200" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding BossIcons}" Value="True">
+                            <Setter Property="MinWidth" Value="0" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
             <ContentControl Style="{StaticResource OverlayClocks}" Margin="0,0,0,4" />
             <ContentControl Content="{Binding Previous}" ContentTemplate="{StaticResource PreviousRow}"
                             Focusable="False" Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}" />
