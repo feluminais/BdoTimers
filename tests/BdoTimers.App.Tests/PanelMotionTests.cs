@@ -7,6 +7,7 @@ using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
 using BdoTimers.App.Views.Panels;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.App.Tests;
 
@@ -161,6 +162,39 @@ public class PanelMotionTests
         Assert.Equal("", ((TextBox)view.FindName("SearchBox")).Text);
         Assert.Equal(0, ((ScrollViewer)view.FindName("Scroller")).VerticalOffset);
         Assert.Equal(0, window.IdlePanelViews);
+    });
+
+    /// <summary>The view is the same, so a panel would otherwise open at the place the last one was scrolled to.</summary>
+    [Fact]
+    public void A_panel_starts_at_its_top_whatever_the_last_one_in_its_view_was_scrolled_to() => WithWindow((services, main, window) =>
+    {
+        window.Height = 380;
+        WpfTest.Drain();
+        var data = services.Timers.Current;
+        var bosses = data.Timers.Where(t => BossRegions.IsSelected(data, t)).Take(2).ToArray();
+        var content = Named<ContentControl>(window, "PanelContent");
+        ScrollViewer Scroller() => PanelFocusScope.Descendants((DependencyObject)content.Content).OfType<ScrollViewer>().First();
+
+        main.OpenPanel(new BossPanelViewModel(services, main, bosses[0]));
+        WpfTest.Wait(500);
+        var view = content.Content;
+        Scroller().ScrollToBottom();
+        WpfTest.Drain();
+        Assert.True(Scroller().VerticalOffset > 0, "the panel is taller than the window");
+
+        main.OpenPanel(new BossPanelViewModel(services, main, bosses[1]));
+        WpfTest.Wait(300);
+        Assert.Same(view, content.Content);
+        Assert.Equal(0, Scroller().VerticalOffset);
+
+        Scroller().ScrollToBottom();
+        WpfTest.Drain();
+        main.ClosePanel();
+        WpfTest.Wait(700);
+        main.OpenPanel(new BossPanelViewModel(services, main, bosses[0]));
+        WpfTest.Wait(500);
+        Assert.Same(view, content.Content);
+        Assert.Equal(0, Scroller().VerticalOffset);
     });
 
     [Fact]

@@ -182,7 +182,11 @@ public partial class MainWindow
         else
         {
             view.DataContext = panel;
-            if (ReferenceEquals(view, previous)) return;
+            if (ReferenceEquals(view, previous))
+            {
+                ScrollToTop(view);
+                return;
+            }
             PanelContent.Content = view;
         }
         _shownView = view;
@@ -193,9 +197,16 @@ public partial class MainWindow
     FrameworkElement TakeView(Type panelType) =>
         _idleViews.GetValueOrDefault(panelType) is { Count: > 0 } views ? views.Pop() : PanelViews[panelType].Make();
 
+    /// <summary>A panel starts at its top, whatever the one that used the view before it was scrolled to.</summary>
+    static void ScrollToTop(FrameworkElement view)
+    {
+        foreach (var scroller in PanelFocusScope.Descendants(view).OfType<ScrollViewer>()) scroller.ScrollToTop();
+    }
+
     void KeepView(Type panelType, FrameworkElement view)
     {
         view.DataContext = null;
+        ScrollToTop(view);
         if (!_idleViews.TryGetValue(panelType, out var views)) _idleViews[panelType] = views = [];
         // One spare is enough: only one panel shows at a time.
         if (views.Count < 1) views.Push(view);
