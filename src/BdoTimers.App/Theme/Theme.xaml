@@ -376,14 +376,19 @@
         <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
-        <Setter Property="Margin" Value="0,0,26,0" />
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Padding" Value="13,0" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Bd" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,2" Padding="0,2,0,0">
-                        <ContentPresenter VerticalAlignment="Center" />
-                    </Border>
+                    <!-- The padding is part of the target, so tabs touch and a click beside a name still lands. -->
+                    <Grid Background="Transparent">
+                        <Border x:Name="Bd" Margin="{TemplateBinding Padding}" Background="Transparent" BorderBrush="Transparent"
+                                BorderThickness="0,0,0,2" Padding="0,2,0,0">
+                            <ContentPresenter VerticalAlignment="Center" />
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Bd" Property="BorderBrush" Value="{Binding (controls:Ui.SectionBrush), RelativeSource={RelativeSource TemplatedParent}}" />
