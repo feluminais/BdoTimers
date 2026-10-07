@@ -159,9 +159,7 @@ public class AlertPlannerTests
         planner.Tick([broken], NoMutes, T);
         planner.Tick([broken], NoMutes, T.AddSeconds(1));
 
-        // Tests share the static log, so another one may be appending to this file as it is read.
-        using var file = new FileStream(Directory.GetFiles(dir.Path, "*.log").Single(), FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        var log = new StreamReader(file).ReadToEnd().Split(Environment.NewLine);
+        var log = dir.ReadLogs().Split(Environment.NewLine);
         Assert.Single(log, line => line.Contains("Unschedulable"));
     }
 }

@@ -81,7 +81,7 @@ public sealed class RepeatingErrorLogTests : IDisposable
         catch (Exception caught) { return caught; }
     }
 
-    string LogText() => string.Concat(Directory.GetFiles(_dir.Path, "*.log").Order().Select(File.ReadAllText));
+    string LogText() => _dir.ReadLogs();
 
     List<string> Entries() => LogText().Split(Environment.NewLine).Where(line => line.Contains(_operation)).ToList();
 }

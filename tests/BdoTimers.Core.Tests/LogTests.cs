@@ -16,7 +16,7 @@ public class LogTests
 
         Log.Error("sound failed", new InvalidOperationException("no device"));
 
-        var text = File.ReadAllText(Directory.GetFiles(dir.Path, "*.log").Single());
+        var text = dir.ReadLogs();
         Assert.Contains("ERR sound failed", text);
         Assert.Contains("no device", text);
     }
