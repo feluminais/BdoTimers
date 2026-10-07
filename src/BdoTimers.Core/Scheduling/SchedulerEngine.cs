@@ -27,7 +27,7 @@ public sealed class SchedulerEngine(
     {
         var now = clock.UtcNow;
         var data = timers.Current;
-        var muted = data.Muted.ToHashSet();
+        var muted = GarmothTracker.Silenced(data);
         var defaultLeads = settings.Current.DefaultLeadTimesMinutes;
         var eligible = data.Timers.Where(t => BossRegions.IsEligible(data, t)).ToList();
         var alerts = AlertGrouping.Group(_planner.Tick(eligible, muted, now, defaultLeads, data.BossAlertsAfterUtc));

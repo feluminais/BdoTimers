@@ -27,7 +27,7 @@ public static class WeekGrid
         var entries = BossBoard.Spawns(data, fromUtc, toUtc, followedOnly: false)
             .SelectMany(g => g.Bosses.Select(boss =>
             {
-                var state = StateOf(boss, g.AtUtc, now, next, muted);
+                var state = StateOf(boss, g.AtUtc, now, next, muted, GarmothTracker.Gone(data, boss, g.AtUtc));
                 var localTime = TimeZoneInfo.ConvertTime(g.AtUtc, local).DateTime;
                 return (Local: localTime, Entry: new GridEntry(boss, g.AtUtc, state));
             }))
@@ -48,9 +48,9 @@ public static class WeekGrid
 
     /// <summary>How an occurrence of <paramref name="timer"/> shows; <paramref name="next"/> is the next boss spawn.</summary>
     internal static CellState StateOf(TimerDef timer, DateTimeOffset at, DateTimeOffset now, DateTimeOffset? next,
-        HashSet<MutedOccurrence> muted) =>
+        HashSet<MutedOccurrence> muted, bool gone = false) =>
         at <= now ? CellState.Past
-        : !timer.Enabled ? CellState.Unfollowed
+        : !timer.Enabled || gone ? CellState.Unfollowed
         : muted.Contains(new MutedOccurrence(timer.Id, at)) ? CellState.Skipped
         : at == next ? CellState.Next
         : CellState.Upcoming;

@@ -20,7 +20,8 @@ public static class AlertEligibility
         var saved = data.Timers.FirstOrDefault(t => t.Id == planned.Id)
             ?? (planned.Preset == Presets.HorseRegistrationRun ? completion : null);
         if (saved is not { Enabled: true } || saved.Kind != planned.Kind
-            || data.Muted.Contains(new MutedOccurrence(planned.Id, alert.OccurrenceUtc))) return null;
+            || data.Muted.Contains(new MutedOccurrence(planned.Id, alert.OccurrenceUtc))
+            || GarmothTracker.Gone(data, saved, alert.OccurrenceUtc)) return null;
         if (planned.IsBuiltIn && (alert.BossSelectionVersion != data.BossSelectionVersion
             || !BossRegions.IsSelected(data, saved))) return null;
 

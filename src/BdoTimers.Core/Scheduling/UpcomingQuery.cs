@@ -13,7 +13,7 @@ public static class UpcomingQuery
     /// <summary>Unmuted occurrences of timers with an overlay pop-up inside each one's "show N minutes before" window.</summary>
     public static IReadOnlyList<UpcomingItem> ForOverlay(AppData data, OverlaySettings settings, DateTimeOffset now)
     {
-        var muted = data.Muted.ToHashSet();
+        var muted = GarmothTracker.Silenced(data);
         return PopUpTimers(data, settings)
             .SelectMany(p => OccurrenceSource.Between(p.Timer, now, now + p.Window)
                 .Where(at => !muted.Contains(new MutedOccurrence(p.Timer.Id, at)) && NewWindow(data, p.Timer, at, p.Window))
@@ -32,7 +32,7 @@ public static class UpcomingQuery
     /// </summary>
     public static DateTimeOffset? OverlayStart(AppData data, OverlaySettings settings, DateTimeOffset now)
     {
-        var muted = data.Muted.ToHashSet();
+        var muted = GarmothTracker.Silenced(data);
         DateTimeOffset? earliest = null;
         foreach (var (t, window) in PopUpTimers(data, settings))
         {

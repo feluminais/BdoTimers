@@ -36,6 +36,8 @@ public static class BossBoard
         return data.Timers
             .Where(t => BossRegions.IsSelected(data, t) && t.Scheduled is not null && (t.Enabled || !followedOnly))
             .SelectMany(t => ScheduleMath.From(t.Scheduled!, fromUtc).TakeWhile(at => at < toUtc).Select(at => (Boss: t, At: at)))
+            // A Garmoth who is done for the week counts as not followed; the schedule still lists him.
+            .Where(s => !followedOnly || !GarmothTracker.Gone(data, s.Boss, s.At))
             .GroupBy(s => s.At)
             .OrderBy(g => g.Key)
             .Select(g => new SpawnGroup(

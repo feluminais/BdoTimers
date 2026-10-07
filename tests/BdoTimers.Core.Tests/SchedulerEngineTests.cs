@@ -276,4 +276,24 @@ public class SchedulerEngineTests : IDisposable
         Assert.Equal(CountdownStatus.Running, _timers.Current.Timers.Single().Countdown!.Status);
         Assert.Equal(T0.AddMinutes(10), _timers.Current.Timers.Single().Countdown!.EndsAtUtc);
     }
+
+    [Fact]
+    public void A_Garmoth_who_is_done_for_the_week_does_not_alert_until_the_week_resets()
+    {
+        // Tuesday 14:00 in Berlin is T0.
+        var garmoth = TestTimers.Boss("Garmoth", DayOfWeek.Tuesday, 14);
+        _timers.Update(d => d with
+        {
+            Timers = [garmoth],
+            Garmoth = new GarmothWeek { Kills = 3, DoneAtUtc = T0.AddHours(-2), ResetUtc = T0.AddDays(2) },
+        });
+
+        TickAt(T0.AddMinutes(-5));
+        TickAt(T0);
+        Assert.Empty(_sink.Alerts);
+
+        _timers.Update(d => d with { Garmoth = new() });
+        TickAt(T0.AddSeconds(1));
+        Assert.Single(_sink.Alerts);
+    }
 }

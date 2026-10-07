@@ -10,6 +10,8 @@ public sealed record AppData
 {
     public IReadOnlyList<TimerDef> Timers { get; init; } = [];
     public IReadOnlyList<MutedOccurrence> Muted { get; init; } = [];
+    /// <summary>The Garmoth tracker's week; empty while <see cref="AppSettings.GarmothTracker"/> is off.</summary>
+    public GarmothWeek Garmoth { get; init; } = new();
     /// <summary>Runtime completion snapshots keep queued end alerts eligible after countdowns reset or disappear.</summary>
     [JsonIgnore]
     public IReadOnlyList<TimerDef> CompletedCountdowns { get; init; } = [];

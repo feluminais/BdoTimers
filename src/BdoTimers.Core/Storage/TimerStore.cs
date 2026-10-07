@@ -235,6 +235,17 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         return d with { Muted = muted ? [.. others, .. changed] : others.ToList() };
     });
 
+    /// <summary>Marks Garmoth's kill <paramref name="kill"/> of the week, or takes it back; see <see cref="GarmothTracker.Mark"/>.</summary>
+    public void MarkGarmoth(int kill, DateTimeOffset nowUtc) =>
+        Update(d => d with { Garmoth = GarmothTracker.Mark(d.Garmoth, kill, nowUtc) });
+
+    /// <summary>Keeps Garmoth's week as <see cref="GarmothTracker.Reconcile"/> has it; nothing is saved when it already is.</summary>
+    public void ReconcileGarmoth(AppSettings settings, DateTimeOffset nowUtc) => Update(d =>
+    {
+        var week = GarmothTracker.Reconcile(d.Garmoth, settings.GarmothTracker, settings.WeeklyTodoReset, nowUtc);
+        return week == d.Garmoth ? d : d with { Garmoth = week };
+    });
+
     /// <summary>Timers that played <paramref name="key"/> go back to the app-wide sound.</summary>
     public void ForgetSound(string key) => Update(d => d with
     {

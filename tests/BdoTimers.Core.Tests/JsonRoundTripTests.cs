@@ -62,6 +62,7 @@ public class JsonRoundTripTests
             },
         ],
         Muted = [new MutedOccurrence(Guid.NewGuid(), T0)],
+        Garmoth = new GarmothWeek { Kills = 3, DoneAtUtc = T0, ResetUtc = T0.AddDays(2) },
     };
 
     static readonly AppSettings Settings = new()
@@ -112,6 +113,7 @@ public class JsonRoundTripTests
         DailyTodoReset = new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5, Minute = 30, LocalTime = true },
         WeeklyTodoReset = new TodoSchedule { Day = DayOfWeek.Friday, Hour = 12, Minute = 15, LocalTime = true },
         Calendar = new CalendarSettings { ShowBosses = false, ShowTimers = false, ShowEvents = false, ShowResets = false },
+        GarmothTracker = true,
     };
 
     static readonly TodoData Todos = new()
@@ -156,6 +158,8 @@ public class JsonRoundTripTests
         Assert.Equal(BuiltInSounds.Default, s.AlertSound);
         Assert.False(s.Autostart);
         Assert.Equal(0.5f, s.Volume);
+        Assert.Equal(new GarmothWeek(), data.Garmoth);
+        Assert.False(s.GarmothTracker);
     }
 
     [Fact]

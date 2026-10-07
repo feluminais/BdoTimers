@@ -29,4 +29,6 @@ public sealed record AppSettings
     public TodoSchedule DailyTodoReset { get; init; } = new();
     public TodoSchedule WeeklyTodoReset { get; init; } = new();
     public CalendarSettings Calendar { get; init; } = new();
+    /// <summary>Counts Garmoth's three kills a week and drops him from the schedule after the third; off until turned on in Settings.</summary>
+    public bool GarmothTracker { get; init; }
 }

@@ -48,7 +48,8 @@ public static class CalendarQuery
         var items = new List<CalendarItem>();
         foreach (var timer in data.Timers.Where(t => BossRegions.IsEligible(data, t)))
             foreach (var (kind, at) in Occurrences(timer, fromUtc, toUtc))
-                items.Add(new(kind, at, timer, WeekGrid.StateOf(timer, at, now, kind == CalendarKind.Boss ? next : null, muted)));
+                items.Add(new(kind, at, timer, WeekGrid.StateOf(timer, at, now, kind == CalendarKind.Boss ? next : null, muted,
+                    GarmothTracker.Gone(data, timer, at))));
         OneForRegistrations(data, items);
         items.AddRange(Resets(CalendarKind.DailyReset, TodoCadence.Daily, settings.DailyTodoReset, fromUtc, toUtc, now, local));
         items.AddRange(Resets(CalendarKind.WeeklyReset, TodoCadence.Weekly, settings.WeeklyTodoReset, fromUtc, toUtc, now, local));
