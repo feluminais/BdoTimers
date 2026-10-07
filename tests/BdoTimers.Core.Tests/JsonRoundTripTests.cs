@@ -114,6 +114,7 @@ public class JsonRoundTripTests
         DailyTodoReset = new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5, Minute = 30, LocalTime = true },
         WeeklyTodoReset = new TodoSchedule { Day = DayOfWeek.Friday, Hour = 12, Minute = 15, LocalTime = true },
         Calendar = new CalendarSettings { ShowBosses = false, ShowTimers = false, ShowEvents = false, ShowResets = false },
+        Today = new TodaySettings { ShowDaily = false, ShowWeekly = false, ShowGarmoth = false },
         GarmothTracker = true,
     };
 

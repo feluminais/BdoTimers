@@ -140,6 +140,24 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         set => UpdateSettings(s => s with { GarmothTracker = value });
     }
 
+    public bool ShowDaily
+    {
+        get => Current.Today.ShowDaily;
+        set => UpdateSettings(s => s with { Today = s.Today with { ShowDaily = value } });
+    }
+
+    public bool ShowWeekly
+    {
+        get => Current.Today.ShowWeekly;
+        set => UpdateSettings(s => s with { Today = s.Today with { ShowWeekly = value } });
+    }
+
+    public bool ShowGarmoth
+    {
+        get => Current.Today.ShowGarmoth;
+        set => UpdateSettings(s => s with { Today = s.Today with { ShowGarmoth = value } });
+    }
+
     /// <summary>The saved app-wide sound, or the default when it's gone.</summary>
     public Choice? AlertSound
     {
@@ -211,6 +229,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         if (previous.Autostart != next.Autostart) OnPropertyChanged(nameof(Autostart));
         if (previous.CloseToTray != next.CloseToTray) OnPropertyChanged(nameof(CloseToTray));
         if (previous.GarmothTracker != next.GarmothTracker) OnPropertyChanged(nameof(GarmothTracker));
+        if (previous.Today != next.Today)
+        {
+            OnPropertyChanged(nameof(ShowDaily));
+            OnPropertyChanged(nameof(ShowWeekly));
+            OnPropertyChanged(nameof(ShowGarmoth));
+        }
         if (previous.TextScale != next.TextScale) OnPropertyChanged(nameof(TextSize));
         if (previous.AlertSound != next.AlertSound) OnPropertyChanged(nameof(AlertSound));
         if (previous.Volume != next.Volume) OnPropertyChanged(nameof(Volume));

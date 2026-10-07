@@ -78,7 +78,7 @@ public class UiShots
                 main.OpenSettingsCommand.Execute(null);
                 WpfTest.Drain();
                 var settings = PanelFocusScope.Descendants(window).OfType<SettingsPanel>().Single();
-                foreach (var (nav, name) in new[] { ("GeneralNav", "general"), ("AlertsNav", "alerts"), ("TodoNav", "todo"), ("BossesNav", "bosses"), ("DataNav", "data"), ("AboutNav", "about") })
+                foreach (var (nav, name) in new[] { ("GeneralNav", "general"), ("TodayNav", "today"), ("AlertsNav", "alerts"), ("TodoNav", "todo"), ("BossesNav", "bosses"), ("DataNav", "data"), ("AboutNav", "about") })
                 {
                     ((RadioButton)settings.FindName(nav)).IsChecked = true;
                     WpfTest.Drain();

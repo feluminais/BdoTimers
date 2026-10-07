@@ -95,6 +95,8 @@
                 <StackPanel>
                     <RadioButton x:Name="GeneralNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="General"
                                  Tag="General" IsChecked="True" Checked="Category_Checked" />
+                    <RadioButton x:Name="TodayNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Today"
+                                 Tag="Today" Checked="Category_Checked" />
                     <RadioButton x:Name="AlertsNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Alerts"
                                  Tag="Alerts" Checked="Category_Checked" />
                     <Button x:Name="OverlayNav" Style="{StaticResource SettingsNavButton}" Content="Overlay" Command="{Binding OpenOverlayCommand}"
@@ -157,6 +159,20 @@
                                    Visibility="{Binding AutostartError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
+                <TextBlock Text="Today" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Today" />
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily tasks" Tag="Daily tasks to-do show hide panel">
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowDaily}"
+                                  Width="110" AutomationProperties.Name="Daily tasks" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Weekly tasks" Tag="Weekly tasks to-do show hide panel">
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowWeekly}"
+                                  Width="110" AutomationProperties.Name="Weekly tasks" />
+                </HeaderedContentControl>
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Garmoth" Tag="Garmoth tracker kills show hide panel"
+                                        ToolTip="Needs the Garmoth tracker, in Bosses">
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowGarmoth}" IsEnabled="{Binding GarmothTracker}"
+                                  Width="110" AutomationProperties.Name="Garmoth on Today" />
+                </HeaderedContentControl>
                 <TextBlock Text="Alerts" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Alerts" />
                 <Border Style="{StaticResource SearchRow}" Tag="Default alert times (minutes before)">
                     <StackPanel>

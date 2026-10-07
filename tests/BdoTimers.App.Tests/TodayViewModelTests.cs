@@ -281,4 +281,50 @@ public class TodayViewModelTests
         Assert.All(garmoth.Kills, kill => Assert.False(kill.IsDone));
         Assert.Equal(new GarmothWeek(), services.Timers.Current.Garmoth);
     });
+
+    [Fact]
+    public void The_Today_switches_in_Settings_hide_the_task_and_Garmoth_panels_and_a_weekly_one_still_needs_a_list() => WithServices(services =>
+    {
+        var todo = new TodoViewModel(services, new Host());
+        var daily = new TaskPanelViewModel(services, todo, () => { }, TodoCadence.Daily);
+        var weekly = new TaskPanelViewModel(services, todo, () => { }, TodoCadence.Weekly);
+        var garmoth = new GarmothViewModel(services);
+        services.Todos.SetEnabled(services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly).Id, true);
+        services.Settings.Update(s => s with { GarmothTracker = true });
+        WpfTest.Drain();
+
+        Assert.True(daily.IsShown);
+        Assert.True(weekly.IsShown);
+        Assert.True(garmoth.IsOn);
+
+        services.Settings.Update(s => s with { Today = new TodaySettings { ShowDaily = false, ShowWeekly = false, ShowGarmoth = false } });
+        WpfTest.Drain();
+
+        Assert.False(daily.IsShown);
+        Assert.False(weekly.IsShown);
+        Assert.False(garmoth.IsOn);
+
+        services.Settings.Update(s => s with { Today = new TodaySettings { ShowGarmoth = true } });
+        services.Todos.SetEnabled(services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly).Id, false);
+        WpfTest.Drain();
+
+        Assert.True(daily.IsShown);
+        Assert.False(weekly.IsShown);
+        Assert.True(garmoth.IsOn);
+    });
+
+    [Fact]
+    public void The_Today_switches_are_a_draft_until_Settings_is_saved() => WithServices(services =>
+    {
+        var settings = new SettingsPanelViewModel(services);
+        Assert.True(settings.ShowDaily && settings.ShowWeekly && settings.ShowGarmoth);
+
+        settings.ShowDaily = false;
+        settings.ShowGarmoth = false;
+
+        Assert.False(settings.ShowDaily);
+        Assert.False(settings.ShowGarmoth);
+        Assert.True(settings.ShowWeekly);
+        Assert.True(services.Settings.Current.Today.ShowDaily);
+    });
 }

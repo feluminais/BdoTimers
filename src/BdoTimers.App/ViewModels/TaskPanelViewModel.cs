@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using BdoTimers.Core.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -44,6 +45,8 @@ public sealed partial class TaskPanelViewModel : ObservableObject
 
     public ObservableCollection<ListedTask> Tasks { get; } = [];
     [ObservableProperty] private bool _hasLists;
+    /// <summary>Whether Today shows the panel: Settings allows it, and a weekly one also needs a list on.</summary>
+    [ObservableProperty] private bool _isShown;
     [ObservableProperty] private string _summary = "";
     [ObservableProperty] private double _fraction;
     /// <summary>"+2 more" when open tasks don't fit; "To-do" when no list is on; otherwise nothing. It opens the To-do screen.</summary>
@@ -57,6 +60,7 @@ public sealed partial class TaskPanelViewModel : ObservableObject
         _todo = todo;
         _showTodo = showTodo;
         todo.Synced += Rebuild;
+        services.Settings.Changed += () => Application.Current?.Dispatcher.BeginInvoke(UpdateShown);
         Rebuild();
     }
 
@@ -90,6 +94,13 @@ public sealed partial class TaskPanelViewModel : ObservableObject
         Tasks.Sync(open.Take(MaxTasks), (task, next) => ReferenceEquals(task.Row, next.Row),
             next => new ListedTask(next.ListName, next.Row), (task, next) => task.ListName = next.ListName);
         Footer = !HasLists ? "To-do" : open.Count > MaxTasks ? $"+{open.Count - MaxTasks} more" : null;
+        UpdateShown();
+    }
+
+    void UpdateShown()
+    {
+        var today = _services.Settings.Current.Today;
+        IsShown = _cadence == TodoCadence.Daily ? today.ShowDaily : today.ShowWeekly && HasLists;
     }
 
     static (int Done, int Total) Count(IEnumerable<TodoList> lists)

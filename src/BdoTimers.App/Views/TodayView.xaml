@@ -456,15 +456,16 @@
                         <ItemsControl ItemsSource="{Binding Running}" ItemTemplate="{StaticResource RunningRow}" Focusable="False" />
                     </StackPanel>
                 </Border>
-                <Border x:Name="DailyPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16">
+                <Border x:Name="DailyPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16"
+                        Visibility="{Binding Daily.IsShown, Converter={StaticResource BoolToVisibility}}">
                     <ContentControl Content="{Binding Daily}" Focusable="False" />
                 </Border>
-                <!-- Off when no weekly list is on -->
+                <!-- Off when Settings hides it, or no weekly list is on -->
                 <Border x:Name="WeeklyPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16"
-                        Visibility="{Binding Weekly.HasLists, Converter={StaticResource BoolToVisibility}}">
+                        Visibility="{Binding Weekly.IsShown, Converter={StaticResource BoolToVisibility}}">
                     <ContentControl Content="{Binding Weekly}" Focusable="False" />
                 </Border>
-                <!-- Only while the tracker is on, in Settings -->
+                <!-- Only while the tracker is on, in Settings, and Today shows it -->
                 <Border x:Name="GarmothPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16"
                         Visibility="{Binding Garmoth.IsOn, Converter={StaticResource BoolToVisibility}}">
                     <ContentControl Content="{Binding Garmoth}" Focusable="False" />

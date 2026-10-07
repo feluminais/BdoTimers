@@ -17,7 +17,7 @@ public sealed partial class GarmothKillViewModel(int number, Action<int> press) 
 }
 
 /// <summary>
-/// Today's Garmoth panel, there while the tracker is on in Settings: his kills this week as buttons, and once the third is
+/// Today's Garmoth panel, there while the tracker is on in Settings and Today shows it: his kills this week as buttons, and once the third is
 /// marked, when he is back. It follows the week kept in the timer data.
 /// </summary>
 public sealed partial class GarmothViewModel : ObservableObject
@@ -44,7 +44,8 @@ public sealed partial class GarmothViewModel : ObservableObject
     void Refresh()
     {
         var week = _services.Timers.Current.Garmoth;
-        IsOn = _services.Settings.Current.GarmothTracker;
+        var settings = _services.Settings.Current;
+        IsOn = settings.GarmothTracker && settings.Today.ShowGarmoth;
         foreach (var kill in Kills) kill.IsDone = week.Kills >= kill.Number;
         Summary = $"{week.Kills}/{GarmothTracker.Limit}";
         BackText = week is { Kills: >= GarmothTracker.Limit } && week.ResetUtc > _services.Clock.UtcNow
