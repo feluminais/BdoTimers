@@ -243,4 +243,30 @@ public sealed class TodoTests : IDisposable
         };
         Assert.Same(readded, TodoMigrations.Apply(readded));
     }
+
+    [Fact]
+    public void The_Garmoth_row_leaves_the_weekly_quests_once_and_nothing_else_changes()
+    {
+        var seed = TodoSeed.Create(Now, new AppSettings());
+        var garmoth = new TodoRow { Text = "Boss's Roar — Garmoth", Done = true, Children = [new TodoRow { Text = "1", Done = true }] };
+        var mine = new TodoRow { Text = "My weekly task", Done = true };
+        var oldWeekly = seed.Lists[0] with { Enabled = true, Rows = [seed.Lists[0].Rows[0], garmoth, mine] };
+        var custom = new TodoList { Name = "Custom", Cadence = TodoCadence.Weekly, Rows = [garmoth] };
+        var store = Store(seed with { DefaultsVersion = 1, Lists = [oldWeekly, seed.Lists[1], custom] });
+
+        store.Update(TodoMigrations.Apply);
+
+        var migrated = Saved();
+        Assert.Equal(TodoData.CurrentDefaultsVersion, migrated.DefaultsVersion);
+        var weekly = migrated.Lists.Single(list => list.Id == TodoSeed.WeeklyId);
+        Assert.True(weekly.Enabled);
+        Assert.Equal([seed.Lists[0].Rows[0].Text, "My weekly task"], weekly.Rows.Select(row => row.Text));
+        Assert.True(weekly.Rows[1].Done);
+        Assert.Equal("Boss's Roar — Garmoth", migrated.Lists.Single(list => list.Id == custom.Id).Rows.Single().Text);
+        Assert.Equal(seed.Lists[1].Rows.Select(row => row.Text), migrated.Lists.Single(list => list.Id == TodoSeed.DailyId).Rows.Select(row => row.Text));
+        Assert.DoesNotContain(seed.Lists.SelectMany(list => list.Rows), row => row.Text.Contains("Garmoth"));
+
+        var readded = migrated with { Lists = migrated.Lists.Select(list => list.Id == TodoSeed.WeeklyId ? list with { Rows = [garmoth] } : list).ToList() };
+        Assert.Same(readded, TodoMigrations.Apply(readded));
+    }
 }

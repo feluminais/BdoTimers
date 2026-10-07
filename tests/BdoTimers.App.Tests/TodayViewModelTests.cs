@@ -200,7 +200,8 @@ public class TodayViewModelTests
         WpfTest.Drain();
 
         Assert.True(panel.HasLists);
-        Assert.Equal("0/16", panel.Summary);
+        var total = TodoOps.Progress(weekly.Rows).Total;
+        Assert.Equal($"0/{total}", panel.Summary);
         Assert.Equal(weekly.Rows.Select(row => row.Text), panel.Tasks.Select(task => task.Row.Text));
         Assert.Null(panel.Footer);
 
@@ -211,7 +212,7 @@ public class TodayViewModelTests
 
         var line = Assert.Single(panel.Tasks, task => task.Row.Text == first.Text).Row;
         Assert.Equal($"1/{first.Children.Count}", line.PartialProgress);
-        Assert.Equal("1/16", panel.Summary);
+        Assert.Equal($"1/{total}", panel.Summary);
         foreach (var child in first.Children.Skip(1)) services.Todos.Toggle(weekly.Id, child.Id);
         WpfTest.Drain();
 

@@ -5,6 +5,7 @@ using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
+using BdoTimers.Core.Model;
 
 namespace BdoTimers.App.Tests;
 
@@ -61,8 +62,9 @@ public sealed class TodoViewTests
             Assert.Equal(0, card.Fraction);
             services.Todos.Toggle(weekly.Id, weekly.Rows[0].Id);
             WpfTest.Drain();
-            Assert.Equal("1/16", card.Summary);
-            Assert.Equal(1.0 / 16, card.Fraction, 3);
+            var total = TodoOps.Progress(weekly.Rows).Total;
+            Assert.Equal($"1/{total}", card.Summary);
+            Assert.Equal(1.0 / total, card.Fraction, 3);
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });

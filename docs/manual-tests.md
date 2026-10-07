@@ -69,8 +69,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     With horse registrations enabled in Overlay → Sections, the newest two appear with their time left and "+8 more
     running" at ten. Delete the preset, restart, and check that its hotkey no longer starts registrations.
 22. [ ] To-do: Weekly quests and Daily tasks start Off, one dashed row each. Turn Weekly quests on with its switch: its card
-    appears, with a progress line. Tick a Garmoth child; the line grows, it moves to the bottom of its group and its
-    parent shows partial. Tick the parent; all three children become done and the group moves down.
+    appears, with a progress line. Tick an Olvia Academy child; the line grows, it moves to the bottom of its group and its
+    parent shows partial. Tick the parent; all four children become done and the group moves down.
     Untick it; the saved order returns. Repeat with Space and check that focus stays on the row.
 23. [ ] To-do: click row text to open the editor. Rename a row, Enter to add, Tab to make a child, Shift+Tab to move it out,
     Backspace on a blank row to remove it, and Alt+arrows or the grip to reorder. Close and reopen; names, order and

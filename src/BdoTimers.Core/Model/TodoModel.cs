@@ -35,7 +35,7 @@ public sealed record TodoList
 [Storage.SavedVersion(nameof(TodoData.DefaultsVersion), TodoData.CurrentDefaultsVersion)]
 public sealed record TodoData
 {
-    public const int CurrentDefaultsVersion = 1;
+    public const int CurrentDefaultsVersion = 2;
     public int DefaultsVersion { get; init; }
     public IReadOnlyList<TodoList> Lists { get; init; } = [];
 }

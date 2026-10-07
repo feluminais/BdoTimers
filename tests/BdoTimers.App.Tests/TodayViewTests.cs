@@ -141,7 +141,8 @@ public class TodayViewTests
                 Assert.Same(parent, today.Weekly.Tasks.Single(task => task.Row.Id == parent.Row.Id));
                 Assert.True(parent.IsExpanded);
                 Assert.Equal($"1/{parent.Row.Children.Count}", parent.Row.PartialProgress);
-                Assert.Equal("1/16", today.Weekly.Summary);
+                Assert.Equal($"1/{TodoOps.Progress(services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly).Rows).Total}",
+                    today.Weekly.Summary);
                 Assert.All(Sub(weekly, parent), box => Assert.True(box.IsVisible));
 
                 // Its name closes it again.

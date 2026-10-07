@@ -20,7 +20,6 @@ public static class TodoSeed
                 Rows =
                 [
                     Row("Throne of Edana — weekly boss quest"),
-                    Row("Boss's Roar — Garmoth", Row("1"), Row("2"), Row("3")),
                     Row("Olvia Academy", Row("Bulletin board quest 1"), Row("Bulletin board quest 2"),
                         Row("Bulletin board quest 3"), Row("Cliff — Operation Bumblin' Buccaneers Brawl")),
                     Row("Liana's weekly life skill quests", Row("Gathering — Fairy Powder"),
