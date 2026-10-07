@@ -367,3 +367,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     List, Card and Bar. With Always show off, the overlay stays hidden while the window is open; Show on hotkey shows
     the row. Skip next on the tile removes the row, and Off removes it too. With the timer's Overlay over the game set,
     that pop-up shows instead of a second row.
+87. [ ] Settings → Today: Daily tasks, Weekly tasks and Garmoth are on. Turn each off and Save: its panel leaves Today and the
+    others stay. Garmoth is dimmed while the tracker in Bosses is off. A weekly panel still needs a weekly list on.
+88. [ ] Settings: click in the Search field, then on bare space in the sheet: the field loses its caret and underline, and
+    Escape then closes the sheet. Click it again and type: it filters.
+89. [ ] Open Settings with the mouse, close it with Escape (or Enter on Save) and leave the mouse where it is: no tooltip
+    appears on the cog or on whatever the mouse is not over. Tab onto the cog afterwards: its tooltip does show.
+90. [ ] Schedule opens on Calendar, listed first; Bosses is the second tab. Calendar's day heading reads like "Wed 7 Oct".
