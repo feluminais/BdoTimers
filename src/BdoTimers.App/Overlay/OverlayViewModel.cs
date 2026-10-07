@@ -69,6 +69,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     static readonly RgbColor FallbackColor = new(0x0B, 0x0B, 0x0C);
     static readonly IReadOnlyList<ArtPicture> NoImages = [];
     static readonly object SampleKey = new();
+    static readonly object UpcomingSampleKey = new();
 
     readonly OverlaySpawn _previousRow = new();
     readonly OverlaySpawn _nextRow = new();
@@ -139,6 +140,10 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
                 settings.BossIcons && i.Timer.IsBuiltIn)).ToList();
         if (preview && settings.GuildBosses.Enabled && !content.PopUps.Any(i => i.Timer.Preset == Presets.GuildBosses))
             popUps.Add((SampleKey, "Guild bosses", DurationFormat.Clock(TimeSpan.FromMinutes(settings.GuildBosses.ShowMinutesBefore)), true, false));
+        popUps.AddRange(content.Upcoming.Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc),
+            DurationFormat.Clock(i.AtUtc - now), false, settings.BossIcons && i.Timer.IsBuiltIn)));
+        if (preview && settings.Timers.Count > 0 && content.Upcoming.Count == 0)
+            popUps.Add((UpcomingSampleKey, "Upcoming timer", "02:59:59", true, false));
         Sync(PopUps, popUps);
         Farm = content.FarmLeft is { } farmLeft
             ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)

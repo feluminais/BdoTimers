@@ -361,3 +361,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 85. [ ] Edit a timer's name and click outside its panel, then do the same in Settings: "Discard changes?" opens centred in the
     window over a darker layer, not inside the drawer, with Keep editing focused. Clicking the dark area does nothing; Keep
     editing returns to the draft and Discard closes it. Check it at the largest text size too.
+86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Overlay → Upcoming lists Guild
+    bosses, War of the Roses and Guild war, each Off. Set Guild war to 1 h before: the preview shows a dimmed
+    "Upcoming timer" row, and Always show shows no row yet; set it to 3 h before: Guild war and its time left show in
+    List, Card and Bar. With Always show off, the overlay stays hidden while the window is open; Show on hotkey shows
+    the row. Skip next on the tile removes the row, and Off removes it too. With the timer's Overlay over the game set,
+    that pop-up shows instead of a second row.

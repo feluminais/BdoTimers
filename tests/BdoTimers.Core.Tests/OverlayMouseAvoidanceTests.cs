@@ -72,7 +72,9 @@ public class OverlayMouseAvoidanceTests
     {
         var settings = new AppSettings { Overlay = new() { MouseProximity = mode } };
         var saved = JsonSerializer.Serialize(settings, JsonDefaults.Options);
-        Assert.Equal(settings.Overlay, JsonSerializer.Deserialize<AppSettings>(saved, JsonDefaults.Options)!.Overlay);
+        var loaded = JsonSerializer.Deserialize<AppSettings>(saved, JsonDefaults.Options)!;
+        Assert.Equal(mode, loaded.Overlay.MouseProximity);
+        Assert.Equal(saved, JsonSerializer.Serialize(loaded, JsonDefaults.Options));
         Assert.Equal(OverlayMouseProximity.Off, JsonSerializer.Deserialize<AppSettings>("{\"overlay\":{}}", JsonDefaults.Options)!.Overlay.MouseProximity);
     }
 

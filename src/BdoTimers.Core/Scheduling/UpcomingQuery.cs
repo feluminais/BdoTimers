@@ -24,6 +24,26 @@ public static class UpcomingQuery
             .ToList();
     }
 
+    /// <summary>The next unmuted occurrence of each timer in <see cref="OverlaySettings.Timers"/> that falls inside its
+    /// window, whether or not the timer's alerts are on. These rows don't bring the overlay up.</summary>
+    public static IReadOnlyList<UpcomingItem> Listed(AppData data, OverlaySettings settings, DateTimeOffset now)
+    {
+        if (settings.Timers.Count == 0) return [];
+        var muted = GarmothTracker.Silenced(data);
+        return settings.Timers
+            .Where(w => w.Minutes > 0)
+            .Select(w => (Timer: data.Timers.FirstOrDefault(t => t.Id == w.TimerId), w.Minutes))
+            .Where(p => p.Timer is not null && BossRegions.IsEligible(data, p.Timer))
+            .Select(p => OccurrenceSource.Between(p.Timer!, now, now + TimeSpan.FromMinutes(p.Minutes))
+                .Where(at => !muted.Contains(new MutedOccurrence(p.Timer!.Id, at)))
+                .Select(at => new UpcomingItem(p.Timer!, at)).FirstOrDefault())
+            .OfType<UpcomingItem>()
+            .DistinctBy(i => i.Timer.Id)
+            .OrderBy(i => i.AtUtc)
+            .ThenBy(i => i.Timer.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     /// <summary>
     /// The earliest instant from <paramref name="now"/> on at which <see cref="ForOverlay"/> can return anything while
     /// the data and settings stay the same; at or before <paramref name="now"/> when a pop-up may be due now, null when no

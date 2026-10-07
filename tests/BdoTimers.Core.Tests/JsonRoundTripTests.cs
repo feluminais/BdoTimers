@@ -101,6 +101,7 @@ public class JsonRoundTripTests
             ShowHorseRegistrations = true,
             ShowCustomTimers = false,
             GuildBosses = new OverlayAlert { Enabled = true, ShowMinutesBefore = 30 },
+            Timers = [new OverlayTimerWindow(new Guid("0b7e0c3a-5a49-4f0e-9a2e-3d2f3a6f2c11"), 180)],
             BackgroundColor = "#3A1417",
             BackgroundImage = "bg.png",
             BackgroundOpacity = 0.4,

@@ -148,6 +148,18 @@
                         </DockPanel>
                     </Border>
 
+                    <TextBlock Text="Upcoming" Style="{StaticResource SectionText}" Visibility="{Binding HasUpcoming, Converter={StaticResource BoolToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding Upcoming}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type pvm:OverlayTimerRow}">
+                                <HeaderedContentControl Style="{StaticResource SettingRow}" Header="{Binding Name}">
+                                    <controls:CycleSelector ItemsSource="{Binding Choices}" SelectedItem="{Binding Lead}" ValueWidth="110"
+                                                            AutomationProperties.Name="{Binding Name}" />
+                                </HeaderedContentControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
                     <TextBlock Text="Background" Style="{StaticResource SectionText}" />
                     <Border Style="{StaticResource Row}">
                         <StackPanel>

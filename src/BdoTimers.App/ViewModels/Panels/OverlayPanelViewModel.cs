@@ -37,6 +37,9 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public IReadOnlyList<Choice> MouseProximityChoices { get; } = Enum.GetValues<OverlayMouseProximity>().Select(m => new Choice(m.ToString(), m)).ToList();
     public IReadOnlyList<Choice> GuildBossChoices { get; }
     public IReadOnlyList<Swatch> Swatches { get; }
+    /// <summary>The timers that can have a row on the overlay. Fixed while the panel is open, as timers can't change under it.</summary>
+    public IReadOnlyList<OverlayTimerRow> Upcoming { get; }
+    public bool HasUpcoming => Upcoming.Count > 0;
     public bool HasPicture => Picture is not null;
     public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
     /// <summary>The combos the other hotkeys hold, which each hotkey field may not repeat.</summary>
@@ -55,6 +58,10 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         _host = host;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
         GuildBossChoices = PopUpChoices.For(PopUpChoices.GuildBossMinutes, Current.GuildBosses);
+        Upcoming = services.Timers.Current.Timers.Where(Listable)
+            .Select(t => new OverlayTimerRow(t.Name, Current.Timers.FirstOrDefault(w => w.TimerId == t.Id)?.Minutes ?? 0,
+                minutes => SetRow(t.Id, minutes)))
+            .ToList();
         _colorSave.Tick += (_, _) => SaveCustomColor();
         var o = Current;
         _lastSettings = o;
@@ -172,6 +179,17 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         OnPropertyChanged(nameof(TakenForMove));
     }
 
+    /// <summary>Scheduled and one-time timers of the player's own and the presets; boss timetable entries have the Next and
+    /// Previous boss sections, and countdowns the Custom timers one.</summary>
+    static bool Listable(TimerDef t) =>
+        !t.IsBuiltIn && (t.Kind == TimerKind.Scheduled || t is { Kind: TimerKind.OneTime, OneTime.Finished: false });
+
+    void SetRow(Guid id, int minutes) => Modify(o =>
+    {
+        var others = o.Timers.Where(w => w.TimerId != id);
+        return o with { Timers = (minutes > 0 ? others.Append(new OverlayTimerWindow(id, minutes)) : others).ToList() };
+    });
+
     void Modify(Func<OverlaySettings, OverlaySettings> change) =>
         _services.Settings.Update(s => change(s.Overlay) is var next && next != s.Overlay ? s with { Overlay = next } : s);
 
@@ -253,6 +271,27 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         _services.Timers.Changed -= OnTimersChanged;
         _services.Overlay.EndPreview();
     }
+}
+
+/// <summary>A timer in the Overlay panel's Upcoming block, with how long before its next time the overlay lists it.</summary>
+public sealed partial class OverlayTimerRow : ObservableObject
+{
+    readonly Action<int> _apply;
+
+    [ObservableProperty] private Choice _lead;
+
+    public OverlayTimerRow(string name, int minutes, Action<int> apply)
+    {
+        _apply = apply;
+        Name = name;
+        Choices = PopUpChoices.ForRow(minutes);
+        _lead = Choices.First(c => (int)c.Value! == Math.Max(0, minutes));
+    }
+
+    public string Name { get; }
+    public IReadOnlyList<Choice> Choices { get; }
+
+    partial void OnLeadChanged(Choice value) => _apply((int)value.Value!);
 }
 
 /// <summary>A background colour in the Overlay panel; the chosen one is ringed.</summary>

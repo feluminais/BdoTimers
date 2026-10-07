@@ -13,6 +13,8 @@ public sealed record OverlaySnapshot
     public SpawnGroup? Previous { get; init; }
     public SpawnGroup? Next { get; init; }
     public IReadOnlyList<UpcomingItem> PopUps { get; init; } = [];
+    /// <summary>Rows of the timers listed in the settings that are inside their window; they never bring the overlay up.</summary>
+    public IReadOnlyList<UpcomingItem> Upcoming { get; init; } = [];
     public TimeSpan? FarmLeft { get; init; }
     public TimeSpan? FishingElapsed { get; init; }
     public IReadOnlyList<HorseOverlayRun> HorseRegistrations { get; init; } = [];
@@ -26,7 +28,7 @@ public sealed record OverlaySnapshot
     /// <summary>True when there is nothing to draw, not even a clock.</summary>
     public bool IsEmpty =>
         !Clock && ServerTime is null && GameTime is null && Previous is null && Next is null && PopUps.Count == 0
-        && FarmLeft is null && FishingElapsed is null && HorseRegistrations.Count == 0 && CustomTimers.Count == 0;
+        && Upcoming.Count == 0 && FarmLeft is null && FishingElapsed is null && HorseRegistrations.Count == 0 && CustomTimers.Count == 0;
 }
 
 /// <summary>A running horse registration; <see cref="Id"/> is its timer's.</summary>
@@ -63,6 +65,10 @@ public static class OverlayContent
             .Where(i => !(settings.ShowHorseRegistrations && i.Timer.Preset == Presets.HorseRegistrationRun))
             .Where(i => !customIds.Contains(i.Timer.Id))
             .ToList();
+        // A custom timer's own row, or a pop-up for the same occurrence, already shows it.
+        var upcoming = UpcomingQuery.Listed(data, settings, now)
+            .Where(i => !customIds.Contains(i.Timer.Id) && !due.Any(d => d.Timer.Id == i.Timer.Id && d.AtUtc == i.AtUtc))
+            .ToList();
         return new OverlaySnapshot
         {
             Clock = settings.ShowClock,
@@ -71,6 +77,7 @@ public static class OverlayContent
             Previous = settings.ShowPrevious ? board?.Previous : null,
             Next = next,
             PopUps = popUps,
+            Upcoming = upcoming,
             FarmLeft = farmLeft,
             FarmProgress = farm is null ? null : CountdownOps.Progress(farm, now, overgrows: true),
             FishingElapsed = settings.ShowFishing ? FishingElapsed(data, now) : null,
