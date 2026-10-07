@@ -96,7 +96,7 @@ public sealed partial class CalendarViewModel : ObservableObject
 
     void ShowSelected(DateOnly today)
     {
-        SelectedTitle = _selected.ToString("dddd d MMMM", CultureInfo.InvariantCulture);
+        SelectedTitle = _selected.ToString("ddd d MMM", CultureInfo.InvariantCulture);
         CanAddEvent = _selected >= today;
         var items = _month?.Days.FirstOrDefault(d => d.Date == _selected)?.Items ?? [];
         Rows.Clear();
