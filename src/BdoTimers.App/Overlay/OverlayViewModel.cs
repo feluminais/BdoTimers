@@ -151,7 +151,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         Sync(HorseRegistrations, horse);
         MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
         var custom = content.CustomTimers.Select(t =>
-            ((object)t.Id, t.Name, DurationFormat.Clock(t.Remaining) + (t.Paused ? " · Paused" : ""), false, false)).ToList();
+            ((object)t.Id, t.Name, DurationFormat.Clock(t.Time) + (t.Paused ? " · Paused" : ""), false, false)).ToList();
         if (custom.Count == 0 && preview && settings.ShowCustomTimers)
             custom.Add((SampleKey, "Custom timer", "00:15:00", true, false));
         Sync(CustomTimers, custom);

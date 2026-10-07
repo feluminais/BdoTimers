@@ -351,3 +351,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 83. [ ] Top bar, the bell: a click opens the alerts menu under it and the bell stays lit; click the bell again and the menu
     closes and does not open again. A click elsewhere and Esc close it too. Pause alerts for 1 hour from it: the bell
     shows the slash, and the menu's Resume alerts brings it back.
+84. [ ] Time Tracking → New tracker offers Countdown, Stopwatch, Weekly and One-time event. Stopwatch opens a panel with a
+    name, a picture and Delete, and no alert settings; the card appears with Start. Start it: it counts up, the card gets
+    Started earlier and Stop on hover, and Today's Running lists it. Pause, Resume and Stop reset it like Fishing; restart
+    the app while it runs and it keeps counting from the same start. With the overlay pinned and Overlay → Sections →
+    Custom timers on, a running stopwatch shows under Custom timers with the time counted, and "Paused" while paused.

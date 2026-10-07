@@ -24,10 +24,10 @@ public class PanelBindingTests
             window.Show();
             WpfTest.Drain();
             var buttons = PanelFocusScope.Descendants(panel).OfType<Button>().Where(b => b.Command == command).ToArray();
-            Assert.Equal(3, buttons.Length);
-            Assert.Equal(new[] { "Countdown", "Weekly", "One-time event" }, buttons.Select(b => new ButtonAutomationPeer(b).GetName()));
+            Assert.Equal(4, buttons.Length);
+            Assert.Equal(new[] { "Countdown", "Stopwatch", "Weekly", "One-time event" }, buttons.Select(b => new ButtonAutomationPeer(b).GetName()));
             foreach (var button in buttons) button.Command!.Execute(null);
-            Assert.Equal(3, calls);
+            Assert.Equal(4, calls);
         }
         finally { window.Close(); }
     });
@@ -57,6 +57,7 @@ public class PanelBindingTests
 
     public sealed record Choices(ICommand CountdownCommand)
     {
+        public ICommand StopwatchCommand => CountdownCommand;
         public ICommand WeeklyCommand => CountdownCommand;
         public ICommand OneTimeCommand => CountdownCommand;
     }

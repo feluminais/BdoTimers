@@ -11,6 +11,10 @@
                 AutomationProperties.Name="Countdown">
             <TextBlock Text="Countdown" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{DynamicResource TextBrush}" />
         </Button>
+        <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding StopwatchCommand}"
+                AutomationProperties.Name="Stopwatch">
+            <TextBlock Text="Stopwatch" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{DynamicResource TextBrush}" />
+        </Button>
         <Button Style="{StaticResource GhostButton}" HorizontalContentAlignment="Left" Padding="16,12" Margin="0,10,0,0" Command="{Binding WeeklyCommand}"
                 AutomationProperties.Name="Weekly">
             <TextBlock Text="Weekly" Style="{StaticResource DisplayText}" FontSize="14" Foreground="{DynamicResource TextBrush}" />

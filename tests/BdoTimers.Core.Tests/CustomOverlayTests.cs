@@ -30,9 +30,9 @@ public class CustomOverlayTests
         var content = OverlayContent.Build(data, OnlyCustom, Now.AddMinutes(5));
         Assert.Equal([first.Id, second.Id], content.CustomTimers.Select(t => t.Id));
         Assert.Equal(["Z first", "A second"], content.CustomTimers.Select(t => t.Name));
-        Assert.Equal(TimeSpan.FromMinutes(55), content.CustomTimers[0].Remaining);
+        Assert.Equal(TimeSpan.FromMinutes(55), content.CustomTimers[0].Time);
         Assert.False(content.CustomTimers[0].Paused);
-        Assert.Equal(TimeSpan.FromMinutes(50), content.CustomTimers[1].Remaining);
+        Assert.Equal(TimeSpan.FromMinutes(50), content.CustomTimers[1].Time);
         Assert.True(content.CustomTimers[1].Paused);
         Assert.False(content.IsEmpty);
         Assert.True(new OverlayPresence().IsVisible(OnlyCustom with { AlwaysShow = true }, Now, content, false));
@@ -44,6 +44,25 @@ public class CustomOverlayTests
         var updated = data with { Timers = data.Timers.Select(t => t.Id == second.Id ? renamedAndResumed : t).ToList() };
         Assert.Equal([first.Id, second.Id], OverlayContent.Build(updated, OnlyCustom, Now.AddMinutes(6)).CustomTimers.Select(t => t.Id));
         Assert.True(OverlayContent.Build(data, OnlyCustom with { ShowCustomTimers = false }, Now).IsEmpty);
+    }
+
+    [Fact]
+    public void Running_and_paused_custom_stopwatches_show_what_they_have_counted_beside_the_Fishing_row()
+    {
+        TimerDef Stopwatch(string name, StopwatchSpec spec) => new() { Name = name, Kind = TimerKind.Stopwatch, Stopwatch = spec };
+        var running = Stopwatch("Grinding", StopwatchOps.Start(new StopwatchSpec(), Now.AddMinutes(-30)));
+        var paused = Stopwatch("Break", StopwatchOps.Pause(StopwatchOps.Start(new StopwatchSpec(), Now.AddMinutes(-20)), Now.AddMinutes(-5)));
+        var idle = Stopwatch("Ready", new StopwatchSpec());
+        var fishing = Presets.Create().Single(t => t.Preset == Presets.Fishing) with { Stopwatch = StopwatchOps.Start(new StopwatchSpec(), Now.AddMinutes(-10)) };
+        var data = new AppData { Timers = [running, idle, paused, fishing] };
+
+        var content = OverlayContent.Build(data, OnlyCustom with { ShowFishing = true }, Now);
+
+        Assert.Equal(["Grinding", "Break"], content.CustomTimers.Select(t => t.Name));
+        Assert.Equal([TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(15)], content.CustomTimers.Select(t => t.Time));
+        Assert.Equal([false, true], content.CustomTimers.Select(t => t.Paused));
+        Assert.Equal(TimeSpan.FromMinutes(10), content.FishingElapsed);
+        Assert.Empty(OverlayContent.Build(data, OnlyCustom with { ShowCustomTimers = false }, Now).CustomTimers);
     }
 
     [Fact]

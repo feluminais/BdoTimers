@@ -16,6 +16,14 @@ public sealed partial class NewTimerPanelViewModel(AppServices services, IPanelH
     });
 
     [RelayCommand]
+    void Stopwatch() => Create(new TimerDef
+    {
+        Name = "New stopwatch",
+        Kind = TimerKind.Stopwatch,
+        Stopwatch = new StopwatchSpec(),
+    });
+
+    [RelayCommand]
     void Weekly() => Create(new TimerDef
     {
         Name = "New weekly timer",

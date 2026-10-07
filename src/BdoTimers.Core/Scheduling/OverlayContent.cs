@@ -32,7 +32,8 @@ public sealed record OverlaySnapshot
 /// <summary>A running horse registration; <see cref="Id"/> is its timer's.</summary>
 public sealed record HorseOverlayRun(Guid Id, string Name, DateTimeOffset EndsAtUtc);
 
-public sealed record CustomOverlayTimer(Guid Id, string Name, TimeSpan Remaining, bool Paused);
+/// <summary>A running or paused custom timer; <see cref="Time"/> is what is left of a countdown or event, and what a stopwatch has counted.</summary>
+public sealed record CustomOverlayTimer(Guid Id, string Name, TimeSpan Time, bool Paused);
 
 public static class OverlayContent
 {
@@ -83,6 +84,8 @@ public static class OverlayContent
 
     static CustomOverlayTimer? CustomTimer(TimerDef timer, DateTimeOffset now)
     {
+        if (timer is { IsBuiltIn: false, Preset: null, Kind: TimerKind.Stopwatch, Stopwatch: { Status: not CountdownStatus.Idle } stopwatch })
+            return new(timer.Id, timer.Name, StopwatchOps.Elapsed(stopwatch, now), stopwatch.Status == CountdownStatus.Paused);
         if (timer is { IsBuiltIn: false, Kind: TimerKind.OneTime, OneTime: { Finished: false } oneTime })
         {
             var at = OneTimeEvents.AtUtc(oneTime);
