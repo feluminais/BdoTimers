@@ -83,12 +83,30 @@
             </Style.Triggers>
         </Style>
 
-        <!-- The clock is the text colour while a timer runs and the secondary one while it waits -->
+        <!-- The clock is the text colour while a timer runs and the secondary one while it waits; two clocks on a card are smaller -->
         <Style x:Key="CardClock" TargetType="TextBlock" BasedOn="{StaticResource ClockText}">
             <Setter Property="FontSize" Value="32" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding IsDimmed}" Value="True">
                     <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding HasSecondClock}" Value="True">
+                    <Setter Property="FontSize" Value="22" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Says there is more than the card shows, and lights up with the card, which opens the whole list -->
+        <Style x:Key="MoreMark" TargetType="TextBlock">
+            <Setter Property="Text" Value="&#x2026;" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="Margin" Value="0,-8,0,0" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=Button}}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -139,6 +157,12 @@
                             <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right">
                                 <TextBlock Text="{Binding Digits}" Style="{StaticResource CardClock}" />
                             </Viewbox>
+                            <!-- A second Horse registration gets its own clock under the first, and more than two an ellipsis -->
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right"
+                                     Visibility="{Binding HasSecondClock, Converter={StaticResource BoolToVisibility}}">
+                                <TextBlock Text="{Binding SecondDigits}" Style="{StaticResource CardClock}" />
+                            </Viewbox>
+                            <TextBlock Style="{StaticResource MoreMark}" Visibility="{Binding HasMoreRuns, Converter={StaticResource BoolToVisibility}}" />
                             <TextBlock Text="{Binding Detail}" Style="{StaticResource LabelText}" TextTrimming="CharacterEllipsis" />
                             <!-- As wide as the lines above; the number's fixed width keeps the line from shifting as it grows -->
                             <DockPanel Margin="0,3,0,0" Visibility="{Binding Growth, Converter={StaticResource NullToCollapsed}}">

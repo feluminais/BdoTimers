@@ -39,6 +39,10 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty, NotifyPropertyChangedFor(nameof(CanStop))] private bool _hasHorseRuns;
     [ObservableProperty] private bool _canStartHorse;
     [ObservableProperty] private string _horseStartTip = "Start registration";
+    /// <summary>Horse registration only: the second clock to run out, under the first once two registrations are under way; both clocks then shrink.</summary>
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasSecondClock))] private string? _secondDigits;
+    /// <summary>Horse registration only: more than the two clocks are under way, so the card ends in an ellipsis that invites opening it.</summary>
+    [ObservableProperty] private bool _hasMoreRuns;
     /// <summary>Farm only: the crops' growth %, like the game shows it; null while the countdown is idle.</summary>
     [ObservableProperty] private int? _growth;
 
@@ -59,6 +63,7 @@ public sealed partial class TimerTileViewModel : ObservableObject
     /// <summary>Countdowns and stopwatches: start, pause and reset from the tile.</summary>
     public bool HasControls => !IsHorseTemplate && _timer.Kind is (TimerKind.Countdown or TimerKind.Stopwatch);
     public bool IsHorseTemplate => _timer.Preset == Presets.HorseRegistration;
+    public bool HasSecondClock => SecondDigits is not null;
     /// <summary>Something to stop: a countdown or stopwatch that has been started, or a horse registration that is under way.</summary>
     public bool CanStop => (HasControls && (IsRunning || IsPaused)) || HasHorseRuns;
     /// <summary>The Horse registration card stops its latest run; its panel lists every run.</summary>
@@ -100,9 +105,12 @@ public sealed partial class TimerTileViewModel : ObservableObject
             HasHorseRuns = runs.Count > 0;
             CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
             HorseStartTip = CanStartHorse ? "Start registration" : Formats.HorseRegistrations(runs.Count);
-            var nextHorse = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
-                .MinBy(t => t.Countdown!.EndsAtUtc);
+            var running = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
+                .OrderBy(t => t.Countdown!.EndsAtUtc).ToList();
+            var nextHorse = running.FirstOrDefault();
             Digits = nextHorse?.Countdown?.EndsAtUtc is { } end ? DurationFormat.Clock(end - now) : DurationFormat.Clock(horse.Duration);
+            SecondDigits = running.Count > 1 ? DurationFormat.Clock(running[1].Countdown!.EndsAtUtc!.Value - now) : null;
+            HasMoreRuns = runs.Count > 2;
             Progress = nextHorse?.Countdown is { } soonest ? Math.Min((CountdownOps.Progress(soonest, now, false) ?? 0) / 100.0, 1) : 0;
             Detail = off + (runs.Count == 0 ? "Ready" : Formats.HorseRegistrations(runs.Count));
             IsDimmed = runs.Count == 0 || !_timer.Enabled;

@@ -59,8 +59,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. The square
     Stop on a started card resets a timer.
 21. [ ] Timers: Horse registration is third, 10:00, and its (i) explains when to start. Its round button is a plus.
-    Press Ctrl+Shift+F10 twice: the card stays one card, saying "2 of 10 active" with the soonest clock, and no
-    registration gets a card of its own, on Timers or in Today's Running (which lists Horse registration with the plus). Each press speaks
+    Press Ctrl+Shift+F10 twice: the card stays one card, saying "2 of 10 active" with the two soonest clocks one under
+    the other, both smaller than the single clock was, and no registration gets a card of its own, on Timers or in Today's
+    Running (which lists Horse registration with the plus). A third press adds an ellipsis under the clocks, which turns gold
+    with the card's border; the card still shows two clocks. Each press speaks
     "Horse registration time started". The first alerts at 1:00 and 0:00, then ends without stopping the second. Today's
     Coming up and the Month show one Horse registration entry, the next to end, and it opens the card's panel.
     Click the card: Running lists Horse 1, Horse 2 with their times, each with a square Stop. The card's own square Stop

@@ -70,6 +70,85 @@ public class HorseCardTests
     });
 
     [Fact]
+    public void A_second_registration_gets_a_second_clock_and_more_than_two_an_ellipsis() => WithServices(services =>
+    {
+        var timers = new CustomViewModel(services, new Host());
+        var horse = timers.Items.Single(t => t.IsHorseTemplate);
+        var now = T0.AddMinutes(2);
+        // The clocks of the registrations under way, the soonest to end first.
+        List<string> Clocks() => Runs(services).OrderBy(run => run.Countdown!.EndsAtUtc)
+            .Select(run => DurationFormat.Clock(run.Countdown!.EndsAtUtc!.Value - now)).ToList();
+        void StartAt(int minute)
+        {
+            Assert.Equal(HorseStartResult.Started, services.Timers.StartHorseRegistration(T0.AddMinutes(minute)));
+            timers.Refresh(now);
+        }
+
+        Assert.Null(horse.SecondDigits);
+        StartAt(0);
+        Assert.Equal(Clocks()[0], horse.Digits);
+        Assert.Null(horse.SecondDigits);
+        Assert.False(horse.HasMoreRuns);
+
+        StartAt(1);
+        Assert.Equal(Clocks()[0], horse.Digits);
+        Assert.Equal(Clocks()[1], horse.SecondDigits);
+        Assert.True(horse.HasSecondClock);
+        Assert.False(horse.HasMoreRuns);
+
+        StartAt(2);
+        Assert.Equal(Clocks()[0], horse.Digits);
+        Assert.Equal(Clocks()[1], horse.SecondDigits);
+        Assert.True(horse.HasMoreRuns);
+
+        horse.ResetCommand.Execute(null);
+        WpfTest.Drain();
+        timers.Refresh(now);
+        Assert.False(horse.HasMoreRuns);
+        Assert.True(horse.HasSecondClock);
+    });
+
+    [Fact]
+    public void The_card_draws_two_smaller_clocks_one_under_the_other_and_the_ellipsis_only_for_more() => WithServices(services =>
+    {
+        var timers = new CustomViewModel(services, new Host());
+        var view = new CustomView { DataContext = timers };
+        var window = new Window { Content = view, Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            WpfTest.Drain();
+            var horse = timers.Items.Single(t => t.IsHorseTemplate);
+            var card = VisualTree.FindDescendant<Button>(view, b => b.Command == horse.OpenCommand)!;
+            TextBlock[] Shown(string? text) => PanelFocusScope.Descendants(card).OfType<TextBlock>().Where(t => t.Text == text && t.IsVisible).ToArray();
+            double Top(TextBlock text) => text.TranslatePoint(new Point(), view).Y;
+            // Each registration started a different time ago, so every clock reads differently.
+            void StartedAgo(int minutes)
+            {
+                services.Timers.StartHorseRegistration(services.Clock.UtcNow.AddMinutes(-minutes));
+                timers.Refresh(services.Clock.UtcNow);
+                WpfTest.Drain();
+            }
+
+            StartedAgo(5);
+            Assert.Equal(32, Assert.Single(Shown(horse.Digits)).FontSize);
+            Assert.Empty(Shown("…"));
+
+            StartedAgo(3);
+            var (first, second) = (Assert.Single(Shown(horse.Digits)), Assert.Single(Shown(horse.SecondDigits)));
+            Assert.Equal(22, first.FontSize);
+            Assert.Equal(22, second.FontSize);
+            Assert.True(Top(first) < Top(second));
+            Assert.Empty(Shown("…"));
+
+            StartedAgo(1);
+            var more = Assert.Single(Shown("…"));
+            Assert.True(Top(second) < Top(more));
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
     public void Stop_on_the_card_ends_the_latest_registration_and_undo_brings_it_back() => WithServices(services =>
     {
         var timers = new CustomViewModel(services, new Host());
