@@ -64,6 +64,11 @@ public class UiShots
                         month.IsChecked = true;
                         WpfTest.Drain();
                         UiCapture.Save(window, "schedule-month.png");
+                        var busy = AddBusyDay(services);
+                        UiCapture.Save(window, "schedule-month-busy.png");
+                        // The events would show on Timers, which is captured next.
+                        foreach (var id in busy) services.Timers.Delete(id);
+                        WpfTest.Drain();
                         PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
                         WpfTest.Drain();
                     }
@@ -98,6 +103,17 @@ public class UiShots
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     });
+
+    /// <summary>A day a week from now with three events of its own: as many lines as a month cell has room for, besides the bosses.</summary>
+    static List<Guid> AddBusyDay(AppServices services)
+    {
+        var day = DateOnly.FromDateTime(services.Clock.UtcNow.UtcDateTime).AddDays(7);
+        var events = new[] { "Node war", "Siege", "Guild meeting" }
+            .Select(title => new TimerDef { Name = title, Kind = TimerKind.OneTime, OneTime = new OneTimeSpec { Date = day, Time = new TimeOnly(20, 0) } }).ToList();
+        foreach (var added in events) services.Timers.Upsert(added);
+        WpfTest.Drain();
+        return events.Select(added => added.Id).ToList();
+    }
 
     static void StartTheOtherTimers(AppServices services)
     {
@@ -134,6 +150,7 @@ public class UiShots
                 window.Show();
                 main.SetShown(true);
                 var tabs = new[] { ("TodayTab", "today"), ("ScheduleTab", "schedule"), ("CustomTab", "timers"), ("TodoTab", "todo") };
+                AddBusyDay(services);
                 void Capture(string suffix)
                 {
                     foreach (var (tab, name) in tabs)
@@ -141,6 +158,13 @@ public class UiShots
                         ((RadioButton)window.FindName(tab)).IsChecked = true;
                         WpfTest.Drain();
                         UiCapture.Save(window, $"{name}-{suffix}.png");
+                        if (name != "schedule") continue;
+                        var toggles = PanelFocusScope.Descendants(window).OfType<RadioButton>().ToList();
+                        toggles.First(b => b.Name == "MonthToggle").IsChecked = true;
+                        WpfTest.Drain();
+                        UiCapture.Save(window, $"schedule-month-{suffix}.png");
+                        toggles.First(b => b.Name == "WeekToggle").IsChecked = true;
+                        WpfTest.Drain();
                     }
                 }
                 Capture("640");
