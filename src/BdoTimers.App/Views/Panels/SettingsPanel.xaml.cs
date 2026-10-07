@@ -43,6 +43,13 @@ public partial class SettingsPanel : UserControl
         if (SettingsItems is not null) ApplySearch();
     }
 
+    /// <summary>A press on bare panel, which no control took, ends the search field's focus; the panel keeps it so its keys still work.</summary>
+    void Panel_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (SearchBox.IsKeyboardFocused && e.OriginalSource is DependencyObject source && !SearchBox.IsAncestorOf(source)
+            && !ReferenceEquals(source, SearchBox)) Focus();
+    }
+
     void ClearSearch_Click(object sender, RoutedEventArgs e) { SearchBox.Clear(); SearchBox.Focus(); }
 
     void Panel_PreviewKeyDown(object sender, KeyEventArgs e)

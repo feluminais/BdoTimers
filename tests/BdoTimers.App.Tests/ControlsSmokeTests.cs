@@ -199,6 +199,28 @@ public sealed class ControlsSmokeTests
     }
 
     [Fact]
+    public void A_press_on_bare_settings_panel_ends_the_search_fields_focus_but_a_press_in_it_does_not() => WpfTest.Run(() =>
+    {
+        var panel = new SettingsPanel();
+        var window = new Window { Content = panel, Width = 500, Height = 600, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            WpfTest.Drain();
+            var search = (TextBox)panel.FindName("SearchBox");
+            static void Press(UIElement target) => target.RaiseEvent(new MouseButtonEventArgs(Mouse.PrimaryDevice, 0, MouseButton.Left)
+            { RoutedEvent = Mouse.MouseDownEvent, Source = target });
+            search.Focus();
+            Press(search);
+            Assert.True(search.IsKeyboardFocused);
+            Press((UIElement)panel.FindName("SettingsItems"));
+            Assert.False(search.IsKeyboardFocused);
+            Assert.Same(panel, Keyboard.FocusedElement);
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
     public void Settings_search_filters_rows_and_headers_and_handles_no_matches()
     {
         WpfTest.Run(() =>

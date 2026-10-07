@@ -52,6 +52,39 @@ public class PanelFocusTests
         finally { window.Close(); }
     });
 
+    /// <summary>WPF shows a tooltip on keyboard focus when the last input was a key, so Escape or Enter closing a panel would
+    /// pop the opener's tooltip with the mouse elsewhere; focus goes back with that turned off.</summary>
+    [Fact]
+    public void Returning_focus_to_the_opener_does_not_ask_for_its_tooltip() => WpfTest.Run(() =>
+    {
+        var opener = new Button { Content = "Open", ToolTip = "Settings" };
+        var background = new Grid();
+        background.Children.Add(opener);
+        var panel = new StackPanel { Visibility = Visibility.Collapsed };
+        panel.Children.Add(new TextBox());
+        var root = new Grid();
+        root.Children.Add(background);
+        root.Children.Add(panel);
+        var window = new Window { Width = 300, Height = 180, Content = root, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            var focus = new PanelFocusScope(window, background, panel, () => { });
+            window.Show();
+            opener.Focus();
+            panel.Visibility = Visibility.Visible;
+            focus.Open();
+            WpfTest.Drain();
+            bool? duringFocus = null;
+            opener.GotKeyboardFocus += (_, _) => duringFocus = ToolTipService.GetShowsToolTipOnKeyboardFocus(opener);
+            panel.Visibility = Visibility.Collapsed;
+            focus.Close();
+            Assert.Same(opener, Keyboard.FocusedElement);
+            Assert.False(duringFocus);
+            Assert.Null(ToolTipService.GetShowsToolTipOnKeyboardFocus(opener));
+        }
+        finally { window.Close(); }
+    });
+
     [Fact]
     public void The_background_can_stay_enabled_until_it_is_told_to_go_dim_and_a_closed_panel_ignores_that() => WpfTest.Run(() =>
     {

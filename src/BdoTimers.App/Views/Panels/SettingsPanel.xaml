@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:controls="clr-namespace:BdoTimers.App.Controls"
              xmlns:panels="clr-namespace:BdoTimers.App.Views.Panels"
-             PreviewKeyDown="Panel_PreviewKeyDown">
+             Focusable="True" IsTabStop="False" FocusVisualStyle="{x:Null}" Background="Transparent"
+             MouseLeftButtonDown="Panel_MouseLeftButtonDown" PreviewKeyDown="Panel_PreviewKeyDown">
     <UserControl.Resources>
         <Style x:Key="SearchRow" TargetType="Border" BasedOn="{StaticResource Row}">
             <Style.Triggers>

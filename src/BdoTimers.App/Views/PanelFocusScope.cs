@@ -53,7 +53,7 @@ internal sealed class PanelFocusScope
             var controls = Descendants(_panel).OfType<Control>()
                 .Where(c => c.Focusable && c.IsVisible && c.IsEnabled && KeyboardNavigation.GetIsTabStop(c)).ToArray();
             var target = controls.FirstOrDefault(Ui.GetInitialFocus) ?? controls.FirstOrDefault();
-            target?.Focus();
+            if (target is not null) FocusQuietly(target);
         });
     }
 
@@ -68,10 +68,18 @@ internal sealed class PanelFocusScope
         _revision++;
         _background.IsEnabled = true;
         if (_opener is UIElement { IsVisible: true, IsEnabled: true, Focusable: true } element)
-            element.Focus();
+            FocusQuietly(element);
         else
             _background.MoveFocus(new TraversalRequest(FocusNavigationDirection.First));
         _opener = null;
+    }
+
+    /// <summary>After a key, WPF shows the tooltip of an element focused from code, though the pointer is elsewhere.</summary>
+    static void FocusQuietly(UIElement element)
+    {
+        ToolTipService.SetShowsToolTipOnKeyboardFocus(element, false);
+        element.Focus();
+        element.ClearValue(ToolTipService.ShowsToolTipOnKeyboardFocusProperty);
     }
 
     internal static IEnumerable<DependencyObject> Descendants(DependencyObject parent)
