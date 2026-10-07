@@ -32,9 +32,9 @@ events. Choose which bosses to follow in **Following**; event bosses can be adde
 Garmoth can be done three times a week: turn on the Garmoth tracker in Settings, mark each kill on Today, and after the
 third he drops out of alerts and the schedule until the weekly reset. [Timetable sources](docs/boss-region-sources.md).
 
-## Timers
+## Time Tracking
 
-![Timers screen with Farm, Fishing, Horse registration, Guild bosses, War of the Roses and a custom countdown](docs/images/timers.png)
+![Time Tracking screen with Farm, Fishing, Horse registration, Guild bosses, War of the Roses, a custom countdown and a custom stopwatch](docs/images/timers.png)
 
 - **Farm:** estimated crop growth, including overgrowth up to 200%.
 - **Fishing:** elapsed fishing time, with pause and resume.
@@ -42,7 +42,7 @@ third he drops out of alerts and the schedule until the weekly reset. [Timetable
 - **Guild bosses:** reminders for your guild's boss runs.
 - **War of the Roses:** application deadline and battle reminders on a two-week schedule, with EU/NA times.
 
-Custom timers cover countdowns, repeating schedules and one-time events.
+**New tracker** adds your own: countdowns, stopwatches, repeating schedules and one-time events.
 
 War of the Roses reminders don't automatically track game cancellations or date changes.
 [Schedule sources](docs/boss-region-sources.md).

@@ -125,6 +125,10 @@ public class UiShots
         var buffs = new TimerDef { Name = "Grinding buffs", Kind = TimerKind.Countdown, Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(45) } };
         timers.Upsert(buffs);
         timers.Start(buffs.Id, now.AddMinutes(-3));
+        // A stopwatch of the player's own, like Fishing.
+        var session = new TimerDef { Name = "Hunting session", Kind = TimerKind.Stopwatch, Stopwatch = new StopwatchSpec() };
+        timers.Upsert(session);
+        timers.Start(session.Id, now.AddMinutes(-52));
         // The second Horse registration gets a clock of its own under the first.
         timers.StartHorseRegistration(now.AddMinutes(-4));
         timers.StartHorseRegistration(now.AddMinutes(-1));
