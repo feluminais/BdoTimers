@@ -58,6 +58,7 @@ internal static class SavedDataValidation
     {
         Require(timers.DataVersion is >= 0 and <= DataMigrations.Current);
         Require(timers.Timers is not null && timers.Muted is not null);
+        Require(timers.Garmoth is { Kills: >= 0 and <= GarmothTracker.Limit });
         BossRegions.Find(timers.SelectedBossRegion);
         Require(timers.BossRegions is not null && timers.BossRegions.All(r => r is not null)
             && timers.BossRegions.Select(r => r.RegionId).Distinct().Count() == timers.BossRegions.Count);

@@ -118,6 +118,22 @@ public class JsonFileStoreTests
         Assert.Equal(content, File.ReadAllText(result.RecoveredBackupPath!));
     }
 
+    [Theory]
+    [InlineData("{\"garmoth\":null}")]
+    [InlineData("{\"garmoth\":{\"kills\":4}}")]
+    [InlineData("{\"garmoth\":{\"kills\":-1}}")]
+    public void Invalid_Garmoth_weeks_are_preserved_and_replaced_with_defaults(string content)
+    {
+        using var dir = new TempDir();
+        var path = dir.File("timers.json");
+        File.WriteAllText(path, content);
+
+        var result = new JsonFileStore<AppData>(path, () => new()).Load();
+
+        Assert.Equal(new GarmothWeek(), result.Value.Garmoth);
+        Assert.Equal(content, File.ReadAllText(result.RecoveredBackupPath!));
+    }
+
     [Fact]
     public void Valid_legacy_timer_data_still_loads_before_migration()
     {
