@@ -397,6 +397,9 @@
         </Style.Triggers>
     </Style>
 
+    <!-- The room either side of a tab's name; the window narrows it when the bar could not hold the tabs beside its buttons. -->
+    <Thickness x:Key="TabPadding">13,0</Thickness>
+
     <Style x:Key="TabButton" TargetType="RadioButton">
         <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
         <Setter Property="FontWeight" Value="Medium" />
@@ -405,7 +408,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Margin" Value="0" />
-        <Setter Property="Padding" Value="13,0" />
+        <Setter Property="Padding" Value="{DynamicResource TabPadding}" />
         <Setter Property="Height" Value="44" />
         <Setter Property="Template">
             <Setter.Value>

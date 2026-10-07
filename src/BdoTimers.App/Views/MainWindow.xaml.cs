@@ -20,8 +20,9 @@ namespace BdoTimers.App.Views;
 public partial class MainWindow : Window
 {
     const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 44;
-    // In unscaled units: the window width from which the paused notice fits, and the room the next boss needs.
-    const double PausedNoticeWidth = 830, ChipRoom = 170;
+    // In unscaled units: the window width from which the paused notice fits, the room the next boss needs, and the width
+    // below which the tabs are set closer so the buttons keep their room.
+    const double PausedNoticeWidth = 880, ChipRoom = 170, CompactTabsWidth = 700;
     /// <summary>Milliseconds after the alerts menu closes in which a press on the bell still belongs to the press that closed it.</summary>
     const int BellMenuPressGrace = 250;
 
@@ -34,6 +35,7 @@ public partial class MainWindow : Window
     HwndSource? _source;
     bool _placementPending;
     long _bellMenuClosedAt;
+    bool _compactTabs;
     // The size the last text size change asked for, which the screen may have held back; while the window keeps the size
     // it got, the next change scales from this, so returning to a smaller text size restores the earlier window.
     Size? _scaledSize;
@@ -153,11 +155,17 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// The paused notice shows when the window is wide enough for it beside the tabs and the buttons. The next boss shows on
-    /// every screen but Today, in the room that is left.
+    /// every screen but Today, in the room that is left. The tabs sit closer in a narrow window, so the buttons stay in it.
     /// </summary>
     void UpdateTopBar()
     {
         if (_vm is null) return;
+        var compact = ActualWidth / UiScale < CompactTabsWidth;
+        if (compact != _compactTabs)
+        {
+            _compactTabs = compact;
+            Resources["TabPadding"] = compact ? new Thickness(7, 0, 7, 0) : new Thickness(13, 0, 13, 0);
+        }
         PausedBlock.Visibility = _vm.IsPaused && ActualWidth / UiScale >= PausedNoticeWidth ? Visibility.Visible : Visibility.Collapsed;
         NextChip.Visibility = _vm.SelectedTab != MainTab.Today && _vm.Today.Hero.HasNext && ChipHost.ActualWidth >= ChipRoom
             ? Visibility.Visible : Visibility.Collapsed;

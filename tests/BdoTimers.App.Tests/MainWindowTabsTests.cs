@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.Views;
@@ -53,7 +54,7 @@ public class MainWindowTabsTests
 
                 // Narrower: the next boss shrinks to the room that is left, and the notice leaves the bar to the bell.
                 main.ResumeCommand.Execute(null);
-                window.Width = 800;
+                window.Width = 850;
                 WpfTest.Drain();
                 Assert.True(chip.IsVisible);
                 Assert.True(Bounds(chip).Left >= lastTab.Right);
@@ -63,6 +64,47 @@ public class MainWindowTabsTests
                 WpfTest.Drain();
                 Assert.False(paused.IsVisible);
                 Assert.False(chip.IsVisible);
+            }
+            finally
+            {
+                typeof(AppServices).GetField("<IsQuitting>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(services, true);
+                window.Close();
+            }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    /// <summary>"Time Tracking" is the longest tab: the tabs sit closer in a narrow window so the buttons stay inside it.</summary>
+    [Fact]
+    public void The_buttons_stay_in_the_smallest_window_and_in_the_narrowest_one_with_the_paused_notice() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Tabs." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            using var main = new MainViewModel(services);
+            var window = new MainWindow(main, services) { Width = 640, Height = 540, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            try
+            {
+                window.Show();
+                main.SetShown(true);
+                WpfTest.Drain();
+                Rect Bounds(FrameworkElement e) => e.TransformToAncestor(window).TransformBounds(new Rect(0, 0, e.ActualWidth, e.ActualHeight));
+                var lastTab = Bounds((FrameworkElement)window.FindName("TodoTab"));
+                var bell = Bounds((FrameworkElement)window.FindName("BellButton"));
+                var close = Bounds(PanelFocusScope.Descendants(window).OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Close"));
+                Assert.Equal("Time Tracking", PanelFocusScope.Descendants((FrameworkElement)window.FindName("CustomTab")).OfType<TextBlock>().Single().Text);
+                Assert.True(close.Right <= window.ActualWidth + 0.01);
+                Assert.True(bell.Left >= lastTab.Right - 0.01);
+
+                // The notice shows from 880 px, with every button still in the window.
+                main.PauseHourCommand.Execute(null);
+                window.Width = 880;
+                WpfTest.Drain();
+                var paused = (FrameworkElement)window.FindName("PausedBlock");
+                Assert.True(paused.IsVisible);
+                Assert.True(Bounds(paused).Left >= Bounds((FrameworkElement)window.FindName("TodoTab")).Right - 0.01);
+                Assert.True(Bounds(PanelFocusScope.Descendants(window).OfType<Button>().Single(b => AutomationProperties.GetName(b) == "Close")).Right <= window.ActualWidth + 0.01);
             }
             finally
             {

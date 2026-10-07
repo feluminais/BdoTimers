@@ -50,10 +50,10 @@
                         </StackPanel>
                     </RadioButton>
                     <RadioButton x:Name="CustomTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource TimersAccentBrush}" Tag="Timers"
-                                 AutomationProperties.Name="Timers" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
+                                 AutomationProperties.Name="Time Tracking" Checked="Tab_Checked" WindowChrome.IsHitTestVisibleInChrome="True">
                         <StackPanel Orientation="Horizontal">
                             <Ellipse Style="{StaticResource TabDot}" />
-                            <TextBlock Text="Timers" />
+                            <TextBlock Text="Time Tracking" />
                         </StackPanel>
                     </RadioButton>
                     <RadioButton x:Name="TodoTab" Style="{StaticResource TabButton}" controls:Ui.SectionBrush="{DynamicResource GoodBrush}" Tag="Todo"

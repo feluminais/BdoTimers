@@ -7,8 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels;
 
 /// <summary>
-/// Timers screen: Farm and Fishing, then the user's own timers in creation order. A horse registration under way is not a
-/// timer of its own here: the Horse registration card counts them.
+/// Time Tracking screen: Farm and Fishing, then the user's own timers in creation order. A horse registration under way is
+/// not a timer of its own here: the Horse registration card counts them.
 /// </summary>
 public sealed partial class CustomViewModel
 {

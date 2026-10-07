@@ -12,7 +12,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 1. [ ] First launch: the window opens on Today, with the next spawn, Coming up and the daily and weekly tasks in local time; Schedule
    shows this week's grid; a "priority notifications" toast appears once.
 2. [ ] Settings (gear) → Test alert → Send: the alert sound, spoken "Test boss in 5 minutes", urgent toast.
-3. [ ] Timers → New timer → Countdown: set Duration 0:02 and alerts "1, At spawn"; press the round play button on its card → alert
+3. [ ] Time Tracking → New tracker → Countdown: set Duration 0:02 and alerts "1, At spawn"; press the round play button on its card → alert
    at 1:00 and at 0:00, then it shows Ready again.
 4. [ ] Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
 5. [ ] Settings → Overlay: the overlay shows as a framed preview; drag it, close the panel; restart the app, open the panel:
@@ -53,14 +53,14 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 18. [ ] Boss panel → Spawn times opens the list below it; the same header closes it.
 19. [ ] Settings → Bosses → Reset EU/NA boss alert settings → Reset: the selected region's pencils are gone and bosses
     with alerts off are on again; spawn times and the other region's choices stay as saved.
-20. [ ] Timers: Farm and Fishing come first and have no Delete. Hover idle Farm → the clock icon above its
+20. [ ] Time Tracking: Farm and Fishing come first and have no Delete. Hover idle Farm → the clock icon above its
     round button → pick a time 2 h ago → Start: it runs with 20:00:xx left and "Started <that time>". Fishing → clock → 1 h ago → Start: it counts from 01:00:00.
     Farm → clock → a time over 22 h ago: it starts overgrown, shows negative time and growth above 100% on the card
     and overlay. The displayed growth caps at 200%. Pause freezes the negative time; resume continues it. The square
     Stop on a started card resets a timer.
-21. [ ] Timers: Horse registration is third, 10:00, and its (i) explains when to start. Its round button is a plus.
+21. [ ] Time Tracking: Horse registration is third, 10:00, and its (i) explains when to start. Its round button is a plus.
     Press Ctrl+Shift+F10 twice: the card stays one card, saying "2 of 10 active" with the two soonest clocks one under
-    the other, both smaller than the single clock was, and no registration gets a card of its own, on Timers or in Today's
+    the other, both smaller than the single clock was, and no registration gets a card of its own, on Time Tracking or in Today's
     Running (which lists Horse registration with the plus). A third press adds an ellipsis under the clocks, which turns gold
     with the card's border; the card still shows two clocks. Each press speaks
     "Horse registration time started". The first alerts at 1:00 and 0:00, then ends without stopping the second. Today's
@@ -141,7 +141,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     March 7 → 20:00 UTC, March 8 → 19:00 UTC, October 25 → 19:00 UTC, November 1 → 20:00 UTC. EU switches on
     March 29/October 25. For edited times in a spring gap, the app shifts forward; an autumn repeated time alerts once
     at its first instance. Check the [source notes](boss-region-sources.md) for separate maintenance exceptions.
-43. [ ] Timers → New timer → One-time event: name it, set a date/time a few minutes ahead and choose its zone by typing
+43. [ ] Time Tracking → New tracker → One-time event: name it, set a date/time a few minutes ahead and choose its zone by typing
     a city ("kyiv") on the open and the closed list; Backspace edits the search and Escape on the open list restores
     the earlier zone. Set own leads to 1 minute and At spawn, enable all channels and pin the overlay. Verify the timer
     counts down, sound, urgent toast and speech arrive at each lead, and the event appears once in List, Card and Bar.
@@ -164,7 +164,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     2026-10-25 02:30: the spring occurrence is 01:30 UTC and the autumn occurrence is 00:30 UTC, firing once.
     Check a weekly Pacific Friday 23:30 with the same start/end Friday: its Saturday occurrence in Europe is included.
     Upgrade existing JSON without date fields: countdowns, presets, boss profiles, weekly slots and alerts are retained.
-49. [ ] Keyboard, each panel: open Settings, Overlay, Following, boss, timer, New timer and To-do from a focused control.
+49. [ ] Keyboard, each panel: open Settings, Overlay, Following, boss, timer, New tracker and To-do from a focused control.
     Focus moves to a meaningful field/action, Tab and Shift+Tab stay inside, and dimmed screen/caption controls cannot
     activate. Escape and the close button dismiss; after the panel has left, focus returns to the opener. Change panels
     quickly and close during opening; no stale focus or blank modal layer remains. Preserve Ctrl+C/X/V/A/Z, caret
@@ -174,7 +174,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Repeat with timer cards, picture actions and to-do checkboxes; Tab still gives a visible keyboard focus cue.
     Open Settings with the mouse, then close it with Escape: no focus frame appears on the Settings button. Typing
     in a mouse-focused search field also leaves focus frames hidden. Tab or keyboard button activation shows them.
-    Tab to Timers, then click that same tab and click empty space: the focus frame disappears without changing the
+    Tab to Time Tracking, then click that same tab and click empty space: the focus frame disappears without changing the
     selected tab. Tab again: the frame returns outside the text. Move the mouse or scroll: the frame disappears;
     Tab brings it back. A stationary pointer during keyboard navigation keeps the frame visible.
     Repeat with names/links at the largest Text size;
@@ -216,17 +216,17 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     spaces, launch-at-finish, running-app upgrade and offline use after installation. Start, timers, to-do and alerts
     work offline; updates fail concisely as in step 34. Local unsigned artifacts must be explicitly built with
     `pwsh scripts/publish.ps1 -AllowUnsigned` and are not a signed release.
-57. [ ] Mouse wheel over the Week grid, Coming up, Timers, both To-do lists and each tall panel (Settings, Overlay,
+57. [ ] Mouse wheel over the Week grid, Coming up, Time Tracking, both To-do lists and each tall panel (Settings, Overlay,
     boss, timer, to-do list) scrolls that list; the Schedule header, list headings and each panel's header and Done stay in place.
     Shrink the window to its minimum with the largest Text size: only then does the screen or panel scroll as a whole.
     Clicking anywhere in the dimmed area (beside, above or below a panel, near or far from it) closes it; clicking
     inside the panel, on its scroll bar, or in a list or calendar dropping out past its edge does not.
-58. [ ] Timers: Guild bosses appears after Horse registration as Off and has no Delete; there is no Guild war tile.
+58. [ ] Time Tracking: Guild bosses appears after Horse registration as Off and has no Delete; there is no Guild war tile.
     Open Guild bosses: Active Off hides Weekly time and Time zone. Turn it On: one Monday 20:00 row with no remove
     or Add time. Change the time and Save; turn Active Off and Save (tile: Off), then On: the time is kept. Discard an
     Active edit: the saved state stays. Restart and check that its next weekly occurrence remains. Data from an earlier
     version drops a Guild war without times; one with times stays, accepts several day/time rows and can be deleted.
-59. [ ] Timers → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. Overlay → Guild bosses → 15 min before: the preview shows
+59. [ ] Time Tracking → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. Overlay → Guild bosses → 15 min before: the preview shows
     a dimmed Guild bosses row; the timer panel's Overlay over the game shows the same value, and changing it there
     changes the Overlay panel's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
     before, then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next
@@ -271,7 +271,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     off and on; restart and confirm they are kept. New event on a future day opens a one-time event on that date; it
     is off for past days. Switch boss region: the month follows. Around 25 October, Berlin's clock change keeps
     Sunday and Monday spawns on their own days.
-68. [ ] War of the Roses appears once in Timers, with Applications close and Battle in the same panel. EU defaults
+68. [ ] War of the Roses appears once in Time Tracking, with Applications close and Battle in the same panel. EU defaults
     are Sunday 15:05 and 17:00 Berlin; NA defaults are 13:05 and 15:00 Pacific. Repeat is 2, From week of is
     2026-09-20, and Schedule → Calendar shows both on 4 and 18 October, neither on 11 October. Opening and closing its panel
     leaves the saved schedule untouched. Switch region: defaults move, edited slots/repeat/date limits stay.
@@ -304,16 +304,16 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     the colon, and 3 then gives 09:3. Type 9 and press Enter: it reads 09:00, is saved and the panel closes.
     Type 134, 13 40 or 13.40 and click another field: 13:40; 14 reads 14:00, 24 and 2 4 read 02:40.
     Type 97 and press Enter: it stays red and is not saved. Discard a completed time edit: the saved time stays.
-75. [ ] Panels: the boss, timer, New timer, Following and to-do list panels open as a drawer from the right over a dimmed
+75. [ ] Panels: the boss, timer, New tracker, Following and to-do list panels open as a drawer from the right over a dimmed
     window; Esc, the dimmed area and ✕ close it, and the discard question shows inside the drawer. Settings opens as a
     two-pane sheet: categories on the left, Ctrl+F searches every category, and Overlay in the list opens the Overlay
     panel. At Text size 150% the drawer and the sheet fit the window; with Windows animation effects off they appear without sliding.
-76. [ ] Timers: each countdown and stopwatch card shows its round Start / Pause at rest, in the same gold while running;
+76. [ ] Time Tracking: each countdown and stopwatch card shows its round Start / Pause at rest, in the same gold while running;
     the triangle and the two bars sit in the middle of the circle at 100%, 125% and 150% display scale. Hovering a
     card shows Started earlier above it and, once it has been started, a square Stop below it; Tab reaches both and shows
     them. A weekly card has Skip next / Unskip next in the middle instead. Cards have no menu; the border turns gold on
     hover and stays gold while Started earlier is open. In the week grid and on Today, right-click a boss: its name stays
-    lit while the menu is open. New timer is the button in the header.
+    lit while the menu is open. New tracker is the button in the header.
 77. [ ] Following: switch a boss off and on; the list is busy while its voice lines are made, and a failed save puts the
     switch back with a note. The name opens the boss panel; Done closes the list.
 78. [ ] To-do: an Off list is one dashed row with a switch that turns it on; a card's ⋯ (on hover) opens its editor, as the
@@ -324,18 +324,18 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     bosses that spawn together are one line with a dot between their names, each name a button that opens that boss and,
     on a right click, skips that boss's spawn; a boss with alerts off is missing, a skipped spawn is struck through, and the
     times to each update as time passes.
-    Running shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "All timers ›"
-    opens Timers; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
+    Running shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "Time Tracking ›"
+    opens Time Tracking; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
     six), ticking one removes it and moves the line; Weekly tasks does the same for the weekly lists, a task with
     sub-tasks on one line saying how far along it is (ticking it ticks them all); its name or its arrow opens the
     sub-tasks under it, each ticked there, and it stays open as they are ticked. A task's text opens nothing; the heading
     with its count is the button, hover lights it: with one list on it opens that list's editor, with several it opens
     To-do. The panel is gone while no weekly list is on. Either panel says "+n more ›" when tasks don't fit, and that opens To-do. Below 820 px wide the screen is one
     column: hero, Running, Coming up, Daily tasks, Weekly tasks.
-80. [ ] The top bar's next-boss chip shows on Schedule, Timers and To-do (not on Today) with the next spawn's names and
+80. [ ] The top bar's next-boss chip shows on Schedule, Time Tracking and To-do (not on Today) with the next spawn's names and
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
     and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking
-    the room) and when no boss is followed. The paused notice shows from 830 px wide; below that the bell's slash says it.
+    the room) and when no boss is followed. The paused notice shows from 880 px wide; below that the bell's slash says it. Below 700 px the tabs sit closer, and at 640 px every caption button is in the window.
 81. [ ] Overlay → Look → Boss icons: turn on; previous and next bosses and world-boss pop-ups show outline faces in
     List, Card and Bar. Paired bosses show two icons; an unfamiliar added boss keeps its name. Skipped bosses stay dim.
     Farm, Fishing and custom timers keep their labels. Hover an icon in preview: its boss name appears. Change Size:

@@ -24,7 +24,7 @@ public sealed partial class TodayViewModel : ObservableObject
     public TaskPanelViewModel Daily { get; }
     public TaskPanelViewModel Weekly { get; }
     public GarmothViewModel Garmoth { get; }
-    /// <summary>The Timers screen's countdowns and stopwatches that are running or paused, and Horse registration while one is under way.</summary>
+    /// <summary>Time Tracking's countdowns and stopwatches that are running or paused, and Horse registration while one is under way.</summary>
     public ObservableCollection<TimerTileViewModel> Running { get; } = [];
     [ObservableProperty] private bool _hasRunning;
 

@@ -228,7 +228,7 @@ public sealed class RepeatTimerTests
                 WpfTest.Drain();
                 Button Find(Func<Button, bool> match) => BdoTimers.App.Controls.VisualTree.FindDescendant<Button>(view, match)!;
                 var newTimer = Find(b => b.Command == timers.NewTimerCommand);
-                Assert.Equal("New timer", new ButtonAutomationPeer(newTimer).GetName());
+                Assert.Equal("New tracker", new ButtonAutomationPeer(newTimer).GetName());
                 foreach (var tile in tiles.Where(t => t.HasControls))
                 {
                     var start = Find(b => b.Command == tile.StartPauseCommand);

@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 
 namespace BdoTimers.App.ViewModels.Panels;
 
-/// <summary>First step of "+ New timer": pick the kind, then the new timer's own panel opens.</summary>
+/// <summary>First step of "+ New tracker": pick the kind, then the new tracker's own panel opens.</summary>
 public sealed partial class NewTimerPanelViewModel(AppServices services, IPanelHost host)
 {
     [RelayCommand]

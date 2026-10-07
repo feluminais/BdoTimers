@@ -255,14 +255,14 @@
 
     <DockPanel>
         <DockPanel DockPanel.Dock="Top" Margin="0,0,0,14">
-            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" AutomationProperties.Name="New timer"
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" AutomationProperties.Name="New tracker"
                     Command="{Binding NewTimerCommand}">
                 <StackPanel Orientation="Horizontal">
                     <controls:PlusIcon Size="10" VerticalAlignment="Center" Margin="0,0,8,0" />
-                    <TextBlock Text="New timer" />
+                    <TextBlock Text="New tracker" />
                 </StackPanel>
             </Button>
-            <TextBlock Text="Timers" Style="{StaticResource DisplayText}" FontSize="18" VerticalAlignment="Center" />
+            <TextBlock Text="Time Tracking" Style="{StaticResource DisplayText}" FontSize="18" VerticalAlignment="Center" />
         </DockPanel>
         <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
             <ItemsControl ItemsSource="{Binding Items}" Margin="0,0,-12,0" Focusable="False">
