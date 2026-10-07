@@ -88,7 +88,8 @@
                                 WindowChrome.IsHitTestVisibleInChrome="True" />
                     </StackPanel>
                     <Button x:Name="BellButton" Style="{StaticResource BellButton}" ToolTip="Alerts" AutomationProperties.Name="Alerts"
-                            Click="Bell_Click" WindowChrome.IsHitTestVisibleInChrome="True">
+                            Click="Bell_Click" PreviewMouseLeftButtonDown="Bell_PreviewMouseLeftButtonDown"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button.ContextMenu>
                             <ContextMenu>
                                 <MenuItem Header="Pause alerts for 1 hour" Command="{Binding PauseHourCommand}" />

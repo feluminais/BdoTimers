@@ -344,3 +344,6 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     minute ahead and Save: at the reset the count clears and Garmoth returns. Turn the tracker off and Save: the panel goes
     and Garmoth is as before. The weekly quests have no "Boss's Roar — Garmoth" row, in an old data folder too after the
     first start. Below 820 px the panel follows Weekly tasks in the one column.
+83. [ ] Top bar, the bell: a click opens the alerts menu under it and the bell stays lit; click the bell again and the menu
+    closes and does not open again. A click elsewhere and Esc close it too. Pause alerts for 1 hour from it: the bell
+    shows the slash, and the menu's Resume alerts brings it back.

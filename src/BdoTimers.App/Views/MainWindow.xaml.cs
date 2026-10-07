@@ -22,6 +22,8 @@ public partial class MainWindow : Window
     const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 44;
     // In unscaled units: the window width from which the paused notice fits, and the room the next boss needs.
     const double PausedNoticeWidth = 830, ChipRoom = 170;
+    /// <summary>Milliseconds after the alerts menu closes in which a press on the bell still belongs to the press that closed it.</summary>
+    const int BellMenuPressGrace = 250;
 
     static readonly DependencyProperty UiScaleProperty = DependencyProperty.Register(nameof(UiScale), typeof(ScaleTransform),
         typeof(MainWindow), new PropertyMetadata(null, (d, e) => ((MainWindow)d).UiScaleChanged((ScaleTransform?)e.OldValue)));
@@ -31,6 +33,7 @@ public partial class MainWindow : Window
     readonly PanelFocusScope _panelFocus;
     HwndSource? _source;
     bool _placementPending;
+    long _bellMenuClosedAt;
     // The size the last text size change asked for, which the screen may have held back; while the window keeps the size
     // it got, the next change scales from this, so returning to a smaller text size restores the earlier window.
     Size? _scaledSize;
@@ -51,6 +54,9 @@ public partial class MainWindow : Window
             if (_vm.Panel is not null && e.OriginalSource is ButtonBase { Command: not null } button
                 && PanelContent.IsAncestorOf(button)) PanelEdits.Complete(PanelContent);
         }));
+        if (BellButton.ContextMenu is { } bellMenu)
+            DependencyPropertyDescriptor.FromProperty(ContextMenu.IsOpenProperty, typeof(ContextMenu)).AddValueChanged(bellMenu,
+                (_, _) => { if (!bellMenu.IsOpen) _bellMenuClosedAt = Environment.TickCount64; });
         SetResourceReference(UiScaleProperty, "UiScaleTransform");
         SourceInitialized += (_, _) =>
         {
@@ -166,6 +172,19 @@ public partial class MainWindow : Window
         menu.PlacementTarget = BellButton;
         menu.Placement = PlacementMode.Bottom;
         menu.IsOpen = true;
+    }
+
+    /// <summary>
+    /// A press on the bell while its menu is open closes the menu and does no more. A press outside a menu closes it, and the
+    /// bell can see that same press before or after, so a press just after the menu closed is that one: it would otherwise click
+    /// the bell and open the menu again. The menu's Closed event comes later still, so it is the change of IsOpen that is timed.
+    /// </summary>
+    void Bell_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (BellButton.ContextMenu is not { } menu) return;
+        if (!menu.IsOpen && Environment.TickCount64 - _bellMenuClosedAt >= BellMenuPressGrace) return;
+        menu.IsOpen = false;
+        e.Handled = true;
     }
 
     void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

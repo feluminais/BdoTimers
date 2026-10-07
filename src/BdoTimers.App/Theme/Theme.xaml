@@ -230,6 +230,11 @@
     <!-- The alerts bell: amber while alerts are paused. -->
     <Style x:Key="BellButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
         <Style.Triggers>
+            <!-- Stays lit while its menu is open, the pointer being in the menu -->
+            <DataTrigger Binding="{Binding ContextMenu.IsOpen, RelativeSource={RelativeSource Self}}" Value="True">
+                <Setter Property="Background" Value="{DynamicResource HoverFillBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource HoverTextBrush}" />
+            </DataTrigger>
             <DataTrigger Binding="{Binding IsPaused}" Value="True">
                 <Setter Property="Foreground" Value="{DynamicResource AmberBrush}" />
             </DataTrigger>
