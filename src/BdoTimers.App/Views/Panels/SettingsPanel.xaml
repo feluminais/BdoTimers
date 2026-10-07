@@ -302,6 +302,11 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Garmoth tracker" Tag="Garmoth tracker kills weekly three limit"
+                                        ToolTip="Three kills a week; after the third he is gone until the weekly reset">
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding GarmothTracker}"
+                                            Width="110" AutomationProperties.Name="Garmoth tracker" />
+                </HeaderedContentControl>
                 <Border Style="{StaticResource SearchRow}" Tag="· Reset Cancel Reset alert settings reset boss alert settings">
                     <StackPanel>
                         <Button Style="{StaticResource LinkButton}" Content="{Binding ResetAlertLabel}" HorizontalAlignment="Left"

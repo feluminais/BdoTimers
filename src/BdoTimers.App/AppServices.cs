@@ -101,6 +101,12 @@ public sealed class AppServices : IDisposable
             var migrated = DataMigrations.Apply(d, Settings.Current);
             return Presets.Ensure(SeedService.ApplyIfNeeded(migrated, _seeds[migrated.SelectedBossRegion], new AlertConfig()));
         });
+        // The Garmoth tracker's week follows its switch and the weekly reset, which both change in Settings.
+        Settings.Changed += () =>
+        {
+            try { Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow); }
+            catch (StateSaveException ex) { Log.Error("Couldn't save the Garmoth tracker", ex); Health.Failed("Saving", ex); }
+        };
         Undo = new UndoService(Timers, Todos, Clock, file =>
         {
             if (Timers.Current.Timers.All(t => t.ImageFile != file) && Settings.Current.Overlay.BackgroundImage != file)
@@ -140,6 +146,8 @@ public sealed class AppServices : IDisposable
         catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); Health.Failed("Startup", ex); }
         try { Todos.Reconcile(Settings.Current); }
         catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); Health.Failed("Saving", ex); }
+        try { Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow); }
+        catch (StateSaveException ex) { Log.Error("Couldn't save the Garmoth tracker", ex); Health.Failed("Saving", ex); }
         var todoResetErrors = new RepeatingErrorLog("To-do reset", Clock);
         UiClock.Tick += _ =>
         {
@@ -147,6 +155,7 @@ public sealed class AppServices : IDisposable
             try
             {
                 Todos.Reconcile(Settings.Current);
+                Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow);
                 todoResetErrors.Succeeded();
             }
             catch (StateSaveException ex) { todoResetErrors.Failed(ex); Health.Failed("Saving", ex); }

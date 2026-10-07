@@ -318,6 +318,40 @@ public class DraftPanelTests
         });
     });
 
+    [Fact]
+    public void The_Garmoth_tracker_is_off_until_it_is_saved_on_in_Settings_and_saving_it_off_clears_the_week() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            foreach (var timer in services.Timers.Current.Timers)
+                services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
+            using var main = new MainViewModel(services);
+            var panel = new SettingsPanelViewModel(services, main);
+            Assert.False(panel.GarmothTracker);
+            Assert.False(panel.HasChanges);
+
+            panel.GarmothTracker = true;
+            Assert.True(panel.HasChanges);
+            Assert.False(services.Settings.Current.GarmothTracker);
+            main.OpenPanel(panel);
+            main.FinishPanel().GetAwaiter().GetResult();
+
+            Assert.True(services.Settings.Current.GarmothTracker);
+            Assert.True(services.Timers.Current.Garmoth.ResetUtc > services.Clock.UtcNow);
+
+            services.Timers.MarkGarmoth(3, services.Clock.UtcNow);
+            Assert.Equal(3, services.Timers.Current.Garmoth.Kills);
+            panel = new SettingsPanelViewModel(services, main);
+            Assert.True(panel.GarmothTracker);
+            panel.GarmothTracker = false;
+            main.OpenPanel(panel);
+            main.FinishPanel().GetAwaiter().GetResult();
+
+            Assert.False(services.Settings.Current.GarmothTracker);
+            Assert.Equal(new GarmothWeek(), services.Timers.Current.Garmoth);
+        });
+    });
+
     static TimerDef Timer() => new() { Name = "Old title", Kind = TimerKind.Countdown, Countdown = new(), Alerts = new() { Tts = new() { Enabled = false } } };
     static void WithServices(Action<AppServices> test)
     {

@@ -134,6 +134,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         set => UpdateSettings(s => s with { CloseToTray = value });
     }
 
+    public bool GarmothTracker
+    {
+        get => Current.GarmothTracker;
+        set => UpdateSettings(s => s with { GarmothTracker = value });
+    }
+
     /// <summary>The saved app-wide sound, or the default when it's gone.</summary>
     public Choice? AlertSound
     {
@@ -204,6 +210,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         var next = _lastSettings = Current;
         if (previous.Autostart != next.Autostart) OnPropertyChanged(nameof(Autostart));
         if (previous.CloseToTray != next.CloseToTray) OnPropertyChanged(nameof(CloseToTray));
+        if (previous.GarmothTracker != next.GarmothTracker) OnPropertyChanged(nameof(GarmothTracker));
         if (previous.TextScale != next.TextScale) OnPropertyChanged(nameof(TextSize));
         if (previous.AlertSound != next.AlertSound) OnPropertyChanged(nameof(AlertSound));
         if (previous.Volume != next.Volume) OnPropertyChanged(nameof(Volume));
