@@ -263,8 +263,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Remove it again, add a boss and name it like the removed one, then Settings → Bosses → Reset bosses: every timetable
     boss is back with the timetable's times, the added boss with that name took its place, and other added bosses stay.
 67. [ ] Schedule → Calendar: the month opens on today (filled) with today chosen (gold outline). ‹ › change month and Today returns.
-    Day cells list own weekly timers, running countdowns, events and the weekly reset by name (the time is the tooltip),
-    with "+N more" past three, and "N bosses"; the day with the next boss spawn has a gold dot. Choose a day: its list shows every item in local
+    Day cells show the day's number large and light, and under it list own weekly timers, running countdowns, events and
+    the weekly reset by name (the time is the tooltip), with "+N more" past three, and "N bosses"; the day with the
+    next boss spawn has a gold dot. Choose a day: its list shows every item in local
     time, coloured as in the week grid. Click a boss or timer: its panel opens. Right-click an upcoming boss or weekly
     timer → Skip this one: it is struck through here and in the Week grid; Unskip restores it. Turn each filter chip
     off and on; restart and confirm they are kept. New event on a future day opens a one-time event on that date; it

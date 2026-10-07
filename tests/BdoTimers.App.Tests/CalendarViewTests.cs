@@ -3,6 +3,7 @@ using System.Windows.Automation.Peers;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.Views;
 using BdoTimers.Core.Scheduling;
@@ -41,6 +42,26 @@ public class CalendarViewTests
             Assert.Equal(4, chips.Length);
             chips[0].IsChecked = false;
             Assert.False(calendar.ShowBosses);
+        }
+        finally { window.Close(); }
+    });
+
+    [Fact]
+    public void A_days_number_is_larger_and_lighter_than_the_lines_under_it() => WpfTest.Run(() =>
+    {
+        var day = new CalendarDayViewModel(_ => { });
+        var boss = new BdoTimers.Core.Scheduling.CalendarItem(CalendarKind.Boss, new DateTimeOffset(2026, 10, 4, 12, 0, 0, TimeSpan.Zero), null, CellState.Upcoming);
+        day.Show(new CalendarDay(new DateOnly(2026, 10, 4), true, []), [boss, boss, boss], isToday: false, isSelected: false);
+        var view = new CalendarView { DataContext = new CalendarStandIn(new RelayCommand(() => { }), day) };
+        var window = new Window { Content = view, Width = 960, Height = 640, Left = -10000, Top = -10000, ShowInTaskbar = false };
+        try
+        {
+            window.Show();
+            WpfTest.Drain();
+            var texts = PanelFocusScope.Descendants(view).OfType<TextBlock>().ToList();
+            var (number, bosses) = (texts.Single(t => t.Text == "4"), texts.Single(t => t.Text == "3 bosses"));
+            Assert.True(number.FontSize >= bosses.FontSize * 1.3);
+            Assert.NotEqual(((SolidColorBrush)number.Foreground).Color, ((SolidColorBrush)bosses.Foreground).Color);
         }
         finally { window.Close(); }
     });

@@ -64,10 +64,11 @@
                         <!-- A gold dot: the next boss spawn is on this day -->
                         <Ellipse DockPanel.Dock="Right" Width="5" Height="5" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center"
                                  ToolTip="Next boss spawn" Visibility="{Binding IsNext, Converter={StaticResource BoolToVisibility}}" />
-                        <TextBlock Text="{Binding Number}" FontSize="12">
+                        <!-- The cell's largest and brightest text, so the day doesn't read as one more line of it -->
+                        <TextBlock Text="{Binding Number}" FontSize="16">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
-                                    <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsToday}" Value="True">
                                             <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
