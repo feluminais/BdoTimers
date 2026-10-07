@@ -194,11 +194,9 @@
         </Style.Triggers>
     </Style>
 
-    <!-- A round action such as Start / Pause: a gold outline that fills on hover. -->
+    <!-- A round action such as Start / Pause, with an icon drawn in it: a gold outline that fills on hover. -->
     <Style x:Key="RoundButton" TargetType="Button" BasedOn="{StaticResource BareButton}">
         <Setter Property="AutomationProperties.Name" Value="{Binding ToolTip, RelativeSource={RelativeSource Self}}" />
-        <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
-        <Setter Property="FontSize" Value="15" />
         <Setter Property="Width" Value="38" />
         <Setter Property="Height" Value="38" />
         <Setter Property="controls:Ui.CornerRadius" Value="19" />

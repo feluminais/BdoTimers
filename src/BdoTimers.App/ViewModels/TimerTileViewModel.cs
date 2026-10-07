@@ -13,8 +13,6 @@ namespace BdoTimers.App.ViewModels;
 
 public sealed partial class TimerTileViewModel : ObservableObject
 {
-    const string PlayGlyph = "";
-    const string PauseGlyph = "";
     // Icon font: Next and Undo.
     const string SkipNextGlyph = "";
     const string UnskipNextGlyph = "";
@@ -29,7 +27,6 @@ public sealed partial class TimerTileViewModel : ObservableObject
     [ObservableProperty] private string _digits = "";
     [ObservableProperty] private string _detail = "";
     [ObservableProperty] private bool _isDimmed;
-    [ObservableProperty] private string _playPauseGlyph = PlayGlyph;
     [ObservableProperty] private string _playPauseTip = "Start";
     [ObservableProperty] private string _skipLabel = "Skip next";
     [ObservableProperty] private string _skipGlyph = SkipNextGlyph;
@@ -176,7 +173,6 @@ public sealed partial class TimerTileViewModel : ObservableObject
         var running = status == CountdownStatus.Running;
         IsRunning = running;
         IsPaused = status == CountdownStatus.Paused;
-        PlayPauseGlyph = running ? PauseGlyph : PlayGlyph;
         PlayPauseTip = running ? "Pause" : status == CountdownStatus.Paused ? "Resume" : "Start";
     }
 

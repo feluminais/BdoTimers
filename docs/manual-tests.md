@@ -305,7 +305,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     window; Esc, the dimmed area and ✕ close it, and the discard question shows inside the drawer. Settings opens as a
     two-pane sheet: categories on the left, Ctrl+F searches every category, and Overlay in the list opens the Overlay
     panel. At Text size 150% the drawer and the sheet fit the window; with Windows animation effects off they appear without sliding.
-76. [ ] Timers: each countdown and stopwatch card shows its round Start / Pause at rest, in blue while running. Hovering a
+76. [ ] Timers: each countdown and stopwatch card shows its round Start / Pause at rest, in the same gold while running;
+    the triangle and the two bars sit in the middle of the circle at 100%, 125% and 150% display scale. Hovering a
     card shows Started earlier above it and, once it has been started, a square Stop below it; Tab reaches both and shows
     them. A weekly card has Skip next / Unskip next in the middle instead. Cards have no menu; the border turns gold on
     hover and stays gold while Started earlier is open. In the week grid and on Today, right-click a boss: its name stays

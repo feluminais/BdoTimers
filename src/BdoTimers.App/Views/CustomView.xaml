@@ -159,10 +159,12 @@
                             <Button x:Name="StartedButton" Style="{StaticResource RailButton}" VerticalAlignment="Bottom" Margin="0,0,0,2" Content="&#xE823;"
                                     ToolTip="Started earlier" Command="{Binding PickStartCommand}"
                                     Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}" />
-                            <Button Grid.Row="1" Style="{StaticResource TimerPlayButton}" Content="{Binding PlayPauseGlyph}" ToolTip="{Binding PlayPauseTip}"
-                                    Command="{Binding StartPauseCommand}" Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}" />
+                            <Button Grid.Row="1" Style="{StaticResource RoundButton}" ToolTip="{Binding PlayPauseTip}"
+                                    Command="{Binding StartPauseCommand}" Visibility="{Binding HasControls, Converter={StaticResource BoolToVisibility}}">
+                                <controls:PlayPauseIcon Size="14" ShowsPause="{Binding IsRunning}" />
+                            </Button>
                             <!-- A registration is added, not started or paused, so its button is a plus -->
-                            <Button Grid.Row="1" Style="{StaticResource TimerPlayButton}" ToolTip="{Binding HorseStartTip}"
+                            <Button Grid.Row="1" Style="{StaticResource RoundButton}" ToolTip="{Binding HorseStartTip}"
                                     Command="{Binding StartHorseRegistrationCommand}" IsEnabled="{Binding CanStartHorse}"
                                     Visibility="{Binding IsHorseTemplate, Converter={StaticResource BoolToVisibility}}">
                                 <controls:PlusIcon Size="14" />

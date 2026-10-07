@@ -242,10 +242,17 @@ public sealed class RepeatTimerTests
                 var stop = Find(b => b.Command == buffs.ResetCommand);
                 Assert.False(buffs.CanStop);
                 Assert.False(stop.IsVisible);
+                var play = Find(b => b.Command == buffs.StartPauseCommand);
+                var icon = Assert.IsType<BdoTimers.App.Controls.PlayPauseIcon>(play.Content);
+                Assert.False(icon.ShowsPause);
+                var (ring, ink) = (play.BorderBrush, play.Foreground);
                 services.Timers.Start(buffsTimer.Id, services.Clock.UtcNow);
                 WpfTest.Drain();
                 timers.Refresh(services.Clock.UtcNow);
                 WpfTest.Drain();
+                // Running, the button says Pause and keeps the gold it has at rest.
+                Assert.True(icon.ShowsPause);
+                Assert.Equal((ring, ink), (play.BorderBrush, play.Foreground));
                 Assert.True(buffs.CanStop);
                 Assert.True(stop.IsVisible);
                 Assert.Equal(0, stop.Opacity);

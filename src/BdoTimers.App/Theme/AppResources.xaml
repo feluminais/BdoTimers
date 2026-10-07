@@ -143,21 +143,4 @@
             </Setter.Value>
         </Setter>
     </Style>
-
-    <!-- Start / Pause takes the Timers blue while the timer runs -->
-    <Style x:Key="TimerPlayButton" TargetType="Button" BasedOn="{StaticResource RoundButton}">
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsRunning}" Value="True">
-                <Setter Property="BorderBrush" Value="{DynamicResource TimersAccentBrush}" />
-                <Setter Property="Foreground" Value="{DynamicResource TimersAccentBrush}" />
-            </DataTrigger>
-            <MultiDataTrigger>
-                <MultiDataTrigger.Conditions>
-                    <Condition Binding="{Binding IsRunning}" Value="True" />
-                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True" />
-                </MultiDataTrigger.Conditions>
-                <Setter Property="Background" Value="{DynamicResource IndigoHoverFillBrush}" />
-            </MultiDataTrigger>
-        </Style.Triggers>
-    </Style>
 </ResourceDictionary>
