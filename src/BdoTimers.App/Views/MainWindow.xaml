@@ -196,18 +196,22 @@
                             <TextBlock Text="{Binding Saving.Error}" Style="{StaticResource ErrorText}"
                                        Visibility="{Binding Saving.Error, Converter={StaticResource NullToCollapsed}}" />
                         </StackPanel>
-                        <Border Grid.RowSpan="2" Background="{DynamicResource PanelBrush}" Padding="24" HorizontalAlignment="Center" VerticalAlignment="Center"
-                                Visibility="{Binding AskingDiscard, Converter={StaticResource BoolToVisibility}}">
-                            <StackPanel>
-                                <TextBlock Text="Discard changes?" Style="{StaticResource RowLabel}" />
-                                <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-                                    <Button Content="Keep editing" Style="{StaticResource OutlineButton}" Command="{Binding KeepEditingCommand}" />
-                                    <Button Content="Discard" Style="{StaticResource DangerLinkButton}" Margin="16,0,0,0" Command="{Binding DiscardChangesCommand}" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
                     </Grid>
                 </Border>
+                <!-- Centred in the window, over a second scrim, so it isn't missed beside a drawer -->
+                <Grid Background="{DynamicResource DimBrush}" Visibility="{Binding AskingDiscard, Converter={StaticResource BoolToVisibility}}">
+                    <Border Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource HairlineStrongBrush}" BorderThickness="1"
+                            Padding="28,24" HorizontalAlignment="Center" VerticalAlignment="Center"
+                            LayoutTransform="{DynamicResource UiScaleTransform}">
+                        <StackPanel>
+                            <TextBlock Text="Discard changes?" Style="{StaticResource DisplayText}" FontSize="18" />
+                            <StackPanel Orientation="Horizontal" Margin="0,18,0,0">
+                                <Button Content="Keep editing" Style="{StaticResource OutlineButton}" Command="{Binding KeepEditingCommand}" />
+                                <Button Content="Discard" Style="{StaticResource DangerLinkButton}" Margin="16,0,0,0" Command="{Binding DiscardChangesCommand}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
         </Grid>
     </Border>

@@ -358,3 +358,6 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Started earlier and Stop on hover, and Today's Running lists it. Pause, Resume and Stop reset it like Fishing; restart
     the app while it runs and it keeps counting from the same start. With the overlay pinned and Overlay → Sections →
     Custom timers on, a running stopwatch shows under Custom timers with the time counted, and "Paused" while paused.
+85. [ ] Edit a timer's name and click outside its panel, then do the same in Settings: "Discard changes?" opens centred in the
+    window over a darker layer, not inside the drawer, with Keep editing focused. Clicking the dark area does nothing; Keep
+    editing returns to the draft and Discard closes it. Check it at the largest text size too.
