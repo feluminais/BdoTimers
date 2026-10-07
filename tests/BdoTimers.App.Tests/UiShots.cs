@@ -51,6 +51,13 @@ public class UiShots
                     ((RadioButton)window.FindName(tab)).IsChecked = true;
                     WpfTest.Drain();
                     UiCapture.Save(window, $"{name}.png");
+                    if (name == "timers")
+                    {
+                        // A third registration turns the Horse registration card's last line into an ellipsis.
+                        services.Timers.StartHorseRegistration(services.Clock.UtcNow.AddMinutes(-2));
+                        WpfTest.Drain();
+                        UiCapture.Save(window, "timers-horse-3.png");
+                    }
                     if (name == "schedule")
                     {
                         var month = PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "MonthToggle");
@@ -102,6 +109,9 @@ public class UiShots
         var buffs = new TimerDef { Name = "Grinding buffs", Kind = TimerKind.Countdown, Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(45) } };
         timers.Upsert(buffs);
         timers.Start(buffs.Id, now.AddMinutes(-3));
+        // The second Horse registration gets a clock of its own under the first.
+        timers.StartHorseRegistration(now.AddMinutes(-4));
+        timers.StartHorseRegistration(now.AddMinutes(-1));
         WpfTest.Drain();
     }
 
