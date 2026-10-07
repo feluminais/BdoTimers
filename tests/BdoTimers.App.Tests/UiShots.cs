@@ -40,9 +40,14 @@ public class UiShots
                 services.Todos.Toggle(weekly.Id, weekly.Rows[0].Id);
                 services.Todos.Toggle(weekly.Id, weekly.Rows[1].Children[0].Id);
                 services.Todos.Toggle(daily.Id, daily.Rows[0].Id);
+                // The Garmoth tracker is off until Settings turns it on; the README shows it with one kill marked.
+                services.Settings.Update(s => s with { GarmothTracker = true });
+                services.Timers.MarkGarmoth(1, services.Clock.UtcNow);
                 WpfTest.Drain();
                 foreach (var (tab, name) in new[] { ("TodayTab", "today"), ("ScheduleTab", "schedule"), ("CustomTab", "timers"), ("TodoTab", "todo") })
                 {
+                    // Today shows Farm running; the Timers screen has every kind of timer going.
+                    if (name == "timers") StartTheOtherTimers(services);
                     ((RadioButton)window.FindName(tab)).IsChecked = true;
                     WpfTest.Drain();
                     UiCapture.Save(window, $"{name}.png");
@@ -86,6 +91,19 @@ public class UiShots
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
     });
+
+    static void StartTheOtherTimers(AppServices services)
+    {
+        var now = services.Clock.UtcNow;
+        var timers = services.Timers;
+        timers.Start(timers.Current.Timers.First(t => t.Preset == Presets.Fishing).Id, now.AddMinutes(-138));
+        timers.Modify(timers.Current.Timers.First(t => t.Preset == Presets.GuildBosses).Id,
+            t => t with { Scheduled = t.Scheduled! with { Off = false } });
+        var buffs = new TimerDef { Name = "Grinding buffs", Kind = TimerKind.Countdown, Countdown = new CountdownSpec { Duration = TimeSpan.FromMinutes(45) } };
+        timers.Upsert(buffs);
+        timers.Start(buffs.Id, now.AddMinutes(-3));
+        WpfTest.Drain();
+    }
 
     /// <summary>The smallest supported cases: 640 wide at 100 %, and the minimum window at 150 % text.</summary>
     [Fact]

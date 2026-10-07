@@ -16,7 +16,7 @@
   <a href="CONTRIBUTING.md">Build &amp; contribute</a>
 </p>
 
-![Today with the next boss spawn, the next 24 hours, running timers and daily and weekly tasks](docs/images/today.png)
+![Today with the next boss spawn, the next 24 hours, running timers, daily and weekly tasks and Garmoth's weekly kills](docs/images/today.png)
 
 ## Today
 
