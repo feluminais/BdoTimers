@@ -17,10 +17,7 @@ public sealed class PlayPauseIcon : PixelIcon
 
     protected override void Draw(DrawingContext drawing, double scale, Point origin)
     {
-        // The centre doubled is even on a pixel edge and odd in a pixel's middle; an extent of the same parity puts both
-        // of its ends on whole pixels, the same distance from the centre.
-        var centreX2 = Math.Round(2 * (origin.X + ActualWidth * scale / 2));
-        var centreY2 = Math.Round(2 * (origin.Y + ActualHeight * scale / 2));
+        var (centreX2, centreY2) = CentreDoubled(origin, scale);
         var height = Fit(Math.Max(2, Math.Round(Size * scale)), centreY2);
         var top = (centreY2 - height) / 2;
         if (ShowsPause)
@@ -44,7 +41,4 @@ public sealed class PlayPauseIcon : PixelIcon
         triangle.Freeze();
         drawing.DrawGeometry(Foreground, null, triangle);
     }
-
-    /// <summary>The extent or the next one up that has the parity of <paramref name="centre2"/>, twice the centre it is placed on.</summary>
-    static double Fit(double extent, double centre2) => (centre2 - extent) % 2 == 0 ? extent : extent + 1;
 }

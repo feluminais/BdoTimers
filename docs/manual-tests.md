@@ -39,6 +39,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 9. [ ] Bell (top bar) or tray → Pause alerts for 1 hour: the bell turns amber and "Alerts paused" with Resume shows in the
    top bar; no alerts; Resume clears it. Pause alerts until resumed: the same, without a time.
 10. [ ] Close window → app quits by default. Enable Settings → Close to tray → close window → stays in tray; launch the exe again → existing window comes to front at the same size and position. Tray → Quit always exits.
+    The tray button beside Minimize hides the window to the tray with that setting off too; alerts keep sounding and the tray icon brings
+    the window back. With an unsaved panel open it asks first, like Close, and hides once the changes are discarded.
 11. [ ] Settings → Start with Windows On, reboot → app starts minimized in the tray. Off → it no longer starts.
 12. [ ] Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
 13. [ ] Timer panel → click the picture (badge "Change picture") → Choose picture…: the card shows it, fading into black.
@@ -335,7 +337,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 80. [ ] The top bar's next-boss chip shows on Schedule, Time Tracking and To-do (not on Today) with the next spawn's names and
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
     and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking
-    the room) and when no boss is followed. The paused notice shows from 880 px wide; below that the bell's slash says it. Below 700 px the tabs sit closer, and at 640 px every caption button is in the window.
+    the room) and when no boss is followed. The paused notice shows from 930 px wide; below that the bell's slash says it. Below 740 px the tabs sit closer, and in the smallest window (700 px) every caption button is in it.
 81. [ ] Overlay → Look → Boss icons: turn on; previous and next bosses and world-boss pop-ups show outline faces in
     List, Card and Bar. Paired bosses show two icons; an unfamiliar added boss keeps its name. Skipped bosses stay dim.
     Farm, Fishing and custom timers keep their labels. Hover an icon in preview: its boss name appears. Change Size:

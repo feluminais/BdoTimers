@@ -54,7 +54,7 @@ public class MainWindowTabsTests
 
                 // Narrower: the next boss shrinks to the room that is left, and the notice leaves the bar to the bell.
                 main.ResumeCommand.Execute(null);
-                window.Width = 850;
+                window.Width = 900;
                 WpfTest.Drain();
                 Assert.True(chip.IsVisible);
                 Assert.True(Bounds(chip).Left >= lastTab.Right);
@@ -74,7 +74,7 @@ public class MainWindowTabsTests
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
 
-    /// <summary>"Time Tracking" is the longest tab: the tabs sit closer in a narrow window so the buttons stay inside it.</summary>
+    /// <summary>"Time Tracking" is the longest tab and there are six buttons: the tabs sit closer in a narrow window so the buttons stay inside it.</summary>
     [Fact]
     public void The_buttons_stay_in_the_smallest_window_and_in_the_narrowest_one_with_the_paused_notice() => WpfTest.Run(() =>
     {
@@ -83,7 +83,7 @@ public class MainWindowTabsTests
         {
             using var services = new AppServices(Application.Current, path);
             using var main = new MainViewModel(services);
-            var window = new MainWindow(main, services) { Width = 640, Height = 540, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            var window = new MainWindow(main, services) { Width = 700, Height = 540, Left = -10000, Top = -10000, ShowInTaskbar = false };
             try
             {
                 window.Show();
@@ -97,9 +97,9 @@ public class MainWindowTabsTests
                 Assert.True(close.Right <= window.ActualWidth + 0.01);
                 Assert.True(bell.Left >= lastTab.Right - 0.01);
 
-                // The notice shows from 880 px, with every button still in the window.
+                // The notice shows from 930 px, with every button still in the window.
                 main.PauseHourCommand.Execute(null);
-                window.Width = 880;
+                window.Width = 930;
                 WpfTest.Drain();
                 var paused = (FrameworkElement)window.FindName("PausedBlock");
                 Assert.True(paused.IsVisible);

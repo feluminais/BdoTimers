@@ -135,7 +135,7 @@ public class UiShots
         WpfTest.Drain();
     }
 
-    /// <summary>The smallest supported cases: 640 wide at 100 %, and the minimum window at 150 % text.</summary>
+    /// <summary>The smallest supported cases: 700 wide at 100 %, and the minimum window at 150 % text.</summary>
     [Fact]
     public void Narrow_windows_and_large_text_render() => WpfTest.Run(() =>
     {
@@ -148,7 +148,7 @@ public class UiShots
             services.Timers.Start(farm.Id, services.Clock.UtcNow.AddHours(-12));
             foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
             using var main = new MainViewModel(services);
-            var window = new MainWindow(main, services) { Width = 640, Height = 540, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            var window = new MainWindow(main, services) { Width = 700, Height = 540, Left = -10000, Top = -10000, ShowInTaskbar = false };
             try
             {
                 window.Show();
@@ -171,7 +171,7 @@ public class UiShots
                         WpfTest.Drain();
                     }
                 }
-                Capture("640");
+                Capture("700");
                 services.Settings.Update(s => s with { TextScale = 1.5 });
                 WpfTest.Drain();
                 window.Width = 960;

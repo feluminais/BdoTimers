@@ -19,10 +19,10 @@ namespace BdoTimers.App.Views;
 
 public partial class MainWindow : Window
 {
-    const double BaseMinWidth = 640, BaseMinHeight = 360, BaseCaptionHeight = 44;
+    const double BaseMinWidth = 700, BaseMinHeight = 360, BaseCaptionHeight = 44;
     // In unscaled units: the window width from which the paused notice fits, the room the next boss needs, and the width
     // below which the tabs are set closer so the buttons keep their room.
-    const double PausedNoticeWidth = 880, ChipRoom = 170, CompactTabsWidth = 700;
+    const double PausedNoticeWidth = 930, ChipRoom = 170, CompactTabsWidth = 740;
     /// <summary>Milliseconds after the alerts menu closes in which a press on the bell still belongs to the press that closed it.</summary>
     const int BellMenuPressGrace = 250;
 
@@ -216,6 +216,20 @@ public partial class MainWindow : Window
     }
 
     void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    void Tray_Click(object sender, RoutedEventArgs e) => HideToTray();
+
+    /// <summary>
+    /// Hides the window and leaves the app running in the tray, whatever the Close to tray setting says; like closing, it
+    /// first asks about unsaved changes in an open panel, and goes on once they are discarded.
+    /// </summary>
+    void HideToTray()
+    {
+        if (!_vm.RequestLeave(HideToTray, runImmediately: false)) return;
+        SavePlacement();
+        _vm.ClosePanel();
+        Hide();
+    }
 
     /// <summary>Text size and Windows' text scaling, which every screen and panel is drawn at.</summary>
     double UiScale => GetValue(UiScaleProperty) is ScaleTransform { ScaleX: > 0 and var scale } ? scale : 1;

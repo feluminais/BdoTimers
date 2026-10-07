@@ -62,6 +62,16 @@ public abstract class PixelIcon : FrameworkElement
     /// <summary>A point given in device pixels, as this element draws it.</summary>
     protected static Point Local(Point origin, double scale, double x, double y) => new((x - origin.X) / scale, (y - origin.Y) / scale);
 
+    /// <summary>
+    /// This element's centre in device pixels, doubled: even on a pixel edge and odd in a pixel's middle, so that an extent
+    /// of the same parity (see <see cref="Fit"/>) puts both of its ends on whole pixels, the same distance from the centre.
+    /// </summary>
+    protected (double X, double Y) CentreDoubled(Point origin, double scale) =>
+        (Math.Round(2 * (origin.X + ActualWidth * scale / 2)), Math.Round(2 * (origin.Y + ActualHeight * scale / 2)));
+
+    /// <summary>The extent, or the next one up, that has the parity of <paramref name="centre2"/>, twice the centre it is placed on.</summary>
+    protected static double Fit(double extent, double centre2) => (centre2 - extent) % 2 == 0 ? extent : extent + 1;
+
     /// <summary>Device pixels in one unit here, and where this element's corner falls in device pixels.</summary>
     bool TryDeviceSpace(out double scale, out Point origin)
     {
