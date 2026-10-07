@@ -29,7 +29,8 @@ spawns, timers and resets; on the right, the timers that are running and your da
 
 World boss schedules for EU and NA, shown in your local time: this week's grid, and a month view with your timers and
 events. Choose which bosses to follow in **Following**; event bosses can be added alongside the built-in timetable.
-[Timetable sources](docs/boss-region-sources.md).
+Garmoth can be done three times a week: turn on the Garmoth tracker in Settings, mark each kill on Today, and after the
+third he drops out of alerts and the schedule until the weekly reset. [Timetable sources](docs/boss-region-sources.md).
 
 ## Timers
 

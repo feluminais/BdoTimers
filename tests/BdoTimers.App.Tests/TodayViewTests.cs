@@ -223,4 +223,63 @@ public class TodayViewTests
         }
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
+
+    [Fact]
+    public void Garmoth_has_a_panel_on_Today_only_while_the_tracker_is_on_with_a_button_for_each_kill() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Today." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var host = new Host();
+            var todo = new TodoViewModel(services, host);
+            var today = new TodayViewModel(services, host, new CustomViewModel(services, host), todo, () => { }, () => { }, () => { });
+            var view = new TodayView { DataContext = today };
+            var window = new Window { Content = new Border { Padding = new Thickness(22, 18, 22, 20), Child = view }, Width = 960, Height = 900,
+                Left = -10000, Top = -10000, ShowInTaskbar = false, FontSize = 13 };
+            window.SetResourceReference(Control.BackgroundProperty, "BgBrush");
+            window.SetResourceReference(Control.ForegroundProperty, "TextBrush");
+            window.SetResourceReference(Control.FontFamilyProperty, "UiFont");
+            try
+            {
+                window.Show();
+                WpfTest.Drain();
+                var panel = (FrameworkElement)view.FindName("GarmothPanel");
+                Assert.False(panel.IsVisible);
+
+                services.Settings.Update(s => s with { GarmothTracker = true });
+                WpfTest.Drain();
+
+                Assert.True(panel.IsVisible);
+                Button Kill(int number) => PanelFocusScope.Descendants(panel).OfType<Button>()
+                    .Single(b => AutomationProperties.GetName(b) == $"Garmoth kill {number}");
+                Assert.All(new[] { 1, 2, 3 }, number => Assert.True(Kill(number).IsVisible));
+
+                // A press in the middle of a ring reaches its button.
+                var middle = Kill(2).TransformToAncestor(view).Transform(new Point(Kill(2).ActualWidth / 2, Kill(2).ActualHeight / 2));
+                Assert.Same(Kill(2), VisualTree.FindAncestor<Button>(VisualTreeHelper.HitTest(view, middle)?.VisualHit, view));
+                Kill(2).Command.Execute(null);
+                WpfTest.Drain();
+
+                Assert.Equal("2/3", today.Garmoth.Summary);
+                Assert.Equal(Kill(1).Background, Kill(2).Background);
+                Assert.NotEqual(Kill(2).Background, Kill(3).Background);
+                UiCapture.Save(window, "today-garmoth.png");
+
+                Kill(3).Command.Execute(null);
+                WpfTest.Drain();
+
+                var back = PanelFocusScope.Descendants(panel).OfType<TextBlock>().Single(t => t.Text.StartsWith("Back "));
+                Assert.True(back.IsVisible);
+                UiCapture.Save(window, "today-garmoth-done.png");
+
+                services.Settings.Update(s => s with { GarmothTracker = false });
+                WpfTest.Drain();
+
+                Assert.False(panel.IsVisible);
+            }
+            finally { window.Close(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
 }

@@ -336,3 +336,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     List, Card and Bar. Paired bosses show two icons; an unfamiliar added boss keeps its name. Skipped bosses stay dim.
     Farm, Fishing and custom timers keep their labels. Hover an icon in preview: its boss name appears. Change Size:
     icons stay sharp. Close the panel and restart: the setting persists; turn it off to restore boss names.
+82. [ ] Garmoth tracker: Settings → Bosses → Garmoth tracker starts off, and Today has no Garmoth panel. Turn it on and Save:
+    a Garmoth panel with 1 2 3 shows under the weekly tasks, 0/3. Press 2: 1 and 2 fill, 2/3, and Garmoth still shows in
+    the hero, Coming up and alerts. Press 3: 3/3 and "Back" with the weekly reset; Garmoth is gone from the hero, Coming up
+    and the overlay, no alert sounds for his spawns, and his cells in Schedule and the Calendar are grey, while the spawn
+    just killed stays as Previous. Press 3 again: 2/3 and he is back. Mark all three, set Settings → To-do → Weekly reset a
+    minute ahead and Save: at the reset the count clears and Garmoth returns. Turn the tracker off and Save: the panel goes
+    and Garmoth is as before. The weekly quests have no "Boss's Roar — Garmoth" row, in an old data folder too after the
+    first start. Below 820 px the panel follows Weekly tasks in the one column.

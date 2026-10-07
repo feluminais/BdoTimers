@@ -285,6 +285,32 @@
             </StackPanel>
         </DataTemplate>
 
+        <!-- Garmoth's week while the tracker is on: his three kills as buttons; with all three marked he is gone until the reset -->
+        <DataTemplate DataType="{x:Type vm:GarmothViewModel}">
+            <StackPanel>
+                <DockPanel>
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding Summary}" FontSize="12" Foreground="{DynamicResource GoodBrush}"
+                               Typography.NumeralAlignment="Tabular" VerticalAlignment="Center" />
+                    <TextBlock Text="Garmoth" Style="{StaticResource PanelHeading}" />
+                </DockPanel>
+                <DockPanel Margin="0,12,0,2">
+                    <TextBlock DockPanel.Dock="Right" Text="{Binding BackText}" Style="{StaticResource LabelText}" VerticalAlignment="Center"
+                               Visibility="{Binding BackText, Converter={StaticResource NullToCollapsed}}" />
+                    <ItemsControl ItemsSource="{Binding Kills}" Focusable="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Style="{StaticResource KillButton}" Content="{Binding Number}" Command="{Binding PressCommand}"
+                                        Margin="0,0,10,0" AutomationProperties.Name="{Binding AutomationName}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </DockPanel>
+            </StackPanel>
+        </DataTemplate>
+
         <!-- A task panel: its heading, which opens the list, and how far along it is; what is still open, and the way on to To-do -->
         <DataTemplate DataType="{x:Type vm:TaskPanelViewModel}">
             <StackPanel>
@@ -435,6 +461,11 @@
                 <Border x:Name="WeeklyPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16"
                         Visibility="{Binding Weekly.HasLists, Converter={StaticResource BoolToVisibility}}">
                     <ContentControl Content="{Binding Weekly}" Focusable="False" />
+                </Border>
+                <!-- Only while the tracker is on, in Settings -->
+                <Border x:Name="GarmothPanel" Style="{StaticResource ForestPanel}" Margin="0,0,0,16"
+                        Visibility="{Binding Garmoth.IsOn, Converter={StaticResource BoolToVisibility}}">
+                    <ContentControl Content="{Binding Garmoth}" Focusable="False" />
                 </Border>
             </StackPanel>
         </ScrollViewer>

@@ -238,4 +238,47 @@ public class TodayViewModelTests
         Assert.Equal("0/8", panel.Summary);
         panel.ShowTodoCommand.Execute(null);
     });
+
+    [Fact]
+    public void The_Garmoth_panel_follows_the_switch_in_Settings_and_the_kills_marked_and_clears_when_it_goes_off() => WithServices(services =>
+    {
+        var garmoth = new GarmothViewModel(services);
+        Assert.False(garmoth.IsOn);
+        Assert.Equal("0/3", garmoth.Summary);
+
+        services.Settings.Update(s => s with { GarmothTracker = true });
+        WpfTest.Drain();
+
+        Assert.True(garmoth.IsOn);
+        Assert.True(services.Timers.Current.Garmoth.ResetUtc > services.Clock.UtcNow);
+        Assert.Equal([1, 2, 3], garmoth.Kills.Select(kill => kill.Number));
+
+        garmoth.Kills[1].PressCommand.Execute(null);
+        WpfTest.Drain();
+
+        Assert.Equal([true, true, false], garmoth.Kills.Select(kill => kill.IsDone));
+        Assert.Equal("2/3", garmoth.Summary);
+        Assert.Null(garmoth.BackText);
+
+        garmoth.Kills[2].PressCommand.Execute(null);
+        WpfTest.Drain();
+
+        Assert.Equal("3/3", garmoth.Summary);
+        Assert.Equal("Back " + Formats.DayTime(services.Timers.Current.Garmoth.ResetUtc), garmoth.BackText);
+        Assert.NotNull(services.Timers.Current.Garmoth.DoneAtUtc);
+
+        garmoth.Kills[2].PressCommand.Execute(null);
+        WpfTest.Drain();
+
+        Assert.Equal("2/3", garmoth.Summary);
+        Assert.Null(garmoth.BackText);
+
+        services.Settings.Update(s => s with { GarmothTracker = false });
+        WpfTest.Drain();
+
+        Assert.False(garmoth.IsOn);
+        Assert.Equal("0/3", garmoth.Summary);
+        Assert.All(garmoth.Kills, kill => Assert.False(kill.IsDone));
+        Assert.Equal(new GarmothWeek(), services.Timers.Current.Garmoth);
+    });
 }

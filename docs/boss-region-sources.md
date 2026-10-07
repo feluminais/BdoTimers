@@ -34,7 +34,7 @@ The notice also records a maintenance exception: NA bosses were one hour earlier
 
 [NIST's DST rules](https://www.nist.gov/pml/time-and-frequency-division/popular-links/daylight-saving-time-dst), checked on 2026-10-02, identify US DST as March 8 through November 1 in 2026. Regular NA offsets are UTC−08:00 (PST) and UTC−07:00 (PDT). The October 2026 EU transition and November 2026 NA transition are different weeks. No autumn 2026 maintenance adjustment had been announced when this was checked.
 
-Daily reset remains fixed at 00:00 UTC according to Pearl Abyss's notice; it is 17:00 PDT in NA and 02:00 CEST in EU. The world-boss guide specifies Thursday 00:00 UTC for Garmoth and Morning Light weekly reward resets in both regions. Switching boss region therefore leaves to-do reset times unchanged.
+Daily reset remains fixed at 00:00 UTC according to Pearl Abyss's notice; it is 17:00 PDT in NA and 02:00 CEST in EU. The world-boss guide specifies Thursday 00:00 UTC for Garmoth and Morning Light weekly reward resets in both regions. Switching boss region therefore leaves to-do reset times unchanged. The Garmoth tracker's week ends at the weekly reset in Settings, Thursday 00:00 UTC by default.
 
 ## What differs between servers
 

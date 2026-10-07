@@ -7,8 +7,8 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels;
 
 /// <summary>
-/// The Today screen: the next spawn, what comes in the next 24 hours, the timers that are running and the daily and weekly
-/// tasks, put together from what the other screens already keep. The 1 Hz tick refreshes it while the window is shown.
+/// The Today screen: the next spawn, what comes in the next 24 hours, the timers that are running, the daily and weekly
+/// tasks and Garmoth's week, put together from what the other screens already keep. The 1 Hz tick refreshes it while the window is shown.
 /// </summary>
 public sealed partial class TodayViewModel : ObservableObject
 {
@@ -23,6 +23,7 @@ public sealed partial class TodayViewModel : ObservableObject
     public ComingUpViewModel ComingUp { get; }
     public TaskPanelViewModel Daily { get; }
     public TaskPanelViewModel Weekly { get; }
+    public GarmothViewModel Garmoth { get; }
     /// <summary>The Timers screen's countdowns and stopwatches that are running or paused, and Horse registration while one is under way.</summary>
     public ObservableCollection<TimerTileViewModel> Running { get; } = [];
     [ObservableProperty] private bool _hasRunning;
@@ -37,6 +38,7 @@ public sealed partial class TodayViewModel : ObservableObject
         ComingUp = new ComingUpViewModel(services, host);
         Daily = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Daily);
         Weekly = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Weekly);
+        Garmoth = new GarmothViewModel(services);
         Refresh(services.Clock.UtcNow);
     }
 
