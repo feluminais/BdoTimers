@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Automation.Peers;
 using System.Windows.Automation.Provider;
 using System.Windows.Controls;
-using System.Windows.Media;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
@@ -285,6 +284,7 @@ public class PanelMotionTests
         Press(b => Equals(b.Content, "Done"));
         Assert.Null(main.Panel);
 
+        WpfTest.WithoutVoice(services);
         main.OpenSettingsCommand.Execute(null);
         WpfTest.Wait(500);
         Press(b => Equals(b.Content, "Save"));
@@ -303,6 +303,6 @@ public class PanelMotionTests
 
         Assert.Equal(1, screen.Opacity);
         Assert.False(screen.HasAnimatedProperties);
-        Assert.Equal(0, ((TranslateTransform)screen.RenderTransform).Y);
+        Assert.Equal(0, screen.RenderTransform.Value.OffsetY);
     });
 }

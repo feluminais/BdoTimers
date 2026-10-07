@@ -55,6 +55,12 @@ internal static class WpfTest
 
     public static void Run(Action action) => Ui.Value.Invoke(action);
 
+    /// <summary>Saving makes the timers' voice lines first, which needs the voice files; the tests may have none.</summary>
+    public static void WithoutVoice(AppServices services)
+    {
+        foreach (var timer in services.Timers.Current.Timers)
+            services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
+    }
 
     /// <summary>Runs the dispatcher for a while, so animations and timers can progress.</summary>
     public static void Wait(int milliseconds)

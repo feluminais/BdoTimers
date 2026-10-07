@@ -172,9 +172,10 @@ public sealed class RepeatTimerTests
             var board = new BossesViewModel(services, new PanelHost());
             var day = new DateTimeOffset(new DateTime(2026, 10, 7), TimeZoneInfo.Local.GetUtcOffset(new DateTime(2026, 10, 7)));
 
-            board.Refresh(day.AddMinutes(1));
+            // A spawn at midnight itself has passed, and which zone the rows are in decides whether there is one.
+            board.Refresh(day);
             var today = board.Rows.Select(row => row.Cells.Single(cell => cell.IsToday)).ToList();
-            Assert.True(today[0].NowAbove);
+            Assert.True(today[board.Rows.ToList().FindIndex(row => row.Time != "00:00")].NowAbove);
             Assert.Equal(1, today.Count(cell => cell.NowAbove) + today.Count(cell => cell.NowBelow));
 
             board.Refresh(day.AddHours(23).AddMinutes(59));

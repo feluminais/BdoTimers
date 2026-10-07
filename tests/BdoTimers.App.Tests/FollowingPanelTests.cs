@@ -19,13 +19,6 @@ public class FollowingPanelTests
         public bool IsOpen(object panel) => ReferenceEquals(Opened, panel);
     }
 
-    /// <summary>Saving a timer makes its voice lines first, which needs the voice files; the tests have none.</summary>
-    static void WithoutVoice(AppServices services)
-    {
-        foreach (var timer in services.Timers.Current.Timers)
-            services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
-    }
-
     [Fact]
     public void Lists_the_regions_bosses_and_a_switch_turns_a_boss_off_and_on() => WpfTest.Run(() =>
     {
@@ -33,7 +26,7 @@ public class FollowingPanelTests
         try
         {
             using var services = new AppServices(Application.Current, path);
-            WithoutVoice(services);
+            WpfTest.WithoutVoice(services);
             var panel = new FollowingPanelViewModel(services, new Host());
             Assert.NotEmpty(panel.Bosses);
             Assert.Equal($"{panel.Bosses.Count} of {panel.Bosses.Count}", panel.Summary);
