@@ -50,6 +50,8 @@ public class UiShots
                     if (name == "timers") StartTheOtherTimers(services);
                     ((RadioButton)window.FindName(tab)).IsChecked = true;
                     WpfTest.Drain();
+                    // Schedule opens on the Calendar; its plain shot is the boss grid.
+                    if (name == "schedule") PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
                     UiCapture.Save(window, $"{name}.png");
                     if (name == "timers")
                     {
@@ -161,6 +163,7 @@ public class UiShots
                     {
                         ((RadioButton)window.FindName(tab)).IsChecked = true;
                         WpfTest.Drain();
+                        if (name == "schedule") PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
                         UiCapture.Save(window, $"{name}-{suffix}.png");
                         if (name != "schedule") continue;
                         var toggles = PanelFocusScope.Descendants(window).OfType<RadioButton>().ToList();

@@ -115,7 +115,7 @@ public class MainWindowTabsTests
         finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
     });
 
-    /// <summary>The first view is only the bosses and the second everything, so the Schedule says which is which.</summary>
+    /// <summary>The Calendar is the first view and the default; the second is only the bosses, so the Schedule says which is which.</summary>
     [Fact]
     public void The_schedule_names_its_two_views_for_what_they_show() => WpfTest.Run(() =>
     {
@@ -124,8 +124,12 @@ public class MainWindowTabsTests
         try
         {
             window.Show();
-            Assert.Equal("Bosses", ((RadioButton)view.FindName("WeekToggle")).Content);
-            Assert.Equal("Calendar", ((RadioButton)view.FindName("MonthToggle")).Content);
+            var month = (RadioButton)view.FindName("MonthToggle");
+            var week = (RadioButton)view.FindName("WeekToggle");
+            Assert.Equal("Calendar", month.Content);
+            Assert.Equal("Bosses", week.Content);
+            Assert.True(month.IsChecked);
+            Assert.True(month.TranslatePoint(new Point(), (UIElement)month.Parent).X < week.TranslatePoint(new Point(), (UIElement)week.Parent).X);
         }
         finally { window.Close(); }
     });
