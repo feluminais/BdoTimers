@@ -60,15 +60,15 @@
         <DataTemplate DataType="{x:Type vm:CalendarDayViewModel}">
             <Button Style="{StaticResource DayButton}" Command="{Binding SelectCommand}" AutomationProperties.Name="{Binding AutomationName}">
                 <StackPanel>
-                    <DockPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                         <!-- A gold dot: the next boss spawn is on this day -->
-                        <Ellipse DockPanel.Dock="Right" Width="5" Height="5" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center"
+                        <Ellipse Width="5" Height="5" Margin="0,0,6,0" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center"
                                  ToolTip="Next boss spawn" Visibility="{Binding IsNext, Converter={StaticResource BoolToVisibility}}" />
-                        <!-- The cell's largest and brightest text, so the day doesn't read as one more line of it -->
+                        <!-- The cell's largest text, muted so the day doesn't outshine the items under it -->
                         <TextBlock Text="{Binding Number}" FontSize="16">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource DisplayText}">
-                                    <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource PastBrush}" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsToday}" Value="True">
                                             <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
@@ -77,7 +77,7 @@
                                 </Style>
                             </TextBlock.Style>
                         </TextBlock>
-                    </DockPanel>
+                    </StackPanel>
                     <ItemsControl ItemsSource="{Binding Lines}" Margin="0,2,0,0" Focusable="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:CalendarLine}">
