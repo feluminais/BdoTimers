@@ -202,7 +202,7 @@ public class PanelMotionTests
     public void Settings_open_at_the_boss_regions_when_asked_to_and_on_General_otherwise() => WithWindow((services, main, window) =>
     {
         var content = Named<ContentControl>(window, "PanelContent");
-        main.OpenPanel(new SettingsPanelViewModel(services, main) { OpenAtRegion = true });
+        main.OpenPanel(new SettingsPanelViewModel(services) { OpenAt = "Bosses" });
         WpfTest.Wait(500);
         var view = Assert.IsType<SettingsPanel>(content.Content);
         Assert.True(((RadioButton)view.FindName("BossesNav")).IsChecked);
@@ -214,6 +214,48 @@ public class PanelMotionTests
 
         Assert.Same(view, content.Content);
         Assert.True(((RadioButton)view.FindName("GeneralNav")).IsChecked);
+    });
+
+    [Fact]
+    public void The_overlay_previews_only_while_the_Overlay_options_are_in_view() => WithWindow((services, main, window) =>
+    {
+        var content = Named<ContentControl>(window, "PanelContent");
+        main.OpenOverlaySettings();
+        WpfTest.Wait(500);
+        var view = Assert.IsType<SettingsPanel>(content.Content);
+        var settings = Assert.IsType<SettingsPanelViewModel>(main.Panel);
+        Assert.True(((RadioButton)view.FindName("OverlayNav")).IsChecked);
+        Assert.True(settings.Overlay.Previewing);
+
+        ((RadioButton)view.FindName("AlertsNav")).IsChecked = true;
+        Assert.False(settings.Overlay.Previewing);
+        ((TextBox)view.FindName("SearchBox")).Text = "opacity";
+        Assert.True(settings.Overlay.Previewing);
+
+        main.ClosePanel();
+        Assert.False(settings.Overlay.Previewing);
+    });
+
+    [Fact]
+    public void Asking_for_Overlay_again_or_for_its_region_switches_the_open_Settings_and_keeps_its_edits() => WithWindow((services, main, window) =>
+    {
+        var content = Named<ContentControl>(window, "PanelContent");
+        main.OpenSettingsCommand.Execute(null);
+        WpfTest.Wait(500);
+        var view = Assert.IsType<SettingsPanel>(content.Content);
+        var settings = Assert.IsType<SettingsPanelViewModel>(main.Panel);
+        settings.CloseToTray = !settings.CloseToTray;
+
+        main.OpenOverlaySettings();
+        Assert.Same(settings, main.Panel);
+        Assert.False(main.AskingDiscard);
+        Assert.True(settings.HasChanges);
+        Assert.True(((RadioButton)view.FindName("OverlayNav")).IsChecked);
+        Assert.True(settings.Overlay.Previewing);
+
+        settings.Overlay.OpenRegionSettingsCommand.Execute(null);
+        Assert.True(((RadioButton)view.FindName("BossesNav")).IsChecked);
+        Assert.False(settings.Overlay.Previewing);
     });
 
     /// <summary>Rows of the other categories would be laid out for nothing, and seen for a moment before the filter hid them.</summary>
@@ -241,9 +283,9 @@ public class PanelMotionTests
         Assert.Equal(0, window.IdlePanelViews);
 
         main.ClosePanel();
-        for (var i = 0; i < 100 && window.IdlePanelViews < 7; i++) WpfTest.Wait(100);
+        for (var i = 0; i < 100 && window.IdlePanelViews < 6; i++) WpfTest.Wait(100);
 
-        Assert.Equal(7, window.IdlePanelViews);
+        Assert.Equal(6, window.IdlePanelViews);
         Assert.Equal(before, screens.Select(name => Named<UIElement>(window, name).Visibility));
     });
 

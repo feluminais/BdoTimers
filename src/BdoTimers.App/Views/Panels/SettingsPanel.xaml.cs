@@ -14,18 +14,33 @@ public partial class SettingsPanel : UserControl
         InitializeComponent();
         // Only the first category's rows take part in the first layout, and the same goes for each panel shown in this view.
         ApplySearch();
-        DataContextChanged += (_, _) => Restart();
+        DataContextChanged += (_, e) =>
+        {
+            if (e.OldValue is SettingsPanelViewModel old) old.CategoryRequested -= ShowCategory;
+            if (e.NewValue is SettingsPanelViewModel next) next.CategoryRequested += ShowCategory;
+            Restart();
+        };
     }
 
-    /// <summary>Starts over at the first category, or at the boss regions when the panel was opened for them, with no search.</summary>
+    RadioButton[] Navs => [GeneralNav, TodayNav, AlertsNav, OverlayNav, TodoNav, BossesNav, DataNav, AboutNav];
+
+    /// <summary>Starts over at the first category, or at the one the panel was opened for, with no search.</summary>
     void Restart()
     {
-        var nav = DataContext is SettingsPanelViewModel { OpenAtRegion: true } ? BossesNav : GeneralNav;
+        var openAt = (DataContext as SettingsPanelViewModel)?.OpenAt;
+        var nav = Navs.FirstOrDefault(n => (string)n.Tag == openAt) ?? GeneralNav;
         _category = (string)nav.Tag;
         nav.IsChecked = true;
         SearchBox.Clear();
         ApplySearch();
         Scroller.ScrollToTop();
+    }
+
+    /// <summary>Switches to a category, ending any search.</summary>
+    void ShowCategory(string category)
+    {
+        Navs.First(n => (string)n.Tag == category).IsChecked = true;
+        SearchBox.Clear();
     }
 
     /// <summary>Shows one category; picking one also ends a search.</summary>
@@ -75,6 +90,7 @@ public partial class SettingsPanel : UserControl
         TextBlock? heading = null;
         var rows = new List<FrameworkElement>();
         var found = false;
+        var overlayShown = false;
         void FilterSection()
         {
             if (heading is null) return;
@@ -91,6 +107,7 @@ public partial class SettingsPanel : UserControl
             }
             SettingsFilter.SetIsMatch(heading, searching && sectionFound);
             found |= sectionFound;
+            overlayShown |= sectionFound && category == "Overlay";
         }
         foreach (FrameworkElement item in SettingsItems.Children)
         {
@@ -104,6 +121,7 @@ public partial class SettingsPanel : UserControl
         }
         FilterSection();
         NoResults.Visibility = found ? Visibility.Collapsed : Visibility.Visible;
+        (DataContext as SettingsPanelViewModel)?.Overlay.ShowPreview(overlayShown);
     }
 
 }

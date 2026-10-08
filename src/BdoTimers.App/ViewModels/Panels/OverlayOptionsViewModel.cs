@@ -9,15 +9,15 @@ using CommunityToolkit.Mvvm.Input;
 namespace BdoTimers.App.ViewModels.Panels;
 
 /// <summary>
-/// The Overlay panel. While it's open the overlay is a
-/// draggable preview, and every change applies at once.
+/// The Overlay options in Settings. While they show, the overlay is a draggable preview, and every change applies at
+/// once, apart from Settings' own Save.
 /// </summary>
-public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
+public sealed partial class OverlayOptionsViewModel : ObservableObject
 {
     static readonly string[] SwatchColors = ["#0B0B0C", "#2A2118", "#3A1417", "#141B2E", "#16261C", "#23272B", "#2B1E33", "#3B3222"];
 
     readonly AppServices _services;
-    readonly IPanelHost _host;
+    readonly Action _showRegion;
     // Picking in the colour square changes the colour many times a second; it's saved once the picking pauses.
     readonly DispatcherTimer _colorSave = new() { Interval = TimeSpan.FromMilliseconds(150) };
     bool _syncing;
@@ -37,7 +37,7 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public IReadOnlyList<Choice> MouseProximityChoices { get; } = Enum.GetValues<OverlayMouseProximity>().Select(m => new Choice(m.ToString(), m)).ToList();
     public IReadOnlyList<Choice> GuildBossChoices { get; }
     public IReadOnlyList<Swatch> Swatches { get; }
-    /// <summary>The timers that can have a row on the overlay. Fixed while the panel is open, as timers can't change under it.</summary>
+    /// <summary>The timers that can have a row on the overlay. Fixed while Settings is open, as timers can't change under it.</summary>
     public IReadOnlyList<OverlayTimerRow> Upcoming { get; }
     public bool HasUpcoming => Upcoming.Count > 0;
     public bool HasPicture => Picture is not null;
@@ -52,10 +52,11 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     /// <summary>The boss region whose server time the overlay shows.</summary>
     public string ServerRegion => _services.Region.Label;
 
-    public OverlayPanelViewModel(AppServices services, IPanelHost host)
+    /// <param name="showRegion">Shows where the boss region is set, which gives the overlay's server time.</param>
+    public OverlayOptionsViewModel(AppServices services, Action showRegion)
     {
         _services = services;
-        _host = host;
+        _showRegion = showRegion;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
         GuildBossChoices = PopUpChoices.For(PopUpChoices.GuildBossMinutes, Current.GuildBosses);
         Upcoming = services.Timers.Current.Timers.Where(Listable)
@@ -70,10 +71,20 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
         MarkColor(_picture is null ? o.BackgroundColor : null);
         services.Settings.Changed += OnSettingsChanged;
         services.Timers.Changed += OnTimersChanged;
-        services.Overlay.BeginPreview();
     }
 
     OverlaySettings Current => _services.Settings.Current.Overlay;
+
+    /// <summary>The overlay shows as a draggable preview while its options are in view.</summary>
+    public bool Previewing { get; private set; }
+
+    public void ShowPreview(bool show)
+    {
+        if (_closed || show == Previewing) return;
+        Previewing = show;
+        if (show) _services.Overlay.BeginPreview();
+        else _services.Overlay.EndPreview();
+    }
 
     public bool Enabled { get => Current.Enabled; set => Modify(o => o with { Enabled = value }); }
     public bool AlwaysShow { get => Current.AlwaysShow; set => Modify(o => o with { AlwaysShow = value }); }
@@ -124,9 +135,8 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     }
     public double TextOpacity { get => Current.TextOpacity; set => Modify(o => o with { TextOpacity = Math.Round(value, 2) }); }
 
-    /// <summary>Closes this panel for Settings, scrolled to the boss region that sets the server time.</summary>
     [RelayCommand]
-    void OpenRegionSettings() => _host.OpenPanel(new SettingsPanelViewModel(_services, _host) { OpenAtRegion = true });
+    void OpenRegionSettings() => _showRegion();
 
     /// <summary>Settings also change from outside the panel: Always show by its hotkey.</summary>
     void OnSettingsChanged()
@@ -266,14 +276,14 @@ public sealed partial class OverlayPanelViewModel : ObservableObject, IPanel
     public void OnClosed()
     {
         if (_colorSave.IsEnabled) SaveCustomColor();
+        ShowPreview(false);
         _closed = true;
         _services.Settings.Changed -= OnSettingsChanged;
         _services.Timers.Changed -= OnTimersChanged;
-        _services.Overlay.EndPreview();
     }
 }
 
-/// <summary>A timer in the Overlay panel's Upcoming block, with how long before its next time the overlay lists it.</summary>
+/// <summary>A timer in the Overlay options' Upcoming block, with how long before its next time the overlay lists it.</summary>
 public sealed partial class OverlayTimerRow : ObservableObject
 {
     readonly Action<int> _apply;
@@ -294,7 +304,7 @@ public sealed partial class OverlayTimerRow : ObservableObject
     partial void OnLeadChanged(Choice value) => _apply((int)value.Value!);
 }
 
-/// <summary>A background colour in the Overlay panel; the chosen one is ringed.</summary>
+/// <summary>A background colour in the Overlay options; the chosen one is ringed.</summary>
 public sealed partial class Swatch : ObservableObject
 {
     readonly Action<Swatch> _pick;

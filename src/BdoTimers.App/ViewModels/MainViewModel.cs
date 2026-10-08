@@ -172,7 +172,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     }
 
     [RelayCommand]
-    void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services, this));
+    void OpenSettings() => OpenPanel(new SettingsPanelViewModel(_services));
 
     /// <summary>Which bosses to follow, each with its alerts, and a way to add one.</summary>
     [RelayCommand]
@@ -181,12 +181,12 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [RelayCommand]
     void ShowToday() => SelectedTab = MainTab.Today;
 
-    /// <summary>Unlike <see cref="OpenPanel"/>, closes the open panel before making the new one: the Overlay panel
-    /// starts the overlay preview when it's made, which an open Overlay panel would end on closing.</summary>
+    /// <summary>Settings on the Overlay category: the open Settings switches to it, so its unsaved edits stay.</summary>
     [RelayCommand]
     public void OpenOverlaySettings()
     {
-        RequestLeave(() => { ClosePanelNow(); Panel = new OverlayPanelViewModel(_services, this); });
+        if (Panel is SettingsPanelViewModel settings) settings.ShowCategory("Overlay");
+        else OpenPanel(new SettingsPanelViewModel(_services) { OpenAt = "Overlay" });
     }
 
     [RelayCommand]

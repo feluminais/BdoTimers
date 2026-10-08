@@ -78,7 +78,7 @@ public static class UpcomingQuery
     }
 
     /// <summary>Timers with alerts on and an overlay pop-up, with how long before an occurrence it shows. The Guild
-    /// bosses timer follows the Overlay panel's setting; other timers have their own.</summary>
+    /// bosses timer follows the Overlay setting; other timers have their own.</summary>
     static IEnumerable<(TimerDef Timer, TimeSpan Window)> PopUpTimers(AppData data, OverlaySettings settings) =>
         data.Timers
             .Where(t => BossRegions.IsEligible(data, t) && t.Enabled)

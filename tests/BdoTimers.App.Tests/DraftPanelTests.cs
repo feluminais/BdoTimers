@@ -326,7 +326,7 @@ public class DraftPanelTests
             foreach (var timer in services.Timers.Current.Timers)
                 services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
             using var main = new MainViewModel(services);
-            var panel = new SettingsPanelViewModel(services, main);
+            var panel = new SettingsPanelViewModel(services);
             Assert.False(panel.GarmothTracker);
             Assert.False(panel.HasChanges);
 
@@ -341,7 +341,7 @@ public class DraftPanelTests
 
             services.Timers.MarkGarmoth(3, services.Clock.UtcNow);
             Assert.Equal(3, services.Timers.Current.Garmoth.Kills);
-            panel = new SettingsPanelViewModel(services, main);
+            panel = new SettingsPanelViewModel(services);
             Assert.True(panel.GarmothTracker);
             panel.GarmothTracker = false;
             main.OpenPanel(panel);
@@ -349,6 +349,36 @@ public class DraftPanelTests
 
             Assert.False(services.Settings.Current.GarmothTracker);
             Assert.Equal(new GarmothWeek(), services.Timers.Current.Garmoth);
+        });
+    });
+
+    [Fact]
+    public void Overlay_options_apply_at_once_and_neither_count_as_unsaved_settings_nor_get_undone_by_Save() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            foreach (var timer in services.Timers.Current.Timers)
+                services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
+            using var main = new MainViewModel(services);
+            var panel = new SettingsPanelViewModel(services);
+            main.OpenPanel(panel);
+
+            panel.Overlay.Scale = 1.4;
+            Assert.Equal(1.4, services.Settings.Current.Overlay.Scale);
+            Assert.False(panel.HasChanges);
+            main.ClosePanel();
+            Assert.False(main.AskingDiscard);
+            Assert.Null(main.Panel);
+
+            panel = new SettingsPanelViewModel(services);
+            main.OpenPanel(panel);
+            panel.CloseToTray = !panel.CloseToTray;
+            panel.Overlay.Scale = 1.8;
+            Assert.True(panel.HasChanges);
+            main.FinishPanel().GetAwaiter().GetResult();
+
+            Assert.Equal(1.8, services.Settings.Current.Overlay.Scale);
+            Assert.Equal(panel.CloseToTray, services.Settings.Current.CloseToTray);
         });
     });
 

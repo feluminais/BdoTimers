@@ -16,7 +16,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     readonly AppServices _services;
     readonly TimerEditor _editor;
     readonly Guid _id;
-    /// <summary>The Guild bosses timer's overlay row shows and changes the Overlay panel's Guild bosses setting.</summary>
+    /// <summary>The Guild bosses timer's overlay row shows and changes the Overlay settings' Guild bosses setting.</summary>
     readonly bool _guildBoss;
 
     [ObservableProperty] private bool _toast;

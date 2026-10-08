@@ -10,8 +10,6 @@ public interface IPanelHost
     void ClosePanel();
     bool IsOpen(object panel);
     void CompletePanelEdits() { }
-    /// <summary>Closes the open panel for the Overlay panel.</summary>
-    void OpenOverlaySettings() { }
 }
 
 /// <summary>How a panel shows: a drawer from the right edge, or a centred sheet.</summary>

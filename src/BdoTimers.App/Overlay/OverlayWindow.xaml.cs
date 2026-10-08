@@ -134,7 +134,7 @@ public partial class OverlayWindow : Window
                && r.Left < bounds.Right && bounds.Left < r.Right && r.Top < bounds.Bottom && bounds.Top < r.Bottom;
     }
 
-    /// <summary>Click-through lets mouse input reach the game; the Overlay panel's preview turns it off so the
+    /// <summary>Click-through lets mouse input reach the game; the Overlay settings' preview turns it off so the
     /// overlay can be dragged.</summary>
     public void SetClickThrough(bool enabled)
     {
@@ -155,7 +155,7 @@ public partial class OverlayWindow : Window
         UpdateMoveTracking();
     }
 
-    /// <summary>The Overlay panel's preview is draggable already, so the keys are only read while the overlay shows and clicks pass through it.</summary>
+    /// <summary>The Overlay settings' preview is draggable already, so the keys are only read while the overlay shows and clicks pass through it.</summary>
     void UpdateMoveTracking()
     {
         if (IsVisible && _clickThrough && _moveHotkey is not null)

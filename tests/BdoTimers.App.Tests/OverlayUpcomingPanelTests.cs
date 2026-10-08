@@ -31,9 +31,10 @@ public class OverlayUpcomingPanelTests
             try
             {
                 window.Show();
-                var panel = new OverlayPanelViewModel(services, main);
-                main.OpenPanel(panel);
+                var settings = new SettingsPanelViewModel(services) { OpenAt = "Overlay" };
+                main.OpenPanel(settings);
                 WpfTest.Drain();
+                var panel = settings.Overlay;
                 Assert.True(panel.HasUpcoming);
                 Assert.DoesNotContain(panel.Upcoming, r => r.Name == "Farm");
                 var row = panel.Upcoming.Single(r => r.Name == "Guild war");

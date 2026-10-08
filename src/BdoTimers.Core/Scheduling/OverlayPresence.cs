@@ -4,7 +4,7 @@ namespace BdoTimers.Core.Scheduling;
 
 /// <summary>
 /// Whether the overlay shows. <see cref="ShowUntilUtc"/> is the end of a show-on-hotkey press; the rest comes from the
-/// settings, the content and whether the Overlay panel is previewing it.
+/// settings, the content and whether the Overlay settings are previewing it.
 /// </summary>
 public sealed record OverlayPresence(DateTimeOffset? ShowUntilUtc = null)
 {

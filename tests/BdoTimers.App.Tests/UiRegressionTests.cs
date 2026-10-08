@@ -125,10 +125,10 @@ public class UiRegressionTests
         var settings = new PersistentState<AppSettings>(new JsonFileStore<AppSettings>(path, () => new()), new());
         var services = (AppServices)RuntimeHelpers.GetUninitializedObject(typeof(AppServices));
         SetField(services, "<Settings>k__BackingField", settings);
-        var model = (OverlayPanelViewModel)RuntimeHelpers.GetUninitializedObject(typeof(OverlayPanelViewModel));
+        var model = (OverlayOptionsViewModel)RuntimeHelpers.GetUninitializedObject(typeof(OverlayOptionsViewModel));
         SetField(model, "_services", services);
         SetField(model, "_lastSettings", settings.Current.Overlay);
-        var changed = (Action)typeof(OverlayPanelViewModel).GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Instance)!
+        var changed = (Action)typeof(OverlayOptionsViewModel).GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Instance)!
             .CreateDelegate(typeof(Action), model);
         settings.Changed += changed;
         var scale = new Slider { Minimum = .6, Maximum = 2 };
@@ -208,24 +208,6 @@ public class UiRegressionTests
     }
 
     [Fact]
-    public void OverlayPanelFocusStartsAtItsSwitch() => WpfTest.Run(() =>
-    {
-        var panel = new OverlayPanel { DataContext = new OverlayModel() };
-        var window = new Window { Content = panel, Width = 500, Height = 600 };
-        try
-        {
-            window.Show();
-            var focus = new PanelFocusScope(window, new Grid(), panel, () => { });
-            focus.Open();
-            WpfTest.Drain();
-            var target = Assert.IsType<ToggleButton>(Keyboard.FocusedElement);
-            Assert.Equal("Overlay", AutomationProperties.GetName(target));
-            Assert.True(Ui.GetInitialFocus(target));
-        }
-        finally { window.Close(); }
-    });
-
-    [Fact]
     public void NativeSwitchReportsToggleStateAndUpdatesBooleanBinding() => WpfTest.Run(() =>
     {
         var model = new SwitchModel();
@@ -278,12 +260,6 @@ public class UiRegressionTests
         .GetField(name, BindingFlags.NonPublic | BindingFlags.Instance)!.SetValue(instance, value);
 
     sealed class SwitchModel { public bool Enabled { get; set; } }
-    sealed class OverlayModel
-    {
-        public bool Enabled { get; set; } = true;
-        public bool ShowOnHotkey { get; set; }
-        public bool PickerOpen { get; set; }
-    }
     sealed class DraftPanel : IPanel
     {
         public string Text { get; set; } = "Original";

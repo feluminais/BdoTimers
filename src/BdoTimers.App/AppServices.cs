@@ -256,7 +256,7 @@ public sealed class AppServices : IDisposable
     public void PauseAlerts(TimeSpan? duration) =>
         Settings.Update(s => AlertPause.Pause(s, Clock.UtcNow, duration));
 
-    /// <summary>Brings the window up with the Overlay panel open.</summary>
+    /// <summary>Brings the window up with Settings open on Overlay.</summary>
     public void ShowOverlaySettings()
     {
         ShowMainWindow();

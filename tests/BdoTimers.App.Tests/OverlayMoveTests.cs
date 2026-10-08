@@ -119,7 +119,7 @@ public class OverlayMoveTests
             Pump();
             Assert.Equal(stoppedAt, reads);
 
-            // The Overlay panel's preview is draggable already, with or without the keys.
+            // The Overlay settings' preview is draggable already, with or without the keys.
             window.Show();
             Pump();
             window.SetClickThrough(false);

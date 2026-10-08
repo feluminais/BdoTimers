@@ -58,31 +58,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        <Style x:Key="SettingsNavButton" TargetType="Button">
-            <Setter Property="Foreground" Value="{DynamicResource SubtleBrush}" />
-            <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Height" Value="34" />
-            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Grid Background="Transparent">
-                            <Border x:Name="Bd" CornerRadius="6" Background="Transparent" />
-                            <DockPanel Margin="14,0,10,0" VerticalAlignment="Center">
-                                <TextBlock DockPanel.Dock="Right" Text="&#xE76C;" Style="{StaticResource IconText}" FontSize="9" VerticalAlignment="Center" />
-                                <ContentPresenter VerticalAlignment="Center" />
-                            </DockPanel>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource HoverFillBrush}" />
-                                <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <!-- A block of options that search shows or hides as a whole -->
+        <Style x:Key="SearchBlock" TargetType="UserControl">
+            <Style.Triggers>
+                <Trigger Property="panels:SettingsFilter.IsMatch" Value="False">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </UserControl.Resources>
     <Grid>
@@ -100,8 +82,8 @@
                                  Tag="Today" Checked="Category_Checked" />
                     <RadioButton x:Name="AlertsNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Alerts"
                                  Tag="Alerts" Checked="Category_Checked" />
-                    <Button x:Name="OverlayNav" Style="{StaticResource SettingsNavButton}" Content="Overlay" Command="{Binding OpenOverlayCommand}"
-                            AutomationProperties.Name="Overlay settings" />
+                    <RadioButton x:Name="OverlayNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Overlay"
+                                 Tag="Overlay" Checked="Category_Checked" />
                     <RadioButton x:Name="TodoNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="To-do"
                                  Tag="To-do" Checked="Category_Checked" />
                     <RadioButton x:Name="BossesNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Bosses"
@@ -260,6 +242,11 @@
                     <Button Style="{StaticResource GhostButton}" Content="Priority notifications" HorizontalAlignment="Left" Margin="0,4,8,6"
                             ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
                 </Border>
+
+                <TextBlock Text="Overlay" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Overlay" />
+                <!-- Its changes apply at once, not with Save -->
+                <panels:OverlayOptions Style="{StaticResource SearchBlock}" DataContext="{Binding Overlay}"
+                                       Tag="Show always hotkey drag move mouse proximity fade hide guild bosses layout list card bar size icons outline sections clock time server game previous next farm fishing horse custom timers upcoming background colour color picture image opacity text" />
 
                 <TextBlock Text="To-do" Style="{StaticResource SearchHeading}" Tag="todo tasks" panels:SettingsFilter.Category="To-do" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily reset" Tag="Daily reset time UTC local">

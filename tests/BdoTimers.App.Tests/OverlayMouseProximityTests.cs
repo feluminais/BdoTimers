@@ -138,11 +138,11 @@ public class OverlayMouseProximityTests
         var settings = new PersistentState<AppSettings>(new JsonFileStore<AppSettings>(path, () => new()), new());
         var services = (AppServices)RuntimeHelpers.GetUninitializedObject(typeof(AppServices));
         SetField(services, "<Settings>k__BackingField", settings);
-        var model = (OverlayPanelViewModel)RuntimeHelpers.GetUninitializedObject(typeof(OverlayPanelViewModel));
+        var model = (OverlayOptionsViewModel)RuntimeHelpers.GetUninitializedObject(typeof(OverlayOptionsViewModel));
         SetField(model, "_services", services);
         SetField(model, "_lastSettings", settings.Current.Overlay);
         SetField(model, "<MouseProximityChoices>k__BackingField", Enum.GetValues<OverlayMouseProximity>().Select(m => new Choice(m.ToString(), m)).ToList());
-        var changed = (Action)typeof(OverlayPanelViewModel).GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Instance)!
+        var changed = (Action)typeof(OverlayOptionsViewModel).GetMethod("OnSettingsChanged", BindingFlags.NonPublic | BindingFlags.Instance)!
             .CreateDelegate(typeof(Action), model);
         settings.Changed += changed;
         var selector = new CycleSelector { ItemsSource = model.MouseProximityChoices.ToList() };

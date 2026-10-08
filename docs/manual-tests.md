@@ -15,21 +15,25 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 3. [ ] Time Tracking → New tracker → Countdown: set Duration 0:02 and alerts "1, At spawn"; press the round play button on its card → alert
    at 1:00 and at 0:00, then it shows Ready again.
 4. [ ] Start BDO fullscreen, repeat step 3: sound + speech play; toast breaks through.
-5. [ ] Settings → Overlay: the overlay shows as a framed preview; drag it, close the panel; restart the app, open the panel:
-   same place. Outside the panel, clicks pass through.
-6. [ ] With BDO in borderless and the app in the tray, Ctrl+Shift+F8 pins and unpins the overlay; the panel's switch
-   follows. Ctrl+Shift+F9 shows it for 10 s and a second press hides it early. With Always show off, a countdown set
+5. [ ] Settings → Overlay: the overlay shows as a framed preview; drag it, close Settings; restart the app, open Settings →
+   Overlay: same place. Outside Settings, clicks pass through. The preview shows only while Overlay is the category (or a
+   search match on it is showing): another category ends it. Options change the overlay at once, without Save, and
+   closing Settings with only Overlay changes asks nothing. Tray → Overlay settings opens Settings on Overlay; with
+   Settings already open and edited, it switches to Overlay and keeps the edits. The server time's region link opens
+   Bosses.
+6. [ ] With BDO in borderless and the app in the tray, Ctrl+Shift+F8 pins and unpins the overlay; Always show in
+   Settings → Overlay follows. Ctrl+Shift+F9 shows it for 10 s and a second press hides it early. With Always show off, a countdown set
    to Overlay 2 min before still pops it up.
-   In Overlay settings, check Mouse proximity Off / Fade / Hide. Close the panel and approach each overlay edge:
+   In Settings → Overlay, check Mouse proximity Off / Fade / Hide. Close Settings and approach each overlay edge:
    Fade dims the entire overlay, Hide disappears, and moving away restores it without flicker. Clicks still reach BDO.
    Repeat with List, Card and Bar, changed size, negative-position monitors and different display scales. Leave the
    pointer nearby until a hotkey show or pop-up expires: moving away must not bring the expired overlay back.
-   Open the panel while proximity-hidden: the preview returns immediately and remains draggable in either mode.
+   Open Settings → Overlay while proximity-hidden: the preview returns immediately and remains draggable in either mode.
    Restart: the chosen mode persists. Off keeps the normal appearance even with the pointer over the overlay.
-   With the overlay showing, hold Ctrl+Shift (Overlay settings → Drag to move): the pointer over the overlay becomes the
+   With the overlay showing, hold Ctrl+Shift (Settings → Overlay → Drag to move): the pointer over the overlay becomes the
    move cursor and the overlay can be dragged, in BDO too; let go and clicks pass through it again. Mouse proximity
    still applies while the keys are held: Fade keeps it faint under the pointer, Hide leaves nothing to grab, so use the
-   panel's preview then. The new place survives a restart. Clear the field and the keys do nothing; set Alt alone, or
+   preview in Settings → Overlay then. The new place survives a restart. Clear the field and the keys do nothing; set Alt alone, or
    Ctrl+Alt+D, and those keys do it.
 7. [ ] Schedule → Bosses: right-click a future boss in the grid → Skip this spawn: struck through, no alert for it; Unskip
    restores it. On Today, Skip on the hero (on hover, or right-click) skips every boss of the next spawn at once; the
@@ -44,7 +48,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 11. [ ] Settings → Start with Windows On, reboot → app starts minimized in the tray. Off → it no longer starts.
 12. [ ] Start a countdown, quit, wait past its end, relaunch → one "ended while closed" toast.
 13. [ ] Timer panel → click the picture (badge "Change picture") → Choose picture…: the card shows it, fading into black.
-    Choose a file that isn't a picture, here and in Overlay → Picture: "Couldn't add …" shows and the picture stays.
+    Choose a file that isn't a picture, here and in Settings → Overlay → Picture: "Couldn't add …" shows and the picture stays.
 14. [ ] Boss panel → Sound: stepping plays nothing; ▶ plays the choice. + → pick a WAV or MP3: it's selected and listed in
     Settings → Your sounds. A file that isn't audio shows "Couldn't play …".
 15. [ ] Settings → Your sounds → ✕: the sound is gone; timers that used it show Default.
@@ -70,7 +74,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Click the card: Running lists Horse 1, Horse 2 with their times, each with a square Stop. The card's own square Stop
     (on hover) ends the latest. Undo restores a stopped one.
     Start ten at once: the next press adds none and shows the limit notice. Stop one and a new press can start another.
-    With horse registrations enabled in Overlay → Sections, the newest two appear with their time left and "+8 more
+    With horse registrations enabled in Settings → Overlay → Sections, the newest two appear with their time left and "+8 more
     running" at ten. Delete the preset, restart, and check that its hotkey no longer starts registrations.
 22. [ ] To-do: Weekly quests and Daily tasks start Off, one dashed row each. Turn Weekly quests on with its switch: its card
     appears, with a progress line. Tick an Olvia Academy child; the line grows, it moves to the bottom of its group and its
@@ -166,13 +170,13 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     2026-10-25 02:30: the spring occurrence is 01:30 UTC and the autumn occurrence is 00:30 UTC, firing once.
     Check a weekly Pacific Friday 23:30 with the same start/end Friday: its Saturday occurrence in Europe is included.
     Upgrade existing JSON without date fields: countdowns, presets, boss profiles, weekly slots and alerts are retained.
-49. [ ] Keyboard, each panel: open Settings, Overlay, Following, boss, timer, New tracker and To-do from a focused control.
+49. [ ] Keyboard, each panel: open Settings (also on Overlay), Following, boss, timer, New tracker and To-do from a focused control.
     Focus moves to a meaningful field/action, Tab and Shift+Tab stay inside, and dimmed screen/caption controls cannot
     activate. Escape and the close button dismiss; after the panel has left, focus returns to the opener. Change panels
     quickly and close during opening; no stale focus or blank modal layer remains. Preserve Ctrl+C/X/V/A/Z, caret
     keys and native selection in text fields; Ctrl+Z outside an editor undoes the last eligible action. Hotkey capture
-    retains its own Escape cancel behavior and existing system-wide shortcuts continue to work. Open Overlay and
-    Settings with the mouse, close each panel and move the pointer away: their caption buttons keep no bright frame.
+    retains its own Escape cancel behavior and existing system-wide shortcuts continue to work. Open Settings on Overlay and
+    Following with the mouse, close each panel and move the pointer away: their caption buttons keep no bright frame.
     Repeat with timer cards, picture actions and to-do checkboxes; Tab still gives a visible keyboard focus cue.
     Open Settings with the mouse, then close it with Escape: no focus frame appears on the Settings button. Typing
     in a mouse-focused search field also leaves focus frames hidden. Tab or keyboard button activation shows them.
@@ -218,8 +222,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     spaces, launch-at-finish, running-app upgrade and offline use after installation. Start, timers, to-do and alerts
     work offline; updates fail concisely as in step 34. Local unsigned artifacts must be explicitly built with
     `pwsh scripts/publish.ps1 -AllowUnsigned` and are not a signed release.
-57. [ ] Mouse wheel over the Week grid, Coming up, Time Tracking, both To-do lists and each tall panel (Settings, Overlay,
-    boss, timer, to-do list) scrolls that list; the Schedule header, list headings and each panel's header and Done stay in place.
+57. [ ] Mouse wheel over the Week grid, Coming up, Time Tracking, both To-do lists and each tall panel (Settings, boss, timer,
+    to-do list) scrolls that list; the Schedule header, list headings and each panel's header and Done stay in place.
     Shrink the window to its minimum with the largest Text size: only then does the screen or panel scroll as a whole.
     Clicking anywhere in the dimmed area (beside, above or below a panel, near or far from it) closes it; clicking
     inside the panel, on its scroll bar, or in a list or calendar dropping out past its edge does not.
@@ -228,19 +232,19 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     or Add time. Change the time and Save; turn Active Off and Save (tile: Off), then On: the time is kept. Discard an
     Active edit: the saved state stays. Restart and check that its next weekly occurrence remains. Data from an earlier
     version drops a Guild war without times; one with times stays, accepts several day/time rows and can be deleted.
-59. [ ] Time Tracking → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. Overlay → Guild bosses → 15 min before: the preview shows
+59. [ ] Time Tracking → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. Settings → Overlay → Guild bosses → 15 min before: the preview shows
     a dimmed Guild bosses row; the timer panel's Overlay over the game shows the same value, and changing it there
-    changes the Overlay panel's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
+    changes Settings → Overlay's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
     before, then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next
     on the tile, Active Off, Alerts Off, or Guild bosses Off: no pop-up.
-60. [ ] Overlay → Sections → Local time, Server time and In-game time: all three share the top line with a monitor,
+60. [ ] Settings → Overlay → Sections → Local time, Server time and In-game time: all three share the top line with a monitor,
     globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
     moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
     server time and the panel's link follow.
-61. [ ] Overlay → Look → Outline: Off removes the clock box, timer chip borders and preview frame immediately;
+61. [ ] Settings → Overlay → Look → Outline: Off removes the clock box, timer chip borders and preview frame immediately;
     On restores their faint neutral outlines in List, Card and Bar. With Off and background opacity at zero, the
     preview remains draggable. Close the panel and restart: the selected outline setting remains saved.
-62. [ ] Overlay → Card: the clocks sit above the card in a raised section with smoothly curved shoulders and no seam.
+62. [ ] Settings → Overlay → Card: the clocks sit above the card in a raised section with smoothly curved shoulders and no seam.
     Toggle each clock and then all clocks off: the section fits the enabled clocks and disappears when none remain.
     Check colour and picture backgrounds, opacity and scale; Outline follows the joined shape in preview. With the
     background and outline off, drag the clock section and card body; both move the overlay together.
@@ -308,8 +312,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Type 97 and press Enter: it stays red and is not saved. Discard a completed time edit: the saved time stays.
 75. [ ] Panels: the boss, timer, New tracker, Following and to-do list panels open as a drawer from the right over a dimmed
     window; Esc, the dimmed area and ✕ close it, and the discard question shows inside the drawer. Settings opens as a
-    two-pane sheet: categories on the left, Ctrl+F searches every category, and Overlay in the list opens the Overlay
-    panel. At Text size 150% the drawer and the sheet fit the window; with Windows animation effects off they appear without sliding.
+    two-pane sheet: categories on the left, Ctrl+F searches every category, and Overlay in the list has the overlay's options. At Text size 150% the drawer and the sheet fit the window; with Windows animation effects off they appear without sliding.
 76. [ ] Time Tracking: each countdown and stopwatch card shows its round Start / Pause at rest, in the same gold while running;
     the triangle and the two bars sit in the middle of the circle at 100%, 125% and 150% display scale. Hovering a
     card shows Started earlier above it and, once it has been started, a square Stop below it; Tab reaches both and shows
@@ -338,7 +341,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
     and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking
     the room) and when no boss is followed. The paused notice shows from 930 px wide; below that the bell's slash says it. Below 740 px the tabs sit closer, and in the smallest window (700 px) every caption button is in it.
-81. [ ] Overlay → Look → Boss icons: turn on; previous and next bosses and world-boss pop-ups show outline faces in
+81. [ ] Settings → Overlay → Look → Boss icons: turn on; previous and next bosses and world-boss pop-ups show outline faces in
     List, Card and Bar. Paired bosses show two icons; an unfamiliar added boss keeps its name. Skipped bosses stay dim.
     Farm, Fishing and custom timers keep their labels. Hover an icon in preview: its boss name appears. Change Size:
     icons stay sharp. Close the panel and restart: the setting persists; turn it off to restore boss names.
@@ -356,12 +359,12 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 84. [ ] Time Tracking → New tracker offers Countdown, Stopwatch, Weekly and One-time event. Stopwatch opens a panel with a
     name, a picture and Delete, and no alert settings; the card appears with Start. Start it: it counts up, the card gets
     Started earlier and Stop on hover, and Today's Running lists it. Pause, Resume and Stop reset it like Fishing; restart
-    the app while it runs and it keeps counting from the same start. With the overlay pinned and Overlay → Sections →
+    the app while it runs and it keeps counting from the same start. With the overlay pinned and Settings → Overlay → Sections →
     Custom timers on, a running stopwatch shows under Custom timers with the time counted, and "Paused" while paused.
 85. [ ] Edit a timer's name and click outside its panel, then do the same in Settings: "Discard changes?" opens centred in the
     window over a darker layer, not inside the drawer, with Keep editing focused. Clicking the dark area does nothing; Keep
     editing returns to the draft and Discard closes it. Check it at the largest text size too.
-86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Overlay → Upcoming lists Guild
+86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Settings → Overlay → Upcoming lists Guild
     bosses, War of the Roses and Guild war, each Off. Set Guild war to 1 h before: the preview shows a dimmed
     "Upcoming timer" row, and Always show shows no row yet; set it to 3 h before: Guild war and its time left show in
     List, Card and Bar. With Always show off, the overlay stays hidden while the window is open; Show on hotkey shows

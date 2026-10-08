@@ -31,7 +31,6 @@ public partial class MainWindow
         [typeof(NewTimerPanelViewModel)] = (() => new NewTimerPanel(), new Size(440, 720)),
         [typeof(TodoListPanelViewModel)] = (() => new TodoListPanel(), new Size(440, 720)),
         [typeof(FollowingPanelViewModel)] = (() => new FollowingPanel(), new Size(440, 720)),
-        [typeof(OverlayPanelViewModel)] = (() => new OverlayPanel(), new Size(440, 720)),
     };
 
     /// <summary>Views built earlier and not showing: a panel is a few hundred controls, so it is built once and bound to each new panel.</summary>
