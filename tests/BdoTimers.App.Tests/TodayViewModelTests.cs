@@ -32,7 +32,7 @@ public class TodayViewModelTests
     static TimerDef[] Bosses(params string[] names) => names.Select(n => new TimerDef { Name = n, IsBuiltIn = true }).ToArray();
 
     [Fact]
-    public void The_hero_shows_the_next_spawn_with_the_one_after_it_the_one_before_it_and_how_soon() => WithServices(services =>
+    public void The_hero_shows_the_next_spawn_with_its_alerts_the_one_before_it_and_how_soon() => WithServices(services =>
     {
         var hero = new HeroViewModel(services, _ => { }, () => { });
         var now = new DateTimeOffset(2026, 10, 4, 6, 0, 0, TimeSpan.Zero);
@@ -46,7 +46,7 @@ public class TodayViewModelTests
         Assert.True(hero.HasNext);
         Assert.Equal("02:47:10", hero.Next.Clock);
         Assert.StartsWith("Next · ", hero.Next.Label);
-        Assert.Equal("Then Garmoth 03:59:58 · Alerts 15 · 5 · at spawn", hero.Then);
+        Assert.Equal("Alerts 15 · 5 · at spawn", hero.Alerts);
         Assert.Equal("Previous Golden Pig King · Kutum −08:00:02", hero.Previous);
         Assert.Equal(UrgencyLevel.Normal, hero.Level);
 
@@ -54,7 +54,7 @@ public class TodayViewModelTests
         Assert.Equal(UrgencyLevel.Imminent, hero.Level);
         hero.Update(new BossBoardState(null, null, null), now, [15, 5, 0]);
         Assert.False(hero.HasNext);
-        Assert.Null(hero.Then);
+        Assert.Null(hero.Alerts);
         Assert.Null(hero.Previous);
     });
 

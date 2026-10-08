@@ -15,8 +15,8 @@ public sealed partial class HeroViewModel(AppServices services, Action<Guid> ope
     public StripTileViewModel Next { get; } = new("Next", elapsed: false);
     [ObservableProperty, NotifyCanExecuteChangedFor(nameof(ToggleSkipCommand))] private bool _hasNext;
     [ObservableProperty] private UrgencyLevel _level;
-    /// <summary>"Then Garmoth 03:59:58 · Alerts 15 · 5 · at spawn".</summary>
-    [ObservableProperty] private string? _then;
+    /// <summary>"Alerts 15 · 5 · at spawn".</summary>
+    [ObservableProperty] private string? _alerts;
     /// <summary>"Previous Golden Pig King · Kutum −08:00:02".</summary>
     [ObservableProperty] private string? _previous;
     [ObservableProperty] private string _skipLabel = "Skip";
@@ -31,10 +31,7 @@ public sealed partial class HeroViewModel(AppServices services, Action<Guid> ope
         SkipLabel = board.Next is { Skipped: true } ? "Unskip" : "Skip";
         NamesText = board.Next is { } shown ? Names(shown) : null;
         Level = board.Next is { } next ? Urgency.Of(next.AtUtc - now) : UrgencyLevel.Normal;
-        var parts = new List<string>();
-        if (board.FollowedBy is { } then) parts.Add($"Then {Names(then)} {DurationFormat.Clock(then.AtUtc - now)}");
-        if (board.Next is { } coming && Leads(coming, defaultLeads) is { Length: > 0 } leads) parts.Add("Alerts " + leads);
-        Then = parts.Count == 0 ? null : string.Join(" · ", parts);
+        Alerts = board.Next is { } coming && Leads(coming, defaultLeads) is { Length: > 0 } leads ? "Alerts " + leads : null;
         Previous = board.Previous is { } previous ? $"Previous {Names(previous)} −{DurationFormat.Clock(now - previous.AtUtc)}" : null;
     }
 
