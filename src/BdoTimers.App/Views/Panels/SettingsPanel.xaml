@@ -344,7 +344,7 @@
                 <TextBlock Text="Overlay" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Overlay" />
                 <!-- Its changes apply at once, not with Save -->
                 <panels:OverlayOptions Style="{StaticResource SearchBlock}" DataContext="{Binding Overlay}"
-                                       Tag="Show always hotkey drag move mouse proximity fade hide layout list card bar size icons outline sections clock time server game previous next farm fishing horse custom timers events always before background colour color picture image opacity text" />
+                                       Tag="Show always hotkey drag move mouse proximity fade hide layout list card bar size icons outline sections clock time server game previous next farm fishing horse custom timers timers always before show next boss farm horse custom background colour color picture image opacity text" />
 
                 <TextBlock Text="Data" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Data" />
                 <Border Style="{StaticResource SearchRow}" Tag="Replace current data and restart? · Export backup… Restore backup… Open data folder Restore Cancel">

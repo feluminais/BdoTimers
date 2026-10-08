@@ -94,11 +94,7 @@
                     <ToggleButton Style="{StaticResource Chip}" Content="Server time" IsChecked="{Binding ShowServerTime}" />
                     <ToggleButton Style="{StaticResource Chip}" Content="In-game time" IsChecked="{Binding ShowGameTime}" />
                     <ToggleButton Style="{StaticResource Chip}" Content="Previous boss" IsChecked="{Binding ShowPrevious}" />
-                    <ToggleButton Style="{StaticResource Chip}" Content="Next boss" IsChecked="{Binding ShowNext}" />
-                    <ToggleButton Style="{StaticResource Chip}" Content="Farm" IsChecked="{Binding ShowFarm}" />
                     <ToggleButton Style="{StaticResource Chip}" Content="Fishing" IsChecked="{Binding ShowFishing}" />
-                    <ToggleButton Style="{StaticResource Chip}" Content="Horse registrations" IsChecked="{Binding ShowHorseRegistrations}" />
-                    <ToggleButton Style="{StaticResource Chip}" Content="Custom timers" IsChecked="{Binding ShowCustomTimers}" />
                 </WrapPanel>
             </Border>
             <Border Style="{StaticResource Row}" Visibility="{Binding ShowServerTime, Converter={StaticResource BoolToVisibility}}">
@@ -110,12 +106,12 @@
                 </DockPanel>
             </Border>
 
-            <TextBlock Text="Events" Style="{StaticResource SectionText}" Visibility="{Binding HasEvents, Converter={StaticResource BoolToVisibility}}" />
-            <ItemsControl ItemsSource="{Binding Events}" Focusable="False">
+            <TextBlock Text="Timers" Style="{StaticResource SectionText}" />
+            <ItemsControl ItemsSource="{Binding Timers}" Focusable="False">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type pvm:OverlayEventRow}">
+                    <DataTemplate DataType="{x:Type pvm:OverlayTimedRow}">
                         <StackPanel>
-                            <HeaderedContentControl Style="{StaticResource SettingRow}" Header="{Binding Name}">
+                            <HeaderedContentControl Style="{StaticResource SettingRow}" Header="{Binding Name}" ToolTip="{Binding Tip}">
                                 <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding IsOn}" Width="60"
                                               AutomationProperties.Name="{Binding Name}" />
                             </HeaderedContentControl>
@@ -130,9 +126,11 @@
                                 <Border Style="{StaticResource Row}" Margin="14,0,0,0"
                                         Visibility="{Binding Always, Converter={StaticResource InverseBoolToVisibility}}">
                                     <DockPanel>
-                                        <TextBox DockPanel.Dock="Right" Width="60" TextAlignment="Right" VerticalAlignment="Center"
-                                                 Text="{Binding BeforeText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
-                                                 controls:Ui.HasError="{Binding BeforeInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes"
+                                        <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding Units}" SelectedItem="{Binding Unit}"
+                                                                ValueWidth="40" AutomationProperties.Name="{Binding Name, StringFormat='{}{0} unit'}" />
+                                        <TextBox DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" MaxLength="4"
+                                                 Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                                                 controls:Ui.HasError="{Binding AmountInvalid}"
                                                  AutomationProperties.Name="{Binding Name, StringFormat='{}{0} show before'}" />
                                         <TextBlock Text="Show before" Style="{StaticResource RowLabel}" />
                                     </DockPanel>

@@ -37,9 +37,9 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
     public IReadOnlyList<Choice> MouseProximityChoices { get; } = Enum.GetValues<OverlayMouseProximity>().Select(m => new Choice(m.ToString(), m)).ToList();
     public IReadOnlyList<Swatch> Swatches { get; }
-    /// <summary>The timers that can have a row on the overlay. Fixed while Settings is open, as timers can't change under it.</summary>
-    public IReadOnlyList<OverlayEventRow> Events { get; }
-    public bool HasEvents => Events.Count > 0;
+    /// <summary>The timed rows the overlay can show, each with when it shows. Fixed while Settings is open, as timers can't
+    /// change under it.</summary>
+    public IReadOnlyList<OverlayTimedRow> Timers { get; }
     public bool HasPicture => Picture is not null;
     public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
     /// <summary>The combos the other hotkeys hold, which each hotkey field may not repeat.</summary>
@@ -58,12 +58,23 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         _services = services;
         _showRegion = showRegion;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
-        Events = services.Timers.Current.Timers.Where(Listable)
-            .Select(t => new OverlayEventRow(t.Name, t.Id, Current.Timers.FirstOrDefault(w => w.TimerId == t.Id),
-                window => SetRow(t.Id, window)))
-            .ToList();
-        _colorSave.Tick += (_, _) => SaveCustomColor();
         var o = Current;
+        Timers =
+        [
+            Section("Next boss", o.ShowNext, o.NextLead, (s, on, lead) => s with { ShowNext = on, NextLead = lead }),
+            Section("Farm", o.ShowFarm, o.FarmLead, (s, on, lead) => s with { ShowFarm = on, FarmLead = lead }),
+            Section("Horse registrations", o.ShowHorseRegistrations, o.HorseLead,
+                (s, on, lead) => s with { ShowHorseRegistrations = on, HorseLead = lead }),
+            Section("Custom timers", o.ShowCustomTimers, o.CustomLead,
+                (s, on, lead) => s with { ShowCustomTimers = on, CustomLead = lead }, "Countdowns and events; stopwatches always show"),
+            .. services.Timers.Current.Timers.Where(Listable).Select(t =>
+            {
+                var saved = o.Timers.FirstOrDefault(w => w.TimerId == t.Id);
+                return new OverlayTimedRow(t.Name, saved is not null, saved?.Always ?? false, saved?.Minutes ?? 0,
+                    (on, always, minutes) => SetRow(t.Id, on ? new OverlayTimerWindow(t.Id, minutes, always) : null));
+            }),
+        ];
+        _colorSave.Tick += (_, _) => SaveCustomColor();
         _lastSettings = o;
         if (RgbColor.TryParseHex(o.BackgroundColor, out var rgb)) _customColor = Color.FromRgb(rgb.R, rgb.G, rgb.B);
         _picture = o.BackgroundImage is { } file ? services.Art.UserPicture(file) : null;
@@ -113,15 +124,7 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     public bool ShowServerTime { get => Current.ShowServerTime; set => Modify(o => o with { ShowServerTime = value }); }
     public bool ShowGameTime { get => Current.ShowGameTime; set => Modify(o => o with { ShowGameTime = value }); }
     public bool ShowPrevious { get => Current.ShowPrevious; set => Modify(o => o with { ShowPrevious = value }); }
-    public bool ShowNext { get => Current.ShowNext; set => Modify(o => o with { ShowNext = value }); }
-    public bool ShowFarm { get => Current.ShowFarm; set => Modify(o => o with { ShowFarm = value }); }
-    public bool ShowCustomTimers { get => Current.ShowCustomTimers; set => Modify(o => o with { ShowCustomTimers = value }); }
     public bool ShowFishing { get => Current.ShowFishing; set => Modify(o => o with { ShowFishing = value }); }
-    public bool ShowHorseRegistrations
-    {
-        get => Current.ShowHorseRegistrations;
-        set => Modify(o => o with { ShowHorseRegistrations = value });
-    }
     public double BackgroundOpacity
     {
         get => Current.BackgroundOpacity;
@@ -159,11 +162,7 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         if (previous.ShowServerTime != next.ShowServerTime) OnPropertyChanged(nameof(ShowServerTime));
         if (previous.ShowGameTime != next.ShowGameTime) OnPropertyChanged(nameof(ShowGameTime));
         if (previous.ShowPrevious != next.ShowPrevious) OnPropertyChanged(nameof(ShowPrevious));
-        if (previous.ShowNext != next.ShowNext) OnPropertyChanged(nameof(ShowNext));
-        if (previous.ShowFarm != next.ShowFarm) OnPropertyChanged(nameof(ShowFarm));
-        if (previous.ShowCustomTimers != next.ShowCustomTimers) OnPropertyChanged(nameof(ShowCustomTimers));
         if (previous.ShowFishing != next.ShowFishing) OnPropertyChanged(nameof(ShowFishing));
-        if (previous.ShowHorseRegistrations != next.ShowHorseRegistrations) OnPropertyChanged(nameof(ShowHorseRegistrations));
         if (previous.BackgroundOpacity != next.BackgroundOpacity) OnPropertyChanged(nameof(BackgroundOpacity));
         if (previous.TextOpacity != next.TextOpacity) OnPropertyChanged(nameof(TextOpacity));
         OnTimersChanged();
@@ -182,10 +181,15 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         OnPropertyChanged(nameof(TakenForMove));
     }
 
-    /// <summary>Scheduled and one-time timers of the player's own and the presets; boss timetable entries have the Next and
-    /// Previous boss sections, and countdowns the Custom timers one.</summary>
+    /// <summary>Scheduled and one-time timers of the player's own and the presets; boss timetable entries, Farm, horse
+    /// registrations and custom countdowns have a row of their own above.</summary>
     static bool Listable(TimerDef t) =>
         !t.IsBuiltIn && (t.Kind == TimerKind.Scheduled || t is { Kind: TimerKind.OneTime, OneTime.Finished: false });
+
+    OverlayTimedRow Section(string name, bool on, OverlayLead lead, Func<OverlaySettings, bool, OverlayLead, OverlaySettings> apply,
+        string? tip = null) =>
+        new(name, on, lead.Always, lead.Minutes,
+            (isOn, always, minutes) => Modify(o => apply(o, isOn, new OverlayLead(always, minutes))), tip);
 
     void SetRow(Guid id, OverlayTimerWindow? window) => Modify(o =>
     {
@@ -276,48 +280,60 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     }
 }
 
-/// <summary>A timer in the Overlay options' Events block: whether the overlay lists it, and whether always or only from
-/// a time before its next occurrence.</summary>
-public sealed partial class OverlayEventRow : ObservableObject
+/// <summary>A row of the Overlay options' Timers block: whether the overlay shows it, and whether always or only from a
+/// time before its own time, typed as a number and a unit.</summary>
+public sealed partial class OverlayTimedRow : ObservableObject
 {
     const int DefaultMinutes = 60;
+    /// <summary>The longest lead a saved overlay accepts: a week.</summary>
+    const int MaxMinutes = 10080;
 
-    readonly Guid _id;
-    readonly Action<OverlayTimerWindow?> _apply;
+    readonly Action<bool, bool, int> _apply;
     int _minutes;
 
     [ObservableProperty] private bool _isOn;
     [ObservableProperty] private bool _always;
-    [ObservableProperty] private string _beforeText;
-    [ObservableProperty] private bool _beforeInvalid;
+    [ObservableProperty] private string _amount;
+    [ObservableProperty] private Choice _unit;
+    [ObservableProperty] private bool _amountInvalid;
 
-    public OverlayEventRow(string name, Guid id, OverlayTimerWindow? saved, Action<OverlayTimerWindow?> apply)
+    public OverlayTimedRow(string name, bool isOn, bool always, int minutes, Action<bool, bool, int> apply, string? tip = null)
     {
-        _id = id;
         _apply = apply;
         Name = name;
-        _minutes = saved is { Minutes: > 0 } ? saved.Minutes : DefaultMinutes;
-        _isOn = saved is not null;
-        _always = saved?.Always ?? false;
-        _beforeText = Parsing.FormatDuration(TimeSpan.FromMinutes(_minutes));
+        Tip = tip;
+        _minutes = minutes > 0 ? minutes : DefaultMinutes;
+        _isOn = isOn;
+        _always = always;
+        var hours = _minutes % 60 == 0;
+        _amount = (hours ? _minutes / 60 : _minutes).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        _unit = Units[hours ? 1 : 0];
     }
 
     public string Name { get; }
+    public string? Tip { get; }
+    public IReadOnlyList<Choice> Units { get; } = [new("min", 1), new("h", 60)];
 
     partial void OnIsOnChanged(bool value) => Save();
 
     partial void OnAlwaysChanged(bool value) => Save();
 
-    /// <summary>A time that doesn't read keeps the last good one saved.</summary>
-    partial void OnBeforeTextChanged(string value)
+    partial void OnAmountChanged(string value) => ReadLead();
+
+    partial void OnUnitChanged(Choice value) => ReadLead();
+
+    /// <summary>A lead that doesn't read keeps the last good one saved.</summary>
+    void ReadLead()
     {
-        BeforeInvalid = !Parsing.TryParseDuration(value, out var before);
-        if (BeforeInvalid) return;
-        _minutes = (int)before.TotalMinutes;
+        var valid = int.TryParse(Amount, System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var amount)
+            && amount >= 1 && amount * (int)Unit.Value! is var minutes && minutes <= MaxMinutes;
+        AmountInvalid = !valid;
+        if (!valid) return;
+        _minutes = amount * (int)Unit.Value!;
         Save();
     }
 
-    void Save() => _apply(IsOn ? new OverlayTimerWindow(_id, _minutes, Always) : null);
+    void Save() => _apply(IsOn, Always, _minutes);
 }
 
 /// <summary>A background colour in the Overlay options; the chosen one is ringed.</summary>

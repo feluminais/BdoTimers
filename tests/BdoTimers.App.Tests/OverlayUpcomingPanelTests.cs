@@ -35,22 +35,26 @@ public class OverlayUpcomingPanelTests
                 main.OpenPanel(settings);
                 WpfTest.Drain();
                 var panel = settings.Overlay;
-                Assert.True(panel.HasEvents);
-                Assert.DoesNotContain(panel.Events, r => r.Name == "Farm");
-                Assert.Single(panel.Events, r => r.Name == "Guild bosses");
-                var row = panel.Events.Single(r => r.Name == "Guild war");
+                Assert.Equal(["Next boss", "Farm", "Horse registrations", "Custom timers"], panel.Timers.Take(4).Select(r => r.Name));
+                Assert.Single(panel.Timers, r => r.Name == "Guild bosses");
+                Assert.DoesNotContain(panel.Timers, r => r.Name == "Fishing");
+                var row = panel.Timers.Single(r => r.Name == "Guild war");
                 Assert.False(row.IsOn);
                 Assert.Empty(services.Settings.Current.Overlay.Timers);
 
                 row.IsOn = true;
                 Assert.Equal([new OverlayTimerWindow(war.Id, 60)], services.Settings.Current.Overlay.Timers);
-                row.BeforeText = "3:00";
+                Assert.Equal(("1", "h"), (row.Amount, row.Unit.Label));
+                row.Amount = "3";
                 Assert.Equal([new OverlayTimerWindow(war.Id, 180)], services.Settings.Current.Overlay.Timers);
-                row.BeforeText = "soon";
-                Assert.True(row.BeforeInvalid);
+                row.Amount = "soon";
+                Assert.True(row.AmountInvalid);
                 Assert.Equal([new OverlayTimerWindow(war.Id, 180)], services.Settings.Current.Overlay.Timers);
-                row.BeforeText = "45";
-                Assert.False(row.BeforeInvalid);
+                row.Amount = "999";
+                Assert.True(row.AmountInvalid);
+                row.Unit = row.Units[0];
+                row.Amount = "45";
+                Assert.False(row.AmountInvalid);
                 Assert.Equal([new OverlayTimerWindow(war.Id, 45)], services.Settings.Current.Overlay.Timers);
                 row.Always = true;
                 Assert.Equal([new OverlayTimerWindow(war.Id, 45, Always: true)], services.Settings.Current.Overlay.Timers);
@@ -60,7 +64,26 @@ public class OverlayUpcomingPanelTests
                 row.IsOn = true;
                 Assert.Equal([new OverlayTimerWindow(war.Id, 45, Always: true)], services.Settings.Current.Overlay.Timers);
                 row.Always = false;
-                row.BeforeText = "3:00";
+                row.Unit = row.Units[1];
+                row.Amount = "3";
+
+                // The built-in rows keep their section's switch and save their lead beside it.
+                var farm = panel.Timers.Single(r => r.Name == "Farm");
+                Assert.True(farm.IsOn);
+                Assert.True(farm.Always);
+                farm.Always = false;
+                Assert.Equal((true, new OverlayLead(false, 60)), (services.Settings.Current.Overlay.ShowFarm, services.Settings.Current.Overlay.FarmLead));
+                farm.Unit = farm.Units[1];
+                farm.Amount = "2";
+                Assert.Equal(new OverlayLead(false, 120), services.Settings.Current.Overlay.FarmLead);
+                farm.IsOn = false;
+                Assert.False(services.Settings.Current.Overlay.ShowFarm);
+                Assert.Equal(new OverlayLead(false, 120), services.Settings.Current.Overlay.FarmLead);
+                var custom = panel.Timers.Single(r => r.Name == "Custom timers");
+                custom.Always = false;
+                custom.Unit = custom.Units[0];
+                custom.Amount = "10";
+                Assert.Equal(new OverlayLead(false, 10), services.Settings.Current.Overlay.CustomLead);
                 PanelFocusScope.Descendants(window).OfType<FrameworkElement>()
                     .First(e => System.Windows.Automation.AutomationProperties.GetName(e) == "Guild war").BringIntoView();
                 WpfTest.Drain();

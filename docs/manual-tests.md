@@ -74,7 +74,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     Click the card: Running lists Horse 1, Horse 2 with their times, each with a square Stop. The card's own square Stop
     (on hover) ends the latest. Undo restores a stopped one.
     Start ten at once: the next press adds none and shows the limit notice. Stop one and a new press can start another.
-    With horse registrations enabled in Settings → Overlay → Sections, the newest two appear with their time left and "+8 more
+    With horse registrations enabled in Settings → Overlay → Timers, the newest two appear with their time left and "+8 more
     running" at ten. Delete the preset, restart, and check that its hotkey no longer starts registrations.
 22. [ ] To-do: Weekly quests and Daily tasks start Off, one dashed row each. Turn Weekly quests on with its switch: its card
     appears, with a progress line. Tick an Olvia Academy child; the line grows, it moves to the bottom of its group and its
@@ -236,7 +236,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     game to 15 min before. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes before,
     then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next on the
     tile, Active Off or Alerts Off: no pop-up. Settings → Overlay has no pop-up setting for it, and its preview shows no
-    Guild bosses row unless Events turns it on.
+    Guild bosses row unless Timers turns it on.
 60. [ ] Settings → Overlay → Sections → Local time, Server time and In-game time: all three share the top line with a monitor,
     globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
     moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
@@ -359,18 +359,20 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 84. [ ] Time Tracking → New tracker offers Countdown, Stopwatch, Weekly and One-time event. Stopwatch opens a panel with a
     name, a picture and Delete, and no alert settings; the card appears with Start. Start it: it counts up, the card gets
     Started earlier and Stop on hover, and Today's Running lists it. Pause, Resume and Stop reset it like Fishing; restart
-    the app while it runs and it keeps counting from the same start. With the overlay pinned and Settings → Overlay → Sections →
+    the app while it runs and it keeps counting from the same start. With the overlay pinned and Settings → Overlay → Timers →
     Custom timers on, a running stopwatch shows under Custom timers with the time counted, and "Paused" while paused.
 85. [ ] Edit a timer's name and click outside its panel, then do the same in Settings: "Discard changes?" opens centred in the
     window over a darker layer, not inside the drawer, with Keep editing focused. Clicking the dark area does nothing; Keep
     editing returns to the draft and Discard closes it. Check it at the largest text size too.
-86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Settings → Overlay → Events lists Guild bosses,
-    War of the Roses and Guild war, each Off. Turn Guild war on: Always (Off) and Show before 1:00 appear under it, and
-    the preview shows a dimmed "Upcoming timer" row while Always show shows no row yet. Type 3:00 in Show before: Guild war
-    and its time left show in List, Card and Bar. With Always show off, the overlay stays hidden while the window is open;
-    Show on hotkey shows the row. Skip next on the tile removes the row, and Off removes it too. Turn Always on: Show before
-    leaves and the row shows however far off the time is. Type "soon" in Show before: the field is flagged and the last
-    good time stays. With the timer's Overlay over the game set, that pop-up shows instead of a second row.
+86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Settings → Overlay → Timers lists Next
+    boss, Farm, Horse registrations and Custom timers, then Guild bosses, War of the Roses and Guild war; the Guild war row
+    is Off. Turn it on: Always (Off) and Show before 1 h appear under it, and the preview shows a dimmed "Upcoming timer"
+    row while Always show shows no row yet. Type 3 in Show before: Guild war and its time left show in List, Card and Bar.
+    With Always show off, the overlay stays hidden while the window is open; Show on hotkey shows the row. Skip next on the
+    tile removes the row, and Off removes it too. Switch the unit to min and type 90: it reads 90 min and the row shows
+    from 1 h 30 min before. Turn Always on: Show before leaves and the row shows however far off the time is. Type "soon"
+    or 99999: the field is flagged and the last good time stays. With the timer's Overlay over the game set, that pop-up
+    shows instead of a second row.
 87. [ ] Settings → Today: Daily tasks, Weekly tasks and Garmoth are on. Turn each off and Save: its panel leaves Today and the
     others stay. Garmoth is dimmed while the tracker in Bosses is off. A weekly panel still needs a weekly list on.
 88. [ ] Settings: click in the Search field, then on bare space in the sheet: the field loses its caret and underline, and
@@ -378,3 +380,10 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 89. [ ] Open Settings with the mouse, close it with Escape (or Enter on Save) and leave the mouse where it is: no tooltip
     appears on the cog or on whatever the mouse is not over. Tab onto the cog afterwards: its tooltip does show.
 90. [ ] Schedule opens on Calendar, listed first; Bosses is the second tab. Calendar's day heading reads like "Wed 7 Oct".
+91. [ ] Settings → Overlay → Timers: Next boss, Farm and Custom timers are on and Always. Start Farm and turn Always off with Show
+    before 2 h: Farm leaves the overlay until 2 h before it has grown, then shows with its time and growth, and stays
+    after the harvest time. Next boss with Show before 30 min shows only that close to the spawn while Previous stays. Start
+    a 1 h countdown and a stopwatch: with Custom timers at 10 min before, the stopwatch always shows and the countdown only
+    from its last 10 minutes. A one-time event
+    listed under Timers follows its own window, not the Custom timers one. With Horse registrations on at 3 min before, a registration shows from its last 3 minutes. Each row's
+    off switch hides it; the preview keeps a dimmed sample of the ones that are on.
