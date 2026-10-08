@@ -3,8 +3,9 @@ namespace BdoTimers.Core.Model;
 public enum OverlayLayout { List, Card, Bar }
 public enum OverlayMouseProximity { Off, Fade, Hide }
 
-/// <summary>A listed timer's row shows from <paramref name="Minutes"/> before its occurrence.</summary>
-public sealed record OverlayTimerWindow(Guid TimerId, int Minutes);
+/// <summary>A listed timer's row shows from <paramref name="Minutes"/> before its occurrence, or at any distance when
+/// <paramref name="Always"/>; the minutes stay saved meanwhile.</summary>
+public sealed record OverlayTimerWindow(Guid TimerId, int Minutes, bool Always = false);
 
 /// <summary>When the in-game overlay shows and how it looks.</summary>
 public sealed record OverlaySettings
@@ -43,8 +44,8 @@ public sealed record OverlaySettings
     /// <summary>When the Guild bosses timer pops up on the overlay, in place of its own overlay alert; off until turned
     /// on.</summary>
     public OverlayAlert GuildBosses { get; init; } = new();
-    /// <summary>Timers that get a row while the overlay shows, inside a window before their next occurrence. Unlike a
-    /// pop-up, a row never brings the overlay up; a timer that isn't listed gets none.</summary>
+    /// <summary>Timers that get a row while the overlay shows, inside a window before their next occurrence or always.
+    /// Unlike a pop-up, a row never brings the overlay up; a timer that isn't listed gets none.</summary>
     public IReadOnlyList<OverlayTimerWindow> Timers { get; init; } = [];
     /// <summary>"#RRGGBB"; also used when the picture can't be read.</summary>
     public string BackgroundColor { get; init; } = DefaultBackgroundColor;

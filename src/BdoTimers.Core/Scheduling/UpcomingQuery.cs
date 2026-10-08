@@ -25,16 +25,17 @@ public static class UpcomingQuery
     }
 
     /// <summary>The next unmuted occurrence of each timer in <see cref="OverlaySettings.Timers"/> that falls inside its
-    /// window, whether or not the timer's alerts are on. These rows don't bring the overlay up.</summary>
+    /// window, or the next at all for an Always one, whether or not the timer's alerts are on. These rows don't bring the
+    /// overlay up.</summary>
     public static IReadOnlyList<UpcomingItem> Listed(AppData data, OverlaySettings settings, DateTimeOffset now)
     {
         if (settings.Timers.Count == 0) return [];
         var muted = GarmothTracker.Silenced(data);
         return settings.Timers
-            .Where(w => w.Minutes > 0)
-            .Select(w => (Timer: data.Timers.FirstOrDefault(t => t.Id == w.TimerId), w.Minutes))
+            .Where(w => w.Always || w.Minutes > 0)
+            .Select(w => (Timer: data.Timers.FirstOrDefault(t => t.Id == w.TimerId), w.Minutes, w.Always))
             .Where(p => p.Timer is not null && BossRegions.IsEligible(data, p.Timer))
-            .Select(p => OccurrenceSource.Between(p.Timer!, now, now + TimeSpan.FromMinutes(p.Minutes))
+            .Select(p => (p.Always ? OccurrenceSource.From(p.Timer!, now) : OccurrenceSource.Between(p.Timer!, now, now + TimeSpan.FromMinutes(p.Minutes)))
                 .Where(at => !muted.Contains(new MutedOccurrence(p.Timer!.Id, at)))
                 .Select(at => new UpcomingItem(p.Timer!, at)).FirstOrDefault())
             .OfType<UpcomingItem>()

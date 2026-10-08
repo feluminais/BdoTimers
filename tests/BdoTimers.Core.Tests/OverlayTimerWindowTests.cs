@@ -32,6 +32,22 @@ public class OverlayTimerWindowTests
     }
 
     [Fact]
+    public void An_always_row_shows_at_any_distance_but_still_skips_a_skipped_time()
+    {
+        var always = Quiet with { Timers = [new OverlayTimerWindow(GuildWar.Id, 60, Always: true)] };
+        var data = new AppData { Timers = [GuildWar] };
+
+        var far = Spawn.AddDays(-3);
+        Assert.Equal(Spawn, Assert.Single(UpcomingQuery.Listed(data, always, far)).AtUtc);
+        Assert.Empty(UpcomingQuery.Listed(data, Listed(GuildWar, 60), far));
+
+        var skipped = new AppData { Timers = [GuildWar], Muted = [new MutedOccurrence(GuildWar.Id, Spawn)] };
+        Assert.Equal(Spawn.AddDays(7), Assert.Single(UpcomingQuery.Listed(skipped, always, far)).AtUtc);
+        Assert.Empty(UpcomingQuery.Listed(new AppData { Timers = [GuildWar with { Scheduled = GuildWar.Scheduled! with { Off = true } }] },
+            always, far));
+    }
+
+    [Fact]
     public void Unlisted_timers_and_a_missing_timer_get_no_row()
     {
         var data = new AppData { Timers = [GuildWar] };

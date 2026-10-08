@@ -101,7 +101,7 @@ public class JsonRoundTripTests
             ShowHorseRegistrations = true,
             ShowCustomTimers = false,
             GuildBosses = new OverlayAlert { Enabled = true, ShowMinutesBefore = 30 },
-            Timers = [new OverlayTimerWindow(new Guid("0b7e0c3a-5a49-4f0e-9a2e-3d2f3a6f2c11"), 180)],
+            Timers = [new OverlayTimerWindow(new Guid("0b7e0c3a-5a49-4f0e-9a2e-3d2f3a6f2c11"), 180, Always: true), new OverlayTimerWindow(new Guid("5c1d2f4e-7a8b-4c3d-9e0f-1a2b3c4d5e6f"), 60)],
             BackgroundColor = "#3A1417",
             BackgroundImage = "bg.png",
             BackgroundOpacity = 0.4,
@@ -177,6 +177,14 @@ public class JsonRoundTripTests
         Assert.Equal(5, data.DataVersion);
         Assert.Equal(TodoCadence.Weekly, todos.Lists.Single().Cadence);
         Assert.Equal(new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5 }, settings.WeeklyTodoReset);
+    }
+
+    [Fact]
+    public void A_saved_overlay_row_without_always_is_not_always()
+    {
+        var s = JsonSerializer.Deserialize<AppSettings>("""{ "overlay": { "timers": [{ "timerId": "0b7e0c3a-5a49-4f0e-9a2e-3d2f3a6f2c11", "minutes": 180 }] } }""", JsonDefaults.Options)!;
+
+        Assert.False(Assert.Single(s.Overlay.Timers).Always);
     }
 
     [Fact]
