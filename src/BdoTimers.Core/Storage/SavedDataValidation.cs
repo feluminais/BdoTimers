@@ -44,6 +44,8 @@ internal static class SavedDataValidation
         Require(settings.Overlay.BackgroundColor is not null && settings.Overlay.GuildBosses is not null);
         Require(settings.Overlay.ShowSeconds > 0);
         Require(settings.Overlay.Timers is not null && settings.Overlay.Timers.All(t => t is { Minutes: > 0 and <= 10080 }));
+        Require(new[] { settings.Overlay.NextLead, settings.Overlay.FarmLead, settings.Overlay.HorseLead, settings.Overlay.CustomLead }
+            .All(l => l is { Minutes: > 0 and <= 10080 }));
         Require(settings.OverlayLeft is not { } left || double.IsFinite(left));
         Require(settings.OverlayTop is not { } top || double.IsFinite(top));
         if (settings.Window is { } window)

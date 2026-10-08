@@ -191,6 +191,74 @@ public class OverlayContentTests
     }
 
     [Fact]
+    public void A_lead_hides_the_next_boss_until_it_is_that_close()
+    {
+        var data = new AppData { Timers = [Boss("Kzarka", DayOfWeek.Tuesday, 11), Boss("Nouver", DayOfWeek.Tuesday, 16)] };
+        var lead = All with { NextLead = new OverlayLead(Always: false, Minutes: 120) };
+
+        Assert.Null(OverlayContent.Build(data, lead, BerlinNoon).Next);
+        Assert.Equal("Nouver", OverlayContent.Build(data, lead, BerlinNoon.AddHours(2)).Next!.Bosses.Single().Name);
+        Assert.NotNull(OverlayContent.Build(data, lead with { NextLead = lead.NextLead with { Always = true } }, BerlinNoon).Next);
+        Assert.NotNull(OverlayContent.Build(data, lead, BerlinNoon).Previous);
+    }
+
+    [Fact]
+    public void A_lead_shows_farm_only_that_long_before_it_has_grown_and_keeps_it_after()
+    {
+        var data = new AppData { Timers = [Farm(CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromHours(22) }, BerlinNoon))] };
+        var lead = All with { FarmLead = new OverlayLead(Always: false, Minutes: 120) };
+
+        Assert.Null(OverlayContent.Build(data, lead, BerlinNoon).FarmLeft);
+        Assert.Null(OverlayContent.Build(data, lead, BerlinNoon).FarmProgress);
+        Assert.Equal(TimeSpan.FromHours(2), OverlayContent.Build(data, lead, BerlinNoon.AddHours(20)).FarmLeft);
+        Assert.Equal(TimeSpan.FromHours(-1), OverlayContent.Build(data, lead, BerlinNoon.AddHours(23)).FarmLeft);
+        Assert.Equal(TimeSpan.FromHours(22), OverlayContent.Build(data, All, BerlinNoon).FarmLeft);
+    }
+
+    [Fact]
+    public void A_lead_applies_to_custom_countdowns_and_events_but_not_stopwatches_or_listed_timers()
+    {
+        TimerDef Countdown(string name, int minutes) => new()
+        {
+            Name = name, Kind = TimerKind.Countdown,
+            Countdown = CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromMinutes(minutes) }, BerlinNoon),
+        };
+        var soon = Countdown("Soon", 30);
+        var late = Countdown("Late", 300);
+        var watch = new TimerDef { Name = "Grinding", Kind = TimerKind.Stopwatch, Stopwatch = StopwatchOps.Start(new StopwatchSpec(), BerlinNoon) };
+        var data = new AppData { Timers = [soon, late, watch] };
+        var only = new OverlaySettings
+        {
+            ShowClock = false, ShowPrevious = false, ShowNext = false, ShowFarm = false, ShowFishing = false,
+            CustomLead = new OverlayLead(Always: false, Minutes: 60),
+        };
+
+        Assert.Equal([soon.Id, watch.Id], OverlayContent.Build(data, only, BerlinNoon).CustomTimers.Select(t => t.Id));
+        Assert.Equal([soon.Id, late.Id, watch.Id],
+            OverlayContent.Build(data, only with { CustomLead = new OverlayLead(Always: true) }, BerlinNoon).CustomTimers.Select(t => t.Id));
+        // A timer listed in the settings leaves the custom section for its own row.
+        var listed = only with { Timers = [new OverlayTimerWindow(soon.Id, 10)] };
+        Assert.Equal([watch.Id], OverlayContent.Build(data, listed, BerlinNoon).CustomTimers.Select(t => t.Id));
+    }
+
+    [Fact]
+    public void A_lead_hides_horse_registrations_until_they_are_that_close_to_ending()
+    {
+        var run = new TimerDef
+        {
+            Name = "Horse registration", Kind = TimerKind.Countdown, Preset = Presets.HorseRegistrationRun, HorseRunNumber = 1,
+            Countdown = CountdownOps.Start(new CountdownSpec { Duration = TimeSpan.FromMinutes(10) }, BerlinNoon),
+        };
+        var settings = All with { ShowHorseRegistrations = true, HorseLead = new OverlayLead(Always: false, Minutes: 3) };
+        var data = new AppData { Timers = [run] };
+
+        var early = OverlayContent.Build(data, settings, BerlinNoon.AddMinutes(1));
+        Assert.Empty(early.HorseRegistrations);
+        Assert.Equal(0, early.MoreHorseRegistrations);
+        Assert.Single(OverlayContent.Build(data, settings, BerlinNoon.AddMinutes(8)).HorseRegistrations);
+    }
+
+    [Fact]
     public void Horse_section_shows_two_newest_running_registrations_and_counts_the_rest()
     {
         var runs = Enumerable.Range(1, 4).Select(i => new TimerDef

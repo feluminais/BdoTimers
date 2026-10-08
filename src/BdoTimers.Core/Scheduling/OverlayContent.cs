@@ -43,16 +43,20 @@ public static class OverlayContent
     public static OverlaySnapshot Build(AppData data, OverlaySettings settings, DateTimeOffset now, BossBoardCache? boards = null)
     {
         var board = settings.ShowPrevious || settings.ShowNext ? boards?.Get(data, now) ?? BossBoard.Build(data, now) : null;
-        var next = settings.ShowNext ? board?.Next : null;
+        var next = settings.ShowNext && board?.Next is { } spawn && settings.NextLead.Allows(spawn.AtUtc - now) ? spawn : null;
         var farm = settings.ShowFarm ? data.Timers.FirstOrDefault(t => t.Preset == Presets.Farm)?.Countdown : null;
         var farmLeft = farm is null ? null : CountdownOps.Left(farm, now);
+        if (farmLeft is { } left && !settings.FarmLead.Allows(left)) (farm, farmLeft) = (null, null);
+        // A timer listed in the settings has its own row, so the custom section leaves it out.
+        var listed = settings.Timers.Select(w => w.TimerId).ToHashSet();
         // Saved timer order stays stable when times cross, a timer pauses, or its name changes.
         var custom = settings.ShowCustomTimers
-            ? data.Timers.Select(t => CustomTimer(t, now)).OfType<CustomOverlayTimer>().ToList() : [];
+            ? data.Timers.Where(t => !listed.Contains(t.Id)).Select(t => CustomTimer(t, now, settings.CustomLead)).OfType<CustomOverlayTimer>().ToList()
+            : [];
         var customIds = custom.Select(t => t.Id).ToHashSet();
         var horse = settings.ShowHorseRegistrations
             ? data.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
-                && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end >= now)
+                && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end >= now && settings.HorseLead.Allows(end - now))
                 .OrderByDescending(t => t.Countdown!.StartedAtUtc)
                 .ThenByDescending(t => t.Id)
                 .ToList()
@@ -89,20 +93,20 @@ public static class OverlayContent
         };
     }
 
-    static CustomOverlayTimer? CustomTimer(TimerDef timer, DateTimeOffset now)
+    static CustomOverlayTimer? CustomTimer(TimerDef timer, DateTimeOffset now, OverlayLead lead)
     {
         if (timer is { IsBuiltIn: false, Preset: null, Kind: TimerKind.Stopwatch, Stopwatch: { Status: not CountdownStatus.Idle } stopwatch })
             return new(timer.Id, timer.Name, StopwatchOps.Elapsed(stopwatch, now), stopwatch.Status == CountdownStatus.Paused);
         if (timer is { IsBuiltIn: false, Kind: TimerKind.OneTime, OneTime: { Finished: false } oneTime })
         {
             var at = OneTimeEvents.AtUtc(oneTime);
-            return at >= now ? new(timer.Id, timer.Name, at - now, false) : null;
+            return at >= now && lead.Allows(at - now) ? new(timer.Id, timer.Name, at - now, false) : null;
         }
         if (!CustomCountdowns.Includes(timer)) return null;
         return timer.Countdown switch
         {
-            { Status: CountdownStatus.Running, EndsAtUtc: { } end } when end >= now => new(timer.Id, timer.Name, end - now, false),
-            { Status: CountdownStatus.Paused, Remaining: { } left } => new(timer.Id, timer.Name, left, true),
+            { Status: CountdownStatus.Running, EndsAtUtc: { } end } when end >= now && lead.Allows(end - now) => new(timer.Id, timer.Name, end - now, false),
+            { Status: CountdownStatus.Paused, Remaining: { } left } when lead.Allows(left) => new(timer.Id, timer.Name, left, true),
             _ => null,
         };
     }

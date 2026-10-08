@@ -7,6 +7,13 @@ public enum OverlayMouseProximity { Off, Fade, Hide }
 /// <paramref name="Always"/>; the minutes stay saved meanwhile.</summary>
 public sealed record OverlayTimerWindow(Guid TimerId, int Minutes, bool Always = false);
 
+/// <summary>How far ahead of its time a timed row shows: from <paramref name="Minutes"/> before, or at any distance when
+/// <paramref name="Always"/>; the minutes stay saved meanwhile.</summary>
+public sealed record OverlayLead(bool Always = false, int Minutes = 60)
+{
+    public bool Allows(TimeSpan left) => Always || left <= TimeSpan.FromMinutes(Minutes);
+}
+
 /// <summary>When the in-game overlay shows and how it looks.</summary>
 public sealed record OverlaySettings
 {
@@ -37,10 +44,19 @@ public sealed record OverlaySettings
     public bool ShowGameTime { get; init; }
     public bool ShowPrevious { get; init; } = true;
     public bool ShowNext { get; init; } = true;
+    /// <summary>How long before the spawn the Next boss section shows.</summary>
+    public OverlayLead NextLead { get; init; } = new(Always: true);
     public bool ShowFarm { get; init; } = true;
+    /// <summary>How long before the crop has grown the Farm row shows.</summary>
+    public OverlayLead FarmLead { get; init; } = new(Always: true);
     public bool ShowFishing { get; init; } = true;
     public bool ShowHorseRegistrations { get; init; }
+    /// <summary>How long before a registration ends its row shows.</summary>
+    public OverlayLead HorseLead { get; init; } = new(Always: true);
     public bool ShowCustomTimers { get; init; } = true;
+    /// <summary>How long before a countdown or one-time event ends its row shows; a stopwatch has no end and always shows.
+    /// A timer listed in <see cref="Timers"/> follows its own window instead.</summary>
+    public OverlayLead CustomLead { get; init; } = new(Always: true);
     /// <summary>When the Guild bosses timer pops up on the overlay, in place of its own overlay alert; off until turned
     /// on.</summary>
     public OverlayAlert GuildBosses { get; init; } = new();
