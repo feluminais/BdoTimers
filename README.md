@@ -22,15 +22,19 @@
 
 The next boss spawn counts down at the top, with the one after it and the alert times. Below it, the next 24 hours of
 spawns, timers and resets; on the right, the timers that are running and your daily and weekly tasks.
+Daily tasks, Weekly tasks and Garmoth can be hidden in **Settings → Today**.
 
-![Schedule with this week's boss spawns](docs/images/schedule.png)
+![Schedule's Calendar with a month of boss spawns, timers, events and resets, and the day picked on the right](docs/images/schedule-month.png)
 
 ## Schedule
 
-World boss schedules for EU and NA, shown in your local time: this week's grid, and a month view with your timers and
-events. Choose which bosses to follow in **Following**; event bosses can be added alongside the built-in timetable.
+World boss schedules for EU and NA, shown in your local time. **Calendar** opens first: a month of boss spawns, your
+timers, events and resets, with a day list beside it and **New event** to add a one-time event. **Bosses** shows this
+week's grid. Choose which bosses to follow in **Following**; event bosses can be added alongside the built-in timetable.
 Garmoth can be done three times a week: turn on the Garmoth tracker in Settings, mark each kill on Today, and after the
 third he drops out of alerts and the schedule until the weekly reset. [Timetable sources](docs/boss-region-sources.md).
+
+![Schedule's Bosses tab with this week's boss spawns](docs/images/schedule.png)
 
 ## Time Tracking
 
@@ -65,6 +69,8 @@ Windows notifications need priority access to appear during Do Not Disturb.
 
 The overlay shows boss spawns, running timers and local, server or in-game time in List, Card or Bar layouts.
 It can stay pinned, appear briefly for an alert or hotkey, and fade or hide when the pointer gets close.
+In **Settings → Overlay**, each timed row (the next boss, Farm, horse registrations, custom timers, Guild bosses and your
+own events) can show always, or only from a set time before it happens.
 
 | Default shortcut | Action |
 | --- | --- |
