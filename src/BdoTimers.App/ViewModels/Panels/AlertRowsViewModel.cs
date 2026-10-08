@@ -33,9 +33,6 @@ public sealed partial class AlertRowsViewModel : ObservableObject
 
     public TimerSoundViewModel Sound { get; }
     public IReadOnlyList<Choice> OverlayChoices { get; }
-    public string OverlayTip => _guildBoss
-        ? "Also in Overlay settings; shows in borderless window mode"
-        : "Shows in borderless window mode";
 
     public AlertRowsViewModel(AppServices services, TimerDef timer, TimerEditor editor)
     {

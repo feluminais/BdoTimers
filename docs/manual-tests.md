@@ -232,11 +232,11 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     or Add time. Change the time and Save; turn Active Off and Save (tile: Off), then On: the time is kept. Discard an
     Active edit: the saved state stays. Restart and check that its next weekly occurrence remains. Data from an earlier
     version drops a Guild war without times; one with times stays, accepts several day/time rows and can be deleted.
-59. [ ] Time Tracking → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. Settings → Overlay → Guild bosses → 15 min before: the preview shows
-    a dimmed Guild bosses row; the timer panel's Overlay over the game shows the same value, and changing it there
-    changes Settings → Overlay's. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes
-    before, then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next
-    on the tile, Active Off, Alerts Off, or Guild bosses Off: no pop-up.
+59. [ ] Time Tracking → Guild bosses: turn Active On, set its time 20 minutes ahead and Save. In its panel, set Overlay over the
+    game to 15 min before. With Always show off and BDO in borderless, the overlay stays hidden until 15 minutes before,
+    then pops up with Guild bosses and its time left in List, Card and Bar, and hides after the spawn. Skip next on the
+    tile, Active Off or Alerts Off: no pop-up. Settings → Overlay has no pop-up setting for it, and its preview shows no
+    Guild bosses row unless Events turns it on.
 60. [ ] Settings → Overlay → Sections → Local time, Server time and In-game time: all three share the top line with a monitor,
     globe and sun icon. In game, the in-game time matches the game's clock within a minute and the sun turns into a
     moon from 22:00 to 07:00. Server time → Europe opens Settings at Bosses; after choosing North America, the overlay's
@@ -364,12 +364,13 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 85. [ ] Edit a timer's name and click outside its panel, then do the same in Settings: "Discard changes?" opens centred in the
     window over a darker layer, not inside the drawer, with Keep editing focused. Clicking the dark area does nothing; Keep
     editing returns to the draft and Discard closes it. Check it at the largest text size too.
-86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Settings → Overlay → Upcoming lists Guild
-    bosses, War of the Roses and Guild war, each Off. Set Guild war to 1 h before: the preview shows a dimmed
-    "Upcoming timer" row, and Always show shows no row yet; set it to 3 h before: Guild war and its time left show in
-    List, Card and Bar. With Always show off, the overlay stays hidden while the window is open; Show on hotkey shows
-    the row. Skip next on the tile removes the row, and Off removes it too. With the timer's Overlay over the game set,
-    that pop-up shows instead of a second row.
+86. [ ] Time Tracking → New tracker → Weekly: create "Guild war" for a time 2 hours ahead. Settings → Overlay → Events lists Guild bosses,
+    War of the Roses and Guild war, each Off. Turn Guild war on: Always (Off) and Show before 1:00 appear under it, and
+    the preview shows a dimmed "Upcoming timer" row while Always show shows no row yet. Type 3:00 in Show before: Guild war
+    and its time left show in List, Card and Bar. With Always show off, the overlay stays hidden while the window is open;
+    Show on hotkey shows the row. Skip next on the tile removes the row, and Off removes it too. Turn Always on: Show before
+    leaves and the row shows however far off the time is. Type "soon" in Show before: the field is flagged and the last
+    good time stays. With the timer's Overlay over the game set, that pop-up shows instead of a second row.
 87. [ ] Settings → Today: Daily tasks, Weekly tasks and Garmoth are on. Turn each off and Save: its panel leaves Today and the
     others stay. Garmoth is dimmed while the tracker in Bosses is off. A weekly panel still needs a weekly list on.
 88. [ ] Settings: click in the Search field, then on bare space in the sheet: the field loses its caret and underline, and

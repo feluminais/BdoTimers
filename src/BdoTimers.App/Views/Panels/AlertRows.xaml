@@ -82,7 +82,7 @@
             <DockPanel>
                 <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding OverlayChoices}" SelectedItem="{Binding Overlay}" ValueWidth="110"
                                         AutomationProperties.Name="Overlay over the game" />
-                <TextBlock Text="Overlay over the game" Style="{StaticResource RowLabel}" ToolTip="{Binding OverlayTip}" />
+                <TextBlock Text="Overlay over the game" Style="{StaticResource RowLabel}" ToolTip="Shows in borderless window mode" />
             </DockPanel>
         </Border>
     </StackPanel>

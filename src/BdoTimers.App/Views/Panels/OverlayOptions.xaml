@@ -74,14 +74,6 @@
                     <TextBlock Text="For" Style="{StaticResource RowLabel}" Margin="14,0,0,0" />
                 </DockPanel>
             </Border>
-            <Border Style="{StaticResource Row}">
-                <DockPanel>
-                    <controls:CycleSelector DockPanel.Dock="Right" ItemsSource="{Binding GuildBossChoices}" SelectedItem="{Binding GuildBosses}"
-                                            ValueWidth="110" AutomationProperties.Name="Guild bosses" />
-                    <TextBlock Text="Guild bosses" Style="{StaticResource RowLabel}" />
-                </DockPanel>
-            </Border>
-
             <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Mouse proximity">
                 <controls:CycleSelector ItemsSource="{Binding MouseProximityChoices}" SelectedItem="{Binding MouseProximity}"
                                         ValueWidth="60" AutomationProperties.Name="Mouse proximity"
@@ -95,6 +87,62 @@
                     <TextBlock Text="Drag to move" Style="{StaticResource RowLabel}" VerticalAlignment="Top" Margin="0,3,0,0" />
                 </DockPanel>
             </Border>
+            <TextBlock Text="Sections" Style="{StaticResource SectionText}" />
+            <Border Style="{StaticResource Row}">
+                <WrapPanel>
+                    <ToggleButton Style="{StaticResource Chip}" Content="Local time" IsChecked="{Binding ShowClock}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Server time" IsChecked="{Binding ShowServerTime}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="In-game time" IsChecked="{Binding ShowGameTime}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Previous boss" IsChecked="{Binding ShowPrevious}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Next boss" IsChecked="{Binding ShowNext}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Farm" IsChecked="{Binding ShowFarm}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Fishing" IsChecked="{Binding ShowFishing}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Horse registrations" IsChecked="{Binding ShowHorseRegistrations}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Custom timers" IsChecked="{Binding ShowCustomTimers}" />
+                </WrapPanel>
+            </Border>
+            <Border Style="{StaticResource Row}" Visibility="{Binding ShowServerTime, Converter={StaticResource BoolToVisibility}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="{Binding ServerRegion}" VerticalAlignment="Center"
+                            Command="{Binding OpenRegionSettingsCommand}" ToolTip="Change region"
+                            AutomationProperties.Name="Server time region" />
+                    <TextBlock Text="Server time" Style="{StaticResource RowLabel}" />
+                </DockPanel>
+            </Border>
+
+            <TextBlock Text="Events" Style="{StaticResource SectionText}" Visibility="{Binding HasEvents, Converter={StaticResource BoolToVisibility}}" />
+            <ItemsControl ItemsSource="{Binding Events}" Focusable="False">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type pvm:OverlayEventRow}">
+                        <StackPanel>
+                            <HeaderedContentControl Style="{StaticResource SettingRow}" Header="{Binding Name}">
+                                <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding IsOn}" Width="60"
+                                              AutomationProperties.Name="{Binding Name}" />
+                            </HeaderedContentControl>
+                            <StackPanel Visibility="{Binding IsOn, Converter={StaticResource BoolToVisibility}}">
+                                <Border Style="{StaticResource Row}" Margin="14,0,0,0">
+                                    <DockPanel>
+                                        <ToggleButton DockPanel.Dock="Right" Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Always}" Width="60"
+                                                      AutomationProperties.Name="{Binding Name, StringFormat='{}{0} always'}" />
+                                        <TextBlock Text="Always" Style="{StaticResource RowLabel}" />
+                                    </DockPanel>
+                                </Border>
+                                <Border Style="{StaticResource Row}" Margin="14,0,0,0"
+                                        Visibility="{Binding Always, Converter={StaticResource InverseBoolToVisibility}}">
+                                    <DockPanel>
+                                        <TextBox DockPanel.Dock="Right" Width="60" TextAlignment="Right" VerticalAlignment="Center"
+                                                 Text="{Binding BeforeText, UpdateSourceTrigger=PropertyChanged, Delay=300}"
+                                                 controls:Ui.HasError="{Binding BeforeInvalid}" ToolTip="Hours:minutes, e.g. 1:30, or just minutes"
+                                                 AutomationProperties.Name="{Binding Name, StringFormat='{}{0} show before'}" />
+                                        <TextBlock Text="Show before" Style="{StaticResource RowLabel}" />
+                                    </DockPanel>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
             <TextBlock Text="Look" Style="{StaticResource SectionText}" />
             <HeaderedContentControl Style="{StaticResource SettingRow}" Header="Layout">
                 <controls:CycleSelector ItemsSource="{Binding Layouts}" SelectedItem="{Binding Layout}" ValueWidth="60"
@@ -112,43 +160,6 @@
                 <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding Outline}" Width="60"
                                         AutomationProperties.Name="Outline" />
             </HeaderedContentControl>
-            <Border Style="{StaticResource Row}">
-                <StackPanel>
-                    <TextBlock Text="Sections" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
-                    <WrapPanel>
-                        <ToggleButton Style="{StaticResource Chip}" Content="Local time" IsChecked="{Binding ShowClock}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Server time" IsChecked="{Binding ShowServerTime}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="In-game time" IsChecked="{Binding ShowGameTime}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Previous boss" IsChecked="{Binding ShowPrevious}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Next boss" IsChecked="{Binding ShowNext}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Farm" IsChecked="{Binding ShowFarm}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Fishing" IsChecked="{Binding ShowFishing}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Horse registrations" IsChecked="{Binding ShowHorseRegistrations}" />
-                        <ToggleButton Style="{StaticResource Chip}" Content="Custom timers" IsChecked="{Binding ShowCustomTimers}" />
-                    </WrapPanel>
-                </StackPanel>
-            </Border>
-            <Border Style="{StaticResource Row}" Visibility="{Binding ShowServerTime, Converter={StaticResource BoolToVisibility}}">
-                <DockPanel>
-                    <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="{Binding ServerRegion}" VerticalAlignment="Center"
-                            Command="{Binding OpenRegionSettingsCommand}" ToolTip="Change region"
-                            AutomationProperties.Name="Server time region" />
-                    <TextBlock Text="Server time" Style="{StaticResource RowLabel}" />
-                </DockPanel>
-            </Border>
-
-            <TextBlock Text="Upcoming" Style="{StaticResource SectionText}" Visibility="{Binding HasUpcoming, Converter={StaticResource BoolToVisibility}}" />
-            <ItemsControl ItemsSource="{Binding Upcoming}" Focusable="False">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="{x:Type pvm:OverlayTimerRow}">
-                        <HeaderedContentControl Style="{StaticResource SettingRow}" Header="{Binding Name}">
-                            <controls:CycleSelector ItemsSource="{Binding Choices}" SelectedItem="{Binding Lead}" ValueWidth="110"
-                                                    AutomationProperties.Name="{Binding Name}" />
-                        </HeaderedContentControl>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-
             <TextBlock Text="Background" Style="{StaticResource SectionText}" />
             <Border Style="{StaticResource Row}">
                 <StackPanel>

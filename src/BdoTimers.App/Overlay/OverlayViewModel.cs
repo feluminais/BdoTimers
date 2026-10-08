@@ -138,8 +138,6 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         var popUps = content.PopUps
             .Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc), DurationFormat.Clock(i.AtUtc - now), false,
                 settings.BossIcons && i.Timer.IsBuiltIn)).ToList();
-        if (preview && settings.GuildBosses.Enabled && !content.PopUps.Any(i => i.Timer.Preset == Presets.GuildBosses))
-            popUps.Add((SampleKey, "Guild bosses", DurationFormat.Clock(TimeSpan.FromMinutes(settings.GuildBosses.ShowMinutesBefore)), true, false));
         popUps.AddRange(content.Upcoming.Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc),
             DurationFormat.Clock(i.AtUtc - now), false, settings.BossIcons && i.Timer.IsBuiltIn)));
         if (preview && settings.Timers.Count > 0 && content.Upcoming.Count == 0)

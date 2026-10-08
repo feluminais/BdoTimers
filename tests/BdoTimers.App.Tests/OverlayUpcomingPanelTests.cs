@@ -35,18 +35,32 @@ public class OverlayUpcomingPanelTests
                 main.OpenPanel(settings);
                 WpfTest.Drain();
                 var panel = settings.Overlay;
-                Assert.True(panel.HasUpcoming);
-                Assert.DoesNotContain(panel.Upcoming, r => r.Name == "Farm");
-                var row = panel.Upcoming.Single(r => r.Name == "Guild war");
-                Assert.Equal(["Off", "1 h before", "2 h before", "3 h before", "6 h before", "12 h before", "24 h before"],
-                    row.Choices.Select(c => c.Label));
-
-                row.Lead = row.Choices.Single(c => c.Label == "3 h before");
-                Assert.Equal([new OverlayTimerWindow(war.Id, 180)], services.Settings.Current.Overlay.Timers);
-                row.Lead = row.Choices[0];
+                Assert.True(panel.HasEvents);
+                Assert.DoesNotContain(panel.Events, r => r.Name == "Farm");
+                Assert.Single(panel.Events, r => r.Name == "Guild bosses");
+                var row = panel.Events.Single(r => r.Name == "Guild war");
+                Assert.False(row.IsOn);
                 Assert.Empty(services.Settings.Current.Overlay.Timers);
 
-                row.Lead = row.Choices.Single(c => c.Label == "3 h before");
+                row.IsOn = true;
+                Assert.Equal([new OverlayTimerWindow(war.Id, 60)], services.Settings.Current.Overlay.Timers);
+                row.BeforeText = "3:00";
+                Assert.Equal([new OverlayTimerWindow(war.Id, 180)], services.Settings.Current.Overlay.Timers);
+                row.BeforeText = "soon";
+                Assert.True(row.BeforeInvalid);
+                Assert.Equal([new OverlayTimerWindow(war.Id, 180)], services.Settings.Current.Overlay.Timers);
+                row.BeforeText = "45";
+                Assert.False(row.BeforeInvalid);
+                Assert.Equal([new OverlayTimerWindow(war.Id, 45)], services.Settings.Current.Overlay.Timers);
+                row.Always = true;
+                Assert.Equal([new OverlayTimerWindow(war.Id, 45, Always: true)], services.Settings.Current.Overlay.Timers);
+                row.IsOn = false;
+                Assert.Empty(services.Settings.Current.Overlay.Timers);
+
+                row.IsOn = true;
+                Assert.Equal([new OverlayTimerWindow(war.Id, 45, Always: true)], services.Settings.Current.Overlay.Timers);
+                row.Always = false;
+                row.BeforeText = "3:00";
                 PanelFocusScope.Descendants(window).OfType<FrameworkElement>()
                     .First(e => System.Windows.Automation.AutomationProperties.GetName(e) == "Guild war").BringIntoView();
                 WpfTest.Drain();
@@ -79,6 +93,9 @@ public class OverlayUpcomingPanelTests
         model.Update(new OverlaySnapshot(), settings, now, preview: true);
         Assert.True(Assert.Single(model.PopUps).IsSample);
         model.Update(new OverlaySnapshot(), new OverlaySettings(), now, preview: true);
+        Assert.Empty(model.PopUps);
+        // The Guild bosses pop-up is no row of its own in the preview.
+        model.Update(new OverlaySnapshot(), new OverlaySettings { GuildBosses = new OverlayAlert { Enabled = true } }, now, preview: true);
         Assert.Empty(model.PopUps);
     });
 }

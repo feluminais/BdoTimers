@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using BdoTimers.App.Overlay;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -35,11 +36,10 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     public IReadOnlyList<Choice> SecondsChoices { get; } = new[] { 5, 10, 15, 30, 60 }.Select(s => new Choice($"{s} s", s)).ToList();
     public IReadOnlyList<Choice> Layouts { get; } = Enum.GetValues<OverlayLayout>().Select(l => new Choice(l.ToString(), l)).ToList();
     public IReadOnlyList<Choice> MouseProximityChoices { get; } = Enum.GetValues<OverlayMouseProximity>().Select(m => new Choice(m.ToString(), m)).ToList();
-    public IReadOnlyList<Choice> GuildBossChoices { get; }
     public IReadOnlyList<Swatch> Swatches { get; }
     /// <summary>The timers that can have a row on the overlay. Fixed while Settings is open, as timers can't change under it.</summary>
-    public IReadOnlyList<OverlayTimerRow> Upcoming { get; }
-    public bool HasUpcoming => Upcoming.Count > 0;
+    public IReadOnlyList<OverlayEventRow> Events { get; }
+    public bool HasEvents => Events.Count > 0;
     public bool HasPicture => Picture is not null;
     public HotkeyService Hotkeys => _services.Overlay.Hotkeys;
     /// <summary>The combos the other hotkeys hold, which each hotkey field may not repeat.</summary>
@@ -58,10 +58,9 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         _services = services;
         _showRegion = showRegion;
         Swatches = SwatchColors.Select(hex => new Swatch(hex, PickSwatch)).ToList();
-        GuildBossChoices = PopUpChoices.For(PopUpChoices.GuildBossMinutes, Current.GuildBosses);
-        Upcoming = services.Timers.Current.Timers.Where(Listable)
-            .Select(t => new OverlayTimerRow(t.Name, Current.Timers.FirstOrDefault(w => w.TimerId == t.Id)?.Minutes ?? 0,
-                minutes => SetRow(t.Id, minutes)))
+        Events = services.Timers.Current.Timers.Where(Listable)
+            .Select(t => new OverlayEventRow(t.Name, t.Id, Current.Timers.FirstOrDefault(w => w.TimerId == t.Id),
+                window => SetRow(t.Id, window)))
             .ToList();
         _colorSave.Tick += (_, _) => SaveCustomColor();
         var o = Current;
@@ -96,11 +95,6 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     {
         get => SecondsChoices.FirstOrDefault(c => (int)c.Value! == Current.ShowSeconds) ?? SecondsChoices[1];
         set => Modify(o => o with { ShowSeconds = (int)value.Value! });
-    }
-    public Choice GuildBosses
-    {
-        get => PopUpChoices.Matching(GuildBossChoices, Current.GuildBosses);
-        set => Modify(o => o with { GuildBosses = PopUpChoices.Apply(o.GuildBosses, value) });
     }
     public Choice Layout
     {
@@ -156,7 +150,6 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         if (previous.ShowHotkey != next.ShowHotkey) OnPropertyChanged(nameof(ShowHotkey));
         if (previous.MoveHotkey != next.MoveHotkey) OnPropertyChanged(nameof(MoveHotkey));
         if (previous.ShowSeconds != next.ShowSeconds) OnPropertyChanged(nameof(ShowSeconds));
-        if (previous.GuildBosses != next.GuildBosses) OnPropertyChanged(nameof(GuildBosses));
         if (previous.Layout != next.Layout) OnPropertyChanged(nameof(Layout));
         if (previous.MouseProximity != next.MouseProximity) OnPropertyChanged(nameof(MouseProximity));
         if (previous.Scale != next.Scale) OnPropertyChanged(nameof(Scale));
@@ -194,10 +187,10 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     static bool Listable(TimerDef t) =>
         !t.IsBuiltIn && (t.Kind == TimerKind.Scheduled || t is { Kind: TimerKind.OneTime, OneTime.Finished: false });
 
-    void SetRow(Guid id, int minutes) => Modify(o =>
+    void SetRow(Guid id, OverlayTimerWindow? window) => Modify(o =>
     {
         var others = o.Timers.Where(w => w.TimerId != id);
-        return o with { Timers = (minutes > 0 ? others.Append(new OverlayTimerWindow(id, minutes)) : others).ToList() };
+        return o with { Timers = (window is null ? others : others.Append(window)).ToList() };
     });
 
     void Modify(Func<OverlaySettings, OverlaySettings> change) =>
@@ -283,25 +276,48 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     }
 }
 
-/// <summary>A timer in the Overlay options' Upcoming block, with how long before its next time the overlay lists it.</summary>
-public sealed partial class OverlayTimerRow : ObservableObject
+/// <summary>A timer in the Overlay options' Events block: whether the overlay lists it, and whether always or only from
+/// a time before its next occurrence.</summary>
+public sealed partial class OverlayEventRow : ObservableObject
 {
-    readonly Action<int> _apply;
+    const int DefaultMinutes = 60;
 
-    [ObservableProperty] private Choice _lead;
+    readonly Guid _id;
+    readonly Action<OverlayTimerWindow?> _apply;
+    int _minutes;
 
-    public OverlayTimerRow(string name, int minutes, Action<int> apply)
+    [ObservableProperty] private bool _isOn;
+    [ObservableProperty] private bool _always;
+    [ObservableProperty] private string _beforeText;
+    [ObservableProperty] private bool _beforeInvalid;
+
+    public OverlayEventRow(string name, Guid id, OverlayTimerWindow? saved, Action<OverlayTimerWindow?> apply)
     {
+        _id = id;
         _apply = apply;
         Name = name;
-        Choices = PopUpChoices.ForRow(minutes);
-        _lead = Choices.First(c => (int)c.Value! == Math.Max(0, minutes));
+        _minutes = saved is { Minutes: > 0 } ? saved.Minutes : DefaultMinutes;
+        _isOn = saved is not null;
+        _always = saved?.Always ?? false;
+        _beforeText = Parsing.FormatDuration(TimeSpan.FromMinutes(_minutes));
     }
 
     public string Name { get; }
-    public IReadOnlyList<Choice> Choices { get; }
 
-    partial void OnLeadChanged(Choice value) => _apply((int)value.Value!);
+    partial void OnIsOnChanged(bool value) => Save();
+
+    partial void OnAlwaysChanged(bool value) => Save();
+
+    /// <summary>A time that doesn't read keeps the last good one saved.</summary>
+    partial void OnBeforeTextChanged(string value)
+    {
+        BeforeInvalid = !Parsing.TryParseDuration(value, out var before);
+        if (BeforeInvalid) return;
+        _minutes = (int)before.TotalMinutes;
+        Save();
+    }
+
+    void Save() => _apply(IsOn ? new OverlayTimerWindow(_id, _minutes, Always) : null);
 }
 
 /// <summary>A background colour in the Overlay options; the chosen one is ringed.</summary>
