@@ -80,14 +80,14 @@
                                  Tag="General" IsChecked="True" Checked="Category_Checked" />
                     <RadioButton x:Name="TodayNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Today"
                                  Tag="Today" Checked="Category_Checked" />
-                    <RadioButton x:Name="AlertsNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Alerts"
-                                 Tag="Alerts" Checked="Category_Checked" />
-                    <RadioButton x:Name="OverlayNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Overlay"
-                                 Tag="Overlay" Checked="Category_Checked" />
                     <RadioButton x:Name="TodoNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="To-do"
                                  Tag="To-do" Checked="Category_Checked" />
                     <RadioButton x:Name="BossesNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Bosses"
                                  Tag="Bosses" Checked="Category_Checked" />
+                    <RadioButton x:Name="AlertsNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Alerts"
+                                 Tag="Alerts" Checked="Category_Checked" />
+                    <RadioButton x:Name="OverlayNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Overlay"
+                                 Tag="Overlay" Checked="Category_Checked" />
                     <RadioButton x:Name="DataNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory" Content="Data"
                                  Tag="Data" Checked="Category_Checked" />
                     <RadioButton x:Name="AboutNav" Style="{StaticResource SettingsNavItem}" GroupName="SettingsCategory"
@@ -156,98 +156,6 @@
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowGarmoth}" IsEnabled="{Binding GarmothTracker}"
                                   Width="110" AutomationProperties.Name="Garmoth on Today" />
                 </HeaderedContentControl>
-                <TextBlock Text="Alerts" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Alerts" />
-                <Border Style="{StaticResource SearchRow}" Tag="Default alert times (minutes before)">
-                    <StackPanel>
-                        <TextBlock Text="Default alert times (minutes before)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
-                        <panels:LeadChips DataContext="{Binding DefaultLeads}" />
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource SearchRow}" Tag="Default sound Test sound">
-                    <StackPanel>
-                        <TextBlock Text="Default sound" Style="{StaticResource RowLabel}" Margin="0,0,0,4" />
-                        <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test sound" Margin="8,0,0,0"
-                                VerticalAlignment="Center" Command="{Binding PreviewSoundCommand}" />
-                        <ComboBox DisplayMemberPath="Label" HorizontalAlignment="Left" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" Width="130"
-                                                AutomationProperties.Name="Default sound" />
-                        </DockPanel>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource SearchRow}" Tag="Your sounds + Add sound…">
-                    <StackPanel>
-                        <DockPanel>
-                            <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="+ Add sound…" VerticalAlignment="Center"
-                                    ToolTip="WAV or MP3" Command="{Binding AddSoundCommand}" />
-                            <TextBlock Text="Your sounds" Style="{StaticResource RowLabel}" />
-                        </DockPanel>
-                        <ItemsControl ItemsSource="{Binding UserSounds}" Margin="0,4,0,0">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <DockPanel Margin="12,0,0,0">
-                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="9"
-                                                Width="26" Height="26" ToolTip="Remove" Command="{Binding RemoveCommand}" />
-                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;"
-                                                Foreground="{DynamicResource AccentBrush}" Width="26" Height="26" ToolTip="Play"
-                                                Command="{Binding PlayCommand}" />
-                                        <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                                                   ToolTip="{Binding Name}" />
-                                    </DockPanel>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                        <TextBlock Text="{Binding SoundError}" Style="{StaticResource ErrorText}"
-                                   Visibility="{Binding SoundError, Converter={StaticResource NullToCollapsed}}" />
-                    </StackPanel>
-                </Border>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Volume" Tag="Volume audio sound loudness">
-                    <Slider AutomationProperties.Name="Volume" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center" Value="{Binding Volume, Delay=250}" />
-                </HeaderedContentControl>
-                <Border Style="{StaticResource SearchRow}" Tag="Voice test speech TTS">
-                    <StackPanel>
-                        <TextBlock Text="Voice" Style="{StaticResource RowLabel}" Margin="0,0,0,4" />
-                        <DockPanel>
-                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test voice" Margin="8,0,0,0"
-                                VerticalAlignment="Center" Command="{Binding TestVoiceCommand}" />
-                        <ComboBox DisplayMemberPath="Label" HorizontalAlignment="Left" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" Width="130"
-                                                AutomationProperties.Name="Voice" />
-                        </DockPanel>
-                    </StackPanel>
-                </Border>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Speech speed" Tag="Speech speed rate TTS">
-                    <Slider AutomationProperties.Name="Speech speed" Width="170" Minimum="-5" Maximum="5" IsSnapToTickEnabled="True" TickFrequency="1"
-                            VerticalAlignment="Center" Value="{Binding SpeechRate, Delay=250}" />
-                </HeaderedContentControl>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Test alert" Tag="Test alert Send Send test alert">
-                    <StackPanel>
-                        <Button Content="Send" Command="{Binding TestAlertCommand}" HorizontalAlignment="Right"
-                                AutomationProperties.Name="Send test alert">
-                            <Button.Style>
-                                <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding Health.TestBusy}" Value="True">
-                                            <Setter Property="IsEnabled" Value="False" />
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                        <TextBlock Text="{Binding Health.TestStatus}" Style="{StaticResource LabelText}" Margin="0,4,0,0"
-                                   Visibility="{Binding Health.TestStatus, Converter={StaticResource NullToCollapsed}}"
-                                   AutomationProperties.LiveSetting="Polite" />
-                    </StackPanel>
-                </HeaderedContentControl>
-
-                <Border Style="{StaticResource SearchRow}" Tag="Priority notifications">
-                    <Button Style="{StaticResource GhostButton}" Content="Priority notifications" HorizontalAlignment="Left" Margin="0,4,8,6"
-                            ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
-                </Border>
-
-                <TextBlock Text="Overlay" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Overlay" />
-                <!-- Its changes apply at once, not with Save -->
-                <panels:OverlayOptions Style="{StaticResource SearchBlock}" DataContext="{Binding Overlay}"
-                                       Tag="Show always hotkey drag move mouse proximity fade hide guild bosses layout list card bar size icons outline sections clock time server game previous next farm fishing horse custom timers upcoming background colour color picture image opacity text" />
-
                 <TextBlock Text="To-do" Style="{StaticResource SearchHeading}" Tag="todo tasks" panels:SettingsFilter.Category="To-do" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily reset" Tag="Daily reset time UTC local">
                     <panels:TodoScheduleEditor DataContext="{Binding DailyTodoReset}" />
@@ -343,6 +251,100 @@
                         </StackPanel>
                     </StackPanel>
                 </Border>
+
+                <TextBlock Text="Alerts" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Alerts" />
+                <Border Style="{StaticResource SearchRow}" Tag="Default alert times (minutes before)">
+                    <StackPanel>
+                        <TextBlock Text="Default alert times (minutes before)" Style="{StaticResource RowLabel}" Margin="0,0,0,6" />
+                        <panels:LeadChips DataContext="{Binding DefaultLeads}" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="Sound" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Alerts" />
+                <Border Style="{StaticResource SearchRow}" Tag="Default sound Test sound">
+                    <StackPanel>
+                        <TextBlock Text="Default sound" Style="{StaticResource RowLabel}" Margin="0,0,0,4" />
+                        <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test sound" Margin="8,0,0,0"
+                                VerticalAlignment="Center" Command="{Binding PreviewSoundCommand}" />
+                        <ComboBox DisplayMemberPath="Label" HorizontalAlignment="Left" ItemsSource="{Binding AlertSounds}" SelectedItem="{Binding AlertSound}" Width="130"
+                                                AutomationProperties.Name="Default sound" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Volume" Tag="Volume audio sound loudness">
+                    <Slider AutomationProperties.Name="Volume" Width="170" Minimum="0" Maximum="1" VerticalAlignment="Center" Value="{Binding Volume, Delay=250}" />
+                </HeaderedContentControl>
+                <Border Style="{StaticResource SearchRow}" Tag="Your sounds + Add sound…">
+                    <StackPanel>
+                        <DockPanel>
+                            <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="+ Add sound…" VerticalAlignment="Center"
+                                    ToolTip="WAV or MP3" Command="{Binding AddSoundCommand}" />
+                            <TextBlock Text="Your sounds" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
+                        <ItemsControl ItemsSource="{Binding UserSounds}" Margin="0,4,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="12,0,0,0">
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE8BB;" FontSize="9"
+                                                Width="26" Height="26" ToolTip="Remove" Command="{Binding RemoveCommand}" />
+                                        <Button DockPanel.Dock="Right" Style="{StaticResource IconButton}" Content="&#xE768;"
+                                                Foreground="{DynamicResource AccentBrush}" Width="26" Height="26" ToolTip="Play"
+                                                Command="{Binding PlayCommand}" />
+                                        <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding Name}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="{Binding SoundError}" Style="{StaticResource ErrorText}"
+                                   Visibility="{Binding SoundError, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="Voice" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Alerts" />
+                <Border Style="{StaticResource SearchRow}" Tag="Voice test speech TTS">
+                    <StackPanel>
+                        <TextBlock Text="Voice" Style="{StaticResource RowLabel}" Margin="0,0,0,4" />
+                        <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Test voice" Margin="8,0,0,0"
+                                VerticalAlignment="Center" Command="{Binding TestVoiceCommand}" />
+                        <ComboBox DisplayMemberPath="Label" HorizontalAlignment="Left" ItemsSource="{Binding Voices}" SelectedItem="{Binding Voice}" Width="130"
+                                                AutomationProperties.Name="Voice" />
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Speech speed" Tag="Speech speed rate TTS">
+                    <Slider AutomationProperties.Name="Speech speed" Width="170" Minimum="-5" Maximum="5" IsSnapToTickEnabled="True" TickFrequency="1"
+                            VerticalAlignment="Center" Value="{Binding SpeechRate, Delay=250}" />
+                </HeaderedContentControl>
+                <TextBlock Text="Notifications" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Alerts" />
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Test alert" Tag="Test alert Send Send test alert">
+                    <StackPanel>
+                        <Button Content="Send" Command="{Binding TestAlertCommand}" HorizontalAlignment="Right"
+                                AutomationProperties.Name="Send test alert">
+                            <Button.Style>
+                                <Style TargetType="Button" BasedOn="{StaticResource GhostButton}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Health.TestBusy}" Value="True">
+                                            <Setter Property="IsEnabled" Value="False" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <TextBlock Text="{Binding Health.TestStatus}" Style="{StaticResource LabelText}" Margin="0,4,0,0"
+                                   Visibility="{Binding Health.TestStatus, Converter={StaticResource NullToCollapsed}}"
+                                   AutomationProperties.LiveSetting="Polite" />
+                    </StackPanel>
+                </HeaderedContentControl>
+                <Border Style="{StaticResource SearchRow}" Tag="Priority notifications">
+                    <Button Style="{StaticResource GhostButton}" Content="Priority notifications" HorizontalAlignment="Left" Margin="0,4,8,6"
+                            ToolTip="Add BDO Timers here so alerts show while you play fullscreen" Command="{Binding OpenNotificationSettingsCommand}" />
+                </Border>
+
+                <TextBlock Text="Overlay" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Overlay" />
+                <!-- Its changes apply at once, not with Save -->
+                <panels:OverlayOptions Style="{StaticResource SearchBlock}" DataContext="{Binding Overlay}"
+                                       Tag="Show always hotkey drag move mouse proximity fade hide layout list card bar size icons outline sections clock time server game previous next farm fishing horse custom timers events always before background colour color picture image opacity text" />
 
                 <TextBlock Text="Data" Style="{StaticResource SearchHeading}" panels:SettingsFilter.Category="Data" />
                 <Border Style="{StaticResource SearchRow}" Tag="Replace current data and restart? · Export backup… Restore backup… Open data folder Restore Cancel">

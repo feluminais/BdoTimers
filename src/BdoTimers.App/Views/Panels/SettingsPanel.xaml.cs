@@ -22,7 +22,7 @@ public partial class SettingsPanel : UserControl
         };
     }
 
-    RadioButton[] Navs => [GeneralNav, TodayNav, AlertsNav, OverlayNav, TodoNav, BossesNav, DataNav, AboutNav];
+    RadioButton[] Navs => [GeneralNav, TodayNav, TodoNav, BossesNav, AlertsNav, OverlayNav, DataNav, AboutNav];
 
     /// <summary>Starts over at the first category, or at the one the panel was opened for, with no search.</summary>
     void Restart()
