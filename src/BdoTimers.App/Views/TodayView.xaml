@@ -395,8 +395,6 @@
                         </Viewbox>
                         <TextBlock Text="Skipped" Style="{StaticResource LabelText}"
                                    Visibility="{Binding Next.Skipped, Converter={StaticResource BoolToVisibility}}" />
-                        <TextBlock Text="{Binding Alerts}" FontSize="12" Foreground="{DynamicResource SubtleBrush}" TextTrimming="CharacterEllipsis"
-                                   Margin="0,10,0,0" Visibility="{Binding Alerts, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                                 Visibility="{Binding HasNext, Converter={StaticResource InverseBoolToVisibility}}">

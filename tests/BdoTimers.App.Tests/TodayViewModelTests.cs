@@ -32,7 +32,7 @@ public class TodayViewModelTests
     static TimerDef[] Bosses(params string[] names) => names.Select(n => new TimerDef { Name = n, IsBuiltIn = true }).ToArray();
 
     [Fact]
-    public void The_hero_shows_the_next_spawn_with_its_alerts_the_one_before_it_and_how_soon() => WithServices(services =>
+    public void The_hero_shows_the_next_spawn_the_one_before_it_and_how_soon() => WithServices(services =>
     {
         var hero = new HeroViewModel(services, _ => { }, () => { });
         var now = new DateTimeOffset(2026, 10, 4, 6, 0, 0, TimeSpan.Zero);
@@ -41,20 +41,18 @@ public class TodayViewModelTests
             new SpawnGroup(now.AddHours(2).AddMinutes(47).AddSeconds(10), Bosses("Muraka", "Quint"), false),
             new SpawnGroup(now.AddHours(3).AddMinutes(59).AddSeconds(58), Bosses("Garmoth"), false));
 
-        hero.Update(board, now, [15, 5, 0]);
+        hero.Update(board, now);
 
         Assert.True(hero.HasNext);
         Assert.Equal("02:47:10", hero.Next.Clock);
         Assert.StartsWith("Next · ", hero.Next.Label);
-        Assert.Equal("Alerts 15 · 5 · at spawn", hero.Alerts);
         Assert.Equal("Previous Golden Pig King · Kutum −08:00:02", hero.Previous);
         Assert.Equal(UrgencyLevel.Normal, hero.Level);
 
-        hero.Update(board, now.AddHours(2).AddMinutes(40), [15, 5, 0]);
+        hero.Update(board, now.AddHours(2).AddMinutes(40));
         Assert.Equal(UrgencyLevel.Imminent, hero.Level);
-        hero.Update(new BossBoardState(null, null, null), now, [15, 5, 0]);
+        hero.Update(new BossBoardState(null, null, null), now);
         Assert.False(hero.HasNext);
-        Assert.Null(hero.Alerts);
         Assert.Null(hero.Previous);
     });
 
@@ -65,13 +63,13 @@ public class TodayViewModelTests
         var now = new DateTimeOffset(2026, 10, 4, 6, 0, 0, TimeSpan.Zero);
         var bosses = Bosses("Kzarka", "Nouver");
         var at = now.AddHours(1);
-        hero.Update(new BossBoardState(null, new SpawnGroup(at, bosses, false), null), now, []);
+        hero.Update(new BossBoardState(null, new SpawnGroup(at, bosses, false), null), now);
         Assert.Equal("Skip", hero.SkipLabel);
 
         hero.ToggleSkipCommand.Execute(null);
 
         Assert.Equal(2, services.Timers.Current.Muted.Count);
-        hero.Update(new BossBoardState(null, new SpawnGroup(at, bosses, true), null), now, []);
+        hero.Update(new BossBoardState(null, new SpawnGroup(at, bosses, true), null), now);
         Assert.Equal("Unskip", hero.SkipLabel);
 
         hero.ToggleSkipCommand.Execute(null);

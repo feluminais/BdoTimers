@@ -45,7 +45,7 @@ public sealed partial class TodayViewModel : ObservableObject
     public void Refresh(DateTimeOffset now)
     {
         var data = _services.Timers.Current;
-        Hero.Update(_services.Boards.Get(data, now), now, _services.Settings.Current.DefaultLeadTimesMinutes);
+        Hero.Update(_services.Boards.Get(data, now), now);
         ComingUp.Refresh(now);
         var running = _custom.Items.Where(t => t.CanStop).Take(MaxRunning).ToList();
         Running.Sync(running, ReferenceEquals, tile => tile, (_, _) => { });
