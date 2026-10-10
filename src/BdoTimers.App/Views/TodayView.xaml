@@ -341,8 +341,8 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <!-- Wide: the hero over Coming up, and Running over the daily and weekly tasks in a column of their own. Narrow: one
-         column, hero, Running, Coming up, Daily tasks, Weekly tasks. The code-behind moves the panels between the hosts. -->
+    <!-- Wide: the hero over Coming up, and Current timers over the daily and weekly tasks in a column of their own. Narrow: one
+         column, hero, Current timers, Coming up, Daily tasks, Weekly tasks. The code-behind moves the panels between the hosts. -->
     <Grid x:Name="Layout">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -455,7 +455,7 @@
                         <DockPanel Margin="0,0,0,4">
                             <Button DockPanel.Dock="Right" Style="{StaticResource LinkButton}" Content="Time Tracking ›" VerticalAlignment="Center"
                                     Command="{Binding ShowTimersCommand}" />
-                            <TextBlock Text="Running" Style="{StaticResource PanelHeading}" />
+                            <TextBlock Text="Current timers" Style="{StaticResource PanelHeading}" />
                         </DockPanel>
                         <ItemsControl ItemsSource="{Binding Running}" ItemTemplate="{StaticResource RunningRow}" Focusable="False" />
                     </StackPanel>

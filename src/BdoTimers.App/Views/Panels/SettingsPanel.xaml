@@ -143,6 +143,10 @@
                     </StackPanel>
                 </Border>
                 <TextBlock Text="Today" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Today" />
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Current timers" Tag="Current timers running countdown stopwatch show hide panel">
+                    <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowCurrentTimers}"
+                                  Width="110" AutomationProperties.Name="Current timers" />
+                </HeaderedContentControl>
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily tasks" Tag="Daily tasks to-do show hide panel">
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowDaily}"
                                   Width="110" AutomationProperties.Name="Daily tasks" />

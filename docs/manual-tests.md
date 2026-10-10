@@ -67,7 +67,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 21. [ ] Time Tracking: Horse registration is third, 10:00, and its (i) explains when to start. Its round button is a plus.
     Press Ctrl+Shift+F10 twice: the card stays one card, saying "2 of 10 active" with the two soonest clocks one under
     the other, both smaller than the single clock was, and no registration gets a card of its own, on Time Tracking or in Today's
-    Running (which lists Horse registration with the plus). A third press adds an ellipsis under the clocks, which turns gold
+    Current timers (which lists Horse registration with the plus). A third press adds an ellipsis under the clocks, which turns gold
     with the card's border; the card still shows two clocks. Each press speaks
     "Horse registration time started". The first alerts at 1:00 and 0:00, then ends without stopping the second. Today's
     Coming up and the Month show one Horse registration entry, the next to end, and it opens the card's panel.
@@ -330,14 +330,14 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     bosses that spawn together are one line with a dot between their names, each name a button that opens that boss and,
     on a right click, skips that boss's spawn; a boss with alerts off is missing, a skipped spawn is struck through, and the
     times to each update as time passes.
-    Running shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "Time Tracking ›"
+    Current timers shows each started or paused timer with a ring that fills, its clock and Start / Pause, and "Time Tracking ›"
     opens Time Tracking; with none running the panel is gone. Daily tasks lists the open tasks of the active daily lists (at most
     six), ticking one removes it and moves the line; Weekly tasks does the same for the weekly lists, a task with
     sub-tasks on one line saying how far along it is (ticking it ticks them all); its name or its arrow opens the
     sub-tasks under it, each ticked there, and it stays open as they are ticked. A task's text opens nothing; the heading
     with its count is the button, hover lights it: with one list on it opens that list's editor, with several it opens
     To-do. The panel is gone while no weekly list is on. Either panel says "+n more ›" when tasks don't fit, and that opens To-do. Below 820 px wide the screen is one
-    column: hero, Running, Coming up, Daily tasks, Weekly tasks.
+    column: hero, Current timers, Coming up, Daily tasks, Weekly tasks.
 80. [ ] The top bar's next-boss chip shows on Schedule, Time Tracking and To-do (not on Today) with the next spawn's names and
     clock in the same colours as the hero, and a click goes to Today. Its names are trimmed to the room between the tabs
     and the buttons and it is gone when there is under about 170 px of it (a narrow window, or the paused notice taking
@@ -359,7 +359,7 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     shows the slash, and the menu's Resume alerts brings it back.
 84. [ ] Time Tracking → New tracker offers Countdown, Stopwatch, Weekly and One-time event. Stopwatch opens a panel with a
     name, a picture and Delete, and no alert settings; the card appears with Start. Start it: it counts up, the card gets
-    Started earlier and Stop on hover, and Today's Running lists it. Pause, Resume and Stop reset it like Fishing; restart
+    Started earlier and Stop on hover, and Today's Current timers lists it. Pause, Resume and Stop reset it like Fishing; restart
     the app while it runs and it keeps counting from the same start. With the overlay pinned and Settings → Overlay → Timers →
     Custom timers on, a running stopwatch shows under Custom timers with the time counted, and "Paused" while paused.
 85. [ ] Edit a timer's name and click outside its panel, then do the same in Settings: "Discard changes?" opens centred in the
@@ -374,8 +374,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     from 1 h 30 min before. Turn Always on: Show before leaves and the row shows however far off the time is. Type "soon"
     or 99999: the field is flagged and the last good time stays. With the timer's Overlay over the game set, that pop-up
     shows instead of a second row.
-87. [ ] Settings → Today: Daily tasks, Weekly tasks and Garmoth are on. Turn each off and Save: its panel leaves Today and the
-    others stay. Garmoth is dimmed while the tracker in Bosses is off. A weekly panel still needs a weekly list on.
+87. [ ] Settings → Today: Current timers, Daily tasks, Weekly tasks and Garmoth are on. Turn each off and Save: its panel leaves
+    Today and the others stay (Current timers is gone anyway while no timer is running). Garmoth is dimmed while the tracker in Bosses is off. A weekly panel still needs a weekly list on.
 88. [ ] Settings: click in the Search field, then on bare space in the sheet: the field loses its caret and underline, and
     Escape then closes the sheet. Click it again and type: it filters.
 89. [ ] Open Settings with the mouse, close it with Escape (or Enter on Save) and leave the mouse where it is: no tooltip

@@ -160,6 +160,30 @@ public class TodayViewModelTests
     });
 
     [Fact]
+    public void The_current_timers_leave_Today_while_Settings_has_them_off() => WithServices(services =>
+    {
+        var host = new Host();
+        var today = new TodayViewModel(services, host, new CustomViewModel(services, host), new TodoViewModel(services, host), () => { }, () => { }, () => { });
+        var farm = services.Timers.Current.Timers.First(t => t.Preset == Presets.Farm);
+        services.Timers.Start(farm.Id, services.Clock.UtcNow.AddHours(-1));
+        WpfTest.Drain();
+        today.Refresh(services.Clock.UtcNow);
+        Assert.True(today.HasRunning);
+
+        services.Settings.Update(s => s with { Today = s.Today with { ShowCurrentTimers = false } });
+        WpfTest.Drain();
+        Assert.False(today.HasRunning);
+        Assert.Empty(today.Running);
+        today.Refresh(services.Clock.UtcNow);
+        Assert.False(today.HasRunning);
+
+        services.Settings.Update(s => s with { Today = s.Today with { ShowCurrentTimers = true } });
+        WpfTest.Drain();
+        Assert.True(today.HasRunning);
+        Assert.Equal("Farm", Assert.Single(today.Running).Name);
+    });
+
+    [Fact]
     public void Daily_tasks_show_the_open_rows_of_the_active_daily_lists_and_count_the_progress() => WithServices(services =>
     {
         var daily = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Daily);
@@ -315,14 +339,20 @@ public class TodayViewModelTests
     public void The_Today_switches_are_a_draft_until_Settings_is_saved() => WithServices(services =>
     {
         var settings = new SettingsPanelViewModel(services);
-        Assert.True(settings.ShowDaily && settings.ShowWeekly && settings.ShowGarmoth);
+        Assert.True(settings.ShowCurrentTimers && settings.ShowDaily && settings.ShowWeekly && settings.ShowGarmoth);
+        var raised = new List<string?>();
+        settings.PropertyChanged += (_, e) => raised.Add(e.PropertyName);
 
         settings.ShowDaily = false;
         settings.ShowGarmoth = false;
+        settings.ShowCurrentTimers = false;
+        Assert.Contains(nameof(SettingsPanelViewModel.ShowCurrentTimers), raised);
 
         Assert.False(settings.ShowDaily);
         Assert.False(settings.ShowGarmoth);
+        Assert.False(settings.ShowCurrentTimers);
         Assert.True(settings.ShowWeekly);
         Assert.True(services.Settings.Current.Today.ShowDaily);
+        Assert.True(services.Settings.Current.Today.ShowCurrentTimers);
     });
 }

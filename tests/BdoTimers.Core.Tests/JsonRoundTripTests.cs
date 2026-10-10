@@ -118,7 +118,7 @@ public class JsonRoundTripTests
         DailyTodoReset = new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5, Minute = 30, LocalTime = true },
         WeeklyTodoReset = new TodoSchedule { Day = DayOfWeek.Friday, Hour = 12, Minute = 15, LocalTime = true },
         Calendar = new CalendarSettings { ShowBosses = false, ShowTimers = false, ShowEvents = false, ShowResets = false },
-        Today = new TodaySettings { ShowDaily = false, ShowWeekly = false, ShowGarmoth = false },
+        Today = new TodaySettings { ShowCurrentTimers = false, ShowDaily = false, ShowWeekly = false, ShowGarmoth = false },
         GarmothTracker = true,
     };
 
@@ -166,6 +166,10 @@ public class JsonRoundTripTests
         Assert.Equal(0.5f, s.Volume);
         Assert.Equal(new GarmothWeek(), data.Garmoth);
         Assert.False(s.GarmothTracker);
+        Assert.True(s.Today.ShowCurrentTimers);
+        var older = JsonSerializer.Deserialize<AppSettings>("""{ "today": { "showDaily": false } }""", JsonDefaults.Options)!;
+        Assert.False(older.Today.ShowDaily);
+        Assert.True(older.Today.ShowCurrentTimers);
     }
 
     [Fact]

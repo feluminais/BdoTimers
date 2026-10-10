@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -39,6 +40,7 @@ public sealed partial class TodayViewModel : ObservableObject
         Daily = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Daily);
         Weekly = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Weekly);
         Garmoth = new GarmothViewModel(services);
+        services.Settings.Changed += () => Application.Current?.Dispatcher.BeginInvoke(SyncRunning);
         Refresh(services.Clock.UtcNow);
     }
 
@@ -47,7 +49,14 @@ public sealed partial class TodayViewModel : ObservableObject
         var data = _services.Timers.Current;
         Hero.Update(_services.Boards.Get(data, now), now);
         ComingUp.Refresh(now);
-        var running = _custom.Items.Where(t => t.CanStop).Take(MaxRunning).ToList();
+        SyncRunning();
+    }
+
+    /// <summary>Settings can switch the panel off, and then it lists nothing and the screen drops it.</summary>
+    void SyncRunning()
+    {
+        var shown = _services.Settings.Current.Today.ShowCurrentTimers;
+        var running = _custom.Items.Where(t => shown && t.CanStop).Take(MaxRunning).ToList();
         Running.Sync(running, ReferenceEquals, tile => tile, (_, _) => { });
         HasRunning = Running.Count > 0;
     }

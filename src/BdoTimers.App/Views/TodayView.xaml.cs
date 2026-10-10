@@ -12,7 +12,7 @@ public partial class TodayView : UserControl
 
     public TodayView() => InitializeComponent();
 
-    /// <summary>One column when the screen is narrow: hero, Running, Coming up, Daily tasks, Weekly tasks, Garmoth.</summary>
+    /// <summary>One column when the screen is narrow: hero, Current timers, Coming up, Daily tasks, Weekly tasks, Garmoth.</summary>
     void Root_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         var wide = e.NewSize.Width >= WideWidth;

@@ -144,6 +144,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         set => UpdateSettings(s => s with { GarmothTracker = value });
     }
 
+    public bool ShowCurrentTimers
+    {
+        get => Current.Today.ShowCurrentTimers;
+        set => UpdateSettings(s => s with { Today = s.Today with { ShowCurrentTimers = value } });
+    }
+
     public bool ShowDaily
     {
         get => Current.Today.ShowDaily;
@@ -235,6 +241,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         if (previous.GarmothTracker != next.GarmothTracker) OnPropertyChanged(nameof(GarmothTracker));
         if (previous.Today != next.Today)
         {
+            OnPropertyChanged(nameof(ShowCurrentTimers));
             OnPropertyChanged(nameof(ShowDaily));
             OnPropertyChanged(nameof(ShowWeekly));
             OnPropertyChanged(nameof(ShowGarmoth));

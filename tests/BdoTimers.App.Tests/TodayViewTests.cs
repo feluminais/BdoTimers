@@ -8,7 +8,9 @@ using BdoTimers.App.Controls;
 using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
+using BdoTimers.App.Views.Panels;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 
 namespace BdoTimers.App.Tests;
 
@@ -272,6 +274,59 @@ public class TodayViewTests
                 UiCapture.Save(window, "today-garmoth-done.png");
 
                 services.Settings.Update(s => s with { GarmothTracker = false });
+                WpfTest.Drain();
+
+                Assert.False(panel.IsVisible);
+            }
+            finally { window.Close(); }
+        }
+        finally { if (Directory.Exists(path)) Directory.Delete(path, true); }
+    });
+
+    [Fact]
+    public void The_panel_of_running_timers_is_headed_Current_timers_and_Settings_can_switch_it_off() => WpfTest.Run(() =>
+    {
+        var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Today." + Guid.NewGuid().ToString("N"));
+        try
+        {
+            using var services = new AppServices(Application.Current, path);
+            var host = new Host();
+            var todo = new TodoViewModel(services, host);
+            var today = new TodayViewModel(services, host, new CustomViewModel(services, host), todo, () => { }, () => { }, () => { });
+            var view = new TodayView { DataContext = today };
+            var window = new Window { Content = new Border { Padding = new Thickness(22, 18, 22, 20), Child = view }, Width = 960, Height = 900,
+                Left = -10000, Top = -10000, ShowInTaskbar = false, FontSize = 13 };
+            window.SetResourceReference(Control.BackgroundProperty, "BgBrush");
+            window.SetResourceReference(Control.ForegroundProperty, "TextBrush");
+            window.SetResourceReference(Control.FontFamilyProperty, "UiFont");
+            try
+            {
+                services.Timers.Start(services.Timers.Current.Timers.First(t => t.Preset == Presets.Farm).Id, services.Clock.UtcNow.AddHours(-1));
+                window.Show();
+                WpfTest.Drain();
+                today.Refresh(services.Clock.UtcNow);
+                WpfTest.Drain();
+                var panel = (FrameworkElement)view.FindName("RunningPanel");
+                Assert.True(panel.IsVisible);
+                Assert.Contains(PanelFocusScope.Descendants(panel).OfType<TextBlock>(), t => t.IsVisible && t.Text == "Current timers");
+
+                // Its switch is in Settings beside the other Today panels, and starts on.
+                var settings = new SettingsPanelViewModel(services);
+                var sheet = new SettingsPanel { DataContext = settings };
+                var sheetWindow = new Window { Content = sheet, Width = 500, Height = 900, Left = -10000, Top = -10000, ShowInTaskbar = false };
+                try
+                {
+                    sheetWindow.Show();
+                    ((RadioButton)sheet.FindName("TodayNav")).IsChecked = true;
+                    WpfTest.Drain();
+                    var toggle = PanelFocusScope.Descendants(sheet).OfType<ToggleButton>().Single(b => AutomationProperties.GetName(b) == "Current timers");
+                    Assert.True(toggle.IsChecked);
+                    toggle.IsChecked = false;
+                    Assert.False(settings.ShowCurrentTimers);
+                }
+                finally { sheetWindow.Close(); }
+
+                services.Settings.Update(s => s with { Today = s.Today with { ShowCurrentTimers = false } });
                 WpfTest.Drain();
 
                 Assert.False(panel.IsVisible);
