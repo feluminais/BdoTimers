@@ -324,7 +324,8 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
 78. [ ] To-do: an Off list is one dashed row with a switch that turns it on; a card's ⋯ (on hover) opens its editor, as the
     name does; the editor's Active switch turns it off again and the card collapses to the dashed row.
 79. [ ] Today: the hero counts down to the next spawn, in the text colour, gold within 30 minutes, amber within 10 and ember
-    within 1; "Alerts" lists the alert times, "Previous" names the last spawn. A name opens that boss. Coming
+    within 1; "Previous" names the last spawn. Of bosses that spawn together the first name is above the clock over its
+    picture, the others under it over the second picture. A name opens that boss. Coming
     up lists the next 24 hours under a gold rule with the time now: bosses a filled dot, timers a ring, resets a small dot;
     bosses that spawn together are one line with a dot between their names, each name a button that opens that boss and,
     on a right click, skips that boss's spawn; a boss with alerts off is missing, a skipped spawn is struck through, and the

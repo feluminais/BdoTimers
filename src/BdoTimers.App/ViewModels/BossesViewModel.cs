@@ -145,7 +145,7 @@ public sealed partial class BossesViewModel : ObservableObject
 public sealed partial class BossLink(Guid id, string name, Action<Guid> open, ArtPicture picture)
 {
     public string Name => name;
-    /// <summary>Set on every name but the first of a spawn, which a line of names separates with a dot.</summary>
+    /// <summary>Set on every name but the first of a line, which a line of names separates with a dot.</summary>
     public bool Follows { get; init; }
     public IReadOnlyList<ArtPicture> Images { get; } = [picture];
 
@@ -160,7 +160,10 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
 
     [ObservableProperty] private bool _hasSpawn;
     [ObservableProperty] private string _label = "";
-    [ObservableProperty] private IReadOnlyList<BossLink> _names = [];
+    /// <summary>The first boss, over the first picture and above the clock.</summary>
+    [ObservableProperty] private IReadOnlyList<BossLink> _above = [];
+    /// <summary>The other bosses, over the second picture and below the clock.</summary>
+    [ObservableProperty] private IReadOnlyList<BossLink> _below = [];
     [ObservableProperty] private IReadOnlyList<ArtPicture> _images = [];
     [ObservableProperty] private string _clock = "";
     [ObservableProperty] private bool _skipped;
@@ -173,8 +176,10 @@ public sealed partial class StripTileViewModel(string caption, bool elapsed) : O
         if (signature != _signature)
         {
             _signature = signature;
-            Names = group.Bosses.Select((b, i) => new BossLink(b.Id, b.Name, open, art.For(b)) { Follows = i > 0 }).ToList();
-            Images = Names.SelectMany(b => b.Images).Take(2).ToList();
+            var names = group.Bosses.Select((b, i) => new BossLink(b.Id, b.Name, open, art.For(b)) { Follows = i > 1 }).ToList();
+            Above = names.Take(1).ToList();
+            Below = names.Skip(1).ToList();
+            Images = names.SelectMany(b => b.Images).Take(2).ToList();
             Label = $"{caption} · {Formats.DayTime(group.AtUtc)}";
         }
         Skipped = group.Skipped;

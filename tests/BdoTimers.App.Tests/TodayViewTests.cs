@@ -46,10 +46,8 @@ public class TodayViewTests
                 window.Show();
                 WpfTest.Drain();
                 var hero = (FrameworkElement)view.FindName("Hero");
-                var names = VisualTree.FindDescendant<ItemsControl>(hero, _ => true)!;
-                Assert.Equal(today.Hero.Next.Names.Count, names.Items.Count);
                 var buttons = PanelFocusScope.Descendants(hero).OfType<Button>().Where(b => b.DataContext is BossLink).ToList();
-                Assert.Equal(today.Hero.Next.Names.Count, buttons.Count);
+                Assert.Equal(today.Hero.Next.Above.Count + today.Hero.Next.Below.Count, buttons.Count);
                 Assert.Contains(PanelFocusScope.Descendants(hero).OfType<TextBlock>(), t => t.IsVisible && t.Text == today.Hero.Next.Clock);
                 Assert.NotEmpty(today.ComingUp.Rows);
                 // Every name of Coming up is a button, and bosses that spawn together are one row of them.

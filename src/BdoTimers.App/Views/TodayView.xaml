@@ -382,19 +382,24 @@
                     </Rectangle>
                     <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Margin="24,0,26,0" TextBlock.TextAlignment="Right"
                                 Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding Next.Label}" FontSize="12" Foreground="{DynamicResource AccentBrush}" />
-                        <ItemsControl ItemsSource="{Binding Next.Names}" ItemTemplate="{StaticResource HeroName}" HorizontalAlignment="Right"
-                                      Margin="0,5,0,2" Focusable="False">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                        </ItemsControl>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <TextBlock Text="{Binding Next.Label}" FontSize="12" Foreground="{DynamicResource AccentBrush}" />
+                            <TextBlock Text=" · Skipped" Style="{StaticResource LabelText}"
+                                       Visibility="{Binding Next.Skipped, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+                        <!-- The first name is over the first picture, the others under the clock over the second -->
+                        <ItemsControl ItemsSource="{Binding Next.Above}" ItemTemplate="{StaticResource HeroName}" HorizontalAlignment="Right"
+                                      Margin="0,5,0,2" Focusable="False" />
                         <!-- Shrinks to fit a narrow hero rather than lose its last digits -->
                         <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Right">
                             <TextBlock Text="{Binding Next.Clock}" Style="{StaticResource HeroClock}" />
                         </Viewbox>
-                        <TextBlock Text="Skipped" Style="{StaticResource LabelText}"
-                                   Visibility="{Binding Next.Skipped, Converter={StaticResource BoolToVisibility}}" />
+                        <ItemsControl ItemsSource="{Binding Next.Below}" ItemTemplate="{StaticResource HeroName}" HorizontalAlignment="Right"
+                                      Focusable="False">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
                     </StackPanel>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
                                 Visibility="{Binding HasNext, Converter={StaticResource InverseBoolToVisibility}}">
