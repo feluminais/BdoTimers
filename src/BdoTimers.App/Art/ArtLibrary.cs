@@ -16,14 +16,14 @@ namespace BdoTimers.App.Art;
 public sealed class ArtLibrary(string imagesDir)
 {
     /// <summary>Wide enough for the zoomed-in crops; wider pictures are decoded down to it.</summary>
-    const int MaxDecodeWidth = 960;
+    const int MaxDecodeWidth = 1600;
 
     /// <summary>Where each boss's head is in its bundled picture, as fractions of width and height.</summary>
     static readonly IReadOnlyDictionary<string, Point> BossHeads = new Dictionary<string, Point>
     {
-        ["bulgasal"] = new(0.57, 0.33),
+        ["bulgasal"] = new(0.46, 0.38),
         ["garmoth"] = new(0.70, 0.30),
-        ["golden-pig-king"] = new(0.57, 0.27),
+        ["golden-pig-king"] = new(0.55, 0.32),
         ["karanda"] = new(0.55, 0.27),
         ["kutum"] = new(0.63, 0.48),
         ["kzarka"] = new(0.60, 0.65),
@@ -31,7 +31,7 @@ public sealed class ArtLibrary(string imagesDir)
         ["nouver"] = new(0.64, 0.44),
         ["offin"] = new(0.51, 0.40),
         ["quint"] = new(0.46, 0.24),
-        ["sangoon"] = new(0.43, 0.27),
+        ["sangoon"] = new(0.66, 0.20),
         ["uturi"] = new(0.61, 0.38),
         ["vell"] = new(0.62, 0.22),
     };

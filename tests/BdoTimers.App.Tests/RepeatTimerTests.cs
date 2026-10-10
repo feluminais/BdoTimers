@@ -293,7 +293,7 @@ public sealed class RepeatTimerTests
 
     [Theory]
     [InlineData(Presets.WarOfTheRoses, 351, 318)]
-    [InlineData(Presets.GuildBosses, 960, 540)]
+    [InlineData(Presets.GuildBosses, 1600, 900)]
     public void Preset_loads_bundled_picture_without_error(string preset, int width, int height) => WpfTest.Run(() =>
     {
         var path = Path.Combine(Path.GetTempPath(), "BdoTimers.Roses." + Guid.NewGuid().ToString("N"));
