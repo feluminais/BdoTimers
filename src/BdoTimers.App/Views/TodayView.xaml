@@ -380,7 +380,7 @@
                             </LinearGradientBrush>
                         </Rectangle.Fill>
                     </Rectangle>
-                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Margin="24,0,26,0" TextBlock.TextAlignment="Right"
+                    <StackPanel HorizontalAlignment="Right" VerticalAlignment="Center" Margin="24,0,14,0" TextBlock.TextAlignment="Right"
                                 Visibility="{Binding HasNext, Converter={StaticResource BoolToVisibility}}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                             <TextBlock Text="{Binding Next.Label}" FontSize="12" Foreground="{DynamicResource AccentBrush}" />
