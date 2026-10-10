@@ -408,8 +408,8 @@
                         <Button Style="{StaticResource GhostButton}" Content="Following" Margin="0,12,0,0" HorizontalAlignment="Center"
                                 Command="{Binding OpenFollowingCommand}" />
                     </StackPanel>
-                    <Border Grid.Row="1" HorizontalAlignment="Left" Margin="12,0,0,10" Padding="10,4" CornerRadius="12"
-                            Background="#9E000000" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="1"
+                    <Border Grid.Row="1" HorizontalAlignment="Left" Padding="14,5,12,5" CornerRadius="0,12,0,0"
+                            Background="#9E000000" BorderBrush="{DynamicResource HairlineBrush}" BorderThickness="0,1,1,0"
                             Visibility="{Binding Previous, Converter={StaticResource NullToCollapsed}}">
                         <TextBlock Text="{Binding Previous}" FontSize="11.5" Foreground="{DynamicResource SubtleBrush}"
                                    Typography.NumeralAlignment="Tabular" />
