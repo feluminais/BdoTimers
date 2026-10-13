@@ -73,7 +73,7 @@ public sealed class RepeatTimerTests
                 panel.ResetTimes.AskCommand.Execute(null);
                 panel.ResetTimes.CancelCommand.Execute(null);
                 Assert.Equal(3, services.Timers.Current.Timers.Single(t => t.Id == timer.Id).Scheduled!.EveryWeeks);
-                services.SelectBossRegion(BossRegions.NorthAmerica);
+                services.Timetable.SelectRegion(BossRegions.NorthAmerica);
                 Assert.Contains("NA", panel.ResetTimesLabel);
                 panel.ResetTimes.AskCommand.Execute(null);
                 panel.ResetTimes.ConfirmCommand.Execute(null);

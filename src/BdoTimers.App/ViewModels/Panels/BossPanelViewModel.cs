@@ -69,7 +69,7 @@ public sealed partial class BossPanelViewModel : ObservableObject, IDraftPanel
         _endDateText = spec.EndDate is { } end ? Parsing.FormatDate(end) : "";
         Slots = new SlotListViewModel(spec.Slots,
             slots => _editor.Modify(t => t with { Scheduled = (t.Scheduled ?? spec) with { Slots = slots } }),
-            defaults: services.BundledSchedule(boss)?.Slots);
+            defaults: services.Timetable.BundledSchedule(boss)?.Slots);
         TimeZoneNote = $"Server time ({TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId).StandardName})";
         Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         Slots.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));

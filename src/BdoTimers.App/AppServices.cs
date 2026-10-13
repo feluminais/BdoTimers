@@ -60,6 +60,7 @@ public sealed class AppServices : IDisposable
     public AudioPreview Audio { get; }
     public UserFiles Files { get; }
     public SupportTools Support { get; }
+    public BossTimetable Timetable { get; }
     readonly ThemePreferences _theme;
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -91,11 +92,6 @@ public sealed class AppServices : IDisposable
         Settings.Changed += () => Health.Saved(settingsFile.FilePath);
         Todos.Changed += () => Health.Saved(todosFile.FilePath);
         Todos.Update(TodoMigrations.Apply);
-        Settings.Changed += () =>
-        {
-            try { Todos.Reconcile(Settings.Current); }
-            catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); Health.Failed("Saving", ex); }
-        };
         Timers = new TimerStore(timersFile, timers.Value);
         Timers.Changed += () => Health.Saved(timersFile.FilePath);
         Timers.Update(d =>
@@ -103,12 +99,7 @@ public sealed class AppServices : IDisposable
             var migrated = DataMigrations.Apply(d, Settings.Current);
             return Presets.Ensure(SeedService.ApplyIfNeeded(migrated, _seeds[migrated.SelectedBossRegion], new AlertConfig()));
         });
-        // The Garmoth tracker's week follows its switch and the weekly reset, which both change in Settings.
-        Settings.Changed += () =>
-        {
-            try { Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow); }
-            catch (StateSaveException ex) { Log.Error("Couldn't save the Garmoth tracker", ex); Health.Failed("Saving", ex); }
-        };
+        FollowSettings();
         Undo = new UndoService(Timers, Todos, Clock, file =>
         {
             if (Timers.Current.Timers.All(t => t.ImageFile != file) && Settings.Current.Overlay.BackgroundImage != file)
@@ -124,6 +115,7 @@ public sealed class AppServices : IDisposable
         Audio = new AudioPreview(_sound, Tts, Sounds, Settings, Health);
         Files = new UserFiles(Art, Sounds, Timers, Settings);
         Support = new SupportTools(_alerts, Health, Clock, dataDir, _updateShutdown.Token);
+        Timetable = new BossTimetable(_seeds, Timers, Undo, _toast, Clock);
         _engine = new SchedulerEngine(Timers, Settings, _alerts, Clock);
         _loop = new SchedulerLoop(_engine, Clock,
             onFailure: ex => Health.Failed(ex is StateSaveException ? "Saving" : "Scheduler", ex),
@@ -131,6 +123,26 @@ public sealed class AppServices : IDisposable
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
 
+        Updates = CreateUpdateChecker(dataDir);
+    }
+
+    /// <summary>The to-do lists and the Garmoth tracker's week follow the reset times and the switch, which change in Settings.</summary>
+    void FollowSettings()
+    {
+        Settings.Changed += () =>
+        {
+            try { Todos.Reconcile(Settings.Current); }
+            catch (StateSaveException ex) { Log.Error("Couldn't save to-do reset settings", ex); Health.Failed("Saving", ex); }
+        };
+        Settings.Changed += () =>
+        {
+            try { Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow); }
+            catch (StateSaveException ex) { Log.Error("Couldn't save the Garmoth tracker", ex); Health.Failed("Saving", ex); }
+        };
+    }
+
+    UpdateChecker CreateUpdateChecker(string dataDir)
+    {
         var updateFile = new JsonFileStore<UpdateCheckState>(Path.Combine(dataDir, "update-check.json"), () => new());
         UpdateCheckState updateState;
         try { updateState = updateFile.Load().Value; }
@@ -139,7 +151,7 @@ public sealed class AppServices : IDisposable
             Log.Error("Couldn't load update check timing", ex);
             updateState = new();
         }
-        Updates = new UpdateChecker(new GitHubReleaseSource(_updateHttp), ProductVersion.Number, Clock,
+        return new UpdateChecker(new GitHubReleaseSource(_updateHttp), ProductVersion.Number, Clock,
             new PersistentState<UpdateCheckState>(updateFile, updateState), App.AutomaticUpdateChecks,
             shutdown: _updateShutdown.Token);
     }
@@ -169,7 +181,7 @@ public sealed class AppServices : IDisposable
         NotifyStartupHints();
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
-        NotifyTimetableReview();
+        Timetable.NotifyReview();
         if (showWindow) ShowMainWindow();
         else EcoQos.Set(true);
 #if !DEBUG
@@ -204,25 +216,6 @@ public sealed class AppServices : IDisposable
     }
 
     static void OnTimeChanged(object? sender, EventArgs e) => TimeZoneInfo.ClearCachedData();
-
-    void NotifyTimetableReview()
-    {
-        var data = Timers.Current;
-        var seed = _seeds[data.SelectedBossRegion];
-        var timetableRevision = TimetableUpdates.Revision(seed);
-        if (TimetableUpdates.Review(data, seed).NeedsReview
-            && BossRegions.State(data).TimetableNoticeRevision != timetableRevision
-            && _toast.ShowInfo($"Review the {BossRegions.Find(data.SelectedBossRegion).ShortLabel} timetable",
-                "Bundled spawn times can be reviewed in Settings → Bosses."))
-        {
-            try
-            {
-                Timers.Update(d => BossRegions.WithState(d,
-                    BossRegions.State(d, data.SelectedBossRegion) with { TimetableNoticeRevision = timetableRevision }));
-            }
-            catch (Exception ex) { Log.Error("Couldn't save that the timetable notice was shown", ex); }
-        }
-    }
 
     async Task CheckForUpdatesOnStartup()
     {
@@ -302,61 +295,10 @@ public sealed class AppServices : IDisposable
         else _mainViewModel.RequestLeave(() => ((App)_app).RestartForRestore(restore), () => BackupArchive.Discard(restore));
     }
 
-    public void SelectBossRegion(string regionId)
-    {
-        Timers.SelectBossRegion(regionId, Clock);
-        NotifyTimetableReview();
-    }
-
-    public void ApplyTimetable(IEnumerable<string> names) => ReleasingDroppedPictures(() =>
-        Timers.Update(data => TimetableUpdates.Apply(data, _seeds[data.SelectedBossRegion], names)));
-
     public void NotifyRestore(string? previousDirectory)
     {
         Log.Info($"Backup restored; previous data: {previousDirectory ?? "none"}");
         _toast.ShowInfo("Backup restored", "Your previous data was kept beside the Data folder.");
-    }
-
-    /// <summary>Brings back the selected region's bundled bosses and spawn times; bosses the player added stay.</summary>
-    public void ResetBossTimetable() => ReleasingDroppedPictures(() =>
-        Timers.Update(d => SeedService.ResetBuiltIns(d, _seeds[d.SelectedBossRegion], new AlertConfig())));
-
-    /// <summary>Deletes the pictures of bosses that <paramref name="change"/> removed from the timetable.</summary>
-    void ReleasingDroppedPictures(Action change)
-    {
-        var before = Timers.Current.Timers.Select(t => t.ImageFile).OfType<string>().ToList();
-        change();
-        foreach (var image in before) Undo.ReleasePicture(image);
-    }
-
-    /// <summary>The spawn times this version ships for a boss, or null when its region's timetable no longer has it.</summary>
-    public ScheduledSpec? BundledSchedule(TimerDef boss) =>
-        _seeds.TryGetValue(BossRegions.RegionOf(boss), out var seed) ? SeedService.Schedule(seed, boss.Name) : null;
-
-    public void SetTodoReset(TodoCadence cadence, TodoSchedule schedule)
-    {
-        var previous = Settings.Current;
-        var changed = WithTodoReset(previous, cadence, schedule);
-        if (changed == previous) return;
-        // Save list boundaries first: if that fails, Settings keeps the old reset.
-        Todos.Reconcile(changed);
-        try { Settings.Update(s => WithTodoReset(s, cadence, schedule)); }
-        catch (StateSaveException)
-        {
-            RestoreTodoLists(previous);
-            throw;
-        }
-    }
-
-    static AppSettings WithTodoReset(AppSettings settings, TodoCadence cadence, TodoSchedule schedule) =>
-        cadence == TodoCadence.Daily
-            ? settings with { DailyTodoReset = schedule }
-            : settings with { WeeklyTodoReset = schedule };
-
-    void RestoreTodoLists(AppSettings previous)
-    {
-        try { Todos.Reconcile(previous); }
-        catch (StateSaveException ex) { Log.Error("Couldn't restore to-do reset after settings save failed", ex); }
     }
 
     public void Quit()

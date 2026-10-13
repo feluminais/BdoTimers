@@ -104,7 +104,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         DailyTodoReset.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         WeeklyTodoReset.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
         AlertReset = new Confirmation(services.Timers.ResetBossAlerts);
-        TimetableReset = new Confirmation(() => { services.ResetBossTimetable(); RefreshTimetable(); });
+        TimetableReset = new Confirmation(() => { services.Timetable.Reset(); RefreshTimetable(); });
         HasDeletedTodoDefaults = services.Todos.Current.Lists.Any(list => list.IsBuiltIn && list.Deleted)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.DailyId)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.WeeklyId);
@@ -229,7 +229,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
             catch (Exception ex) { Log.Error("Couldn't restore settings after save failed", ex); }
             throw;
         }
-        if (!RegionSaved) _services.SelectBossRegion(region);
+        if (!RegionSaved) _services.Timetable.SelectRegion(region);
     }
 
     void OnSettingsChanged()
@@ -321,7 +321,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     [RelayCommand]
     void ApplyTimetable()
     {
-        _services.ApplyTimetable(TimetableChanges.Where(c => c.Apply).Select(c => c.Change.Name));
+        _services.Timetable.Apply(TimetableChanges.Where(c => c.Apply).Select(c => c.Change.Name));
         ReviewingTimetable = false;
         RefreshTimetable();
     }
@@ -329,7 +329,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     [RelayCommand]
     void KeepTimetable()
     {
-        _services.ApplyTimetable([]);
+        _services.Timetable.Apply([]);
         ReviewingTimetable = false;
         RefreshTimetable();
     }
