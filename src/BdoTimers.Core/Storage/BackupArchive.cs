@@ -214,12 +214,19 @@ public static class BackupArchive
                 throw new InvalidDataException($"The saved picture {name} is missing.");
     }
 
-    internal static bool SafeFileName(string name)
+    static readonly char[] InvalidNameChars = [.. Path.GetInvalidFileNameChars(), '\\', '/'];
+
+    internal static bool SafeFileName(string name) => IsPlainFileName(name) && !IsDeviceName(name);
+
+    static bool IsPlainFileName(string name) =>
+        !string.IsNullOrWhiteSpace(name) && name is not ("." or "..") && !name.EndsWith('.') && !name.EndsWith(' ')
+        && name.IndexOfAny(InvalidNameChars) < 0;
+
+    /// <summary>Windows device names such as CON or COM1, with or without an extension.</summary>
+    static bool IsDeviceName(string name)
     {
-        if (string.IsNullOrWhiteSpace(name) || name is "." or ".." || name.EndsWith('.') || name.EndsWith(' ')
-            || name.Contains('\\') || name.Contains('/') || name.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0) return false;
         var stem = name.Split('.')[0].ToUpperInvariant();
-        return stem is not ("CON" or "PRN" or "AUX" or "NUL") && !Enumerable.Range(1, 9).Any(n => stem == $"COM{n}" || stem == $"LPT{n}");
+        return stem is "CON" or "PRN" or "AUX" or "NUL" || Enumerable.Range(1, 9).Any(n => stem == $"COM{n}" || stem == $"LPT{n}");
     }
 
     static bool IsLink(string path) => (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
