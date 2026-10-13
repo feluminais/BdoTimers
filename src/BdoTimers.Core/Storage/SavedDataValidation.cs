@@ -36,16 +36,8 @@ internal static class SavedDataValidation
         Require(double.IsFinite(settings.TextScale) && settings.TextScale is >= 1 and <= 1.5);
         Require(settings.DefaultLeadTimesMinutes is not null && settings.DefaultLeadTimesMinutes.All(m => m is >= 0 and <= 1440));
         Require(float.IsFinite(settings.Volume) && settings.Volume is >= 0 and <= 1 && settings.AlertSound is not null);
-        Require(settings.Overlay is not null && Enum.IsDefined(settings.Overlay.Layout));
-        Require(Enum.IsDefined(settings.Overlay.MouseProximity));
-        Require(double.IsFinite(settings.Overlay.Scale) && settings.Overlay.Scale is >= 0.6 and <= 2);
-        Require(double.IsFinite(settings.Overlay.BackgroundOpacity) && settings.Overlay.BackgroundOpacity is >= 0 and <= 1);
-        Require(double.IsFinite(settings.Overlay.TextOpacity) && settings.Overlay.TextOpacity is >= 0.2 and <= 1);
-        Require(settings.Overlay.BackgroundColor is not null && settings.Overlay.GuildBosses is not null);
-        Require(settings.Overlay.ShowSeconds > 0);
-        Require(settings.Overlay.Timers is not null && settings.Overlay.Timers.All(t => t is { Minutes: > 0 and <= 10080 }));
-        Require(new[] { settings.Overlay.NextLead, settings.Overlay.FarmLead, settings.Overlay.HorseLead, settings.Overlay.CustomLead }
-            .All(l => l is { Minutes: > 0 and <= 10080 }));
+        Require(settings.Overlay is not null);
+        Overlay(settings.Overlay);
         Require(settings.OverlayLeft is not { } left || double.IsFinite(left));
         Require(settings.OverlayTop is not { } top || double.IsFinite(top));
         if (settings.Window is { } window)
@@ -57,19 +49,27 @@ internal static class SavedDataValidation
         Require(settings.Calendar is not null);
     }
 
+    static void Overlay(OverlaySettings overlay)
+    {
+        Require(Enum.IsDefined(overlay.Layout));
+        Require(Enum.IsDefined(overlay.MouseProximity));
+        Require(double.IsFinite(overlay.Scale) && overlay.Scale is >= 0.6 and <= 2);
+        Require(double.IsFinite(overlay.BackgroundOpacity) && overlay.BackgroundOpacity is >= 0 and <= 1);
+        Require(double.IsFinite(overlay.TextOpacity) && overlay.TextOpacity is >= 0.2 and <= 1);
+        Require(overlay.BackgroundColor is not null && overlay.GuildBosses is not null);
+        Require(overlay.ShowSeconds > 0);
+        Require(overlay.Timers is not null && overlay.Timers.All(t => t is { Minutes: > 0 and <= 10080 }));
+        Require(new[] { overlay.NextLead, overlay.FarmLead, overlay.HorseLead, overlay.CustomLead }
+            .All(l => l is { Minutes: > 0 and <= 10080 }));
+    }
+
     static void Timers(AppData timers)
     {
         Require(timers.DataVersion is >= 0 and <= DataMigrations.Current);
         Require(timers.Timers is not null && timers.Muted is not null);
         Require(timers.Garmoth is { Kills: >= 0 and <= GarmothTracker.Limit });
         BossRegions.Find(timers.SelectedBossRegion);
-        Require(timers.BossRegions is not null && timers.BossRegions.All(r => r is not null)
-            && timers.BossRegions.Select(r => r.RegionId).Distinct().Count() == timers.BossRegions.Count);
-        foreach (var region in timers.BossRegions)
-        {
-            BossRegions.Find(region.RegionId);
-            if (region.AcceptedBossTimetable is { } baseline) Timetable(baseline);
-        }
+        Regions(timers);
         Require(timers.Timers.Count <= 10000 && timers.Timers.Select(t => t.Id).Distinct().Count() == timers.Timers.Count);
         foreach (var timer in timers.Timers)
             Timer(timer);
@@ -77,15 +77,24 @@ internal static class SavedDataValidation
             Timetable(seed);
     }
 
+    static void Regions(AppData timers)
+    {
+        Require(timers.BossRegions is not null && timers.BossRegions.All(r => r is not null)
+            && timers.BossRegions.Select(r => r.RegionId).Distinct().Count() == timers.BossRegions.Count);
+        foreach (var region in timers.BossRegions)
+        {
+            BossRegions.Find(region.RegionId);
+            if (region.AcceptedBossTimetable is { } baseline) Timetable(baseline);
+        }
+    }
+
     static void Timer(TimerDef timer)
     {
         Require(timer is not null && timer.Id != Guid.Empty && timer.Name is not null && Enum.IsDefined(timer.Kind));
         if (timer.IsBuiltIn) BossRegions.Find(BossRegions.RegionOf(timer));
         Require(!timer.AddedByUser || timer.IsBuiltIn && timer.Kind == TimerKind.Scheduled);
-        Require(timer.Alerts is not null && timer.Alerts.Sound is not null && timer.Alerts.Toast is not null
-            && timer.Alerts.Tts is not null && timer.Alerts.Overlay is not null);
-        Require(timer.Alerts.LeadTimesMinutes is null || timer.Alerts.LeadTimesMinutes.All(m => m is >= 0 and <= 1440));
-        Require(timer.Alerts.Tts.Template is not null && timer.Alerts.Tts.NowTemplate is not null);
+        Require(timer.Alerts is not null);
+        Alerts(timer.Alerts);
         FileName(timer.ImageFile);
         switch (timer.Kind)
         {
@@ -97,6 +106,13 @@ internal static class SavedDataValidation
             case TimerKind.Countdown: CountdownTimer(timer.Countdown); break;
             default: StopwatchTimer(timer.Stopwatch); break;
         }
+    }
+
+    static void Alerts(AlertConfig alerts)
+    {
+        Require(alerts.Sound is not null && alerts.Toast is not null && alerts.Tts is not null && alerts.Overlay is not null);
+        Require(alerts.LeadTimesMinutes is null || alerts.LeadTimesMinutes.All(m => m is >= 0 and <= 1440));
+        Require(alerts.Tts.Template is not null && alerts.Tts.NowTemplate is not null);
     }
 
     static void ScheduledTimer(TimerDef timer)
