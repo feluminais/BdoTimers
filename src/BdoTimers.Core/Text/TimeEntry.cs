@@ -12,7 +12,7 @@ public static class TimeEntry
     /// </summary>
     public static string AddColon(string text)
     {
-        var beforeSeparator = text.Length is 2 or 3 && text[text.Length - 1] is ' ' or '.' ? text.Substring(0, text.Length - 1) : "";
+        var beforeSeparator = BeforeTrailingSeparator(text);
         if (Digits(beforeSeparator, 1, 2))
         {
             var hour = int.Parse(beforeSeparator, CultureInfo.InvariantCulture);
@@ -39,6 +39,9 @@ public static class TimeEntry
             ? hour.ToString("00", CultureInfo.InvariantCulture) + ":" + minute.ToString("00", CultureInfo.InvariantCulture)
             : text;
     }
+
+    static string BeforeTrailingSeparator(string text) =>
+        text.Length is 2 or 3 && text[text.Length - 1] is ' ' or '.' ? text.Substring(0, text.Length - 1) : "";
 
     static bool Digits(string text, int min, int max) =>
         text.Length >= min && text.Length <= max && text.All(c => c is >= '0' and <= '9');
