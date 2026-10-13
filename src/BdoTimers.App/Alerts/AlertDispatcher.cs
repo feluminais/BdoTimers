@@ -4,6 +4,7 @@ using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Sounds;
 using BdoTimers.Core.Storage;
 using BdoTimers.Core.Text;
+using NAudio.Wave;
 
 namespace BdoTimers.App.Alerts;
 
@@ -77,29 +78,29 @@ public sealed class AlertDispatcher(
                 await TryAsync("sound", () => sound.PlayAsync(
                     SoundKeys.Playable(withSound.Sound.Key, s.AlertSound, userSounds.Exists), s.Volume));
             if (speech is not null)
-                await TryAsync("tts", async () =>
-                {
-                    var spoken = current;
-                    var pending = speech;
-                    // Recheck after every synthesis, keeping custom timers when a shared boss becomes inactive.
-                    while (true)
-                    {
-                        using var source = await pending;
-                        if (Eligible(timers.Current, spoken, test) is not { } eligible
-                            || !eligible.Timers.Any(t => t.Alerts.Tts.Enabled)) return false;
-                        if (ReferenceEquals(eligible, spoken))
-                        {
-                            await sound.PlayAsync(source, s.Volume);
-                            return true;
-                        }
-                        spoken = eligible;
-                        pending = tts.SynthesizeAsync(AlertMessage.Build(spoken).Speech, s.TtsVoice, s.TtsRate);
-                    }
-                });
+                await TryAsync("tts", () => SpeakAsync(current, speech, s, test));
         }
         finally
         {
             _audio.Release();
+        }
+    }
+
+    /// <summary>Rechecks after every synthesis, keeping custom timers when a shared boss becomes inactive.</summary>
+    async Task<bool> SpeakAsync(AlertEvent spoken, Task<WaveStream> pending, AppSettings s, bool test)
+    {
+        while (true)
+        {
+            using var source = await pending;
+            if (Eligible(timers.Current, spoken, test) is not { } eligible
+                || !eligible.Timers.Any(t => t.Alerts.Tts.Enabled)) return false;
+            if (ReferenceEquals(eligible, spoken))
+            {
+                await sound.PlayAsync(source, s.Volume);
+                return true;
+            }
+            spoken = eligible;
+            pending = tts.SynthesizeAsync(AlertMessage.Build(spoken).Speech, s.TtsVoice, s.TtsRate);
         }
     }
 
