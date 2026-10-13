@@ -117,9 +117,7 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
             try
             {
                 Synthesize(next);
-                bool more;
-                lock (_gate) more = _queue.Count > 0;
-                if (!more) kokoro.Release();
+                if (!HasQueued()) kokoro.Release();
             }
             // Nothing may escape a thread of its own; the line is synthesized when its alert plays instead.
             catch (Exception ex)
@@ -127,6 +125,11 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
                 if (!_disposed) Log.Error($"Couldn't prepare speech \"{next.Line.Spoken}\"", ex);
             }
         }
+    }
+
+    bool HasQueued()
+    {
+        lock (_gate) return _queue.Count > 0;
     }
 
     /// <summary>The next queued line; false, with preparing ended, when none is left or the channel is disposed.</summary>
