@@ -130,22 +130,13 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
         CanChangePicture = timer.Preset != Presets.HorseRegistrationRun;
         _horseHotkey = timer.StartHotkey;
         _controlHotkey = timer.ControlHotkey;
-        if (HasHotkey)
-        {
-            services.Timers.Changed += OnHotkeyConfigChanged;
-            services.Settings.Changed += OnHotkeyConfigChanged;
-        }
         IsStopwatch = timer.Kind == TimerKind.Stopwatch;
         CanDelete = Presets.CanDelete(timer.Preset);
         Delete = new Confirmation(DeleteTimer, hideAfter: false);
         ResetTimes = new Confirmation(ResetSchedule);
-        if (IsWarOfTheRoses) services.Timers.Changed += OnRegionChanged;
         if (timer.Countdown is { } c) _durationText = Parsing.FormatDuration(c.Duration);
         _farmGrowth = GrowthOption(timer.Countdown?.Duration);
-        if (timer.Scheduled is { } spec)
-        {
-            LoadSchedule(spec);
-        }
+        if (timer.Scheduled is { } spec) LoadSchedule(spec);
         if (timer.OneTime is { } oneTime)
         {
             _timeZoneId = TimeZoneInfo.TryConvertIanaIdToWindowsId(oneTime.TimeZoneId, out var windowsId) ? windowsId : oneTime.TimeZoneId;
@@ -154,14 +145,24 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
         }
         Alerts = new AlertRowsViewModel(services, timer, _editor);
         Alerts.PropertyChanged += (_, _) => OnPropertyChanged(nameof(CanFinish));
-        if (IsHorseRun) services.Timers.Changed += OnHorseRunChanged;
-        if (IsHorseTemplate)
+        Follow();
+    }
+
+    /// <summary>Follows the stores for what this kind of timer shows.</summary>
+    void Follow()
+    {
+        if (HasHotkey)
         {
-            Runs.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRuns));
-            RefreshRuns(services.Clock.UtcNow);
-            services.Timers.Changed += OnRunsChanged;
-            services.UiClock.Tick += RefreshRuns;
+            _services.Timers.Changed += OnHotkeyConfigChanged;
+            _services.Settings.Changed += OnHotkeyConfigChanged;
         }
+        if (IsWarOfTheRoses) _services.Timers.Changed += OnRegionChanged;
+        if (IsHorseRun) _services.Timers.Changed += OnHorseRunChanged;
+        if (!IsHorseTemplate) return;
+        Runs.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRuns));
+        RefreshRuns(_services.Clock.UtcNow);
+        _services.Timers.Changed += OnRunsChanged;
+        _services.UiClock.Tick += RefreshRuns;
     }
 
     /// <summary>Starting or stopping a registration can happen on a hotkey's thread; the list follows on the UI thread.</summary>
