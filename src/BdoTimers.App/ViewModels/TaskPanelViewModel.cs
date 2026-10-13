@@ -86,15 +86,22 @@ public sealed partial class TaskPanelViewModel : ObservableObject
         Summary = $"{done}/{total}";
         Fraction = total == 0 ? 0 : (double)done / total;
 
-        var open = new List<(string? ListName, TodoRowViewModel Row)>();
-        foreach (var card in (_cadence == TodoCadence.Daily ? _todo.DailyOn : _todo.WeeklyOn))
-            foreach (var row in card.Rows.Where(r => r.Checked != true))
-                open.Add((lists.Count > 1 && open.All(t => t.ListName != card.Name) ? card.Name : null, row));
+        var open = OpenTasks(lists.Count > 1);
         // A task that stays keeps its line, so one that was opened stays open while its sub-tasks are ticked.
         Tasks.Sync(open.Take(MaxTasks), (task, next) => ReferenceEquals(task.Row, next.Row),
             next => new ListedTask(next.ListName, next.Row), (task, next) => task.ListName = next.ListName);
         Footer = !HasLists ? "To-do" : open.Count > MaxTasks ? $"+{open.Count - MaxTasks} more" : null;
         UpdateShown();
+    }
+
+    /// <summary>The unchecked rows of this cadence's lists; with several lists, the first row of each carries the list's name.</summary>
+    List<(string? ListName, TodoRowViewModel Row)> OpenTasks(bool nameLists)
+    {
+        var open = new List<(string? ListName, TodoRowViewModel Row)>();
+        foreach (var card in (_cadence == TodoCadence.Daily ? _todo.DailyOn : _todo.WeeklyOn))
+            foreach (var row in card.Rows.Where(r => r.Checked != true))
+                open.Add((nameLists && open.All(t => t.ListName != card.Name) ? card.Name : null, row));
+        return open;
     }
 
     void UpdateShown()
