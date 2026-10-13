@@ -146,27 +146,34 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         }
         var previous = _lastSettings;
         var next = _lastSettings = Current;
-        if (previous.Enabled != next.Enabled) OnPropertyChanged(nameof(Enabled));
-        if (previous.AlwaysShow != next.AlwaysShow) OnPropertyChanged(nameof(AlwaysShow));
-        if (previous.ShowOnHotkey != next.ShowOnHotkey) OnPropertyChanged(nameof(ShowOnHotkey));
-        if (previous.AlwaysShowHotkey != next.AlwaysShowHotkey) OnPropertyChanged(nameof(AlwaysShowHotkey));
-        if (previous.ShowHotkey != next.ShowHotkey) OnPropertyChanged(nameof(ShowHotkey));
-        if (previous.MoveHotkey != next.MoveHotkey) OnPropertyChanged(nameof(MoveHotkey));
-        if (previous.ShowSeconds != next.ShowSeconds) OnPropertyChanged(nameof(ShowSeconds));
-        if (previous.Layout != next.Layout) OnPropertyChanged(nameof(Layout));
-        if (previous.MouseProximity != next.MouseProximity) OnPropertyChanged(nameof(MouseProximity));
-        if (previous.Scale != next.Scale) OnPropertyChanged(nameof(Scale));
-        if (previous.ShowOutline != next.ShowOutline) OnPropertyChanged(nameof(Outline));
-        if (previous.BossIcons != next.BossIcons) OnPropertyChanged(nameof(BossIcons));
-        if (previous.ShowClock != next.ShowClock) OnPropertyChanged(nameof(ShowClock));
-        if (previous.ShowServerTime != next.ShowServerTime) OnPropertyChanged(nameof(ShowServerTime));
-        if (previous.ShowGameTime != next.ShowGameTime) OnPropertyChanged(nameof(ShowGameTime));
-        if (previous.ShowPrevious != next.ShowPrevious) OnPropertyChanged(nameof(ShowPrevious));
-        if (previous.ShowFishing != next.ShowFishing) OnPropertyChanged(nameof(ShowFishing));
-        if (previous.BackgroundOpacity != next.BackgroundOpacity) OnPropertyChanged(nameof(BackgroundOpacity));
-        if (previous.TextOpacity != next.TextOpacity) OnPropertyChanged(nameof(TextOpacity));
+        foreach (var (property, value) in Watched)
+            if (!Equals(value(previous), value(next))) OnPropertyChanged(property);
         OnTimersChanged();
     }
+
+    /// <summary>The panel properties backed by a single overlay setting, by the setting they read.</summary>
+    static readonly (string Property, Func<OverlaySettings, object?> Value)[] Watched =
+    [
+        (nameof(Enabled), o => o.Enabled),
+        (nameof(AlwaysShow), o => o.AlwaysShow),
+        (nameof(ShowOnHotkey), o => o.ShowOnHotkey),
+        (nameof(AlwaysShowHotkey), o => o.AlwaysShowHotkey),
+        (nameof(ShowHotkey), o => o.ShowHotkey),
+        (nameof(MoveHotkey), o => o.MoveHotkey),
+        (nameof(ShowSeconds), o => o.ShowSeconds),
+        (nameof(Layout), o => o.Layout),
+        (nameof(MouseProximity), o => o.MouseProximity),
+        (nameof(Scale), o => o.Scale),
+        (nameof(Outline), o => o.ShowOutline),
+        (nameof(BossIcons), o => o.BossIcons),
+        (nameof(ShowClock), o => o.ShowClock),
+        (nameof(ShowServerTime), o => o.ShowServerTime),
+        (nameof(ShowGameTime), o => o.ShowGameTime),
+        (nameof(ShowPrevious), o => o.ShowPrevious),
+        (nameof(ShowFishing), o => o.ShowFishing),
+        (nameof(BackgroundOpacity), o => o.BackgroundOpacity),
+        (nameof(TextOpacity), o => o.TextOpacity),
+    ];
 
     void OnTimersChanged()
     {
