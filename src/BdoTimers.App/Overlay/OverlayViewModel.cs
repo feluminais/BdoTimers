@@ -111,6 +111,21 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
 
     public void Update(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
     {
+        ApplyLook(settings, preview);
+
+        UpdateClocks(content, now);
+        UpdateSpawns(content, settings, now, preview);
+        UpdatePopUps(content, settings, now, preview);
+        Farm = FarmRow(content, settings, preview);
+        Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
+        UpdateHorseRegistrations(content, settings, now, preview);
+        UpdateCustomTimers(content, settings, now, preview);
+        ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
+            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
+    }
+
+    void ApplyLook(OverlaySettings settings, bool preview)
+    {
         Layout = settings.Layout;
         BossIcons = settings.BossIcons;
         Scale = settings.Scale;
@@ -119,19 +134,12 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         TextOpacity = settings.TextOpacity;
         IsPreview = preview;
         UpdateBackground(settings);
+    }
 
-        UpdateClocks(content, now);
-        UpdateSpawns(content, settings, now, preview);
-        UpdatePopUps(content, settings, now, preview);
-        Farm = content.FarmLeft is { } farmLeft
+    OverlayLine? FarmRow(OverlaySnapshot content, OverlaySettings settings, bool preview) =>
+        content.FarmLeft is { } farmLeft
             ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
             : preview && settings.ShowFarm ? _farmRow.Show("Farm", "21:59:59 · 0%", true) : null;
-        Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
-        UpdateHorseRegistrations(content, settings, now, preview);
-        UpdateCustomTimers(content, settings, now, preview);
-        ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
-            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
-    }
 
     void UpdateClocks(OverlaySnapshot content, DateTimeOffset now)
     {
@@ -147,14 +155,15 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         Previous = content.Previous is { } previous
             ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false,
                 settings.BossIcons ? previous.Bosses.Select(b => b.Name) : null)
-            : preview && settings.ShowPrevious ? _previousRow.Show("Kzarka", "−00:12:05", false, NoImages, true,
-                settings.BossIcons ? ["Kzarka"] : null) : null;
+            : preview && settings.ShowPrevious ? SampleSpawn(_previousRow, settings, "Kzarka", "−00:12:05") : null;
         Next = content.Next is { } next
             ? _nextRow.Show(Names(next), DurationFormat.Clock(next.AtUtc - now), next.Skipped, ImagesFor(next), false,
                 settings.BossIcons ? next.Bosses.Select(b => b.Name) : null)
-            : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true,
-                settings.BossIcons ? ["Nouver"] : null) : null;
+            : preview && settings.ShowNext ? SampleSpawn(_nextRow, settings, "Nouver", "00:47:12") : null;
     }
+
+    OverlaySpawn SampleSpawn(OverlaySpawn row, OverlaySettings settings, string boss, string time) =>
+        row.Show(boss, time, false, NoImages, true, settings.BossIcons ? [boss] : null);
 
     void UpdatePopUps(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
     {
