@@ -54,13 +54,7 @@ public static class OverlayContent
             ? data.Timers.Where(t => !listed.Contains(t.Id)).Select(t => CustomTimer(t, now, settings.CustomLead)).OfType<CustomOverlayTimer>().ToList()
             : [];
         var customIds = custom.Select(t => t.Id).ToHashSet();
-        var horse = settings.ShowHorseRegistrations
-            ? data.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
-                && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end >= now && settings.HorseLead.Allows(end - now))
-                .OrderByDescending(t => t.Countdown!.StartedAtUtc)
-                .ThenByDescending(t => t.Id)
-                .ToList()
-            : [];
+        var horse = settings.ShowHorseRegistrations ? HorseRuns(data, settings, now) : [];
         // An occurrence the overlay already shows gets no second row.
         var due = UpcomingQuery.ForOverlay(data, settings, now);
         var popUps = due
@@ -92,6 +86,14 @@ public static class OverlayContent
             HasDuePopUp = due.Count > 0,
         };
     }
+
+    /// <summary>Running horse registrations inside their window, newest first.</summary>
+    static List<TimerDef> HorseRuns(AppData data, OverlaySettings settings, DateTimeOffset now) =>
+        data.Timers.Where(t => t.Preset == Presets.HorseRegistrationRun
+            && t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: { } end } && end >= now && settings.HorseLead.Allows(end - now))
+            .OrderByDescending(t => t.Countdown!.StartedAtUtc)
+            .ThenByDescending(t => t.Id)
+            .ToList();
 
     static CustomOverlayTimer? CustomTimer(TimerDef timer, DateTimeOffset now, OverlayLead lead)
     {
