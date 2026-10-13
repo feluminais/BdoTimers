@@ -72,45 +72,54 @@ internal static class SavedDataValidation
         }
         Require(timers.Timers.Count <= 10000 && timers.Timers.Select(t => t.Id).Distinct().Count() == timers.Timers.Count);
         foreach (var timer in timers.Timers)
-        {
-            Require(timer is not null && timer.Id != Guid.Empty && timer.Name is not null && Enum.IsDefined(timer.Kind));
-            if (timer.IsBuiltIn) BossRegions.Find(BossRegions.RegionOf(timer));
-            Require(!timer.AddedByUser || timer.IsBuiltIn && timer.Kind == TimerKind.Scheduled);
-            Require(timer.Alerts is not null && timer.Alerts.Sound is not null && timer.Alerts.Toast is not null
-                && timer.Alerts.Tts is not null && timer.Alerts.Overlay is not null);
-            Require(timer.Alerts.LeadTimesMinutes is null || timer.Alerts.LeadTimesMinutes.All(m => m is >= 0 and <= 1440));
-            Require(timer.Alerts.Tts.Template is not null && timer.Alerts.Tts.NowTemplate is not null);
-            FileName(timer.ImageFile);
-            if (timer.Kind == TimerKind.Scheduled)
-            {
-                Require(timer.Scheduled is not null && timer.Scheduled.Slots is not null);
-                TimeZoneInfo.FindSystemTimeZoneById(timer.Scheduled.TimeZoneId);
-                Require(timer.Scheduled.Slots.All(s => Enum.IsDefined(s.Day)));
-                ScheduleMath.ValidateDateRange(timer.Scheduled.StartDate, timer.Scheduled.EndDate);
-                ScheduleMath.ValidateEveryWeeks(timer.Scheduled.EveryWeeks);
-            }
-            else if (timer.Kind == TimerKind.OneTime)
-            {
-                Require(timer.OneTime is not null);
-                OneTimeEvents.AtUtc(timer.OneTime);
-            }
-            else if (timer.Kind == TimerKind.Countdown)
-            {
-                var countdown = timer.Countdown;
-                Require(countdown is not null && countdown.Duration > TimeSpan.Zero && Enum.IsDefined(countdown.Status));
-                Require(countdown.Status != CountdownStatus.Running || countdown.EndsAtUtc is not null);
-                Require(countdown.Status != CountdownStatus.Paused || countdown.Remaining is not null);
-            }
-            else
-            {
-                var stopwatch = timer.Stopwatch;
-                Require(stopwatch is not null && Enum.IsDefined(stopwatch.Status));
-                Require(stopwatch.Status != CountdownStatus.Running || stopwatch.StartedAtUtc is not null);
-                Require(stopwatch.Status != CountdownStatus.Paused || stopwatch.Elapsed is not null);
-            }
-        }
+            Timer(timer);
         if (timers.AcceptedBossTimetable is { } seed)
             Timetable(seed);
+    }
+
+    static void Timer(TimerDef timer)
+    {
+        Require(timer is not null && timer.Id != Guid.Empty && timer.Name is not null && Enum.IsDefined(timer.Kind));
+        if (timer.IsBuiltIn) BossRegions.Find(BossRegions.RegionOf(timer));
+        Require(!timer.AddedByUser || timer.IsBuiltIn && timer.Kind == TimerKind.Scheduled);
+        Require(timer.Alerts is not null && timer.Alerts.Sound is not null && timer.Alerts.Toast is not null
+            && timer.Alerts.Tts is not null && timer.Alerts.Overlay is not null);
+        Require(timer.Alerts.LeadTimesMinutes is null || timer.Alerts.LeadTimesMinutes.All(m => m is >= 0 and <= 1440));
+        Require(timer.Alerts.Tts.Template is not null && timer.Alerts.Tts.NowTemplate is not null);
+        FileName(timer.ImageFile);
+        switch (timer.Kind)
+        {
+            case TimerKind.Scheduled: ScheduledTimer(timer); break;
+            case TimerKind.OneTime:
+                Require(timer.OneTime is not null);
+                OneTimeEvents.AtUtc(timer.OneTime);
+                break;
+            case TimerKind.Countdown: CountdownTimer(timer.Countdown); break;
+            default: StopwatchTimer(timer.Stopwatch); break;
+        }
+    }
+
+    static void ScheduledTimer(TimerDef timer)
+    {
+        Require(timer.Scheduled is not null && timer.Scheduled.Slots is not null);
+        TimeZoneInfo.FindSystemTimeZoneById(timer.Scheduled.TimeZoneId);
+        Require(timer.Scheduled.Slots.All(s => Enum.IsDefined(s.Day)));
+        ScheduleMath.ValidateDateRange(timer.Scheduled.StartDate, timer.Scheduled.EndDate);
+        ScheduleMath.ValidateEveryWeeks(timer.Scheduled.EveryWeeks);
+    }
+
+    static void CountdownTimer(CountdownSpec? countdown)
+    {
+        Require(countdown is not null && countdown.Duration > TimeSpan.Zero && Enum.IsDefined(countdown.Status));
+        Require(countdown.Status != CountdownStatus.Running || countdown.EndsAtUtc is not null);
+        Require(countdown.Status != CountdownStatus.Paused || countdown.Remaining is not null);
+    }
+
+    static void StopwatchTimer(StopwatchSpec? stopwatch)
+    {
+        Require(stopwatch is not null && Enum.IsDefined(stopwatch.Status));
+        Require(stopwatch.Status != CountdownStatus.Running || stopwatch.StartedAtUtc is not null);
+        Require(stopwatch.Status != CountdownStatus.Paused || stopwatch.Elapsed is not null);
     }
 
     static void Todos(TodoData todos)
