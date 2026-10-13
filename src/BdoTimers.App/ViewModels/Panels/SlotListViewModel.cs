@@ -58,15 +58,18 @@ public sealed partial class SlotListViewModel : ObservableObject
         foreach (var row in Rows)
             if (row.Day.Value is DayOfWeek day && Parsing.TryParseTime(row.TimeText, out var time))
                 occupied.Add(new Slot(day, time));
-        // Prefer 20:00 on each unused day, then other hours, then remaining minutes.
+        foreach (var slot in Candidates())
+            if (!occupied.Contains(slot)) return slot;
+        return new Slot(DayOfWeek.Monday, new TimeOnly(20, 0));
+    }
+
+    /// <summary>Every slot, preferring 20:00 on each unused day, then other hours, then remaining minutes.</summary>
+    static IEnumerable<Slot> Candidates()
+    {
         for (var minute = 0; minute < 60; minute++)
             for (var hour = 0; hour < 24; hour++)
                 for (var day = 0; day < 7; day++)
-                {
-                    var slot = new Slot((DayOfWeek)((day + 1) % 7), new TimeOnly((20 + hour) % 24, minute));
-                    if (!occupied.Contains(slot)) return slot;
-                }
-        return new Slot(DayOfWeek.Monday, new TimeOnly(20, 0));
+                    yield return new Slot((DayOfWeek)((day + 1) % 7), new TimeOnly((20 + hour) % 24, minute));
     }
 
     bool CanAddTime() => MayAddTime;
