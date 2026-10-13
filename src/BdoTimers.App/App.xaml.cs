@@ -41,35 +41,10 @@ public partial class App : Application
         // Initialize before services so startup includes loading saved state and starting the tray.
         PerformanceMetrics.Begin();
 
-        if (Argument(e.Args, "--wait-for-exit") is { } processId && int.TryParse(processId, out var previousId))
-        {
-            try
-            {
-                if (previousId == Environment.ProcessId) throw new InvalidOperationException("Invalid restart request.");
-                using var previous = Process.GetProcessById(previousId);
-                if (!previous.WaitForExit(30000)) throw new IOException("The previous app is still closing.");
-            }
-            catch (ArgumentException) { }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
-                Shutdown(1);
-                return;
-            }
-        }
+        if (!WaitForPreviousInstance(e.Args)) return;
 
         var performanceReport = Argument(e.Args, "--performance-report");
-        var instance = performanceReport is null ? InstanceName : InstanceName + ".Performance";
-        _singleInstance = new Mutex(true, $@"Local\{instance}.SingleInstance", out var isFirst);
-        _activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{instance}.Activate");
-        if (!isFirst)
-        {
-            _activateSignal.Set();
-            Shutdown();
-            return;
-        }
-        ThreadPool.RegisterWaitForSingleObject(_activateSignal,
-            (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
+        if (!ClaimSingleInstance(performanceReport is null ? InstanceName : InstanceName + ".Performance")) return;
 
         // Data stays beside the exe. Relocating an installation requires copying Data or restoring a backup.
         var dataDir = Path.Combine(AppContext.BaseDirectory, "Data");
@@ -80,19 +55,73 @@ public partial class App : Application
             Shutdown(1);
             return;
         }
-        string? restoredPrevious = null;
         var restoring = Argument(e.Args, "--restore-prepared");
-        if (restoring is not null)
-        {
-            try { restoredPrevious = BackupArchive.ApplyPrepared(restoring, dataDir, new SystemClock()); }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Couldn't restore the backup: {ex.Message}", "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
-                Shutdown(1);
-                return;
-            }
-        }
+        if (!TryApplyRestore(restoring, dataDir, out var restoredPrevious)) return;
         Log.Init(Path.Combine(dataDir, "logs"), new SystemClock());
+        RegisterFailureHandlers();
+
+        if (!TryStartServices(e.Args, dataDir, performanceReport, restoring, restoredPrevious)) return;
+        Log.Info("Started");
+        PerformanceMetrics.Started();
+        if (performanceReport is not null)
+        {
+            var settle = int.TryParse(Argument(e.Args, "--settle-seconds"), out var seconds) ? Math.Clamp(seconds, 1, 60) : 30;
+            MeasureAndExit(performanceReport, settle, e.Args.Contains("--skip-idle-unload") ? 0 : 190);
+        }
+    }
+
+    /// <summary>A restart waits for the app that asked for it to close; false when it didn't and the app is shutting down.</summary>
+    bool WaitForPreviousInstance(string[] args)
+    {
+        if (Argument(args, "--wait-for-exit") is not { } processId || !int.TryParse(processId, out var previousId)) return true;
+        try
+        {
+            if (previousId == Environment.ProcessId) throw new InvalidOperationException("Invalid restart request.");
+            using var previous = Process.GetProcessById(previousId);
+            if (!previous.WaitForExit(30000)) throw new IOException("The previous app is still closing.");
+        }
+        catch (ArgumentException) { }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message, "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Shutdown(1);
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>False when another instance holds the name: it is asked to show its window and this one shuts down.</summary>
+    bool ClaimSingleInstance(string instance)
+    {
+        _singleInstance = new Mutex(true, $@"Local\{instance}.SingleInstance", out var isFirst);
+        _activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, $@"Local\{instance}.Activate");
+        if (!isFirst)
+        {
+            _activateSignal.Set();
+            Shutdown();
+            return false;
+        }
+        ThreadPool.RegisterWaitForSingleObject(_activateSignal,
+            (_, _) => Dispatcher.BeginInvoke(() => _services?.ShowMainWindow()), null, Timeout.Infinite, false);
+        return true;
+    }
+
+    bool TryApplyRestore(string? restoring, string dataDir, out string? restoredPrevious)
+    {
+        restoredPrevious = null;
+        if (restoring is null) return true;
+        try { restoredPrevious = BackupArchive.ApplyPrepared(restoring, dataDir, new SystemClock()); }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Couldn't restore the backup: {ex.Message}", "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
+            Shutdown(1);
+            return false;
+        }
+        return true;
+    }
+
+    void RegisterFailureHandlers()
+    {
         DispatcherUnhandledException += (_, args) =>
         {
             Log.Error("Unhandled UI exception", args.Exception);
@@ -118,41 +147,36 @@ public partial class App : Application
             Log.Error("Unobserved task exception", args.Exception);
             args.SetObserved();
         };
+    }
 
-        // A half-started app has no window or tray icon yet still holds the single-instance mutex,
-        // so every later launch would silently hand off to it. Fail visibly and exit instead.
+    /// <summary>A half-started app has no window or tray icon yet still holds the single-instance mutex,
+    /// so every later launch would silently hand off to it. Fail visibly and exit instead.</summary>
+    bool TryStartServices(string[] args, string dataDir, string? performanceReport, string? restoring, string? restoredPrevious)
+    {
         try
         {
             _services = new AppServices(this, dataDir);
-            _services.Start(showWindow: performanceReport is null && !e.Args.Contains("--minimized") && !e.Args.Contains("--behind"),
+            _services.Start(showWindow: performanceReport is null && !args.Contains("--minimized") && !args.Contains("--behind"),
                 measuring: performanceReport is not null);
 #if DEBUG
-            if (e.Args.Contains("--behind")) _services.ShowMainWindowBehind();
+            if (args.Contains("--behind")) _services.ShowMainWindowBehind();
 #endif
             if (restoring is not null) _services.NotifyRestore(restoredPrevious);
+            return true;
         }
         catch (UnsupportedDataVersionException ex)
         {
             Log.Error("Saved data needs a newer version", ex);
             MessageBox.Show(ex.Message, "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
-            Shutdown(1);
-            return;
         }
         catch (Exception ex)
         {
             Log.Error("Startup failed", ex);
             MessageBox.Show($"BDO Timers couldn't start: {ex.Message}\n\nDetails are in {Path.Combine(dataDir, "logs")}.",
                 "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Error);
-            Shutdown(1);
-            return;
         }
-        Log.Info("Started");
-        PerformanceMetrics.Started();
-        if (performanceReport is not null)
-        {
-            var settle = int.TryParse(Argument(e.Args, "--settle-seconds"), out var seconds) ? Math.Clamp(seconds, 1, 60) : 30;
-            MeasureAndExit(performanceReport, settle, e.Args.Contains("--skip-idle-unload") ? 0 : 190);
-        }
+        Shutdown(1);
+        return false;
     }
 
     async void MeasureAndExit(string destination, int settleSeconds, int unloadSeconds)
