@@ -28,11 +28,10 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         {
             if (t.OneTime is not { } spec) return t;
             var next = new OneTimeSpec { Date = date, Time = time, TimeZoneId = timeZoneId };
-            var at = OneTimeEvents.AtUtc(next);
-            if (spec.Date == date && spec.Time == time && spec.TimeZoneId == timeZoneId
-                && (!spec.Finished || at <= clock.UtcNow)) return t;
-            next = next with { Finished = spec.Finished && at <= clock.UtcNow };
-            return t with { OneTime = next };
+            var passed = OneTimeEvents.AtUtc(next) <= clock.UtcNow;
+            var sameTime = spec.Date == date && spec.Time == time && spec.TimeZoneId == timeZoneId;
+            if (sameTime && (!spec.Finished || passed)) return t;
+            return t with { OneTime = next with { Finished = spec.Finished && passed } };
         });
 
     /// <summary>Seeds each region once and saves selection and its alert boundary together.</summary>
@@ -206,8 +205,7 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         Update(d =>
         {
             var current = d.Timers.FirstOrDefault(t => t.Id == reset.Before.Id);
-            if (current is null || current.Kind != reset.After.Kind || current.Preset != reset.After.Preset
-                || current.Countdown != reset.After.Countdown || current.Stopwatch != reset.After.Stopwatch) return d;
+            if (current is null || !StillAsResetLeftIt(current, reset.After)) return d;
             restored = true;
             var next = current with { Countdown = reset.Before.Countdown, Stopwatch = reset.Before.Stopwatch };
             return d with
@@ -218,6 +216,10 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
         });
         return restored;
     }
+
+    static bool StillAsResetLeftIt(TimerDef current, TimerDef after) =>
+        current.Kind == after.Kind && current.Preset == after.Preset
+        && current.Countdown == after.Countdown && current.Stopwatch == after.Stopwatch;
 
     public void SetEnabled(Guid id, bool enabled) => Modify(id, t => t with { Enabled = enabled });
 
