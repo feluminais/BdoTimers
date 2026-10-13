@@ -56,26 +56,27 @@ public static class UpcomingQuery
         var muted = GarmothTracker.Silenced(data);
         DateTimeOffset? earliest = null;
         foreach (var (t, window) in PopUpTimers(data, settings))
-        {
-            if (t.Kind == TimerKind.OneTime || t.Scheduled is { StartDate: not null } or { EndDate: not null } or { EveryWeeks: > 1 })
-            {
-                var next = OccurrenceSource.From(t, now)
-                    .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)) && NewWindow(data, t, at, window))
-                    .Cast<DateTimeOffset?>().FirstOrDefault();
-                if (next is null) continue;
-                var boundedStart = next.Value - window;
-                if (earliest is null || boundedStart < earliest) earliest = boundedStart;
-                continue;
-            }
-            var first = OccurrenceSource.Between(t, now, now + Reach)
-                .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)))
-                .Where(at => NewWindow(data, t, at, window))
-                .Cast<DateTimeOffset?>()
-                .FirstOrDefault();
-            var start = (first ?? now + Reach) - window;
-            if (earliest is null || start < earliest) earliest = start;
-        }
+            if (PopUpStart(data, muted, t, window, now) is { } start && (earliest is null || start < earliest))
+                earliest = start;
         return earliest;
+    }
+
+    /// <summary>When <paramref name="t"/>'s pop-up can first show, or null when it never will.</summary>
+    static DateTimeOffset? PopUpStart(AppData data, HashSet<MutedOccurrence> muted, TimerDef t, TimeSpan window, DateTimeOffset now)
+    {
+        if (t.Kind == TimerKind.OneTime || t.Scheduled is { StartDate: not null } or { EndDate: not null } or { EveryWeeks: > 1 })
+        {
+            var next = OccurrenceSource.From(t, now)
+                .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)) && NewWindow(data, t, at, window))
+                .Cast<DateTimeOffset?>().FirstOrDefault();
+            return next - window;
+        }
+        var first = OccurrenceSource.Between(t, now, now + Reach)
+            .Where(at => !muted.Contains(new MutedOccurrence(t.Id, at)))
+            .Where(at => NewWindow(data, t, at, window))
+            .Cast<DateTimeOffset?>()
+            .FirstOrDefault();
+        return (first ?? now + Reach) - window;
     }
 
     /// <summary>Timers with alerts on and an overlay pop-up, with how long before an occurrence it shows. The Guild
