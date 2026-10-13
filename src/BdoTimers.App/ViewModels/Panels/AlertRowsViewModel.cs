@@ -92,7 +92,7 @@ public sealed partial class AlertRowsViewModel : ObservableObject
     void ResetVoiceLine() => VoiceLine = ToEditor(new TtsAlert().Template);
 
     [RelayCommand]
-    void HearVoiceLine() => _services.Speak(SampleSpeech());
+    void HearVoiceLine() => _services.Audio.Speak(SampleSpeech());
 
     bool CanGenerateVoiceLine() => !Generating && !VoiceLineInvalid;
 

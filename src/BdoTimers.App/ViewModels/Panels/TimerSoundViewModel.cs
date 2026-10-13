@@ -44,7 +44,7 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     }
 
     [RelayCommand(CanExecute = nameof(CanTest))]
-    void Test() => _services.PlaySound(Sound!.Key);
+    void Test() => _services.Audio.PlaySound(Sound!.Key);
 
     bool CanTest() => Sound is { Enabled: true };
 
@@ -52,7 +52,7 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     [RelayCommand]
     void Add()
     {
-        var (key, error) = _services.AddSound();
+        var (key, error) = _services.Files.AddSound();
         Error = error;
         if (key is null) return;
         Choices = SoundChoices.ForTimer(_services.Sounds);
@@ -64,7 +64,7 @@ public sealed partial class TimerSoundViewModel : ObservableObject
     void Remove()
     {
         if (!IsUserSound) return;
-        Error = _services.RemoveSound(Sound!.Key!);
+        Error = _services.Files.RemoveSound(Sound!.Key!);
         if (Error is not null) return;
         _syncing = true;
         Choices = SoundChoices.ForTimer(_services.Sounds);

@@ -33,7 +33,6 @@ public sealed class AppServices : IDisposable
     readonly string _dataDir;
     MainWindow? _main;
     MainViewModel? _mainViewModel;
-    CancellationTokenSource? _preview;
     readonly CancellationTokenSource _updateShutdown = new();
     readonly HttpClient _updateHttp = new(new HttpClientHandler
     {
@@ -58,6 +57,9 @@ public sealed class AppServices : IDisposable
     public bool IsQuitting { get; private set; }
     public AppHealth Health { get; }
     public UndoService Undo { get; }
+    public AudioPreview Audio { get; }
+    public UserFiles Files { get; }
+    public SupportTools Support { get; }
     readonly ThemePreferences _theme;
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -119,6 +121,9 @@ public sealed class AppServices : IDisposable
             new SpeechCache(Path.Combine(dataDir, "speech"), Path.Combine(AppContext.BaseDirectory, "Voice", "speech")));
         Tts.CleanCacheInBackground();
         _alerts = new AlertDispatcher(_toast, _sound, Tts, Settings, Sounds, Timers, Health);
+        Audio = new AudioPreview(_sound, Tts, Sounds, Settings, Health);
+        Files = new UserFiles(Art, Sounds, Timers, Settings);
+        Support = new SupportTools(_alerts, Health, Clock, dataDir, _updateShutdown.Token);
         _engine = new SchedulerEngine(Timers, Settings, _alerts, Clock);
         _loop = new SchedulerLoop(_engine, Clock,
             onFailure: ex => Health.Failed(ex is StateSaveException ? "Saving" : "Scheduler", ex),
@@ -284,157 +289,6 @@ public sealed class AppServices : IDisposable
         else if (result == HorseStartResult.LimitReached)
             _toast.ShowInfo("Horse registrations", $"{Formats.HorseRegistrations(TimerStore.MaxHorseRegistrations)}.");
         return result;
-    }
-
-    public void SendTestAlert() => SendTestAlert(Settings.Current);
-
-    public async void SendTestAlert(AppSettings previewSettings)
-    {
-        if (Health.TestBusy) return;
-        Health.TestBusy = true;
-        Health.TestStatus = "Sending…";
-        try
-        {
-            await _alerts.SendTestAsync(new AlertEvent([new TimerDef { Name = "Test boss" }], Clock.UtcNow.AddMinutes(5), 5, 5), previewSettings);
-            Health.TestStatus = Health.Status is null ? "Test sent" : "Some channels failed. See Diagnostics.";
-        }
-        catch (Exception ex)
-        {
-            Log.Error("Test alert failed", ex);
-            Health.Failed("App", ex);
-            Health.TestStatus = "Couldn't send the test. See Diagnostics.";
-        }
-        finally { Health.TestBusy = false; }
-    }
-
-    /// <summary>The key that plays for a timer sound key; null means the app-wide alert sound.</summary>
-    public string PlayableSound(string? key) => SoundKeys.Playable(key, Settings.Current.AlertSound, Sounds.Exists);
-
-    /// <summary>
-    /// Plays a sound once at the current volume for the ▶ buttons. A new preview stops the previous one, so repeated
-    /// presses don't pile up. UI thread only.
-    /// </summary>
-    public void PlaySound(string? key) => Preview("Sound", cancel => _sound.PlayAsync(PlayableSound(key), Settings.Current.Volume, cancel));
-    public void PlaySound(string? key, float volume) => Preview("Sound", cancel => _sound.PlayAsync(PlayableSound(key), volume, cancel));
-
-    /// <summary>Speaks <paramref name="text"/> with the chosen voice and speed, like an alert would.</summary>
-    public void Speak(string text) => Speak(text, Settings.Current);
-    public void Speak(string text, AppSettings s) => Preview("Voice", async cancel =>
-    {
-        var speech = await Tts.SynthesizeAsync(text, s.TtsVoice, s.TtsRate);
-        if (cancel.IsCancellationRequested) speech.Dispose();
-        else await _sound.PlayAsync(speech, s.Volume, cancel);
-    });
-
-    async void Preview(string area, Func<CancellationToken, Task> play)
-    {
-        _preview?.Cancel();
-        var preview = _preview = new CancellationTokenSource();
-        try { await play(preview.Token); if (!preview.IsCancellationRequested) Health.Succeeded(area); }
-        catch (OperationCanceledException) when (preview.IsCancellationRequested) { }
-        catch (Exception ex)
-        {
-            if (!preview.IsCancellationRequested)
-            {
-                Log.Error("Preview failed", ex);
-                Health.Failed(area, ex);
-                MessageBox.Show(Health.LastFailure?.Message, "BDO Timers", MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-        }
-        finally
-        {
-            if (_preview == preview) _preview = null;
-            preview.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Asks for a picture and copies it into the pictures folder. File is null when cancelled or refused; a copy that
-    /// fails or a file that isn't a readable picture gives the error to show.
-    /// </summary>
-    public (string? File, string? Error) ChoosePicture()
-    {
-        var dialog = new OpenFileDialog { Filter = "Pictures|*.png;*.jpg;*.jpeg;*.bmp;*.gif|All files|*.*" };
-        if (dialog.ShowDialog() != true) return (null, null);
-        var error = $"Couldn't add {Path.GetFileName(dialog.FileName)}.";
-        string file;
-        try { file = Art.Import(dialog.FileName); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            Log.Error($"Couldn't import picture {dialog.FileName}", ex);
-            return (null, error);
-        }
-        if (Art.UserPicture(file) is not null) return (file, null);
-        Art.Delete(file);
-        return (null, error);
-    }
-
-    /// <summary>Asks for a WAV or MP3 and copies it into the user's sounds. Key is null when cancelled or refused.</summary>
-    public (string? Key, string? Error) AddSound()
-    {
-        var dialog = new OpenFileDialog { Filter = "Sounds (WAV, MP3)|*.wav;*.mp3", Title = "Add a sound" };
-        if (dialog.ShowDialog() != true) return (null, null);
-        if (!SoundChannel.CanDecode(dialog.FileName)) return (null, $"Couldn't play {Path.GetFileName(dialog.FileName)}.");
-        try { return (Sounds.Import(dialog.FileName), null); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
-        {
-            Log.Error($"Couldn't add sound {dialog.FileName}", ex);
-            return (null, $"Couldn't add {Path.GetFileName(dialog.FileName)}.");
-        }
-    }
-
-    /// <summary>
-    /// Deletes a user sound; timers and the app-wide sound that used it go back to their defaults. Returns the error
-    /// to show, or null once it's gone.
-    /// </summary>
-    public string? RemoveSound(string key)
-    {
-        try { Sounds.Delete(key); }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            // Most likely still playing; the file is released when playback ends.
-            Log.Error($"Couldn't remove sound {key}", ex);
-            return $"Couldn't remove {Path.GetFileNameWithoutExtension(key)}. Try again in a moment.";
-        }
-        Timers.ForgetSound(key);
-        Settings.Update(s => s.AlertSound == key ? s with { AlertSound = BuiltInSounds.Default } : s);
-        return null;
-    }
-
-    public void OpenDataFolder()
-    {
-        Directory.CreateDirectory(_dataDir);
-        Process.Start(new ProcessStartInfo(_dataDir) { UseShellExecute = true });
-    }
-
-    public void OpenLogs()
-    {
-        try
-        {
-            var directory = Path.Combine(_dataDir, "logs");
-            Directory.CreateDirectory(directory);
-            Process.Start(new ProcessStartInfo(directory) { UseShellExecute = true });
-            Health.Succeeded("Diagnostics");
-            Health.DiagnosticStatus = null;
-        }
-        catch (Exception ex) { Log.Error("Couldn't open logs", ex); Health.Failed("Diagnostics", ex); }
-    }
-
-    public async void CopyDiagnostics()
-    {
-        if (Health.DiagnosticsBusy) return;
-        Health.DiagnosticsBusy = true;
-        Health.DiagnosticStatus = "Measuring…";
-        try
-        {
-            var report = await PerformanceMetrics.ReportAsync(Health.LastFailure, _updateShutdown.Token);
-            Clipboard.SetText(report);
-            Health.Succeeded("Diagnostics");
-            Health.DiagnosticStatus = "Copied";
-        }
-        catch (OperationCanceledException) when (_updateShutdown.IsCancellationRequested) { }
-        catch (Exception ex) { Log.Error("Couldn't copy diagnostics", ex); Health.Failed("Diagnostics", ex); Health.DiagnosticStatus = null; }
-        finally { Health.DiagnosticsBusy = false; }
     }
 
     public void ExportBackup(string destination, string appVersion) => BackupArchive.Export(_dataDir, destination,

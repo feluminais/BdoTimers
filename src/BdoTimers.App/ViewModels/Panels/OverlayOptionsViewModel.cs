@@ -252,7 +252,7 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     [RelayCommand]
     void ChoosePicture()
     {
-        var (file, error) = _services.ChoosePicture();
+        var (file, error) = _services.Files.ChoosePicture();
         PictureError = error;
         if (file is null) return;
         PickerOpen = false;

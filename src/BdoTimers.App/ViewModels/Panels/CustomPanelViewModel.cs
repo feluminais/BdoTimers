@@ -381,7 +381,7 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     [RelayCommand]
     void ChoosePicture()
     {
-        var (file, error) = _services.ChoosePicture();
+        var (file, error) = _services.Files.ChoosePicture();
         PictureError = error;
         if (file is not null) ReplacePicture(file);
     }

@@ -261,33 +261,33 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         AlertSounds = SoundChoices.ForApp(_services.Sounds);
         UserSounds.Clear();
         foreach (var key in _services.Sounds.Keys())
-            UserSounds.Add(new UserSoundRow(SoundChoices.Label(key), key, _services.PlaySound, RemoveSound));
+            UserSounds.Add(new UserSoundRow(SoundChoices.Label(key), key, _services.Audio.PlaySound, RemoveSound));
     }
 
     [RelayCommand]
     void AddSound()
     {
-        var (key, error) = _services.AddSound();
+        var (key, error) = _services.Files.AddSound();
         SoundError = error;
         if (key is not null) ReloadSounds();
     }
 
     void RemoveSound(string key)
     {
-        SoundError = _services.RemoveSound(key);
+        SoundError = _services.Files.RemoveSound(key);
         if (SoundError is null && Current.AlertSound == key) UpdateSettings(s => s with { AlertSound = new AppSettings().AlertSound });
         ReloadSounds();
     }
 
     [RelayCommand]
-    void PreviewSound() => _services.PlaySound(Current.AlertSound, Current.Volume);
+    void PreviewSound() => _services.Audio.PlaySound(Current.AlertSound, Current.Volume);
 
     [RelayCommand]
-    void TestAlert() => _services.SendTestAlert(Current);
+    void TestAlert() => _services.Support.SendTestAlert(Current);
 
     /// <summary>Two respelled boss names, so the test also shows pronunciation.</summary>
     [RelayCommand]
-    void TestVoice() => _services.Speak("Kzarka and Uturi in 5 minutes", Current);
+    void TestVoice() => _services.Audio.Speak("Kzarka and Uturi in 5 minutes", Current);
 
 
     [RelayCommand]
@@ -460,13 +460,13 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     }
 
     [RelayCommand]
-    void OpenDataFolder() => _services.OpenDataFolder();
+    void OpenDataFolder() => _services.Support.OpenDataFolder();
 
     [RelayCommand]
-    void OpenLogs() => _services.OpenLogs();
+    void OpenLogs() => _services.Support.OpenLogs();
 
     [RelayCommand]
-    void CopyDiagnostics() => _services.CopyDiagnostics();
+    void CopyDiagnostics() => _services.Support.CopyDiagnostics();
 
     /// <summary>The GPL asks that the source be offered to everyone who gets the app.</summary>
     [RelayCommand]
