@@ -99,70 +99,67 @@ public sealed partial class TimerTileViewModel : ObservableObject
     public void Refresh(DateTimeOffset now)
     {
         var off = _timer.Enabled ? "" : "Alerts off · ";
-        if (IsHorseTemplate && _timer.Countdown is { } horse)
-        {
-            var runs = _services.Timers.Current.Timers.Where(Presets.IsActiveHorseRun).ToList();
-            HasHorseRuns = runs.Count > 0;
-            CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
-            HorseStartTip = CanStartHorse ? "Start registration" : Formats.HorseRegistrations(runs.Count);
-            var running = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
-                .OrderBy(t => t.Countdown!.EndsAtUtc).ToList();
-            var nextHorse = running.FirstOrDefault();
-            Digits = nextHorse?.Countdown?.EndsAtUtc is { } end ? DurationFormat.Clock(end - now) : DurationFormat.Clock(horse.Duration);
-            SecondDigits = running.Count > 1 ? DurationFormat.Clock(running[1].Countdown!.EndsAtUtc!.Value - now) : null;
-            HasMoreRuns = runs.Count > 2;
-            Progress = nextHorse?.Countdown is { } soonest ? Math.Min((CountdownOps.Progress(soonest, now, false) ?? 0) / 100.0, 1) : 0;
-            Detail = off + (runs.Count == 0 ? "Ready" : Formats.HorseRegistrations(runs.Count));
-            IsDimmed = runs.Count == 0 || !_timer.Enabled;
-            return;
-        }
-        if (_timer.Countdown is { } c)
-        {
-            string Remaining(TimeSpan left) => IsFarm ? DurationFormat.SignedClock(left) : DurationFormat.Clock(left);
-            (Digits, Detail, IsDimmed) = c.Status switch
-            {
-                CountdownStatus.Running when c.EndsAtUtc is { } end => (Remaining(end - now), StartedText(c.StartedAtUtc), false),
-                CountdownStatus.Paused when c.Remaining is { } left => (Remaining(left), "Paused", true),
-                _ => (DurationFormat.Clock(c.Duration), "Ready", true),
-            };
-            Detail = off + Detail;
-            IsDimmed |= !_timer.Enabled;
-            Growth = IsFarm ? CountdownOps.Progress(c, now, overgrows: true) : null;
-            Progress = Math.Min((CountdownOps.Progress(c, now, IsFarm) ?? 0) / 100.0, 1);
-            ShowStatus(c.Status);
-            return;
-        }
+        if (IsHorseTemplate && _timer.Countdown is { } horse) ShowHorse(horse, now, off);
+        else if (_timer.Countdown is { } c) ShowCountdown(c, now, off);
+        else if (_timer.Stopwatch is { } s) ShowStopwatch(s, now);
+        else if (_timer.OneTime is { Finished: true }) (Digits, Detail, IsDimmed) = ("--:--:--", "Finished", true);
+        else ShowNextOccurrence(now, off);
+    }
 
-        if (_timer.Stopwatch is { } s)
-        {
-            Digits = DurationFormat.Clock(StopwatchOps.Elapsed(s, now));
-            (Detail, IsDimmed) = s.Status switch
-            {
-                CountdownStatus.Running => (StartedText(s.StartedAtUtc), false),
-                CountdownStatus.Paused => ("Paused", true),
-                _ => ("Ready", true),
-            };
-            ShowStatus(s.Status);
-            return;
-        }
+    void ShowHorse(CountdownSpec horse, DateTimeOffset now, string off)
+    {
+        var runs = _services.Timers.Current.Timers.Where(Presets.IsActiveHorseRun).ToList();
+        HasHorseRuns = runs.Count > 0;
+        CanStartHorse = runs.Count < TimerStore.MaxHorseRegistrations;
+        HorseStartTip = CanStartHorse ? "Start registration" : Formats.HorseRegistrations(runs.Count);
+        var running = runs.Where(t => t.Countdown is { Status: CountdownStatus.Running, EndsAtUtc: not null })
+            .OrderBy(t => t.Countdown!.EndsAtUtc).ToList();
+        var nextHorse = running.FirstOrDefault();
+        Digits = nextHorse?.Countdown?.EndsAtUtc is { } end ? DurationFormat.Clock(end - now) : DurationFormat.Clock(horse.Duration);
+        SecondDigits = running.Count > 1 ? DurationFormat.Clock(running[1].Countdown!.EndsAtUtc!.Value - now) : null;
+        HasMoreRuns = runs.Count > 2;
+        Progress = nextHorse?.Countdown is { } soonest ? Math.Min((CountdownOps.Progress(soonest, now, false) ?? 0) / 100.0, 1) : 0;
+        Detail = off + (runs.Count == 0 ? "Ready" : Formats.HorseRegistrations(runs.Count));
+        IsDimmed = runs.Count == 0 || !_timer.Enabled;
+    }
 
-        if (_timer.OneTime is { Finished: true })
+    void ShowCountdown(CountdownSpec c, DateTimeOffset now, string off)
+    {
+        string Remaining(TimeSpan left) => IsFarm ? DurationFormat.SignedClock(left) : DurationFormat.Clock(left);
+        (Digits, Detail, IsDimmed) = c.Status switch
         {
-            (Digits, Detail, IsDimmed) = ("--:--:--", "Finished", true);
-            return;
-        }
+            CountdownStatus.Running when c.EndsAtUtc is { } end => (Remaining(end - now), StartedText(c.StartedAtUtc), false),
+            CountdownStatus.Paused when c.Remaining is { } left => (Remaining(left), "Paused", true),
+            _ => (DurationFormat.Clock(c.Duration), "Ready", true),
+        };
+        Detail = off + Detail;
+        IsDimmed |= !_timer.Enabled;
+        Growth = IsFarm ? CountdownOps.Progress(c, now, overgrows: true) : null;
+        Progress = Math.Min((CountdownOps.Progress(c, now, IsFarm) ?? 0) / 100.0, 1);
+        ShowStatus(c.Status);
+    }
 
-        // Dated and weekly timers: keep the next occurrence until it passes or the saved schedule changes.
+    void ShowStopwatch(StopwatchSpec s, DateTimeOffset now)
+    {
+        Digits = DurationFormat.Clock(StopwatchOps.Elapsed(s, now));
+        (Detail, IsDimmed) = s.Status switch
+        {
+            CountdownStatus.Running => (StartedText(s.StartedAtUtc), false),
+            CountdownStatus.Paused => ("Paused", true),
+            _ => ("Ready", true),
+        };
+        ShowStatus(s.Status);
+    }
+
+    /// <summary>Dated and weekly timers: keeps the next occurrence until it passes or the saved schedule changes.</summary>
+    void ShowNextOccurrence(DateTimeOffset now, string off)
+    {
         if (_nextOccurrence is not { } cached || cached <= now)
             _nextOccurrence = OccurrenceSource.Next(_timer, now);
         HasNextOccurrence = IsWeekly && _nextOccurrence is not null;
         if (_nextOccurrence is not { } next)
         {
-            var state = _timer.Kind == TimerKind.OneTime ? "Finished"
-                : _timer.Scheduled is { Off: true } ? "Off"
-                : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired"
-                : _timer.Preset is Presets.GuildBosses or Presets.GuildWar ? "Not set" : "No times set";
-            (Digits, Detail, IsDimmed) = ("--:--:--", off + state, true);
+            (Digits, Detail, IsDimmed) = ("--:--:--", off + NoOccurrenceState(now), true);
             return;
         }
         var skipped = _services.Timers.Current.Muted.Contains(new MutedOccurrence(_timer.Id, next));
@@ -175,6 +172,12 @@ public sealed partial class TimerTileViewModel : ObservableObject
         SkipLabel = skipped ? "Unskip next" : "Skip next";
         SkipGlyph = skipped ? UnskipNextGlyph : SkipNextGlyph;
     }
+
+    string NoOccurrenceState(DateTimeOffset now) =>
+        _timer.Kind == TimerKind.OneTime ? "Finished"
+        : _timer.Scheduled is { Off: true } ? "Off"
+        : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired"
+        : _timer.Preset is Presets.GuildBosses or Presets.GuildWar ? "Not set" : "No times set";
 
     void ShowStatus(CountdownStatus status)
     {
