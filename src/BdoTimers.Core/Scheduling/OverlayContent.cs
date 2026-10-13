@@ -44,15 +44,8 @@ public static class OverlayContent
     {
         var board = settings.ShowPrevious || settings.ShowNext ? boards?.Get(data, now) ?? BossBoard.Build(data, now) : null;
         var next = settings.ShowNext && board?.Next is { } spawn && settings.NextLead.Allows(spawn.AtUtc - now) ? spawn : null;
-        var farm = settings.ShowFarm ? data.Timers.FirstOrDefault(t => t.Preset == Presets.Farm)?.Countdown : null;
-        var farmLeft = farm is null ? null : CountdownOps.Left(farm, now);
-        if (farmLeft is { } left && !settings.FarmLead.Allows(left)) (farm, farmLeft) = (null, null);
-        // A timer listed in the settings has its own row, so the custom section leaves it out.
-        var listed = settings.Timers.Select(w => w.TimerId).ToHashSet();
-        // Saved timer order stays stable when times cross, a timer pauses, or its name changes.
-        var custom = settings.ShowCustomTimers
-            ? data.Timers.Where(t => !listed.Contains(t.Id)).Select(t => CustomTimer(t, now, settings.CustomLead)).OfType<CustomOverlayTimer>().ToList()
-            : [];
+        var (farm, farmLeft) = FarmRow(data, settings, now);
+        var custom = CustomRows(data, settings, now);
         var customIds = custom.Select(t => t.Id).ToHashSet();
         var horse = settings.ShowHorseRegistrations ? HorseRuns(data, settings, now) : [];
         // An occurrence the overlay already shows gets no second row.
@@ -85,6 +78,24 @@ public static class OverlayContent
             CustomTimers = custom,
             HasDuePopUp = due.Count > 0,
         };
+    }
+
+    /// <summary>The Farm countdown and what is left of it while it is inside its window; both null otherwise.</summary>
+    static (CountdownSpec? Farm, TimeSpan? Left) FarmRow(AppData data, OverlaySettings settings, DateTimeOffset now)
+    {
+        var farm = settings.ShowFarm ? data.Timers.FirstOrDefault(t => t.Preset == Presets.Farm)?.Countdown : null;
+        var left = farm is null ? null : CountdownOps.Left(farm, now);
+        return left is { } remaining && !settings.FarmLead.Allows(remaining) ? (null, null) : (farm, left);
+    }
+
+    static List<CustomOverlayTimer> CustomRows(AppData data, OverlaySettings settings, DateTimeOffset now)
+    {
+        if (!settings.ShowCustomTimers) return [];
+        // A timer listed in the settings has its own row, so the custom section leaves it out.
+        var listed = settings.Timers.Select(w => w.TimerId).ToHashSet();
+        // Saved timer order stays stable when times cross, a timer pauses, or its name changes.
+        return data.Timers.Where(t => !listed.Contains(t.Id)).Select(t => CustomTimer(t, now, settings.CustomLead))
+            .OfType<CustomOverlayTimer>().ToList();
     }
 
     /// <summary>Running horse registrations inside their window, newest first.</summary>
