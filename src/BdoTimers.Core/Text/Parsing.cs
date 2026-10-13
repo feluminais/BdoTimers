@@ -15,6 +15,16 @@ public static class Parsing
     public static bool TryParseDate(string text, out DateOnly date) =>
         DateOnly.TryParseExact(text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
 
+    /// <summary>A blank text is no date; anything else must be a date.</summary>
+    public static bool TryParseOptionalDate(string text, out DateOnly? date)
+    {
+        date = null;
+        if (string.IsNullOrWhiteSpace(text)) return true;
+        if (!TryParseDate(text, out var parsed)) return false;
+        date = parsed;
+        return true;
+    }
+
     /// <summary>Countdown length as "H:MM" or a plain number of minutes, from 1 minute to 24 hours.</summary>
     public static bool TryParseDuration(string text, out TimeSpan duration)
     {

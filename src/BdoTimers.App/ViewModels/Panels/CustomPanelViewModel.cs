@@ -295,15 +295,17 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
         EventTimeInvalid = !Parsing.TryParseTime(EventTimeText, out var time);
         ScheduleError = EventDateInvalid ? "Enter a date (YYYY-MM-DD)." : EventTimeInvalid ? "Enter a time (HH:mm)." : "";
         if (!ScheduleValid || TimeZoneId is not { } zone) return;
-        try
-        {
-            var previous = Timer.OneTime!;
-            if (previous.Date == date && previous.Time == time && previous.TimeZoneId == zone) return;
-            var next = new OneTimeSpec { Date = date, Time = time, TimeZoneId = zone };
-            var at = OneTimeEvents.AtUtc(next);
-            Modify(t => t with { OneTime = next with { Finished = t.OneTime!.Finished && at <= _services.Clock.UtcNow } });
-        }
+        try { Reschedule(date, time, zone); }
         catch (ArgumentOutOfRangeException) { ScheduleError = "Date is out of range."; EventDateInvalid = true; }
+    }
+
+    void Reschedule(DateOnly date, TimeOnly time, string zone)
+    {
+        var previous = Timer.OneTime!;
+        if (previous.Date == date && previous.Time == time && previous.TimeZoneId == zone) return;
+        var next = new OneTimeSpec { Date = date, Time = time, TimeZoneId = zone };
+        var at = OneTimeEvents.AtUtc(next);
+        Modify(t => t with { OneTime = next with { Finished = t.OneTime!.Finished && at <= _services.Clock.UtcNow } });
     }
 
     partial void OnStartDateTextChanged(string value) => ApplyDateRange();
@@ -362,17 +364,12 @@ public sealed partial class CustomPanelViewModel : ObservableObject, IDraftPanel
     void ApplyDateRange()
     {
         if (_loadingSchedule) return;
-        StartDateInvalid = !Parsing.TryParseDate(StartDateText, out var start) && !string.IsNullOrWhiteSpace(StartDateText);
-        EndDateInvalid = !Parsing.TryParseDate(EndDateText, out var end) && !string.IsNullOrWhiteSpace(EndDateText);
+        StartDateInvalid = !Parsing.TryParseOptionalDate(StartDateText, out var first);
+        EndDateInvalid = !Parsing.TryParseOptionalDate(EndDateText, out var last);
         _dateRangeError = StartDateInvalid || EndDateInvalid ? "Enter a date (YYYY-MM-DD)." : "";
         RefreshScheduleError();
         if (_dateRangeError.Length > 0) return;
-        try
-        {
-            var first = string.IsNullOrWhiteSpace(StartDateText) ? (DateOnly?)null : start;
-            var last = string.IsNullOrWhiteSpace(EndDateText) ? (DateOnly?)null : end;
-            Modify(t => t with { Scheduled = t.Scheduled! with { StartDate = first, EndDate = last } });
-        }
+        try { Modify(t => t with { Scheduled = t.Scheduled! with { StartDate = first, EndDate = last } }); }
         catch (ArgumentException ex) { _dateRangeError = ex.Message; RefreshScheduleError(); EndDateInvalid = true; }
     }
 

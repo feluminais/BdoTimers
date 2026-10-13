@@ -330,4 +330,15 @@ public sealed class DatedTimersTests : IDisposable
     [InlineData("02/10/2026", false)]
     public void Date_editor_parsing_is_unambiguous_and_rejects_impossible_dates(string text, bool valid) =>
         Assert.Equal(valid, BdoTimers.Core.Text.Parsing.TryParseDate(text, out _));
+
+    [Theory]
+    [InlineData("", true, null)]
+    [InlineData("  ", true, null)]
+    [InlineData("2026-10-02", true, "2026-10-02")]
+    [InlineData("2026-02-30", false, null)]
+    public void Optional_date_is_blank_or_a_valid_date(string text, bool valid, string? expected)
+    {
+        Assert.Equal(valid, BdoTimers.Core.Text.Parsing.TryParseOptionalDate(text, out var date));
+        Assert.Equal(expected is null ? null : DateOnly.Parse(expected, System.Globalization.CultureInfo.InvariantCulture), date);
+    }
 }

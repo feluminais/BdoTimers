@@ -96,16 +96,11 @@ public sealed partial class BossPanelViewModel : ObservableObject, IDraftPanel
     void ApplyDateRange()
     {
         if (!IsAdded) return;
-        StartDateInvalid = !Parsing.TryParseDate(StartDateText, out var start) && !string.IsNullOrWhiteSpace(StartDateText);
-        EndDateInvalid = !Parsing.TryParseDate(EndDateText, out var end) && !string.IsNullOrWhiteSpace(EndDateText);
+        StartDateInvalid = !Parsing.TryParseOptionalDate(StartDateText, out var first);
+        EndDateInvalid = !Parsing.TryParseOptionalDate(EndDateText, out var last);
         ScheduleError = StartDateInvalid || EndDateInvalid ? "Enter a date (YYYY-MM-DD)." : "";
         if (!ScheduleValid) return;
-        try
-        {
-            var first = string.IsNullOrWhiteSpace(StartDateText) ? (DateOnly?)null : start;
-            var last = string.IsNullOrWhiteSpace(EndDateText) ? (DateOnly?)null : end;
-            _editor.Modify(t => t with { Scheduled = t.Scheduled! with { StartDate = first, EndDate = last } });
-        }
+        try { _editor.Modify(t => t with { Scheduled = t.Scheduled! with { StartDate = first, EndDate = last } }); }
         catch (ArgumentException ex) { ScheduleError = ex.Message; EndDateInvalid = true; }
     }
 
