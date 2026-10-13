@@ -120,11 +120,30 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         IsPreview = preview;
         UpdateBackground(settings);
 
+        UpdateClocks(content, now);
+        UpdateSpawns(content, settings, now, preview);
+        UpdatePopUps(content, settings, now, preview);
+        Farm = content.FarmLeft is { } farmLeft
+            ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
+            : preview && settings.ShowFarm ? _farmRow.Show("Farm", "21:59:59 · 0%", true) : null;
+        Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
+        UpdateHorseRegistrations(content, settings, now, preview);
+        UpdateCustomTimers(content, settings, now, preview);
+        ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
+            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
+    }
+
+    void UpdateClocks(OverlaySnapshot content, DateTimeOffset now)
+    {
         Clock = content.Clock ? Formats.Time(now) : null;
         ServerClock = content.ServerTime is { } server ? Formats.ZoneTime(server) : null;
         GameClock = content.GameTime is { } game ? Formats.Time(game.Time) : null;
         IsNight = content.GameTime?.IsNight == true;
         HasClocks = Clock is not null || ServerClock is not null || GameClock is not null;
+    }
+
+    void UpdateSpawns(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
+    {
         Previous = content.Previous is { } previous
             ? _previousRow.Show(Names(previous), "−" + DurationFormat.Clock(now - previous.AtUtc), previous.Skipped, NoImages, false,
                 settings.BossIcons ? previous.Bosses.Select(b => b.Name) : null)
@@ -135,6 +154,10 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
                 settings.BossIcons ? next.Bosses.Select(b => b.Name) : null)
             : preview && settings.ShowNext ? _nextRow.Show("Nouver", "00:47:12", false, NoImages, true,
                 settings.BossIcons ? ["Nouver"] : null) : null;
+    }
+
+    void UpdatePopUps(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
+    {
         var popUps = content.PopUps
             .Select(i => ((object)(i.Timer.Id, i.AtUtc), OccurrenceSource.NameAt(i.Timer, i.AtUtc), DurationFormat.Clock(i.AtUtc - now), false,
                 settings.BossIcons && i.Timer.IsBuiltIn)).ToList();
@@ -143,24 +166,26 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         if (preview && settings.Timers.Count > 0 && content.Upcoming.Count == 0)
             popUps.Add((UpcomingSampleKey, "Upcoming timer", "02:59:59", true, false));
         Sync(PopUps, popUps);
-        Farm = content.FarmLeft is { } farmLeft
-            ? _farmRow.Show("Farm", $"{DurationFormat.SignedClock(farmLeft)} · {content.FarmProgress}%", false)
-            : preview && settings.ShowFarm ? _farmRow.Show("Farm", "21:59:59 · 0%", true) : null;
-        Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
+    }
+
+    void UpdateHorseRegistrations(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
+    {
         var horse = content.HorseRegistrations
             .Select(r => ((object)r.Id, r.Name, DurationFormat.Clock(r.EndsAtUtc - now), false, false)).ToList();
         if (horse.Count == 0 && preview && settings.ShowHorseRegistrations)
             horse.Add((SampleKey, "Horse 1", "00:08:30", true, false));
         Sync(HorseRegistrations, horse);
         MoreHorseRegistrations = content.MoreHorseRegistrations > 0 ? $"+{content.MoreHorseRegistrations} more running" : null;
+    }
+
+    void UpdateCustomTimers(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)
+    {
         var custom = content.CustomTimers.Select(t =>
             ((object)t.Id, t.Name, DurationFormat.Clock(t.Time) + (t.Paused ? " · Paused" : ""), false, false)).ToList();
         if (custom.Count == 0 && preview && settings.ShowCustomTimers)
             custom.Add((SampleKey, "Custom timer", "00:15:00", true, false));
         Sync(CustomTimers, custom);
         HasCustomTimers = CustomTimers.Count > 0;
-        ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
-            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
     }
 
     static string Names(SpawnGroup group) => string.Join(" · ", group.Bosses.Select(b => b.Name));
