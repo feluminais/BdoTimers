@@ -90,30 +90,32 @@ public partial class MainWindow
         // The background goes dim once the panel is in, so the dimming is the scrim's alone while it fades.
         _panelFocus.Open(disableBackground: !animate);
         if (!animate) return;
-        AfterFrames(2, () =>
+        AfterFrames(2, () => AnimatePanelIn(token, sheet));
+    }
+
+    void AnimatePanelIn(int token, bool sheet)
+    {
+        if (token != _motion || _vm.Panel is null) return;
+        void Arrived()
         {
-            if (token != _motion || _vm.Panel is null) return;
-            void Arrived()
-            {
-                if (token != _motion) return;
-                SettlePanelMotion(open: true);
-                _panelFocus.DisableBackground();
-            }
-            Scrim.BeginAnimation(OpacityProperty, Animate(0, 1, ScrimIn, EaseOutQuad));
-            if (sheet)
-            {
-                var fade = Animate(0, 1, SheetIn, EaseOut);
-                fade.Completed += (_, _) => Arrived();
-                PanelFrame.BeginAnimation(OpacityProperty, fade);
-                FrameShift.BeginAnimation(TranslateTransform.YProperty, Animate(12, 0, SheetIn, EaseOut));
-            }
-            else
-            {
-                var slide = Animate(PanelFrame.ActualWidth * UiScale, 0, SlideIn, EaseOut);
-                slide.Completed += (_, _) => Arrived();
-                FrameShift.BeginAnimation(TranslateTransform.XProperty, slide);
-            }
-        });
+            if (token != _motion) return;
+            SettlePanelMotion(open: true);
+            _panelFocus.DisableBackground();
+        }
+        Scrim.BeginAnimation(OpacityProperty, Animate(0, 1, ScrimIn, EaseOutQuad));
+        if (sheet)
+        {
+            var fade = Animate(0, 1, SheetIn, EaseOut);
+            fade.Completed += (_, _) => Arrived();
+            PanelFrame.BeginAnimation(OpacityProperty, fade);
+            FrameShift.BeginAnimation(TranslateTransform.YProperty, Animate(12, 0, SheetIn, EaseOut));
+        }
+        else
+        {
+            var slide = Animate(PanelFrame.ActualWidth * UiScale, 0, SlideIn, EaseOut);
+            slide.Completed += (_, _) => Arrived();
+            FrameShift.BeginAnimation(TranslateTransform.XProperty, slide);
+        }
     }
 
     void HidePanel()
