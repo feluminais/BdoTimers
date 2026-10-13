@@ -108,13 +108,15 @@ static partial class NativeMethods
         if (source?.RootVisual is System.Windows.Window window) window.ShowActivated = true;
     }
 
+    static bool Activates(int msg, IntPtr wParam) =>
+        msg == 0x0021 // WM_MOUSEACTIVATE
+        || (msg == 0x0006 && (wParam.ToInt64() & 0xffff) != 0) // WM_ACTIVATE
+        || (msg == 0x0112 && (wParam.ToInt64() & 0xfff0) == 0xf120); // SC_RESTORE
+
     /// <summary>Keeps an inspection window behind other windows until it is explicitly activated.</summary>
     public static IntPtr KeepAtBottom(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
-        if (msg == 0x0021 // WM_MOUSEACTIVATE
-            || (msg == 0x0006 && (wParam.ToInt64() & 0xffff) != 0) // WM_ACTIVATE
-            || (msg == 0x0112 && (wParam.ToInt64() & 0xfff0) == 0xf120)) // SC_RESTORE
-            ReleaseBottom(hwnd);
+        if (Activates(msg, wParam)) ReleaseBottom(hwnd);
         if (msg == WM_WINDOWPOSCHANGING)
         {
             var pos = Marshal.PtrToStructure<WindowPos>(lParam);
