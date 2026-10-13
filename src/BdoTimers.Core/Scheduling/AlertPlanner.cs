@@ -28,20 +28,22 @@ public sealed class AlertPlanner
             var leads = Leads(timer, defaultLeads);
             if (leads.Length == 0) continue;
 
-            try
-            {
-                var window = OccurrenceSource.Between(timer, now - Grace, now + TimeSpan.FromMinutes(leads[^1]));
-                foreach (var occurrence in window)
-                {
-                    if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
-                    if (NewlyDueLead(timer, occurrence, leads, now, bossAlertsAfterUtc) is { } fired)
-                        events.Add(new AlertEvent([timer], occurrence, fired, MinutesLeft(occurrence, now)));
-                }
-            }
+            try { events.AddRange(Due(timer, leads, muted, now, bossAlertsAfterUtc)); }
             catch (Exception ex) { Failed(timer, ex); }
         }
         _fired.RemoveWhere(k => k.Occurrence < now - Memory);
         return events;
+    }
+
+    IEnumerable<AlertEvent> Due(
+        TimerDef timer, int[] leads, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now, DateTimeOffset? bossAlertsAfterUtc)
+    {
+        foreach (var occurrence in OccurrenceSource.Between(timer, now - Grace, now + TimeSpan.FromMinutes(leads[^1])))
+        {
+            if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
+            if (NewlyDueLead(timer, occurrence, leads, now, bossAlertsAfterUtc) is { } fired)
+                yield return new AlertEvent([timer], occurrence, fired, MinutesLeft(occurrence, now));
+        }
     }
 
     /// <summary>Marks every due lead as fired. Ascending leads: the first newly-due one is the most recent and the
@@ -77,15 +79,7 @@ public sealed class AlertPlanner
         var pending = new List<AlertEvent>();
         foreach (var (timer, leads) in planned)
         {
-            try
-            {
-                foreach (var occurrence in OccurrenceSource.Between(timer, now, until))
-                {
-                    if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
-                    foreach (var lead in leads.Where(l => IsPending(timer, occurrence, l, now, bossAlertsAfterUtc)))
-                        pending.Add(new AlertEvent([timer], occurrence, lead, lead));
-                }
-            }
+            try { pending.AddRange(Pending(timer, leads, muted, now, until, bossAlertsAfterUtc)); }
             catch (Exception ex) { Failed(timer, ex); }
         }
         if (pending.Count == 0) return [];
@@ -109,6 +103,18 @@ public sealed class AlertPlanner
     /// </summary>
     internal static bool SuppressedAfterRegionSwitch(TimerDef timer, DateTimeOffset dueUtc, DateTimeOffset? bossAlertsAfterUtc) =>
         timer.IsBuiltIn && bossAlertsAfterUtc is { } boundary && dueUtc <= boundary;
+
+    IEnumerable<AlertEvent> Pending(
+        TimerDef timer, int[] leads, IReadOnlySet<MutedOccurrence> muted, DateTimeOffset now, DateTimeOffset until,
+        DateTimeOffset? bossAlertsAfterUtc)
+    {
+        foreach (var occurrence in OccurrenceSource.Between(timer, now, until))
+        {
+            if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
+            foreach (var lead in leads.Where(l => IsPending(timer, occurrence, l, now, bossAlertsAfterUtc)))
+                yield return new AlertEvent([timer], occurrence, lead, lead);
+        }
+    }
 
     bool IsPending(TimerDef timer, DateTimeOffset occurrence, int lead, DateTimeOffset now, DateTimeOffset? bossAlertsAfterUtc)
     {
