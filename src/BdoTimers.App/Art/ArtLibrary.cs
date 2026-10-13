@@ -58,14 +58,20 @@ public sealed class ArtLibrary(string imagesDir)
     public ArtPicture For(TimerDef timer)
     {
         if (timer.ImageFile is { } file) return new ArtPicture(Load(Path.Combine(ImagesDir, file)));
-        if (timer.Preset is { } preset)
-        {
-            if (preset != Presets.Farm && !PresetFocus.ContainsKey(preset)) return new ArtPicture(Placeholder);
-            var extension = preset is Presets.GuildBosses or Presets.WarOfTheRoses ? "png" : "jpg";
-            return new ArtPicture(Load($"pack://application:,,,/BdoTimers;component/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.{extension}"),
-                PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
-        }
-        if (!timer.IsBuiltIn) return new ArtPicture(Placeholder);
+        if (timer.Preset is { } preset) return PresetPicture(preset);
+        return timer.IsBuiltIn ? BossPicture(timer) : new ArtPicture(Placeholder);
+    }
+
+    ArtPicture PresetPicture(string preset)
+    {
+        if (preset != Presets.Farm && !PresetFocus.ContainsKey(preset)) return new ArtPicture(Placeholder);
+        var extension = preset is Presets.GuildBosses or Presets.WarOfTheRoses ? "png" : "jpg";
+        return new ArtPicture(Load($"pack://application:,,,/BdoTimers;component/Assets/Timers/{(preset == Presets.HorseRegistrationRun ? Presets.HorseRegistration : preset)}.{extension}"),
+            PresetFocus.TryGetValue(preset, out var focus) ? focus : null);
+    }
+
+    ArtPicture BossPicture(TimerDef timer)
+    {
         var slug = Slug(timer.Name);
         // A boss the player added has bundled art only under a bundled boss's name.
         if (timer.AddedByUser && !BossHeads.ContainsKey(slug)) return new ArtPicture(Placeholder);
