@@ -13,8 +13,30 @@ namespace BdoTimers.App.Tests;
 /// <summary>Opt-in: with BDOTIMERS_SHOTS set to a folder, saves a PNG of each screen and the main panels at 960 x 720.</summary>
 public class UiShots
 {
+    static readonly (string Tab, string Name)[] Screens =
+        [("TodayTab", "today"), ("ScheduleTab", "schedule"), ("CustomTab", "timers"), ("TodoTab", "todo")];
+
     [Fact]
-    public void Screens_and_panels_render() => WpfTest.Run(() =>
+    public void Screens_and_panels_render() => WpfTest.Run(() => Shoot(960, 720, prepare: null, (services, main, window) =>
+    {
+        CaptureTodoOff(window, services);
+        foreach (var (tab, name) in Screens)
+        {
+            // Today shows Farm running; the Timers screen has every kind of timer going.
+            if (name == "timers") StartTheOtherTimers(services);
+            SelectTab(window, tab);
+            // Schedule opens on the Calendar; its plain shot is the boss grid.
+            if (name == "schedule") Select(window, "WeekToggle");
+            UiCapture.Save(window, $"{name}.png");
+            if (name == "timers") CaptureThirdHorse(window, services);
+            if (name == "schedule") CaptureMonth(window, services);
+        }
+        CaptureSettings(window, main);
+        CapturePanels(window, services, main);
+    }));
+
+    /// <summary>Runs <paramref name="shoot"/> against a fresh data folder and an off-screen window of the given size.</summary>
+    static void Shoot(int width, int height, Action<AppServices>? prepare, Action<AppServices, MainViewModel, MainWindow> shoot)
     {
         if (Environment.GetEnvironmentVariable("BDOTIMERS_SHOTS") is null) return;
         var root = Path.Combine(Path.GetTempPath(), "BdoTimers.Shots." + Guid.NewGuid());
@@ -23,79 +45,15 @@ public class UiShots
             using var services = new AppServices(Application.Current, root);
             var farm = services.Timers.Current.Timers.First(t => t.Preset == Presets.Farm);
             services.Timers.Start(farm.Id, services.Clock.UtcNow.AddHours(-12));
+            prepare?.Invoke(services);
             using var main = new MainViewModel(services);
             var window = new MainWindow(main, services)
-            { Width = 960, Height = 720, Left = -10000, Top = -10000, ShowInTaskbar = false };
+            { Width = width, Height = height, Left = -10000, Top = -10000, ShowInTaskbar = false };
             try
             {
                 window.Show();
                 main.SetShown(true);
-                // The lists start off; look at that, then turn them on and tick some rows for the other screens.
-                ((RadioButton)window.FindName("TodoTab")).IsChecked = true;
-                WpfTest.Drain();
-                UiCapture.Save(window, "todo-off.png");
-                foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
-                var weekly = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly);
-                var daily = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Daily);
-                services.Todos.Toggle(weekly.Id, weekly.Rows[0].Id);
-                services.Todos.Toggle(weekly.Id, weekly.Rows[1].Children[0].Id);
-                services.Todos.Toggle(daily.Id, daily.Rows[0].Id);
-                // The Garmoth tracker is off until Settings turns it on; the README shows it with one kill marked.
-                services.Settings.Update(s => s with { GarmothTracker = true });
-                services.Timers.MarkGarmoth(1, services.Clock.UtcNow);
-                WpfTest.Drain();
-                foreach (var (tab, name) in new[] { ("TodayTab", "today"), ("ScheduleTab", "schedule"), ("CustomTab", "timers"), ("TodoTab", "todo") })
-                {
-                    // Today shows Farm running; the Timers screen has every kind of timer going.
-                    if (name == "timers") StartTheOtherTimers(services);
-                    ((RadioButton)window.FindName(tab)).IsChecked = true;
-                    WpfTest.Drain();
-                    // Schedule opens on the Calendar; its plain shot is the boss grid.
-                    if (name == "schedule") PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
-                    UiCapture.Save(window, $"{name}.png");
-                    if (name == "timers")
-                    {
-                        // A third registration turns the Horse registration card's last line into an ellipsis.
-                        services.Timers.StartHorseRegistration(services.Clock.UtcNow.AddMinutes(-2));
-                        WpfTest.Drain();
-                        UiCapture.Save(window, "timers-horse-3.png");
-                    }
-                    if (name == "schedule")
-                    {
-                        var month = PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "MonthToggle");
-                        month.IsChecked = true;
-                        WpfTest.Drain();
-                        UiCapture.Save(window, "schedule-month.png");
-                        var busy = AddBusyDay(services);
-                        UiCapture.Save(window, "schedule-month-busy.png");
-                        // The events would show on Timers, which is captured next.
-                        foreach (var id in busy) services.Timers.Delete(id);
-                        WpfTest.Drain();
-                        PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
-                        WpfTest.Drain();
-                    }
-                }
-                main.OpenSettingsCommand.Execute(null);
-                WpfTest.Drain();
-                var settings = PanelFocusScope.Descendants(window).OfType<SettingsPanel>().Single();
-                foreach (var (nav, name) in new[] { ("GeneralNav", "general"), ("TodayNav", "today"), ("AlertsNav", "alerts"), ("TodoNav", "todo"), ("BossesNav", "bosses"), ("DataNav", "data"), ("AboutNav", "about") })
-                {
-                    ((RadioButton)settings.FindName(nav)).IsChecked = true;
-                    WpfTest.Drain();
-                    UiCapture.Save(window, $"settings-{name}.png");
-                }
-                main.ClosePanel();
-                WpfTest.Drain();
-                var data = services.Timers.Current;
-                var boss = data.Timers.First(t => BossRegions.IsSelected(data, t));
-                main.OpenPanel(new BossPanelViewModel(services, main, boss));
-                WpfTest.Drain();
-                UiCapture.Save(window, "boss-panel.png");
-                main.ClosePanel();
-                WpfTest.Drain();
-                main.OpenPanel(new FollowingPanelViewModel(services, main));
-                WpfTest.Drain();
-                UiCapture.Save(window, "following.png");
+                shoot(services, main, window);
             }
             finally
             {
@@ -104,7 +62,85 @@ public class UiShots
             }
         }
         finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
-    });
+    }
+
+    static void SelectTab(Window window, string tab)
+    {
+        ((RadioButton)window.FindName(tab)).IsChecked = true;
+        WpfTest.Drain();
+    }
+
+    /// <summary>Checks a toggle on the current screen, such as the Schedule's Week or Month.</summary>
+    static void Select(Window window, string toggle) =>
+        PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == toggle).IsChecked = true;
+
+    /// <summary>The lists start off; look at that, then turn them on and tick some rows for the other screens.</summary>
+    static void CaptureTodoOff(Window window, AppServices services)
+    {
+        SelectTab(window, "TodoTab");
+        UiCapture.Save(window, "todo-off.png");
+        foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
+        var weekly = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Weekly);
+        var daily = services.Todos.Current.Lists.First(l => l.Cadence == TodoCadence.Daily);
+        services.Todos.Toggle(weekly.Id, weekly.Rows[0].Id);
+        services.Todos.Toggle(weekly.Id, weekly.Rows[1].Children[0].Id);
+        services.Todos.Toggle(daily.Id, daily.Rows[0].Id);
+        // The Garmoth tracker is off until Settings turns it on; the README shows it with one kill marked.
+        services.Settings.Update(s => s with { GarmothTracker = true });
+        services.Timers.MarkGarmoth(1, services.Clock.UtcNow);
+        WpfTest.Drain();
+    }
+
+    /// <summary>A third registration turns the Horse registration card's last line into an ellipsis.</summary>
+    static void CaptureThirdHorse(Window window, AppServices services)
+    {
+        services.Timers.StartHorseRegistration(services.Clock.UtcNow.AddMinutes(-2));
+        WpfTest.Drain();
+        UiCapture.Save(window, "timers-horse-3.png");
+    }
+
+    static void CaptureMonth(Window window, AppServices services)
+    {
+        Select(window, "MonthToggle");
+        WpfTest.Drain();
+        UiCapture.Save(window, "schedule-month.png");
+        var busy = AddBusyDay(services);
+        UiCapture.Save(window, "schedule-month-busy.png");
+        // The events would show on Timers, which is captured next.
+        foreach (var id in busy) services.Timers.Delete(id);
+        WpfTest.Drain();
+        Select(window, "WeekToggle");
+        WpfTest.Drain();
+    }
+
+    static void CaptureSettings(Window window, MainViewModel main)
+    {
+        main.OpenSettingsCommand.Execute(null);
+        WpfTest.Drain();
+        var settings = PanelFocusScope.Descendants(window).OfType<SettingsPanel>().Single();
+        foreach (var (nav, name) in new[] { ("GeneralNav", "general"), ("TodayNav", "today"), ("AlertsNav", "alerts"), ("TodoNav", "todo"), ("BossesNav", "bosses"), ("DataNav", "data"), ("AboutNav", "about") })
+        {
+            ((RadioButton)settings.FindName(nav)).IsChecked = true;
+            WpfTest.Drain();
+            UiCapture.Save(window, $"settings-{name}.png");
+        }
+        main.ClosePanel();
+        WpfTest.Drain();
+    }
+
+    static void CapturePanels(Window window, AppServices services, MainViewModel main)
+    {
+        var data = services.Timers.Current;
+        var boss = data.Timers.First(t => BossRegions.IsSelected(data, t));
+        main.OpenPanel(new BossPanelViewModel(services, main, boss));
+        WpfTest.Drain();
+        UiCapture.Save(window, "boss-panel.png");
+        main.ClosePanel();
+        WpfTest.Drain();
+        main.OpenPanel(new FollowingPanelViewModel(services, main));
+        WpfTest.Drain();
+        UiCapture.Save(window, "following.png");
+    }
 
     /// <summary>A day a week from now with three events of its own: as many lines as a month cell has room for, besides the bosses.</summary>
     static List<Guid> AddBusyDay(AppServices services)
@@ -139,62 +175,46 @@ public class UiShots
 
     /// <summary>The smallest supported cases: 700 wide at 100 %, and the minimum window at 150 % text.</summary>
     [Fact]
-    public void Narrow_windows_and_large_text_render() => WpfTest.Run(() =>
-    {
-        if (Environment.GetEnvironmentVariable("BDOTIMERS_SHOTS") is null) return;
-        var root = Path.Combine(Path.GetTempPath(), "BdoTimers.Shots." + Guid.NewGuid());
-        try
+    public void Narrow_windows_and_large_text_render() => WpfTest.Run(() => Shoot(700, 540,
+        prepare: services =>
         {
-            using var services = new AppServices(Application.Current, root);
-            var farm = services.Timers.Current.Timers.First(t => t.Preset == Presets.Farm);
-            services.Timers.Start(farm.Id, services.Clock.UtcNow.AddHours(-12));
             foreach (var list in services.Todos.Current.Lists) services.Todos.SetEnabled(list.Id, true);
-            using var main = new MainViewModel(services);
-            var window = new MainWindow(main, services) { Width = 700, Height = 540, Left = -10000, Top = -10000, ShowInTaskbar = false };
-            try
-            {
-                window.Show();
-                main.SetShown(true);
-                var tabs = new[] { ("TodayTab", "today"), ("ScheduleTab", "schedule"), ("CustomTab", "timers"), ("TodoTab", "todo") };
-                AddBusyDay(services);
-                void Capture(string suffix)
-                {
-                    foreach (var (tab, name) in tabs)
-                    {
-                        ((RadioButton)window.FindName(tab)).IsChecked = true;
-                        WpfTest.Drain();
-                        if (name == "schedule") PanelFocusScope.Descendants(window).OfType<RadioButton>().First(b => b.Name == "WeekToggle").IsChecked = true;
-                        UiCapture.Save(window, $"{name}-{suffix}.png");
-                        if (name != "schedule") continue;
-                        var toggles = PanelFocusScope.Descendants(window).OfType<RadioButton>().ToList();
-                        toggles.First(b => b.Name == "MonthToggle").IsChecked = true;
-                        WpfTest.Drain();
-                        UiCapture.Save(window, $"schedule-month-{suffix}.png");
-                        toggles.First(b => b.Name == "WeekToggle").IsChecked = true;
-                        WpfTest.Drain();
-                    }
-                }
-                Capture("700");
-                services.Settings.Update(s => s with { TextScale = 1.5 });
-                WpfTest.Drain();
-                window.Width = 960;
-                window.Height = 720;
-                WpfTest.Drain();
-                Capture("150-min");
-                window.Width = 1440;
-                window.Height = 1080;
-                WpfTest.Drain();
-                Capture("150");
-                main.OpenPanel(new BossPanelViewModel(services, main, services.Timers.Current.Timers.First(t => t.IsBuiltIn)));
-                WpfTest.Drain();
-                UiCapture.Save(window, "boss-panel-150.png");
-            }
-            finally
-            {
-                typeof(AppServices).GetField("<IsQuitting>k__BackingField", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!.SetValue(services, true);
-                window.Close();
-            }
+        },
+        (services, main, window) =>
+        {
+            AddBusyDay(services);
+            Capture(window, "700");
+            services.Settings.Update(s => s with { TextScale = 1.5 });
+            WpfTest.Drain();
+            Resize(window, 960, 720);
+            Capture(window, "150-min");
+            Resize(window, 1440, 1080);
+            Capture(window, "150");
+            main.OpenPanel(new BossPanelViewModel(services, main, services.Timers.Current.Timers.First(t => t.IsBuiltIn)));
+            WpfTest.Drain();
+            UiCapture.Save(window, "boss-panel-150.png");
+        }));
+
+    static void Resize(Window window, int width, int height)
+    {
+        window.Width = width;
+        window.Height = height;
+        WpfTest.Drain();
+    }
+
+    static void Capture(Window window, string suffix)
+    {
+        foreach (var (tab, name) in Screens)
+        {
+            SelectTab(window, tab);
+            if (name == "schedule") Select(window, "WeekToggle");
+            UiCapture.Save(window, $"{name}-{suffix}.png");
+            if (name != "schedule") continue;
+            Select(window, "MonthToggle");
+            WpfTest.Drain();
+            UiCapture.Save(window, $"schedule-month-{suffix}.png");
+            Select(window, "WeekToggle");
+            WpfTest.Drain();
         }
-        finally { if (Directory.Exists(root)) Directory.Delete(root, true); }
-    });
+    }
 }
