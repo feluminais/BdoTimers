@@ -35,19 +35,29 @@ public sealed class SchedulerEngine(
         var paused = AlertPause.IsPaused(settings.Current, now);
         if (!paused)
         {
-            foreach (var alert in alerts)
-                if (AlertEligibility.Filter(timers.Current, alert with { BossSelectionVersion = data.BossSelectionVersion }) is { } current)
-                    sink.Dispatch(current);
+            DispatchDue(alerts, data.BossSelectionVersion);
             var speech = _planner.UpcomingSpeech(eligible, muted, now, SpeechLead, defaultLeads, data.BossAlertsAfterUtc);
             if (speech.Count > 0 && timers.Current.BossSelectionVersion == data.BossSelectionVersion) sink.PrepareSpeech(speech);
         }
 
-        // An end older than the planner's grace was never alerted: the PC slept through it or the loop stalled.
+        CompleteEnded(now, paused);
+        // Skips are kept as long as fired alerts, so setting the clock back doesn't replay either.
+        timers.PruneMuted(now - AlertPlanner.Memory);
+    }
+
+    void DispatchDue(IEnumerable<AlertEvent> alerts, Guid bossSelectionVersion)
+    {
+        foreach (var alert in alerts)
+            if (AlertEligibility.Filter(timers.Current, alert with { BossSelectionVersion = bossSelectionVersion }) is { } current)
+                sink.Dispatch(current);
+    }
+
+    /// <summary>An end older than the planner's grace was never alerted: the PC slept through it or the loop stalled.</summary>
+    void CompleteEnded(DateTimeOffset now, bool paused)
+    {
         foreach (var timer in timers.CompleteCountdowns(now, now))
             if (!paused && timer.Countdown!.EndsAtUtc < now - AlertPlanner.Grace) sink.NotifyEndedWhileAway(timer);
         foreach (var timer in timers.CompleteEvents(clock))
             if (!paused && OneTimeEvents.AtUtc(timer.OneTime!) < now - AlertPlanner.Grace) sink.NotifyEndedWhileAway(timer);
-        // Skips are kept as long as fired alerts, so setting the clock back doesn't replay either.
-        timers.PruneMuted(now - AlertPlanner.Memory);
     }
 }
