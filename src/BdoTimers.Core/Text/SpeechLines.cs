@@ -20,20 +20,7 @@ public static class SpeechLines
                 foreach (var lead in timer.Alerts.LeadTimes(defaults).Where(l => l >= 0).Distinct())
                     Add([(timer, Name(timer, label))], lead);
         }
-        var now = clock.UtcNow;
-        var upcoming = new List<AlertEvent>();
-        foreach (var timer in enabled)
-        {
-            try
-            {
-                var alerts = OccurrenceSource.Between(timer, now, now.AddDays(370))
-                    .SelectMany(at => timer.Alerts.LeadTimes(defaults).Where(l => l >= 0).Distinct()
-                        .Select(lead => new AlertEvent([timer], at, lead, lead))).ToList();
-                upcoming.AddRange(alerts);
-            }
-            catch (Exception ex) { Log.Error($"Couldn't prepare shared voice lines for '{timer.Name}'", ex); }
-        }
-        foreach (var alert in AlertGrouping.Group(upcoming))
+        foreach (var alert in AlertGrouping.Group(UpcomingAlerts(enabled, defaults, clock.UtcNow)))
             if (alert.Timers.Any(t => t.Alerts.Tts.Enabled) && (affectedTimer is null || alert.Timers.Any(t => t.Id == affectedTimer)))
                 lines.Add(AlertMessage.Build(alert).Speech);
         return lines.Order(StringComparer.Ordinal).ToList();
@@ -47,6 +34,23 @@ public static class SpeechLines
             var names = sorted.Select(t => group.First(p => p.Timer.Id == t.Id).Name).ToList();
             lines.Add(AlertMessage.Fill(lead == 0 ? voice.NowTemplate : voice.Template, AlertMessage.JoinNames(names), lead));
         }
+    }
+
+    static List<AlertEvent> UpcomingAlerts(IEnumerable<TimerDef> timers, IReadOnlyList<int> defaults, DateTimeOffset now)
+    {
+        var upcoming = new List<AlertEvent>();
+        foreach (var timer in timers)
+        {
+            try
+            {
+                var alerts = OccurrenceSource.Between(timer, now, now.AddDays(370))
+                    .SelectMany(at => timer.Alerts.LeadTimes(defaults).Where(l => l >= 0).Distinct()
+                        .Select(lead => new AlertEvent([timer], at, lead, lead))).ToList();
+                upcoming.AddRange(alerts);
+            }
+            catch (Exception ex) { Log.Error($"Couldn't prepare shared voice lines for '{timer.Name}'", ex); }
+        }
+        return upcoming;
     }
 
     static string Name(TimerDef timer, string? label) => string.IsNullOrWhiteSpace(label) ? timer.Name : $"{timer.Name}, {label}";
