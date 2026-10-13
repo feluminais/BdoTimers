@@ -95,16 +95,22 @@ public sealed partial class BossesViewModel : ObservableObject
         var grid = WeekGrid.Build(data, now, TimeZoneInfo.Local, _services.Boards);
         var today = DateOnly.FromDateTime(now.LocalDateTime);
         _tooltipMinute = -1;
-        if (grid.WeekStart == _gridWeekStart && today == _gridToday && SameCells(grid))
+        if (grid.WeekStart == _gridWeekStart && today == _gridToday && SameCells(grid)) UpdateCells(grid);
+        else RebuildGrid(grid, today);
+    }
+
+    void UpdateCells(WeekGridState grid)
+    {
+        foreach (var (row, rowModel) in grid.Rows.Zip(Rows))
+        foreach (var (entries, cell) in row.Days.Zip(rowModel.Cells))
         {
-            foreach (var (row, rowModel) in grid.Rows.Zip(Rows))
-            foreach (var (entries, cell) in row.Days.Zip(rowModel.Cells))
-            {
-                cell.IsNext = entries.Any(e => e.State == CellState.Next);
-                foreach (var (entry, model) in entries.Zip(cell.Entries)) model.Show(entry);
-            }
-            return;
+            cell.IsNext = entries.Any(e => e.State == CellState.Next);
+            foreach (var (entry, model) in entries.Zip(cell.Entries)) model.Show(entry);
         }
+    }
+
+    void RebuildGrid(WeekGridState grid, DateOnly today)
+    {
         _gridWeekStart = grid.WeekStart;
         _gridToday = today;
         Days.Clear();
