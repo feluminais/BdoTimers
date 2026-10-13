@@ -112,27 +112,11 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
 
     void PrepareQueued()
     {
-        while (true)
+        while (TryTakeQueued(out var next))
         {
-            (string Key, Line Line) next;
-            lock (_gate)
-            {
-                if (_disposed || !_queue.TryDequeue(out next))
-                {
-                    _preparing = false;
-                    return;
-                }
-            }
             try
             {
-                lock (_synthesis)
-                {
-                    if (!cache.Contains(next.Key))
-                    {
-                        var samples = kokoro.Generate(next.Line.Spoken, next.Line.Voice, next.Line.Speed, out var sampleRate, ahead: true);
-                        Store(next.Key, samples, sampleRate);
-                    }
-                }
+                Synthesize(next);
                 bool more;
                 lock (_gate) more = _queue.Count > 0;
                 if (!more) kokoro.Release();
@@ -142,6 +126,28 @@ public sealed class TtsChannel(KokoroEngine kokoro, SpeechCache cache) : IDispos
             {
                 if (!_disposed) Log.Error($"Couldn't prepare speech \"{next.Line.Spoken}\"", ex);
             }
+        }
+    }
+
+    /// <summary>The next queued line; false, with preparing ended, when none is left or the channel is disposed.</summary>
+    bool TryTakeQueued(out (string Key, Line Line) next)
+    {
+        lock (_gate)
+        {
+            if (!_disposed && _queue.TryDequeue(out next)) return true;
+            _preparing = false;
+            next = default;
+            return false;
+        }
+    }
+
+    void Synthesize((string Key, Line Line) next)
+    {
+        lock (_synthesis)
+        {
+            if (cache.Contains(next.Key)) return;
+            var samples = kokoro.Generate(next.Line.Spoken, next.Line.Voice, next.Line.Speed, out var sampleRate, ahead: true);
+            Store(next.Key, samples, sampleRate);
         }
     }
 
