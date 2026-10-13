@@ -56,23 +56,26 @@ public partial class TodoListPanel : UserControl
     void RowText_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (_model is null || sender is not TextBox { Tag: Guid id } box) return;
-        var shift = Keyboard.Modifiers == ModifierKeys.Shift;
-        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+        if (EditRow(_model, id, box.Text.Length == 0, e)) e.Handled = true;
+    }
+
+    /// <summary>Enter, Tab, Backspace on an empty row and Alt with an arrow edit the list; true when the key was used.</summary>
+    bool EditRow(TodoListPanelViewModel model, Guid id, bool textEmpty, KeyEventArgs e)
+    {
+        var modifiers = Keyboard.Modifiers;
+        if (e.Key == Key.Enter && modifiers == ModifierKeys.None)
         {
-            _model.Enter(id);
-            e.Handled = true;
+            model.Enter(id);
+            return true;
         }
-        else if (e.Key == Key.Tab && (Keyboard.Modifiers == ModifierKeys.None || shift))
-            e.Handled = shift ? _model.Outdent(id) : _model.Indent(id);
-        else if (e.Key == Key.Back && box.Text.Length == 0 && Keyboard.Modifiers == ModifierKeys.None)
-            e.Handled = _model.Backspace(id);
+        if (e.Key == Key.Tab && modifiers is ModifierKeys.None or ModifierKeys.Shift)
+            return modifiers == ModifierKeys.Shift ? model.Outdent(id) : model.Indent(id);
+        if (e.Key == Key.Back && textEmpty && modifiers == ModifierKeys.None) return model.Backspace(id);
         // With Alt held, WPF reports the arrow as Key.System and puts it in SystemKey.
-        else if (Keyboard.Modifiers == ModifierKeys.Alt && e.SystemKey is Key.Up or Key.Down)
-        {
-            Ui.UseKeyboardFocus(this);
-            _model.Move(id, e.SystemKey == Key.Up ? -1 : 1);
-            e.Handled = true;
-        }
+        if (modifiers != ModifierKeys.Alt || e.SystemKey is not (Key.Up or Key.Down)) return false;
+        Ui.UseKeyboardFocus(this);
+        model.Move(id, e.SystemKey == Key.Up ? -1 : 1);
+        return true;
     }
 
     void FocusRow(Guid id) => Dispatcher.BeginInvoke(() =>
@@ -227,10 +230,9 @@ public partial class TodoListPanel : UserControl
         var point = TranslatePoint(_dragPointer, RowsScrollViewer);
         if (point.X < 0 || point.X > RowsScrollViewer.ActualWidth ||
             point.Y < 0 || point.Y > RowsScrollViewer.ViewportHeight) return;
-        if (point.Y < 28) RowsScrollViewer.ScrollToVerticalOffset(RowsScrollViewer.VerticalOffset - 10);
-        else if (point.Y > RowsScrollViewer.ViewportHeight - 28)
-            RowsScrollViewer.ScrollToVerticalOffset(RowsScrollViewer.VerticalOffset + 10);
-        else return;
+        var step = point.Y < 28 ? -10 : point.Y > RowsScrollViewer.ViewportHeight - 28 ? 10 : 0;
+        if (step == 0) return;
+        RowsScrollViewer.ScrollToVerticalOffset(RowsScrollViewer.VerticalOffset + step);
         UpdateDropTarget();
     }
 
