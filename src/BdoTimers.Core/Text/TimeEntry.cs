@@ -31,7 +31,7 @@ public static class TimeEntry
     public static string Finish(string text)
     {
         var parts = AddColon(text.Trim().Replace(' ', ':').Replace('.', ':')).Split(':');
-        if (parts.Length > 2 || !Digits(parts[0], 1, 2) || parts.Length == 2 && !Digits(parts[1], 0, 2)) return text;
+        if (!IsHourAndMinute(parts)) return text;
         var hour = int.Parse(parts[0], CultureInfo.InvariantCulture);
         var minute = parts.Length == 1 || parts[1].Length == 0
             ? 0 : int.Parse(parts[1].PadRight(2, '0'), CultureInfo.InvariantCulture);
@@ -39,6 +39,9 @@ public static class TimeEntry
             ? hour.ToString("00", CultureInfo.InvariantCulture) + ":" + minute.ToString("00", CultureInfo.InvariantCulture)
             : text;
     }
+
+    static bool IsHourAndMinute(string[] parts) =>
+        parts.Length <= 2 && Digits(parts[0], 1, 2) && (parts.Length == 1 || Digits(parts[1], 0, 2));
 
     static string BeforeTrailingSeparator(string text) =>
         text.Length is 2 or 3 && text[text.Length - 1] is ' ' or '.' ? text.Substring(0, text.Length - 1) : "";

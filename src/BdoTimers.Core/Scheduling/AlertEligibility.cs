@@ -16,19 +16,19 @@ public static class AlertEligibility
     {
         var completion = alert.LeadMinutes == 0 ? data.CompletedCountdowns.FirstOrDefault(t => t.Id == planned.Id
             && t.Countdown == planned.Countdown) : null;
-        var completed = completion is not null;
         var saved = data.Timers.FirstOrDefault(t => t.Id == planned.Id)
             ?? (planned.Preset == Presets.HorseRegistrationRun ? completion : null);
-        if (saved is not { Enabled: true } || saved.Kind != planned.Kind
-            || data.Muted.Contains(new MutedOccurrence(planned.Id, alert.OccurrenceUtc))
-            || GarmothTracker.Gone(data, saved, alert.OccurrenceUtc)) return null;
-        if (planned.IsBuiltIn && (alert.BossSelectionVersion != data.BossSelectionVersion
-            || !BossRegions.IsSelected(data, saved))) return null;
-
-        if (!SameOccurrence(saved, planned, alert, completed)) return null;
+        if (saved is not { Enabled: true } || !StillWanted(data, alert, planned, saved)) return null;
+        if (!SameOccurrence(saved, planned, alert, completed: completion is not null)) return null;
         return planned.Name == saved.Name && planned.Alerts == saved.Alerts ? planned
             : planned with { Name = saved.Name, Alerts = saved.Alerts };
     }
+
+    static bool StillWanted(AppData data, AlertEvent alert, TimerDef planned, TimerDef saved) =>
+        saved.Kind == planned.Kind
+        && !data.Muted.Contains(new MutedOccurrence(planned.Id, alert.OccurrenceUtc))
+        && !GarmothTracker.Gone(data, saved, alert.OccurrenceUtc)
+        && !(planned.IsBuiltIn && (alert.BossSelectionVersion != data.BossSelectionVersion || !BossRegions.IsSelected(data, saved)));
 
     static bool SameOccurrence(TimerDef saved, TimerDef planned, AlertEvent alert, bool completed) => planned.Kind switch
     {
