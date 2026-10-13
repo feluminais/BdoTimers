@@ -205,14 +205,14 @@ public partial class App : Application
         catch (Exception ex) { Log.Error("Performance measurement failed", ex); Shutdown(1); }
     }
 
-    static string? Argument(string[] args, string name)
+    internal static string? Argument(string[] args, string name)
     {
         var index = Array.IndexOf(args, name);
         return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
     }
 
     /// <summary>Creates the folder if needed and tries a throwaway file in it.</summary>
-    static bool CanWrite(string dir)
+    internal static bool CanWrite(string dir)
     {
         try
         {
