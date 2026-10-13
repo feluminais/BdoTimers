@@ -142,12 +142,7 @@ public sealed class AppServices : IDisposable
     /// <summary>Optional steps log their failures and carry on, so none of them can stop the app from starting.</summary>
     public void Start(bool showWindow, bool measuring = false)
     {
-        try { _engine.ReconcileStartup(); }
-        catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); Health.Failed("Startup", ex); }
-        try { Todos.Reconcile(Settings.Current); }
-        catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); Health.Failed("Saving", ex); }
-        try { Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow); }
-        catch (StateSaveException ex) { Log.Error("Couldn't save the Garmoth tracker", ex); Health.Failed("Saving", ex); }
+        ReconcileStartup();
         var todoResetErrors = new RepeatingErrorLog("To-do reset", Clock);
         UiClock.Tick += _ =>
         {
@@ -166,6 +161,29 @@ public sealed class AppServices : IDisposable
         UiClock.Start();
         Overlay.Start();
         if (measuring) { EcoQos.Set(true); return; }
+        NotifyStartupHints();
+        try { Autostart.Apply(Settings.Current.Autostart); }
+        catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
+        NotifyTimetableReview();
+        if (showWindow) ShowMainWindow();
+        else EcoQos.Set(true);
+#if !DEBUG
+        _ = Task.Run(CheckForUpdatesOnStartup);
+#endif
+    }
+
+    void ReconcileStartup()
+    {
+        try { _engine.ReconcileStartup(); }
+        catch (Exception ex) { Log.Error("Couldn't complete countdowns that ended while closed", ex); Health.Failed("Startup", ex); }
+        try { Todos.Reconcile(Settings.Current); }
+        catch (StateSaveException ex) { Log.Error("Couldn't save to-do lists", ex); Health.Failed("Saving", ex); }
+        try { Timers.ReconcileGarmoth(Settings.Current, Clock.UtcNow); }
+        catch (StateSaveException ex) { Log.Error("Couldn't save the Garmoth tracker", ex); Health.Failed("Saving", ex); }
+    }
+
+    void NotifyStartupHints()
+    {
         foreach (var path in RecoveredFiles)
             _toast.ShowInfo("A data file was damaged",
                 $"BDO Timers started with defaults. The damaged file was kept as {Path.GetFileName(path)}.");
@@ -178,14 +196,6 @@ public sealed class AppServices : IDisposable
             try { Settings.Update(s => s with { NotificationHintShown = true }); }
             catch (Exception ex) { Log.Error("Couldn't save that the notification hint was shown", ex); }
         }
-        try { Autostart.Apply(Settings.Current.Autostart); }
-        catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
-        NotifyTimetableReview();
-        if (showWindow) ShowMainWindow();
-        else EcoQos.Set(true);
-#if !DEBUG
-        _ = Task.Run(CheckForUpdatesOnStartup);
-#endif
     }
 
     static void OnTimeChanged(object? sender, EventArgs e) => TimeZoneInfo.ClearCachedData();
@@ -472,21 +482,27 @@ public sealed class AppServices : IDisposable
     public void SetTodoReset(TodoCadence cadence, TodoSchedule schedule)
     {
         var previous = Settings.Current;
-        var changed = cadence == TodoCadence.Daily
-            ? previous with { DailyTodoReset = schedule }
-            : previous with { WeeklyTodoReset = schedule };
+        var changed = WithTodoReset(previous, cadence, schedule);
         if (changed == previous) return;
         // Save list boundaries first: if that fails, Settings keeps the old reset.
         Todos.Reconcile(changed);
-        try { Settings.Update(s => cadence == TodoCadence.Daily
-            ? s with { DailyTodoReset = schedule }
-            : s with { WeeklyTodoReset = schedule }); }
+        try { Settings.Update(s => WithTodoReset(s, cadence, schedule)); }
         catch (StateSaveException)
         {
-            try { Todos.Reconcile(previous); }
-            catch (StateSaveException ex) { Log.Error("Couldn't restore to-do reset after settings save failed", ex); }
+            RestoreTodoLists(previous);
             throw;
         }
+    }
+
+    static AppSettings WithTodoReset(AppSettings settings, TodoCadence cadence, TodoSchedule schedule) =>
+        cadence == TodoCadence.Daily
+            ? settings with { DailyTodoReset = schedule }
+            : settings with { WeeklyTodoReset = schedule };
+
+    void RestoreTodoLists(AppSettings previous)
+    {
+        try { Todos.Reconcile(previous); }
+        catch (StateSaveException ex) { Log.Error("Couldn't restore to-do reset after settings save failed", ex); }
     }
 
     public void Quit()
