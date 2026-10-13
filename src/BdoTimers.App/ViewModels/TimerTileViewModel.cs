@@ -164,20 +164,29 @@ public sealed partial class TimerTileViewModel : ObservableObject
         }
         var skipped = _services.Timers.Current.Muted.Contains(new MutedOccurrence(_timer.Id, next));
         Digits = DurationFormat.Clock(next - now);
-        var format = _timer.Kind == TimerKind.OneTime ? "MMM d, yyyy HH:mm" : "ddd HH:mm";
-        var label = _timer.Scheduled is { } schedule ? ScheduleMath.SlotAt(schedule, next)?.Label : null;
-        var named = string.IsNullOrWhiteSpace(label) ? "" : $"{label} · ";
-        Detail = $"{off}Next {named}{(_timer.Kind == TimerKind.OneTime ? next.ToLocalTime().ToString(format, CultureInfo.InvariantCulture) : Formats.DayTime(next))}{(skipped ? " · skipped" : "")}";
+        Detail = NextDetail(next, skipped, off);
         IsDimmed = !_timer.Enabled || skipped;
         SkipLabel = skipped ? "Unskip next" : "Skip next";
         SkipGlyph = skipped ? UnskipNextGlyph : SkipNextGlyph;
     }
 
-    string NoOccurrenceState(DateTimeOffset now) =>
-        _timer.Kind == TimerKind.OneTime ? "Finished"
-        : _timer.Scheduled is { Off: true } ? "Off"
-        : _timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now) ? "Expired"
-        : _timer.Preset is Presets.GuildBosses or Presets.GuildWar ? "Not set" : "No times set";
+    string NextDetail(DateTimeOffset next, bool skipped, string off)
+    {
+        var label = _timer.Scheduled is { } schedule ? ScheduleMath.SlotAt(schedule, next)?.Label : null;
+        var named = string.IsNullOrWhiteSpace(label) ? "" : $"{label} · ";
+        var when = _timer.Kind == TimerKind.OneTime
+            ? next.ToLocalTime().ToString("MMM d, yyyy HH:mm", CultureInfo.InvariantCulture)
+            : Formats.DayTime(next);
+        return $"{off}Next {named}{when}{(skipped ? " · skipped" : "")}";
+    }
+
+    string NoOccurrenceState(DateTimeOffset now)
+    {
+        if (_timer.Kind == TimerKind.OneTime) return "Finished";
+        if (_timer.Scheduled is { Off: true }) return "Off";
+        if (_timer.Scheduled is { } spec && ScheduleMath.IsExpired(spec, now)) return "Expired";
+        return _timer.Preset is Presets.GuildBosses or Presets.GuildWar ? "Not set" : "No times set";
+    }
 
     void ShowStatus(CountdownStatus status)
     {
@@ -299,21 +308,27 @@ public sealed partial class TimerTileViewModel : ObservableObject
     void CheckStart()
     {
         StartInvalid = TimeStart() is null;
-        var at = PickedStart();
-        StartProblem = !IsFarm && at is { } start && _timer.Countdown is { } c && start + c.Duration <= _services.Clock.UtcNow
-            ? $"Would have ended at {Formats.Time(start + c.Duration)}"
-            : "";
+        StartProblem = StartProblemAt(PickedStart());
         ConfirmStartCommand.NotifyCanExecuteChanged();
+    }
+
+    string StartProblemAt(DateTimeOffset? at)
+    {
+        if (IsFarm || at is not { } start || _timer.Countdown is not { } c) return "";
+        var end = start + c.Duration;
+        return end <= _services.Clock.UtcNow ? $"Would have ended at {Formats.Time(end)}" : "";
     }
 
     DateTimeOffset? PickedStart() => _fromPercent ? PercentStart() : TimeStart();
 
     /// <summary>The picked local time, today or, if that's still ahead, yesterday.</summary>
     DateTimeOffset? TimeStart() =>
-        int.TryParse(StartHour, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) && hour < 24
-        && int.TryParse(StartMinute, NumberStyles.None, CultureInfo.InvariantCulture, out var minute) && minute < 60
+        TryBelow(StartHour, 24, out var hour) && TryBelow(StartMinute, 60, out var minute)
             ? ScheduleMath.MostRecent(new TimeOnly(hour, minute), _services.Clock.UtcNow, TimeZoneInfo.Local)
             : null;
+
+    static bool TryBelow(string text, int limit, out int value) =>
+        int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out value) && value < limit;
 
     /// <summary>Taken against the current time, so a pause before pressing Start doesn't shift it.</summary>
     DateTimeOffset? PercentStart() =>
