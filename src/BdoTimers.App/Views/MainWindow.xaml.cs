@@ -51,14 +51,8 @@ public partial class MainWindow : Window
         HandlePanelCommand(PanelCommands.Finish, _vm.FinishPanelCommand);
         viewModel.CompletingPanelEdits += () => PanelEdits.Complete(PanelContent);
         // Button commands (including previews) use the current draft, even inside a binding's debounce interval.
-        AddHandler(ButtonBase.ClickEvent, new RoutedEventHandler((_, e) =>
-        {
-            if (_vm.Panel is not null && e.OriginalSource is ButtonBase { Command: not null } button
-                && PanelContent.IsAncestorOf(button)) PanelEdits.Complete(PanelContent);
-        }));
-        if (BellButton.ContextMenu is { } bellMenu)
-            DependencyPropertyDescriptor.FromProperty(ContextMenu.IsOpenProperty, typeof(ContextMenu)).AddValueChanged(bellMenu,
-                (_, _) => { if (!bellMenu.IsOpen) _bellMenuClosedAt = Environment.TickCount64; });
+        AddHandler(ButtonBase.ClickEvent, new RoutedEventHandler((_, e) => CompleteEditsBeforeCommand(e)));
+        TrackBellMenuClose();
         SetResourceReference(UiScaleProperty, "UiScaleTransform");
         SourceInitialized += (_, _) =>
         {
@@ -69,36 +63,53 @@ public partial class MainWindow : Window
         Loaded += (_, _) => QueuePlacementCheck();
         DpiChanged += (_, _) => QueuePlacementCheck();
         PreviewKeyDown += UndoKeyDown;
-        viewModel.PropertyChanged += (_, e) =>
-        {
-            if (e.PropertyName == nameof(MainViewModel.Panel)) ShowPanel(viewModel.Panel);
-            if (e.PropertyName == nameof(MainViewModel.SelectedTab))
-            {
-                TabOf(viewModel.SelectedTab).IsChecked = true;
-                UpdateTopBar();
-            }
-            if (e.PropertyName == nameof(MainViewModel.IsPaused)) UpdateTopBar();
-            if (e.PropertyName == nameof(MainViewModel.AskingDiscard) && viewModel.AskingDiscard)
-                Dispatcher.BeginInvoke(() => PanelFocusScope.Descendants(PanelLayer).OfType<Button>()
-                    .FirstOrDefault(b => Equals(b.Content, "Keep editing"))?.Focus());
-        };
+        viewModel.PropertyChanged += (_, e) => OnViewModelChanged(e.PropertyName);
         viewModel.Today.Hero.PropertyChanged += (_, e) =>
         {
             if (e.PropertyName == nameof(HeroViewModel.HasNext)) UpdateTopBar();
         };
         SizeChanged += (_, _) => UpdateTopBar();
-        StateChanged += (_, _) =>
-        {
-            // A maximized frameless window overhangs the screen by the resize border.
-            Frame.Margin = new Thickness(WindowState == WindowState.Maximized ? 7 : 0);
-            var maximized = WindowState == WindowState.Maximized;
-            MaximizeButton.Content = maximized ? "\uE923" : "\uE922";
-            MaximizeButton.ToolTip = maximized ? "Restore" : "Maximize";
-            AutomationProperties.SetName(MaximizeButton, maximized ? "Restore" : "Maximize");
-            FollowShown();
-            if (WindowState == WindowState.Normal) QueuePlacementCheck();
-        };
+        StateChanged += (_, _) => OnStateChanged();
         IsVisibleChanged += (_, _) => { FollowShown(); if (IsVisible) QueuePlacementCheck(); };
+    }
+
+    void CompleteEditsBeforeCommand(RoutedEventArgs e)
+    {
+        if (_vm.Panel is not null && e.OriginalSource is ButtonBase { Command: not null } button
+            && PanelContent.IsAncestorOf(button)) PanelEdits.Complete(PanelContent);
+    }
+
+    void TrackBellMenuClose()
+    {
+        if (BellButton.ContextMenu is not { } bellMenu) return;
+        DependencyPropertyDescriptor.FromProperty(ContextMenu.IsOpenProperty, typeof(ContextMenu)).AddValueChanged(bellMenu,
+            (_, _) => { if (!bellMenu.IsOpen) _bellMenuClosedAt = Environment.TickCount64; });
+    }
+
+    void OnViewModelChanged(string? property)
+    {
+        if (property == nameof(MainViewModel.Panel)) ShowPanel(_vm.Panel);
+        if (property == nameof(MainViewModel.SelectedTab))
+        {
+            TabOf(_vm.SelectedTab).IsChecked = true;
+            UpdateTopBar();
+        }
+        if (property == nameof(MainViewModel.IsPaused)) UpdateTopBar();
+        if (property == nameof(MainViewModel.AskingDiscard) && _vm.AskingDiscard)
+            Dispatcher.BeginInvoke(() => PanelFocusScope.Descendants(PanelLayer).OfType<Button>()
+                .FirstOrDefault(b => Equals(b.Content, "Keep editing"))?.Focus());
+    }
+
+    void OnStateChanged()
+    {
+        var maximized = WindowState == WindowState.Maximized;
+        // A maximized frameless window overhangs the screen by the resize border.
+        Frame.Margin = new Thickness(maximized ? 7 : 0);
+        MaximizeButton.Content = maximized ? "\uE923" : "\uE922";
+        MaximizeButton.ToolTip = maximized ? "Restore" : "Maximize";
+        AutomationProperties.SetName(MaximizeButton, maximized ? "Restore" : "Maximize");
+        FollowShown();
+        if (WindowState == WindowState.Normal) QueuePlacementCheck();
     }
 
     void HandlePanelCommand(RoutedCommand routed, ICommand command) => CommandBindings.Add(new CommandBinding(routed,
@@ -166,10 +177,11 @@ public partial class MainWindow : Window
             _compactTabs = compact;
             Resources["TabPadding"] = compact ? new Thickness(7, 0, 7, 0) : new Thickness(13, 0, 13, 0);
         }
-        PausedBlock.Visibility = _vm.IsPaused && ActualWidth / UiScale >= PausedNoticeWidth ? Visibility.Visible : Visibility.Collapsed;
-        NextChip.Visibility = _vm.SelectedTab != MainTab.Today && _vm.Today.Hero.HasNext && ChipHost.ActualWidth >= ChipRoom
-            ? Visibility.Visible : Visibility.Collapsed;
+        PausedBlock.Visibility = Shown(_vm.IsPaused && ActualWidth / UiScale >= PausedNoticeWidth);
+        NextChip.Visibility = Shown(_vm.SelectedTab != MainTab.Today && _vm.Today.Hero.HasNext && ChipHost.ActualWidth >= ChipRoom);
     }
+
+    static Visibility Shown(bool shown) => shown ? Visibility.Visible : Visibility.Collapsed;
 
     void ChipHost_SizeChanged(object sender, SizeChangedEventArgs e) => UpdateTopBar();
 
