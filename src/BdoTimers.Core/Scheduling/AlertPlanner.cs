@@ -34,17 +34,7 @@ public sealed class AlertPlanner
                 foreach (var occurrence in window)
                 {
                     if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
-
-                    // Ascending leads: the first newly-due one is the most recent; older ones are marked silently.
-                    int? toFire = null;
-                    foreach (var lead in leads)
-                    {
-                        if (now < occurrence - TimeSpan.FromMinutes(lead)) continue;
-                        var first = _fired.Add((timer.Id, EventVersion(timer), occurrence, lead));
-                        if (SuppressedAfterRegionSwitch(timer, occurrence - TimeSpan.FromMinutes(lead), bossAlertsAfterUtc)) continue;
-                        if (first && toFire is null) toFire = lead;
-                    }
-                    if (toFire is { } fired)
+                    if (NewlyDueLead(timer, occurrence, leads, now, bossAlertsAfterUtc) is { } fired)
                         events.Add(new AlertEvent([timer], occurrence, fired, MinutesLeft(occurrence, now)));
                 }
             }
@@ -52,6 +42,21 @@ public sealed class AlertPlanner
         }
         _fired.RemoveWhere(k => k.Occurrence < now - Memory);
         return events;
+    }
+
+    /// <summary>Marks every due lead as fired. Ascending leads: the first newly-due one is the most recent and the
+    /// one returned; older ones are marked silently.</summary>
+    int? NewlyDueLead(TimerDef timer, DateTimeOffset occurrence, int[] leads, DateTimeOffset now, DateTimeOffset? bossAlertsAfterUtc)
+    {
+        int? toFire = null;
+        foreach (var lead in leads)
+        {
+            if (now < occurrence - TimeSpan.FromMinutes(lead)) continue;
+            var first = _fired.Add((timer.Id, EventVersion(timer), occurrence, lead));
+            if (SuppressedAfterRegionSwitch(timer, occurrence - TimeSpan.FromMinutes(lead), bossAlertsAfterUtc)) continue;
+            if (first && toFire is null) toFire = lead;
+        }
+        return toFire;
     }
 
     /// <summary>
@@ -77,11 +82,8 @@ public sealed class AlertPlanner
                 foreach (var occurrence in OccurrenceSource.Between(timer, now, until))
                 {
                     if (muted.Contains(new MutedOccurrence(timer.Id, occurrence))) continue;
-                    foreach (var lead in leads)
-                        if (occurrence - TimeSpan.FromMinutes(lead) > now
-                            && !SuppressedAfterRegionSwitch(timer, occurrence - TimeSpan.FromMinutes(lead), bossAlertsAfterUtc)
-                            && !_fired.Contains((timer.Id, EventVersion(timer), occurrence, lead)))
-                            pending.Add(new AlertEvent([timer], occurrence, lead, lead));
+                    foreach (var lead in leads.Where(l => IsPending(timer, occurrence, l, now, bossAlertsAfterUtc)))
+                        pending.Add(new AlertEvent([timer], occurrence, lead, lead));
                 }
             }
             catch (Exception ex) { Failed(timer, ex); }
@@ -107,6 +109,14 @@ public sealed class AlertPlanner
     /// </summary>
     internal static bool SuppressedAfterRegionSwitch(TimerDef timer, DateTimeOffset dueUtc, DateTimeOffset? bossAlertsAfterUtc) =>
         timer.IsBuiltIn && bossAlertsAfterUtc is { } boundary && dueUtc <= boundary;
+
+    bool IsPending(TimerDef timer, DateTimeOffset occurrence, int lead, DateTimeOffset now, DateTimeOffset? bossAlertsAfterUtc)
+    {
+        var due = occurrence - TimeSpan.FromMinutes(lead);
+        return due > now
+            && !SuppressedAfterRegionSwitch(timer, due, bossAlertsAfterUtc)
+            && !_fired.Contains((timer.Id, EventVersion(timer), occurrence, lead));
+    }
 
     static int[] Leads(TimerDef timer, IReadOnlyList<int>? defaultLeads) =>
         timer.Alerts.LeadTimes(defaultLeads ?? AlertConfig.StandardLeadTimesMinutes)
