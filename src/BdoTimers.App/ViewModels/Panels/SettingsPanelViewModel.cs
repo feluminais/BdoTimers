@@ -236,22 +236,24 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     {
         var previous = _lastSettings;
         var next = _lastSettings = Current;
-        if (previous.Autostart != next.Autostart) OnPropertyChanged(nameof(Autostart));
-        if (previous.CloseToTray != next.CloseToTray) OnPropertyChanged(nameof(CloseToTray));
-        if (previous.GarmothTracker != next.GarmothTracker) OnPropertyChanged(nameof(GarmothTracker));
-        if (previous.Today != next.Today)
-        {
-            OnPropertyChanged(nameof(ShowCurrentTimers));
-            OnPropertyChanged(nameof(ShowDaily));
-            OnPropertyChanged(nameof(ShowWeekly));
-            OnPropertyChanged(nameof(ShowGarmoth));
-        }
-        if (previous.TextScale != next.TextScale) OnPropertyChanged(nameof(TextSize));
-        if (previous.AlertSound != next.AlertSound) OnPropertyChanged(nameof(AlertSound));
-        if (previous.Volume != next.Volume) OnPropertyChanged(nameof(Volume));
-        if (previous.TtsVoice != next.TtsVoice) OnPropertyChanged(nameof(Voice));
-        if (previous.TtsRate != next.TtsRate) OnPropertyChanged(nameof(SpeechRate));
+        foreach (var (value, properties) in Watched)
+            if (!Equals(value(previous), value(next)))
+                foreach (var property in properties) OnPropertyChanged(property);
     }
+
+    /// <summary>The panel properties that follow a setting changed from outside, by the setting they read.</summary>
+    static readonly (Func<AppSettings, object?> Value, string[] Properties)[] Watched =
+    [
+        (s => s.Autostart, [nameof(Autostart)]),
+        (s => s.CloseToTray, [nameof(CloseToTray)]),
+        (s => s.GarmothTracker, [nameof(GarmothTracker)]),
+        (s => s.Today, [nameof(ShowCurrentTimers), nameof(ShowDaily), nameof(ShowWeekly), nameof(ShowGarmoth)]),
+        (s => s.TextScale, [nameof(TextSize)]),
+        (s => s.AlertSound, [nameof(AlertSound)]),
+        (s => s.Volume, [nameof(Volume)]),
+        (s => s.TtsVoice, [nameof(Voice)]),
+        (s => s.TtsRate, [nameof(SpeechRate)]),
+    ];
 
     /// <summary>Rebuilds the sound list and the "Your sounds" rows.</summary>
     void ReloadSounds()
