@@ -25,18 +25,19 @@ public static class AlertEligibility
         if (planned.IsBuiltIn && (alert.BossSelectionVersion != data.BossSelectionVersion
             || !BossRegions.IsSelected(data, saved))) return null;
 
-        var sameOccurrence = planned.Kind switch
-        {
-            TimerKind.OneTime => SameEvent(saved, planned),
-            TimerKind.Countdown => saved.Countdown is { Status: CountdownStatus.Running } countdown
-                ? countdown == planned.Countdown : completed && saved.Countdown?.Status == CountdownStatus.Idle,
-            TimerKind.Scheduled => OccurrenceSource.Next(saved, alert.OccurrenceUtc) == alert.OccurrenceUtc,
-            _ => false,
-        };
-        if (!sameOccurrence) return null;
+        if (!SameOccurrence(saved, planned, alert, completed)) return null;
         return planned.Name == saved.Name && planned.Alerts == saved.Alerts ? planned
             : planned with { Name = saved.Name, Alerts = saved.Alerts };
     }
+
+    static bool SameOccurrence(TimerDef saved, TimerDef planned, AlertEvent alert, bool completed) => planned.Kind switch
+    {
+        TimerKind.OneTime => SameEvent(saved, planned),
+        TimerKind.Countdown => saved.Countdown is { Status: CountdownStatus.Running } countdown
+            ? countdown == planned.Countdown : completed && saved.Countdown?.Status == CountdownStatus.Idle,
+        TimerKind.Scheduled => OccurrenceSource.Next(saved, alert.OccurrenceUtc) == alert.OccurrenceUtc,
+        _ => false,
+    };
 
     static bool SameEvent(TimerDef current, TimerDef planned) => planned.OneTime is { } occurrence
         && current.OneTime is { } saved
