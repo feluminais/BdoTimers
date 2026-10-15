@@ -81,5 +81,10 @@ preserves an edited schedule.
 
 Each region's timetable is an embedded JSON file in `src/BdoTimers.Core/Data/` with its source URLs and verification
 date, shown in the timetable tooltip in Settings. The app follows the regular weekly wall-clock timetable and each time
-zone's DST rules; it doesn't model the short maintenance exceptions above, which need a new Pearl Abyss notice each
-time.
+zone's DST rules. For the short maintenance exceptions above, Settings → Bosses → DST at maintenance takes the
+maintenance day from the Pearl Abyss notice. Schedules in that region's server time then switch at 10:00 UTC on that
+day instead of with the clocks. That covers bosses, War of the Roses and any other timer kept in server time; to-do
+resets and the Garmoth week don't move. Within two weeks either side of the date, the app derives the direction and
+the window from the zone's rules, so the date can be entered as soon as the notice appears. A date with no clock
+change near it is rejected. The 10:00 UTC instant falls inside the Thursday maintenance, when neither timetable has a
+spawn.

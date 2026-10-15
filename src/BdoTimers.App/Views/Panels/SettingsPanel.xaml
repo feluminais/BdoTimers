@@ -184,6 +184,19 @@
                                    Visibility="{Binding RegionError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
+                <Border Style="{StaticResource SearchRow}" Tag="DST at maintenance daylight saving summer winter time clock change">
+                    <StackPanel>
+                        <DockPanel>
+                            <controls:DateInput DockPanel.Dock="Right" Width="190" Text="{Binding DstMaintenanceText, UpdateSourceTrigger=PropertyChanged}"
+                                                TodayProvider="{Binding TodayProvider}" HasError="{Binding DstMaintenanceInvalid}"
+                                                ToolTip="Maintenance day when Pearl Abyss moves boss times for daylight saving; blank to follow the clock"
+                                                AutomationProperties.Name="DST at maintenance" />
+                            <TextBlock Text="DST at maintenance" Style="{StaticResource RowLabel}" />
+                        </DockPanel>
+                        <TextBlock Text="{Binding DstMaintenanceError}" Style="{StaticResource LabelText}"
+                                   Visibility="{Binding DstMaintenanceError, Converter={StaticResource NullToCollapsed}}" />
+                    </StackPanel>
+                </Border>
                 <Border Style="{StaticResource SearchRow}" Tag="Timetable verified source changes spawn times review apply keep">
                     <StackPanel>
                         <TextBlock Text="{Binding TimetableVerified}" Style="{StaticResource LabelText}" ToolTip="{Binding TimetableSource}" />

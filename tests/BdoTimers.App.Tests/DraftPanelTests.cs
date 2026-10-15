@@ -8,6 +8,7 @@ using BdoTimers.App.ViewModels;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.App.Views;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 
 namespace BdoTimers.App.Tests;
@@ -349,6 +350,33 @@ public class DraftPanelTests
 
             Assert.False(services.Settings.Current.GarmothTracker);
             Assert.Equal(new GarmothWeek(), services.Timers.Current.Garmoth);
+        });
+    });
+
+    [Fact]
+    public void DST_at_maintenance_saves_with_the_sheet_and_a_date_without_a_clock_change_holds_it() => WpfTest.Run(() =>
+    {
+        WithServices(services =>
+        {
+            foreach (var timer in services.Timers.Current.Timers)
+                services.Timers.Modify(timer.Id, t => t with { Alerts = t.Alerts with { Tts = t.Alerts.Tts with { Enabled = false } } });
+            using var main = new MainViewModel(services);
+            var panel = new SettingsPanelViewModel(services);
+            main.OpenPanel(panel);
+            Assert.Equal("", panel.DstMaintenanceText);
+
+            panel.DstMaintenanceText = "2026-07-16";
+            Assert.Equal("No clock change near this date", panel.DstMaintenanceError);
+            main.FinishPanel().GetAwaiter().GetResult();
+            Assert.True(main.IsOpen(panel));
+
+            panel.DstMaintenanceText = "2026-10-29";
+            Assert.Null(panel.DstMaintenanceError);
+            Assert.True(panel.HasChanges);
+            Assert.Null(BossRegions.State(services.Timers.Current).DstMaintenance);
+            main.FinishPanel().GetAwaiter().GetResult();
+
+            Assert.Equal(new DateOnly(2026, 10, 29), BossRegions.State(services.Timers.Current).DstMaintenance);
         });
     });
 

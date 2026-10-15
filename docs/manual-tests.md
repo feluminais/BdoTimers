@@ -388,3 +388,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     from its last 10 minutes. A one-time event
     listed under Timers follows its own window, not the Custom timers one. With Horse registrations on at 3 min before, a registration shows from its last 3 minutes. Each row's
     off switch hides it; the preview keeps a dimmed sample of the ones that are on.
+92. [ ] Settings → Bosses → DST at maintenance is blank under Region; its tooltip names the maintenance day. Type 2026-07-16:
+    the field turns red with "No clock change near this date" and Save does nothing. Type 2026-10-29 for EU and Save. In
+    a disposable dev environment with the clock on 26 Oct 2026, Today, the Bosses grid, Calendar, the overlay and alerts
+    show Monday's 22:15 bosses at 21:15 CET until the 29 Oct maintenance, then at their usual times. NA with
+    2026-10-29 shows Thursday's 10:00 PT boss at 11:00 PDT from that maintenance until 1 Nov. Clear the field and Save:
+    the times follow the clocks again. A backup restore brings the date back. Two weeks after the date the field is blank.

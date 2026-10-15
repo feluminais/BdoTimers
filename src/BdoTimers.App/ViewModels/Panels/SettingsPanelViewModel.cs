@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using BdoTimers.App.Alerts;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 using BdoTimers.Core.Seed;
 using BdoTimers.Core.Storage;
 using BdoTimers.Core.Updates;
@@ -21,13 +22,15 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     readonly AppServices _services;
     readonly EditDraft<AppSettings> _draft;
     public bool RegionSaved => (string)Region.Value! == _services.Timers.Current.SelectedBossRegion;
-    public bool HasChanges => _draft.HasChanges || !RegionSaved;
+    public bool HasChanges => _draft.HasChanges || !RegionSaved || DstMaintenanceChanged;
     bool _closed;
     AppSettings _lastSettings;
     PreparedRestore? _preparedRestore;
 
     [ObservableProperty] private Choice _region;
     [ObservableProperty] private string? _regionError;
+    [ObservableProperty] private string _dstMaintenanceText = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(DstMaintenanceInvalid))] private string? _dstMaintenanceError;
     [ObservableProperty] private string? _autostartError;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(AlertSound))] private IReadOnlyList<Choice> _alertSounds = [];
     [ObservableProperty] private string? _soundError;
@@ -109,6 +112,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.DailyId)
             || services.Todos.Current.Lists.All(list => list.Id != TodoSeed.WeeklyId);
         RefreshTimetable();
+        LoadDstMaintenance();
         services.Settings.Changed += OnSettingsChanged;
     }
 
@@ -130,6 +134,28 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         ReviewingTimetable = false;
         TimetableReset.IsAsking = AlertReset.IsAsking = false;
         OnPropertyChanged(nameof(RegionSaved));
+        LoadDstMaintenance();
+    }
+
+    public bool DstMaintenanceInvalid => DstMaintenanceError is not null;
+    public Func<DateTime> TodayProvider => () => _services.Clock.UtcNow.LocalDateTime;
+    string RegionId => (string)Region.Value!;
+    DateOnly? SavedDstMaintenance => BossRegions.ActiveDstMaintenance(_services.Timers.Current, RegionId, _services.Clock.UtcNow);
+    bool DstMaintenanceChanged => Parsing.TryParseOptionalDate(DstMaintenanceText, out var day) && day != SavedDstMaintenance;
+
+    void LoadDstMaintenance()
+    {
+        DstMaintenanceText = SavedDstMaintenance is { } day ? Parsing.FormatDate(day) : "";
+        // The same text can mean a different check in another region.
+        OnDstMaintenanceTextChanged(DstMaintenanceText);
+    }
+
+    partial void OnDstMaintenanceTextChanged(string value)
+    {
+        DstMaintenanceError = !Parsing.TryParseOptionalDate(value, out var day) ? "Enter a date (YYYY-MM-DD)."
+            : day is { } d && ScheduleMath.ServerSwitch(d, BossRegions.Find(RegionId).TimeZoneId) is null ? "No clock change near this date"
+            : null;
+        OnPropertyChanged(nameof(CanFinish));
     }
 
     public bool CloseToTray
@@ -199,7 +225,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         set => UpdateSettings(s => s with { TtsRate = (int)Math.Round(value) });
     }
 
-    public bool CanFinish => !DailyTodoReset.InvalidTime && !WeeklyTodoReset.InvalidTime;
+    public bool CanFinish => !DailyTodoReset.InvalidTime && !WeeklyTodoReset.InvalidTime && !DstMaintenanceInvalid;
     public PanelPresentation Presentation => PanelPresentation.Sheet;
 
     public async Task SaveAsync()
@@ -229,6 +255,8 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
             catch (Exception ex) { Log.Error("Couldn't restore settings after save failed", ex); }
             throw;
         }
+        if (DstMaintenanceChanged && Parsing.TryParseOptionalDate(DstMaintenanceText, out var maintenance))
+            _services.Timers.SetDstMaintenance(region, maintenance);
         if (!RegionSaved) _services.Timetable.SelectRegion(region);
     }
 
