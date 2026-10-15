@@ -6,7 +6,8 @@ namespace BdoTimers.Core.Storage;
 
 public enum HorseStartResult { Started, LimitReached, Unavailable }
 
-public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : PersistentState<AppData>(file, initial)
+public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial)
+    : PersistentState<AppData>(file, initial, BossRegions.WithServerSwitches)
 {
     public const int MaxHorseRegistrations = 10;
 
@@ -53,6 +54,15 @@ public sealed class TimerStore(JsonFileStore<AppData> file, AppData initial) : P
                 Timers = timers, SelectedBossRegion = regionId, BossSelectionVersion = Guid.NewGuid(), BossAlertsAfterUtc = boundary,
             };
         });
+    }
+
+    /// <summary>Sets the maintenance day when <paramref name="regionId"/>'s server moves boss times for daylight saving;
+    /// null follows the clocks.</summary>
+    public void SetDstMaintenance(string regionId, DateOnly? day)
+    {
+        BossRegions.Find(regionId);
+        Update(d => BossRegions.State(d, regionId) is var state && state.DstMaintenance == day
+            ? d : BossRegions.WithState(d, state with { DstMaintenance = day }));
     }
 
     /// <summary>Starts a separate countdown from the horse preset; active runs retain their own settings and times.</summary>

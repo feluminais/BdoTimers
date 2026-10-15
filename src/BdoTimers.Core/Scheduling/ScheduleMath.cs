@@ -34,17 +34,54 @@ public static class ScheduleMath
     public static Slot? SlotAt(ScheduledSpec spec, DateTimeOffset occurrenceUtc)
     {
         var zone = TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId);
-        var date = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(occurrenceUtc, zone).DateTime);
+        var date = DateOnly.FromDateTime(ToLocal(occurrenceUtc, zone, spec.ServerSwitchUtc));
         // A spring gap can shift a slot's actual wall time, even into the following day.
         for (var offset = 0; offset <= 1; offset++)
         {
             if (date.DayNumber < offset) break;
             var day = date.AddDays(-offset);
             foreach (var slot in spec.Slots.Where(s => s.Day == day.DayOfWeek))
-                if (LocalToUtc(day.ToDateTime(slot.Time), zone) == occurrenceUtc) return slot;
+                if (ToUtc(day.ToDateTime(slot.Time), zone, spec.ServerSwitchUtc) == occurrenceUtc) return slot;
         }
         return null;
     }
+
+    /// <summary>How far from a maintenance day its daylight-saving switch is looked for and applies.</summary>
+    public static readonly TimeSpan ServerSwitchReach = TimeSpan.FromDays(14);
+
+    // ponytail: a fixed hour inside the NA/EU Thursday maintenance, when neither timetable has a spawn (08:00-12:00 UTC);
+    // a time field if Pearl Abyss moves its maintenance hours.
+    static readonly TimeOnly MaintenanceUtc = new(10, 0);
+
+    /// <summary>When the server switches for daylight saving at the <paramref name="maintenance"/> day; null when the
+    /// zone's clocks don't change within <see cref="ServerSwitchReach"/> of it.</summary>
+    public static DateTimeOffset? ServerSwitch(DateOnly maintenance, string timeZoneId)
+    {
+        // Keeps the reach inside DateTimeOffset's range.
+        if (maintenance.Year is <= 1 or >= 9999) return null;
+        var at = new DateTimeOffset(maintenance.ToDateTime(MaintenanceUtc), TimeSpan.Zero);
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
+        return zone.GetUtcOffset(at - ServerSwitchReach) == zone.GetUtcOffset(at + ServerSwitchReach) ? null : at;
+    }
+
+    /// <summary>A wall time in server time to UTC: <see cref="LocalToUtc"/>, except that near
+    /// <paramref name="serverSwitch"/> the offset changes at that instant instead of with the clocks.</summary>
+    static DateTimeOffset ToUtc(DateTime local, TimeZoneInfo tz, DateTimeOffset? serverSwitch)
+    {
+        var utc = LocalToUtc(local, tz);
+        if (serverSwitch is not { } at || (utc - at).Duration() > ServerSwitchReach) return utc;
+        local = DateTime.SpecifyKind(local, DateTimeKind.Unspecified);
+        var before = new DateTimeOffset(local, tz.GetUtcOffset(at - ServerSwitchReach)).ToUniversalTime();
+        if (before < at) return before;
+        var after = new DateTimeOffset(local, tz.GetUtcOffset(at + ServerSwitchReach)).ToUniversalTime();
+        // A time the switch skips reads with the earlier offset, as a spring gap does in LocalToUtc.
+        return after >= at ? after : before;
+    }
+
+    static DateTime ToLocal(DateTimeOffset utc, TimeZoneInfo tz, DateTimeOffset? serverSwitch) =>
+        serverSwitch is { } at && (utc - at).Duration() <= ServerSwitchReach
+            ? utc.ToOffset(tz.GetUtcOffset(utc < at ? at - ServerSwitchReach : at + ServerSwitchReach)).DateTime
+            : TimeZoneInfo.ConvertTime(utc, tz).DateTime;
 
     public static bool IsExpired(ScheduledSpec spec, DateTimeOffset now) =>
         spec.EndDate is not null && !From(spec, now).Any();
@@ -93,7 +130,7 @@ public static class ScheduleMath
         var tz = TimeZoneInfo.FindSystemTimeZoneById(spec.TimeZoneId);
         // Start a day early: a late slot on the previous local day that falls in a spring-forward gap
         // is pushed past midnight, into the day that contains fromUtc.
-        var first = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(fromUtc, tz).DateTime);
+        var first = DateOnly.FromDateTime(ToLocal(fromUtc, tz, spec.ServerSwitchUtc));
         if (first > DateOnly.MinValue) first = first.AddDays(-1);
         if (spec.StartDate is { } start && start > first) first = start;
         var last = spec.EndDate ?? DateOnly.MaxValue;
@@ -112,7 +149,7 @@ public static class ScheduleMath
             }
             var occurrences = spec.Slots
                 .Where(s => s.Day == date.DayOfWeek)
-                .Select(s => LocalToUtc(date.ToDateTime(s.Time), tz))
+                .Select(s => ToUtc(date.ToDateTime(s.Time), tz, spec.ServerSwitchUtc))
                 .Where(o => o >= fromUtc)
                 .Distinct()
                 .Order();

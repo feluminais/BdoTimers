@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace BdoTimers.Core.Model;
 
 public enum TimerKind { Scheduled, Countdown, Stopwatch, OneTime }
@@ -23,6 +25,10 @@ public sealed record ScheduledSpec
     public DateOnly? WeekAnchor { get; init; }
     /// <summary>A schedule that is off has no occurrences; it keeps its slots for when it is turned back on.</summary>
     public bool Off { get; init; }
+    /// <summary>When the region's server moves this schedule for daylight saving, if not with the clocks. Filled from
+    /// <see cref="BossRegionState.DstMaintenance"/> for schedules in a region's server time; never saved.</summary>
+    [JsonIgnore]
+    public DateTimeOffset? ServerSwitchUtc { get; init; }
 }
 
 public sealed record OneTimeSpec

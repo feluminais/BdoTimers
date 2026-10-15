@@ -23,6 +23,7 @@ public class JsonRoundTripTests
         {
             RegionId = BossRegions.NorthAmerica, SeedApplied = true,
             AcceptedBossTimetable = SeedService.LoadEmbedded(BossRegions.NorthAmerica), TimetableNoticeRevision = "na-review",
+            DstMaintenance = new DateOnly(2026, 10, 29),
         }],
         Timers =
         [

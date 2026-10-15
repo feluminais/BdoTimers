@@ -5,11 +5,13 @@ namespace BdoTimers.Core.Storage;
 /// <see cref="Changed"/> only when the change function returns a different instance.
 /// <see cref="Changed"/> is raised on the calling thread. If the save fails the value is left
 /// unchanged and <see cref="StateSaveException"/> is thrown, so memory never runs ahead of disk.
+/// <paramref name="derive"/> fills in a value's unsaved parts, the initial value's too, and returns the same instance when
+/// they are already right.
 /// </summary>
-public class PersistentState<T>(JsonFileStore<T> file, T initial) where T : class
+public class PersistentState<T>(JsonFileStore<T> file, T initial, Func<T, T>? derive = null) where T : class
 {
     readonly object _gate = new();
-    T _value = initial;
+    T _value = derive is null ? initial : derive(initial);
 
     public event Action? Changed;
 
@@ -24,6 +26,7 @@ public class PersistentState<T>(JsonFileStore<T> file, T initial) where T : clas
         lock (_gate)
         {
             var next = change(_value);
+            if (derive is not null) next = derive(next);
             changed = !ReferenceEquals(next, _value);
             if (changed)
             {

@@ -1,4 +1,5 @@
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
 
 namespace BdoTimers.Core.Seed;
 
@@ -64,6 +65,32 @@ public static class BossRegions
                 : [.. regions, state],
             SeedApplied = false, AcceptedBossTimetable = null,
         };
+    }
+
+    /// <summary>The region's maintenance day while it can still move times; null once two weeks past.</summary>
+    public static DateOnly? ActiveDstMaintenance(AppData data, string regionId, DateTimeOffset now) =>
+        State(data, regionId).DstMaintenance is { } day && ScheduleMath.ServerSwitch(day, Find(regionId).TimeZoneId) is { } at
+        && now < at + ScheduleMath.ServerSwitchReach ? day : null;
+
+    /// <summary>
+    /// Gives every schedule written in a region's server time that region's daylight-saving switch: bosses, War of the
+    /// Roses and any other timer kept in server time. Schedules in the player's own zones are left alone. The same
+    /// instance when nothing changes.
+    /// </summary>
+    public static AppData WithServerSwitches(AppData data)
+    {
+        var switches = All.ToDictionary(r => r.TimeZoneId,
+            r => State(data, r.Id).DstMaintenance is { } day ? ScheduleMath.ServerSwitch(day, r.TimeZoneId) : null);
+        var changed = false;
+        var timers = data.Timers.Select(t =>
+        {
+            if (t.Scheduled is not { } spec) return t;
+            var at = switches.GetValueOrDefault(spec.TimeZoneId);
+            if (spec.ServerSwitchUtc == at) return t;
+            changed = true;
+            return t with { Scheduled = spec with { ServerSwitchUtc = at } };
+        }).ToList();
+        return changed ? data with { Timers = timers } : data;
     }
 
     /// <summary>Assigns the existing configuration to EU without replacing any boss or schedule.</summary>

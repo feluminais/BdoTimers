@@ -9,4 +9,7 @@ public sealed record BossRegionState
     public bool SeedApplied { get; init; }
     public BossSeed? AcceptedBossTimetable { get; init; }
     public string? TimetableNoticeRevision { get; init; }
+    /// <summary>The maintenance day when Pearl Abyss moves this region's boss times for daylight saving; null follows
+    /// the clocks.</summary>
+    public DateOnly? DstMaintenance { get; init; }
 }

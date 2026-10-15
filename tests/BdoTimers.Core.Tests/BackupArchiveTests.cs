@@ -11,7 +11,11 @@ public class BackupArchiveTests
 {
     static readonly FakeClock Clock = new(new DateTimeOffset(2026, 10, 2, 12, 0, 0, TimeSpan.Zero));
     static BackupSnapshot Snapshot => new(new AppSettings { Volume = 0.3f },
-        new AppData { Timers = [new TimerDef { Name = "My timer", Kind = TimerKind.Countdown, Countdown = new() }], DataVersion = DataMigrations.Current },
+        new AppData
+        {
+            Timers = [new TimerDef { Name = "My timer", Kind = TimerKind.Countdown, Countdown = new() }], DataVersion = DataMigrations.Current,
+            BossRegions = [new BossRegionState { RegionId = BossRegions.Europe, DstMaintenance = new(2026, 10, 29) }],
+        },
         new TodoData { Lists = [new TodoList { Name = "My list", Rows = [new TodoRow { Text = "My task", Done = true }] }] });
 
     [Fact]
@@ -35,6 +39,7 @@ public class BackupArchiveTests
         Assert.Equal("1.0.123", prepared.Manifest.AppVersion);
         Assert.Equal(0.3f, Read<AppSettings>(prepared.Directory, "settings.json").Volume);
         Assert.Equal(snapshot.Timers.Timers[0].Id, Read<AppData>(prepared.Directory, "timers.json").Timers[0].Id);
+        Assert.Equal(new DateOnly(2026, 10, 29), Read<AppData>(prepared.Directory, "timers.json").BossRegions[0].DstMaintenance);
         Assert.True(Read<TodoData>(prepared.Directory, "todos.json").Lists[0].Rows[0].Done);
         Assert.Equal(new byte[] { 1, 2, 3 }, File.ReadAllBytes(Path.Combine(prepared.Directory, "images", "custom.jpg")));
         Assert.Equal(new byte[] { 4, 5, 6 }, File.ReadAllBytes(Path.Combine(prepared.Directory, "sounds", "custom.wav")));
