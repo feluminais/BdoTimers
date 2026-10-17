@@ -10,7 +10,7 @@ public sealed record OverlaySnapshot
     /// <summary>Now in the selected boss region's server time zone.</summary>
     public DateTimeOffset? ServerTime { get; init; }
     public GameTime? GameTime { get; init; }
-    /// <summary>The game world's day or night and what is left of it, for the Night row.</summary>
+    /// <summary>The game world's day or night and what is left of it, for the clocks strip's countdown to the next one.</summary>
     public GameTime? Night { get; init; }
     public SpawnGroup? Previous { get; init; }
     public SpawnGroup? Next { get; init; }

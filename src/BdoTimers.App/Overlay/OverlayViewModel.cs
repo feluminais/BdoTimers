@@ -75,7 +75,6 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     readonly OverlaySpawn _nextRow = new();
     readonly OverlayLine _farmRow = new("Farm");
     readonly OverlayLine _fishingRow = new("Fishing");
-    readonly OverlayLine _nightRow = new("Night");
     string _imagesKey = "";
     IReadOnlyList<ArtPicture> _images = [];
     string? _backgroundKey;
@@ -94,12 +93,14 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private string? _serverClock;
     [ObservableProperty] private string? _gameClock;
     [ObservableProperty] private bool _isNight;
+    /// <summary>The real time until night falls, or by night until day breaks.</summary>
+    [ObservableProperty] private string? _nightClock;
+    [ObservableProperty] private bool _untilDay;
     [ObservableProperty] private bool _hasClocks;
     [ObservableProperty] private OverlaySpawn? _previous;
     [ObservableProperty] private OverlaySpawn? _next;
     [ObservableProperty] private OverlayLine? _farm;
     [ObservableProperty] private OverlayLine? _fishing;
-    [ObservableProperty] private OverlayLine? _night;
     [ObservableProperty] private string? _moreHorseRegistrations;
     [ObservableProperty] private bool _hasCustomTimers;
     [ObservableProperty] private bool _showDivider;
@@ -120,11 +121,10 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         UpdatePopUps(content, settings, now, preview);
         Farm = FarmRow(content, settings, preview);
         Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
-        Night = Line(_nightRow, content.Night?.IsNight == true ? "Until day" : "Until night", content.Night?.Left, false, "");
         UpdateHorseRegistrations(content, settings, now, preview);
         UpdateCustomTimers(content, settings, now, preview);
         ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
-            && (Farm is not null || Fishing is not null || Night is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
+            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
     }
 
     void ApplyLook(OverlaySettings settings, bool preview)
@@ -150,7 +150,9 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         ServerClock = content.ServerTime is { } server ? Formats.ZoneTime(server) : null;
         GameClock = content.GameTime is { } game ? Formats.Time(game.Time) : null;
         IsNight = content.GameTime?.IsNight == true;
-        HasClocks = Clock is not null || ServerClock is not null || GameClock is not null;
+        NightClock = content.Night is { } night ? DurationFormat.Clock(night.Left) : null;
+        UntilDay = content.Night?.IsNight == true;
+        HasClocks = Clock is not null || ServerClock is not null || GameClock is not null || NightClock is not null;
     }
 
     void UpdateSpawns(OverlaySnapshot content, OverlaySettings settings, DateTimeOffset now, bool preview)

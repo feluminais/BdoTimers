@@ -450,7 +450,7 @@
 
         <ScrollViewer x:Name="SideHost" Grid.Column="2" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel x:Name="SideStack">
-                <!-- The game world's day or night and what is left of it, a sun or a moon beside it; off unless Settings shows it -->
+                <!-- The time to the game world's next night or day, the moon or sun it ends in beside it; off unless Settings shows it -->
                 <Border x:Name="NightPanel" Style="{StaticResource TodayPanel}" Margin="0,0,0,16"
                         Visibility="{Binding NightHeading, Converter={StaticResource NullToCollapsed}}">
                     <DockPanel>
@@ -460,10 +460,10 @@
                                    Foreground="{DynamicResource SubtleBrush}">
                             <TextBlock.Style>
                                 <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
-                                    <Setter Property="Text" Value="&#xE706;" />
+                                    <Setter Property="Text" Value="&#xE708;" />
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding IsNight}" Value="True">
-                                            <Setter Property="Text" Value="&#xE708;" />
+                                            <Setter Property="Text" Value="&#xE706;" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>

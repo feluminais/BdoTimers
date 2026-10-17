@@ -83,7 +83,7 @@
         <Setter Property="Foreground" Value="{DynamicResource AccentTextBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
-    <!-- Local, server and in-game time: a monitor, a globe, and a sun or by night a moon -->
+    <!-- Local, server and in-game time: a monitor, a globe, and a sun or by night a moon; then the time to the next one of those, the moon by day and the sun by night -->
     <Style x:Key="OverlayClocks" TargetType="ContentControl">
         <Setter Property="Focusable" Value="False" />
         <Setter Property="BorderThickness" Value="{Binding OutlineThickness}" />
@@ -119,6 +119,21 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                                 <TextBlock Style="{StaticResource ClockTime}" Text="{Binding GameClock}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding NightClock, Converter={StaticResource NullToCollapsed}}">
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource ClockIcon}">
+                                            <Setter Property="Text" Value="&#xE708;" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding UntilDay}" Value="True">
+                                                    <Setter Property="Text" Value="&#xE706;" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                                <TextBlock Style="{StaticResource ClockTime}" Text="{Binding NightClock}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -241,8 +256,6 @@
                             Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
             <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource LineRow}"
                             Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
-            <ContentControl Content="{Binding Night}" ContentTemplate="{StaticResource LineRow}"
-                            Focusable="False" Visibility="{Binding Night, Converter={StaticResource NullToCollapsed}}" />
             <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
             <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
                        Visibility="{Binding MoreHorseRegistrations, Converter={StaticResource NullToCollapsed}}" />
@@ -288,8 +301,6 @@
                                         Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
                         <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource ChipLine}"
                                         Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
-                        <ContentControl Content="{Binding Night}" ContentTemplate="{StaticResource ChipLine}"
-                                        Focusable="False" Visibility="{Binding Night, Converter={StaticResource NullToCollapsed}}" />
                     </WrapPanel>
                     <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource LineRow}" Focusable="False" />
                     <TextBlock Text="{Binding MoreHorseRegistrations}" Style="{StaticResource LabelText}" Margin="12,2,0,0"
@@ -318,8 +329,6 @@
                             Focusable="False" Visibility="{Binding Farm, Converter={StaticResource NullToCollapsed}}" />
             <ContentControl Content="{Binding Fishing}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
                             Focusable="False" Visibility="{Binding Fishing, Converter={StaticResource NullToCollapsed}}" />
-            <ContentControl Content="{Binding Night}" ContentTemplate="{StaticResource BarLine}" VerticalAlignment="Center"
-                            Focusable="False" Visibility="{Binding Night, Converter={StaticResource NullToCollapsed}}" />
             <ItemsControl ItemsSource="{Binding HorseRegistrations}" ItemTemplate="{StaticResource BarLine}" VerticalAlignment="Center" Focusable="False">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate>

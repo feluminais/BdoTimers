@@ -160,9 +160,9 @@
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowGarmoth}" IsEnabled="{Binding GarmothTracker}"
                                   Width="110" AutomationProperties.Name="Garmoth on Today" />
                 </HeaderedContentControl>
-                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Until night" Tag="Until night day in-game time show hide panel">
+                <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Day and night" Tag="Day and night until night day dawn dusk in-game time show hide panel">
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowNight}"
-                                  Width="110" AutomationProperties.Name="Until night" />
+                                  Width="110" AutomationProperties.Name="Day and night" />
                 </HeaderedContentControl>
                 <TextBlock Text="To-do" Style="{StaticResource SearchHeading}" Tag="todo tasks" panels:SettingsFilter.Category="To-do" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Daily reset" Tag="Daily reset time UTC local">
