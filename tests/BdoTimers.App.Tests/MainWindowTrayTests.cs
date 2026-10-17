@@ -60,6 +60,21 @@ public class MainWindowTrayTests
     });
 
     [Fact]
+    public void The_tray_button_is_gone_while_closing_goes_to_the_tray() => WithWindow((services, main, window) =>
+    {
+        var tray = TrayButton(window);
+        Assert.Equal(Visibility.Visible, tray.Visibility);
+
+        services.Settings.Update(s => s with { CloseToTray = true });
+        WpfTest.Drain();
+        Assert.Equal(Visibility.Collapsed, tray.Visibility);
+
+        services.Settings.Update(s => s with { CloseToTray = false });
+        WpfTest.Drain();
+        Assert.Equal(Visibility.Visible, tray.Visibility);
+    });
+
+    [Fact]
     public void The_tray_button_asks_about_unsaved_changes_first_like_closing_does() => WithWindow((services, main, window) =>
     {
         var timer = new TimerDef { Name = "Old title", Kind = TimerKind.Countdown, Countdown = new(), Alerts = new() { Tts = new() { Enabled = false } } };

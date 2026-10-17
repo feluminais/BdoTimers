@@ -114,7 +114,8 @@
                                  Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                     <Button x:Name="TrayButton" Style="{StaticResource CaptionButton}" ToolTip="Close to tray"
-                            AutomationProperties.Name="Close to tray" Click="Tray_Click" WindowChrome.IsHitTestVisibleInChrome="True">
+                            AutomationProperties.Name="Close to tray" Click="Tray_Click" WindowChrome.IsHitTestVisibleInChrome="True"
+                            Visibility="{Binding CloseToTray, Converter={StaticResource InverseBoolToVisibility}}">
                         <controls:ToTrayIcon Size="10" />
                     </Button>
                     <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimize"

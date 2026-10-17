@@ -27,6 +27,8 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     [ObservableProperty] private string _pausedText = "";
     /// <summary>A newer release is available; the gear shows a dot, and Settings → About has the release.</summary>
     [ObservableProperty] private bool _hasUpdate;
+    /// <summary>Closing already goes to the tray, so the caption's own tray button is gone.</summary>
+    [ObservableProperty] private bool _closeToTray;
     /// <summary>The window opens on Today.</summary>
     [ObservableProperty] private MainTab _selectedTab = MainTab.Today;
 
@@ -47,6 +49,17 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
         RefreshPaused(services.Clock.UtcNow);
         services.Updates.Changed += UpdatesChanged;
         RefreshUpdate();
+        services.Settings.Changed += SettingsChanged;
+        CloseToTray = services.Settings.Current.CloseToTray;
+    }
+
+    void SettingsChanged()
+    {
+        if (_services.IsQuitting) return;
+        Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            if (!_services.IsQuitting) CloseToTray = _services.Settings.Current.CloseToTray;
+        });
     }
 
     void UpdatesChanged()
@@ -63,6 +76,7 @@ public sealed partial class MainViewModel : ObservableObject, IPanelHost, IDispo
     public void Dispose()
     {
         _services.Updates.Changed -= UpdatesChanged;
+        _services.Settings.Changed -= SettingsChanged;
         SetShown(false);
         _cancelLeave?.Invoke();
         ClosePanelNow();
