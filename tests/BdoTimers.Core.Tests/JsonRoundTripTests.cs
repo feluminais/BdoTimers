@@ -95,6 +95,7 @@ public class JsonRoundTripTests
             ShowClock = false,
             ShowServerTime = true,
             ShowGameTime = true,
+            ShowNight = true,
             ShowPrevious = false,
             ShowNext = false,
             ShowFarm = false,
@@ -119,7 +120,7 @@ public class JsonRoundTripTests
         DailyTodoReset = new TodoSchedule { Day = DayOfWeek.Monday, Hour = 5, Minute = 30, LocalTime = true },
         WeeklyTodoReset = new TodoSchedule { Day = DayOfWeek.Friday, Hour = 12, Minute = 15, LocalTime = true },
         Calendar = new CalendarSettings { ShowBosses = false, ShowTimers = false, ShowEvents = false, ShowResets = false },
-        Today = new TodaySettings { ShowCurrentTimers = false, ShowDaily = false, ShowWeekly = false, ShowGarmoth = false },
+        Today = new TodaySettings { ShowCurrentTimers = false, ShowDaily = false, ShowWeekly = false, ShowGarmoth = false, ShowNight = true },
         GarmothTracker = true,
     };
 

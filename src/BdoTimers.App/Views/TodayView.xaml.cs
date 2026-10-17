@@ -12,18 +12,19 @@ public partial class TodayView : UserControl
 
     public TodayView() => InitializeComponent();
 
-    /// <summary>One column when the screen is narrow: hero, Current timers, Coming up, Daily tasks, Weekly tasks, Garmoth.</summary>
+    /// <summary>One column when the screen is narrow: hero, Until night, Current timers, Coming up, Daily tasks, Weekly tasks, Garmoth.</summary>
     void Root_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         var wide = e.NewSize.Width >= WideWidth;
         if (wide == _wide) return;
         _wide = wide;
-        foreach (var panel in new FrameworkElement[] { Hero, RunningPanel, ComingUpPanel, DailyPanel, WeeklyPanel, GarmothPanel })
+        foreach (var panel in new FrameworkElement[] { Hero, NightPanel, RunningPanel, ComingUpPanel, DailyPanel, WeeklyPanel, GarmothPanel })
             (panel.Parent as Panel)?.Children.Remove(panel);
         if (wide)
         {
             MainHost.Children.Add(Hero);
             MainHost.Children.Add(ComingUpPanel);
+            SideStack.Children.Add(NightPanel);
             SideStack.Children.Add(RunningPanel);
             SideStack.Children.Add(DailyPanel);
             SideStack.Children.Add(WeeklyPanel);
@@ -35,7 +36,7 @@ public partial class TodayView : UserControl
         }
         else
         {
-            foreach (var panel in new FrameworkElement[] { Hero, RunningPanel, ComingUpPanel, DailyPanel, WeeklyPanel, GarmothPanel })
+            foreach (var panel in new FrameworkElement[] { Hero, NightPanel, RunningPanel, ComingUpPanel, DailyPanel, WeeklyPanel, GarmothPanel })
             {
                 NarrowStack.Children.Add(panel);
                 panel.Margin = new Thickness(0, 0, 0, 16);

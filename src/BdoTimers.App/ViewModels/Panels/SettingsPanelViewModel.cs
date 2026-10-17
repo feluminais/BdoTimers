@@ -194,6 +194,12 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         set => UpdateSettings(s => s with { Today = s.Today with { ShowGarmoth = value } });
     }
 
+    public bool ShowNight
+    {
+        get => Current.Today.ShowNight;
+        set => UpdateSettings(s => s with { Today = s.Today with { ShowNight = value } });
+    }
+
     /// <summary>The saved app-wide sound, or the default when it's gone.</summary>
     public Choice? AlertSound
     {
@@ -275,7 +281,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         (s => s.Autostart, [nameof(Autostart)]),
         (s => s.CloseToTray, [nameof(CloseToTray)]),
         (s => s.GarmothTracker, [nameof(GarmothTracker)]),
-        (s => s.Today, [nameof(ShowCurrentTimers), nameof(ShowDaily), nameof(ShowWeekly), nameof(ShowGarmoth)]),
+        (s => s.Today, [nameof(ShowCurrentTimers), nameof(ShowDaily), nameof(ShowWeekly), nameof(ShowGarmoth), nameof(ShowNight)]),
         (s => s.TextScale, [nameof(TextSize)]),
         (s => s.AlertSound, [nameof(AlertSound)]),
         (s => s.Volume, [nameof(Volume)]),

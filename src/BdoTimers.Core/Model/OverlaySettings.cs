@@ -50,6 +50,8 @@ public sealed record OverlaySettings
     /// <summary>How long before the crop has grown the Farm row shows.</summary>
     public OverlayLead FarmLead { get; init; } = new(Always: true);
     public bool ShowFishing { get; init; } = true;
+    /// <summary>The real time until night falls in game, or by night until day breaks.</summary>
+    public bool ShowNight { get; init; }
     public bool ShowHorseRegistrations { get; init; }
     /// <summary>How long before a registration ends its row shows.</summary>
     public OverlayLead HorseLead { get; init; } = new(Always: true);

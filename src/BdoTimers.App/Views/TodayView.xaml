@@ -341,8 +341,9 @@
         </DataTemplate>
     </UserControl.Resources>
 
-    <!-- Wide: the hero over Coming up, and Current timers over the daily and weekly tasks in a column of their own. Narrow: one
-         column, hero, Current timers, Coming up, Daily tasks, Weekly tasks. The code-behind moves the panels between the hosts. -->
+    <!-- Wide: the hero over Coming up, and Until night and Current timers over the daily and weekly tasks in a column of their
+         own. Narrow: one column, hero, Until night, Current timers, Coming up, Daily tasks, Weekly tasks. The code-behind moves
+         the panels between the hosts. -->
     <Grid x:Name="Layout">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -449,6 +450,28 @@
 
         <ScrollViewer x:Name="SideHost" Grid.Column="2" VerticalScrollBarVisibility="Auto" Focusable="False">
             <StackPanel x:Name="SideStack">
+                <!-- The game world's day or night and what is left of it, a sun or a moon beside it; off unless Settings shows it -->
+                <Border x:Name="NightPanel" Style="{StaticResource TodayPanel}" Margin="0,0,0,16"
+                        Visibility="{Binding NightHeading, Converter={StaticResource NullToCollapsed}}">
+                    <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Text="{Binding NightLeft}" Style="{StaticResource ClockText}" FontSize="19"
+                                   Foreground="{DynamicResource TextBrush}" VerticalAlignment="Center" />
+                        <TextBlock DockPanel.Dock="Left" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource SubtleBrush}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource IconText}">
+                                    <Setter Property="Text" Value="&#xE706;" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsNight}" Value="True">
+                                            <Setter Property="Text" Value="&#xE708;" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <TextBlock Text="{Binding NightHeading}" Style="{StaticResource PanelHeading}" />
+                    </DockPanel>
+                </Border>
                 <Border x:Name="RunningPanel" Style="{StaticResource IndigoPanel}" Margin="0,0,0,16"
                         Visibility="{Binding HasRunning, Converter={StaticResource BoolToVisibility}}">
                     <StackPanel>

@@ -10,6 +10,8 @@ public sealed record OverlaySnapshot
     /// <summary>Now in the selected boss region's server time zone.</summary>
     public DateTimeOffset? ServerTime { get; init; }
     public GameTime? GameTime { get; init; }
+    /// <summary>The game world's day or night and what is left of it, for the Night row.</summary>
+    public GameTime? Night { get; init; }
     public SpawnGroup? Previous { get; init; }
     public SpawnGroup? Next { get; init; }
     public IReadOnlyList<UpcomingItem> PopUps { get; init; } = [];
@@ -27,7 +29,7 @@ public sealed record OverlaySnapshot
 
     /// <summary>True when there is nothing to draw, not even a clock.</summary>
     public bool IsEmpty =>
-        !Clock && ServerTime is null && GameTime is null && Previous is null && Next is null && PopUps.Count == 0
+        !Clock && ServerTime is null && GameTime is null && Night is null && Previous is null && Next is null && PopUps.Count == 0
         && Upcoming.Count == 0 && FarmLeft is null && FishingElapsed is null && HorseRegistrations.Count == 0 && CustomTimers.Count == 0;
 }
 
@@ -65,6 +67,7 @@ public static class OverlayContent
             Clock = settings.ShowClock,
             ServerTime = settings.ShowServerTime ? BossRegions.Find(data.SelectedBossRegion).ServerTime(now) : null,
             GameTime = settings.ShowGameTime ? GameClock.At(now) : null,
+            Night = settings.ShowNight ? GameClock.At(now) : null,
             Previous = settings.ShowPrevious ? board?.Previous : null,
             Next = next,
             PopUps = popUps,

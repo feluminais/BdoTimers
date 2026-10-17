@@ -170,7 +170,17 @@ public class OverlayContentTests
 
         // 10:00 UTC is 100 minutes into the day that broke at 08:20 UTC.
         var on = OverlayContent.Build(new AppData(), All with { ShowGameTime = true }, BerlinNoon);
-        Assert.Equal(new GameTime(new TimeOnly(14, 30), false), on.GameTime);
+        Assert.Equal(new GameTime(new TimeOnly(14, 30), false, TimeSpan.FromMinutes(100)), on.GameTime);
+    }
+
+    [Fact]
+    public void Night_row_shows_only_when_switched_on()
+    {
+        Assert.Null(OverlayContent.Build(new AppData(), All, BerlinNoon).Night);
+
+        var on = OverlayContent.Build(new AppData(), All with { ShowNight = true }, BerlinNoon);
+        Assert.Equal(TimeSpan.FromMinutes(100), on.Night?.Left);
+        Assert.False(OverlayContent.Build(new AppData(), new OverlaySettings { ShowClock = false, ShowNight = true }, BerlinNoon).IsEmpty);
     }
 
     [Theory]

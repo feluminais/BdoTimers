@@ -95,6 +95,7 @@
                     <ToggleButton Style="{StaticResource Chip}" Content="In-game time" IsChecked="{Binding ShowGameTime}" />
                     <ToggleButton Style="{StaticResource Chip}" Content="Previous boss" IsChecked="{Binding ShowPrevious}" />
                     <ToggleButton Style="{StaticResource Chip}" Content="Fishing" IsChecked="{Binding ShowFishing}" />
+                    <ToggleButton Style="{StaticResource Chip}" Content="Until night" IsChecked="{Binding ShowNight}" />
                 </WrapPanel>
             </Border>
             <Border Style="{StaticResource Row}" Visibility="{Binding ShowServerTime, Converter={StaticResource BoolToVisibility}}">

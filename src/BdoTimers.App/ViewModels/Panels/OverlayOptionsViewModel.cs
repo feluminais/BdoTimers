@@ -125,6 +125,7 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
     public bool ShowGameTime { get => Current.ShowGameTime; set => Modify(o => o with { ShowGameTime = value }); }
     public bool ShowPrevious { get => Current.ShowPrevious; set => Modify(o => o with { ShowPrevious = value }); }
     public bool ShowFishing { get => Current.ShowFishing; set => Modify(o => o with { ShowFishing = value }); }
+    public bool ShowNight { get => Current.ShowNight; set => Modify(o => o with { ShowNight = value }); }
     public double BackgroundOpacity
     {
         get => Current.BackgroundOpacity;
@@ -171,6 +172,7 @@ public sealed partial class OverlayOptionsViewModel : ObservableObject
         (nameof(ShowGameTime), o => o.ShowGameTime),
         (nameof(ShowPrevious), o => o.ShowPrevious),
         (nameof(ShowFishing), o => o.ShowFishing),
+        (nameof(ShowNight), o => o.ShowNight),
         (nameof(BackgroundOpacity), o => o.BackgroundOpacity),
         (nameof(TextOpacity), o => o.TextOpacity),
     ];

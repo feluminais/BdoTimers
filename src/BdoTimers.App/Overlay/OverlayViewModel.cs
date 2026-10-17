@@ -75,6 +75,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     readonly OverlaySpawn _nextRow = new();
     readonly OverlayLine _farmRow = new("Farm");
     readonly OverlayLine _fishingRow = new("Fishing");
+    readonly OverlayLine _nightRow = new("Night");
     string _imagesKey = "";
     IReadOnlyList<ArtPicture> _images = [];
     string? _backgroundKey;
@@ -98,6 +99,7 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
     [ObservableProperty] private OverlaySpawn? _next;
     [ObservableProperty] private OverlayLine? _farm;
     [ObservableProperty] private OverlayLine? _fishing;
+    [ObservableProperty] private OverlayLine? _night;
     [ObservableProperty] private string? _moreHorseRegistrations;
     [ObservableProperty] private bool _hasCustomTimers;
     [ObservableProperty] private bool _showDivider;
@@ -118,10 +120,11 @@ public sealed partial class OverlayViewModel(ArtLibrary art) : ObservableObject
         UpdatePopUps(content, settings, now, preview);
         Farm = FarmRow(content, settings, preview);
         Fishing = Line(_fishingRow, "Fishing", content.FishingElapsed, preview && settings.ShowFishing, "00:42:10");
+        Night = Line(_nightRow, content.Night?.IsNight == true ? "Until day" : "Until night", content.Night?.Left, false, "");
         UpdateHorseRegistrations(content, settings, now, preview);
         UpdateCustomTimers(content, settings, now, preview);
         ShowDivider = (Previous is not null || Next is not null || PopUps.Count > 0)
-            && (Farm is not null || Fishing is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
+            && (Farm is not null || Fishing is not null || Night is not null || HorseRegistrations.Count > 0 || HasCustomTimers);
     }
 
     void ApplyLook(OverlaySettings settings, bool preview)

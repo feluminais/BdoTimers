@@ -1,7 +1,8 @@
 namespace BdoTimers.Core.Scheduling;
 
-/// <summary>The time of day in the game world, and whether it is night there.</summary>
-public readonly record struct GameTime(TimeOnly Time, bool IsNight);
+/// <summary>The time of day in the game world, whether it is night there, and the real time until night falls or day
+/// breaks.</summary>
+public readonly record struct GameTime(TimeOnly Time, bool IsNight, TimeSpan Left);
 
 /// <summary>
 /// Black Desert's world clock, shared by the NA and EU servers: a four-hour real cycle of 200 minutes of day (07:00 to
@@ -22,8 +23,8 @@ public static class GameClock
     {
         var sinceDawn = TimeSpan.FromTicks(Mod((now.UtcDateTime.TimeOfDay - FirstDawnUtc).Ticks, Cycle.Ticks));
         return sinceDawn < Day
-            ? new(Dawn.Add(sinceDawn * DayRate), false)
-            : new(Dusk.Add((sinceDawn - Day) * NightRate), true);
+            ? new(Dawn.Add(sinceDawn * DayRate), false, Day - sinceDawn)
+            : new(Dusk.Add((sinceDawn - Day) * NightRate), true, Cycle - sinceDawn);
     }
 
     static long Mod(long value, long divisor) => (value % divisor + divisor) % divisor;

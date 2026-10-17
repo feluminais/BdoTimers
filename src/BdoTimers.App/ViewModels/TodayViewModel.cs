@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using BdoTimers.App.ViewModels.Panels;
 using BdoTimers.Core.Model;
+using BdoTimers.Core.Scheduling;
+using BdoTimers.Core.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -28,6 +30,10 @@ public sealed partial class TodayViewModel : ObservableObject
     /// <summary>Time Tracking's countdowns and stopwatches that are running or paused, and Horse registration while one is under way.</summary>
     public ObservableCollection<TimerTileViewModel> Running { get; } = [];
     [ObservableProperty] private bool _hasRunning;
+    /// <summary>"Until night", or by night "Until day"; null while Settings hides the panel.</summary>
+    [ObservableProperty] private string? _nightHeading;
+    [ObservableProperty] private string _nightLeft = "";
+    [ObservableProperty] private bool _isNight;
 
     public TodayViewModel(AppServices services, IPanelHost host, CustomViewModel custom, TodoViewModel todo,
         Action showTimers, Action showTodo, Action openFollowing)
@@ -40,7 +46,11 @@ public sealed partial class TodayViewModel : ObservableObject
         Daily = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Daily);
         Weekly = new TaskPanelViewModel(services, todo, showTodo, TodoCadence.Weekly);
         Garmoth = new GarmothViewModel(services);
-        services.Settings.Changed += () => Application.Current?.Dispatcher.BeginInvoke(SyncRunning);
+        services.Settings.Changed += () => Application.Current?.Dispatcher.BeginInvoke(() =>
+        {
+            SyncRunning();
+            UpdateNight(services.Clock.UtcNow);
+        });
         Refresh(services.Clock.UtcNow);
     }
 
@@ -50,6 +60,15 @@ public sealed partial class TodayViewModel : ObservableObject
         Hero.Update(_services.Boards.Get(data, now), now);
         ComingUp.Refresh(now);
         SyncRunning();
+        UpdateNight(now);
+    }
+
+    void UpdateNight(DateTimeOffset now)
+    {
+        var game = GameClock.At(now);
+        NightHeading = !_services.Settings.Current.Today.ShowNight ? null : game.IsNight ? "Until day" : "Until night";
+        NightLeft = DurationFormat.Clock(game.Left);
+        IsNight = game.IsNight;
     }
 
     /// <summary>Settings can switch the panel off, and then it lists nothing and the screen drops it.</summary>
