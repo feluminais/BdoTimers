@@ -122,6 +122,7 @@ public class JsonRoundTripTests
         Calendar = new CalendarSettings { ShowBosses = false, ShowTimers = false, ShowEvents = false, ShowResets = false },
         Today = new TodaySettings { ShowCurrentTimers = false, ShowDaily = false, ShowWeekly = false, ShowGarmoth = false, ShowNight = true },
         GarmothTracker = true,
+        AgentAccess = true,
     };
 
     static readonly TodoData Todos = new()
@@ -168,6 +169,7 @@ public class JsonRoundTripTests
         Assert.Equal(0.5f, s.Volume);
         Assert.Equal(new GarmothWeek(), data.Garmoth);
         Assert.False(s.GarmothTracker);
+        Assert.False(s.AgentAccess);
         Assert.True(s.Today.ShowCurrentTimers);
         var older = JsonSerializer.Deserialize<AppSettings>("""{ "today": { "showDaily": false } }""", JsonDefaults.Options)!;
         Assert.False(older.Today.ShowDaily);

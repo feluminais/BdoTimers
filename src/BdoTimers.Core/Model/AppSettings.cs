@@ -32,4 +32,6 @@ public sealed record AppSettings
     public TodaySettings Today { get; init; } = new();
     /// <summary>Counts Garmoth's three kills a week and drops him from the schedule after the third; off until turned on in Settings.</summary>
     public bool GarmothTracker { get; init; }
+    /// <summary>Lets MCP clients on this PC read and change timers and to-dos through the app's pipe; off until turned on in Settings.</summary>
+    public bool AgentAccess { get; init; }
 }
