@@ -2,7 +2,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BdoTimers.Core\BdoTimers.Core.csproj" />
+    <!-- The MCP bridge (BdoTimers.Mcp.exe) is built with the app and copied beside it; publish.ps1 publishes it into the app's folder. -->
+    <ProjectReference Include="..\BdoTimers.Mcp\BdoTimers.Mcp.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <Target Name="CopyMcpBridge" AfterTargets="Build">
+    <ItemGroup>
+      <McpBridgeFile Include="$(MSBuildThisFileDirectory)..\BdoTimers.Mcp\bin\$(Configuration)\BdoTimers.Mcp.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(McpBridgeFile)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />

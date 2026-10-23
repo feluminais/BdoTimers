@@ -61,6 +61,7 @@ public sealed class AppServices : IDisposable
     public UserFiles Files { get; }
     public SupportTools Support { get; }
     public BossTimetable Timetable { get; }
+    public AgentHost Agent { get; }
     readonly ThemePreferences _theme;
     IReadOnlyList<string> RecoveredFiles { get; }
 
@@ -122,6 +123,7 @@ public sealed class AppServices : IDisposable
             onRecovered: _ => Health.Succeeded("Scheduler"));
         _tray = new TrayIcon(this);
         Overlay = new OverlayController(this);
+        Agent = new AgentHost(this, app.Dispatcher);
 
         Updates = CreateUpdateChecker(dataDir);
     }
@@ -178,6 +180,8 @@ public sealed class AppServices : IDisposable
         UiClock.Start();
         Overlay.Start();
         if (measuring) { EcoQos.Set(true); return; }
+        Agent.Apply(Settings.Current.AgentAccess);
+        Settings.Changed += () => Agent.Apply(Settings.Current.AgentAccess);
         NotifyStartupHints();
         try { Autostart.Apply(Settings.Current.Autostart); }
         catch (Exception ex) { Log.Error("Couldn't update autostart", ex); }
@@ -321,6 +325,7 @@ public sealed class AppServices : IDisposable
     {
         SystemEvents.TimeChanged -= OnTimeChanged;
         _mainViewModel?.Dispose();
+        Agent.Dispose();
         Undo.Dispose();
         _theme.Dispose();
         _updateShutdown.Cancel();

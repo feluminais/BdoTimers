@@ -394,3 +394,9 @@ bindings and automation names. Release packaging and signing: [releasing.md](rel
     show Monday's 22:15 bosses at 21:15 CET until the 29 Oct maintenance, then at their usual times. NA with
     2026-10-29 shows Thursday's 10:00 PT boss at 11:00 PDT from that maintenance until 1 Nov. Clear the field and Save:
     the times follow the clocks again. A backup restore brings the date back. Two weeks after the date the field is blank.
+93. [ ] Settings → General → Agent access is Off, with no Copy MCP command link. Turn it On and Save: the link appears, and it
+    puts a `claude mcp add bdo-timers -- "…\BdoTimers.Mcp.exe"` command on the clipboard. With the app running and
+    the server added to Claude Code, ask it for the next spawns and the running timers: the answer matches Today. Ask it to
+    start a 2 minute countdown, check a to-do row, then pause alerts for 5 minutes: each shows in the app at once, with
+    no window or focus change, and Delete (a timer it made) offers undo. Turn Agent access Off and Save: the next
+    request says the app is not running or access is off.

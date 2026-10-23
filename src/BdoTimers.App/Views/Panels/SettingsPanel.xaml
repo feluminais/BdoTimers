@@ -142,6 +142,20 @@
                                    Visibility="{Binding AutostartError, Converter={StaticResource NullToCollapsed}}" />
                     </StackPanel>
                 </Border>
+                <Border Style="{StaticResource SearchRow}" Tag="Agent access MCP Claude AI assistant">
+                    <StackPanel>
+                        <DockPanel ToolTip="Lets MCP clients such as Claude read and change your timers and to-dos">
+                            <ToggleButton Style="{StaticResource OnOffSwitch}" DockPanel.Dock="Right" IsChecked="{Binding AgentAccess}"
+                                                    Width="110" AutomationProperties.Name="Agent access" />
+                            <TextBlock Text="Agent access" Style="{StaticResource RowLabel}" TextWrapping="Wrap" Margin="0,0,10,0" />
+                        </DockPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,6,0,0" Visibility="{Binding AgentAccess, Converter={StaticResource BoolToVisibility}}">
+                            <Button Style="{StaticResource LinkButton}" Content="Copy MCP command" Command="{Binding CopyMcpCommandCommand}" />
+                            <TextBlock Text="{Binding AgentError}" Style="{StaticResource ErrorText}" Margin="10,0,0,0"
+                                       Visibility="{Binding AgentError, Converter={StaticResource NullToCollapsed}}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
                 <TextBlock Text="Today" Style="{StaticResource SearchHeading}" Margin="0,4,0,4" panels:SettingsFilter.Category="Today" />
                 <HeaderedContentControl Style="{StaticResource SearchSettingRow}" Header="Current timers" Tag="Current timers running countdown stopwatch show hide panel">
                     <ToggleButton Style="{StaticResource OnOffSwitch}" IsChecked="{Binding ShowCurrentTimers}"

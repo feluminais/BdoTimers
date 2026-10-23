@@ -40,8 +40,10 @@ try {
 
     # App -> MSI (the package) -> setup window -> bundle (the setup.exe users run)
     dotnet publish src/BdoTimers.App -c Release -o $stage "-p:Version=$version"
+    # The MCP bridge goes into the app's folder and shares its runtime.
+    dotnet publish src/BdoTimers.Mcp -c Release -o $stage "-p:Version=$version"
     if ($CertificateThumbprint) {
-        foreach ($name in 'BdoTimers.exe', 'BdoTimers.dll', 'BdoTimers.Core.dll') {
+        foreach ($name in 'BdoTimers.exe', 'BdoTimers.dll', 'BdoTimers.Core.dll', 'BdoTimers.Mcp.exe', 'BdoTimers.Mcp.dll') {
             & "$PSScriptRoot/sign.ps1" -FilePath (Join-Path $stage $name) -CertificateThumbprint $CertificateThumbprint
         }
     }

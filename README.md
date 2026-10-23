@@ -82,6 +82,18 @@ own events) can show always, or only from a set time before it happens.
 **The overlay needs borderless window mode.** It is a separate, click-through
 Windows window; the app does not read game memory, inject code or send keyboard or mouse input to BDO.
 
+## MCP server
+
+BDO Timers includes an [MCP](https://modelcontextprotocol.io) server, so an AI assistant such as Claude can answer
+"what spawns next?", start a countdown, tick a to-do or pause alerts while you play. It is off by default: switch on
+**Settings → General → Agent access**, then **Copy MCP command** and run it in a terminal (Claude Code), or point any
+MCP client at `BdoTimers.Mcp.exe` in the app's folder. The app has to be running.
+
+The server talks to the running app over a local pipe that only your Windows user can open, and changes go through the
+same code as the screens, so they show at once. It lists timers and to-dos, shows what is coming up, and can start,
+pause or reset countdowns and stopwatches, add countdowns and events, turn timers on or off, delete timers you made,
+check and add to-do rows, and pause alerts.
+
 ## Install
 
 Download the latest **BdoTimers-Setup-<version>.exe** from

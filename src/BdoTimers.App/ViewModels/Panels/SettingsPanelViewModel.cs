@@ -4,6 +4,7 @@ using System.IO;
 using System.Windows;
 using Microsoft.Win32;
 using BdoTimers.App.Alerts;
+using BdoTimers.Core.Agent;
 using BdoTimers.Core.Diagnostics;
 using BdoTimers.Core.Model;
 using BdoTimers.Core.Scheduling;
@@ -32,6 +33,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
     [ObservableProperty] private string _dstMaintenanceText = "";
     [ObservableProperty, NotifyPropertyChangedFor(nameof(DstMaintenanceInvalid))] private string? _dstMaintenanceError;
     [ObservableProperty] private string? _autostartError;
+    [ObservableProperty] private string? _agentError;
     [ObservableProperty, NotifyPropertyChangedFor(nameof(AlertSound))] private IReadOnlyList<Choice> _alertSounds = [];
     [ObservableProperty] private string? _soundError;
     [ObservableProperty] private bool _hasDeletedTodoDefaults;
@@ -170,6 +172,27 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         set => UpdateSettings(s => s with { GarmothTracker = value });
     }
 
+    public bool AgentAccess
+    {
+        get => Current.AgentAccess;
+        set => UpdateSettings(s => s with { AgentAccess = value });
+    }
+
+    [RelayCommand]
+    void CopyMcpCommand()
+    {
+        try
+        {
+            Clipboard.SetText(AgentSetup.ClaudeCodeCommand(AppContext.BaseDirectory, App.InstanceName));
+            AgentError = null;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Couldn't copy the MCP command", ex);
+            AgentError = "Couldn't copy";
+        }
+    }
+
     public bool ShowCurrentTimers
     {
         get => Current.Today.ShowCurrentTimers;
@@ -281,6 +304,7 @@ public sealed partial class SettingsPanelViewModel : ObservableObject, IDraftPan
         (s => s.Autostart, [nameof(Autostart)]),
         (s => s.CloseToTray, [nameof(CloseToTray)]),
         (s => s.GarmothTracker, [nameof(GarmothTracker)]),
+        (s => s.AgentAccess, [nameof(AgentAccess)]),
         (s => s.Today, [nameof(ShowCurrentTimers), nameof(ShowDaily), nameof(ShowWeekly), nameof(ShowGarmoth), nameof(ShowNight)]),
         (s => s.TextScale, [nameof(TextSize)]),
         (s => s.AlertSound, [nameof(AlertSound)]),

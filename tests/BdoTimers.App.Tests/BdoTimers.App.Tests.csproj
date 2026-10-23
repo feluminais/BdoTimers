@@ -12,4 +12,11 @@
     <Using Include="Xunit" />
     <ProjectReference Include="..\..\src\BdoTimers.App\BdoTimers.App.csproj" />
   </ItemGroup>
+  <!-- The app builds the MCP bridge; one test starts it. -->
+  <Target Name="CopyMcpBridge" AfterTargets="Build">
+    <ItemGroup>
+      <McpBridgeFile Include="$(MSBuildThisFileDirectory)..\..\src\BdoTimers.Mcp\bin\$(Configuration)\BdoTimers.Mcp.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(McpBridgeFile)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
 </Project>
