@@ -91,8 +91,8 @@ MCP client at `BdoTimers.Mcp.exe` in the app's folder. The app has to be running
 
 The server talks to the running app over a local pipe that only your Windows user can open, and changes go through the
 same code as the screens, so they show at once. It lists timers and to-dos, shows what is coming up, and can start,
-pause or reset countdowns and stopwatches, add countdowns and events, turn timers on or off, delete timers you made,
-check and add to-do rows, and pause alerts.
+pause or reset countdowns and stopwatches, add countdowns, events and event bosses, turn timers on or off, delete
+timers and bosses you made, check and add to-do rows, and pause alerts.
 
 ## Install
 

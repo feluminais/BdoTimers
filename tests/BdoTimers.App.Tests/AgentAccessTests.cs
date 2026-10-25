@@ -136,8 +136,19 @@ public class AgentAccessTests
             Assert.True(refused["isError"]!.GetValue<bool>());
             Assert.Contains("built in", refused["content"]![0]!["text"]!.GetValue<string>());
 
+            var boss = Exchange("""{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"add_boss","arguments":{"name":"Event boss","times":["19:30","23:30"]}}}""")["result"]!;
+            Assert.False(boss["isError"]!.GetValue<bool>());
+            var added = services.Timers.Current.Timers.Single(t => t.Name == "Event boss");
+            Assert.True(added.IsBuiltIn && added.AddedByUser);
+            Assert.Equal(services.Timers.Current.SelectedBossRegion, added.BossRegionId);
+            Assert.Equal(14, added.Scheduled!.Slots.Count);
+            var deleted = Exchange("""{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"delete_timer","arguments":{"timer":"Event boss"}}}""")["result"]!;
+            Assert.False(deleted["isError"]!.GetValue<bool>());
+            Assert.DoesNotContain(services.Timers.Current.Timers, t => t.Name == "Event boss");
+            Assert.Equal("Boss removed", services.Undo.Message);
+
             host.Apply(false);
-            var closed = Exchange("""{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_status"}}""")["result"]!;
+            var closed = Exchange("""{"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"get_status"}}""")["result"]!;
             Assert.True(closed["isError"]!.GetValue<bool>());
             Assert.Equal(AgentPipeClient.AppNotAvailable, closed["content"]![0]!["text"]!.GetValue<string>());
 

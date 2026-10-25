@@ -16,6 +16,7 @@ public sealed class AgentToolsTests : IDisposable
     readonly TodoStore _todos;
     readonly PersistentState<AppSettings> _settings;
     readonly List<Guid> _deleted = [];
+    readonly List<Guid> _deletedBosses = [];
     readonly AgentTools _tools;
 
     public AgentToolsTests()
@@ -24,7 +25,8 @@ public sealed class AgentToolsTests : IDisposable
         _todos = new TodoStore(new JsonFileStore<TodoData>(_dir.File("todos.json"), () => new TodoData()), new TodoData(), _clock);
         _settings = new PersistentState<AppSettings>(new JsonFileStore<AppSettings>(_dir.File("settings.json"), () => new AppSettings()), new AppSettings());
         _tools = new AgentTools(_timers, _todos, _settings, _clock, TimeZoneInfo.Utc,
-            new AgentHooks(DeleteTimer: id => { _deleted.Add(id); _timers.Delete(id); return true; }));
+            new AgentHooks(DeleteTimer: id => { _deleted.Add(id); _timers.Delete(id); return true; },
+                DeleteBoss: id => { _deletedBosses.Add(id); _timers.Delete(id); return true; }));
     }
 
     public void Dispose() => _dir.Dispose();
@@ -327,6 +329,74 @@ public sealed class AgentToolsTests : IDisposable
         Assert.Contains("built in", Message(() => Call("delete_timer", """{"timer":"Kzarka"}""")));
         Assert.Contains("built in", Message(() => Call("delete_timer", """{"timer":"Farm"}""")));
         Assert.Equal(2, _timers.Current.Timers.Count);
+    }
+
+    // ---- Bosses
+
+    [Fact]
+    public void Add_boss_spawns_every_day_in_the_regions_server_time_within_its_dates()
+    {
+        var made = Call("add_boss", """{"name":" Innocence Mk XII ","times":["23:30","19:30"],"from":"2026-09-22","to":"2026-09-23"}""");
+
+        Assert.True(made["boss"]!.GetValue<bool>());
+        Assert.Equal("2026-09-22T17:30:00Z", made["next"]!["utc"]!.GetValue<string>());
+        Assert.Equal("2026-09-23", made["to"]!.GetValue<string>());
+        var boss = _timers.Current.Timers.Single();
+        Assert.Equal("Innocence Mk XII", boss.Name);
+        Assert.True(boss.IsBuiltIn && boss.AddedByUser);
+        Assert.Equal(BossRegions.Europe, boss.BossRegionId);
+        Assert.Equal("Europe/Berlin", boss.Scheduled!.TimeZoneId);
+        Assert.Equal(14, boss.Scheduled.Slots.Count);
+        Assert.Equal(new Slot(DayOfWeek.Monday, new TimeOnly(19, 30)), boss.Scheduled.Slots[0]);
+        Assert.Equal((new DateOnly(2026, 9, 22), new DateOnly(2026, 9, 23)), (boss.Scheduled.StartDate!.Value, boss.Scheduled.EndDate!.Value));
+        Assert.Equal(["2026-09-22T17:30:00Z", "2026-09-22T21:30:00Z", "2026-09-23T17:30:00Z", "2026-09-23T21:30:00Z"],
+            Names(Call("get_upcoming", """{"hours":168}""")["upcoming"]!, "utc"));
+        Assert.Equal(["Innocence Mk XII"], Names(Call("list_timers", """{"bosses":true}""")["timers"]!));
+    }
+
+    [Fact]
+    public void Add_boss_takes_days_and_a_lone_time_for_the_selected_region()
+    {
+        _timers.Update(d => d with { SelectedBossRegion = BossRegions.NorthAmerica });
+
+        Call("add_boss", """{"name":"Kzarka","times":"13:00","days":["sat","Sunday","SAT"]}""");
+
+        var boss = _timers.Current.Timers.Single();
+        Assert.Equal(BossRegions.NorthAmerica, boss.BossRegionId);
+        Assert.Equal("America/Los_Angeles", boss.Scheduled!.TimeZoneId);
+        Assert.Equal([new Slot(DayOfWeek.Saturday, new TimeOnly(13, 0)), new Slot(DayOfWeek.Sunday, new TimeOnly(13, 0))], boss.Scheduled.Slots);
+        Assert.Null(boss.Scheduled.StartDate);
+        Assert.Null(boss.Scheduled.EndDate);
+    }
+
+    [Theory]
+    [InlineData("""{"name":"kzarka","times":["19:30"]}""", "already named")]
+    [InlineData("""{"name":"Odd","times":["25:00"]}""", "isn't a time")]
+    [InlineData("""{"name":"Odd","times":[]}""", "times is required")]
+    [InlineData("""{"name":"Odd","times":[19]}""", "list of text")]
+    [InlineData("""{"name":"Odd","times":["19:30"],"days":["Funday"]}""", "isn't a day")]
+    [InlineData("""{"name":"Odd","times":["19:30"],"from":"22.10.2026"}""", "from must look like")]
+    [InlineData("""{"name":"Odd","times":["19:30"],"from":"2026-11-04","to":"2026-10-22"}""", "End date must be on or after start date")]
+    public void Add_boss_refuses_a_taken_name_and_bad_times_days_and_dates(string args, string error)
+    {
+        Add(TestTimers.Boss("Kzarka", DayOfWeek.Tuesday, 20));
+
+        Assert.Contains(error, Message(() => Call("add_boss", args)));
+        Assert.Single(_timers.Current.Timers);
+    }
+
+    [Fact]
+    public void Delete_removes_an_added_boss_through_the_boss_hook()
+    {
+        Call("add_boss", """{"name":"Event boss","times":["19:30"]}""");
+        var added = _timers.Current.Timers.Single();
+        Add(TestTimers.Boss("Kzarka", DayOfWeek.Tuesday, 20));
+
+        Assert.Equal("Event boss", Call("delete_timer", """{"timer":"Event boss"}""")["deleted"]!["name"]!.GetValue<string>());
+        Assert.Equal([added.Id], _deletedBosses);
+        Assert.Empty(_deleted);
+        Assert.Contains("built in", Message(() => Call("delete_timer", """{"timer":"Kzarka"}""")));
+        Assert.Equal(["Kzarka"], _timers.Current.Timers.Select(t => t.Name));
     }
 
     // ---- To-dos

@@ -13,7 +13,8 @@ namespace BdoTimers.App;
 public sealed class AgentHost(AppServices services, Dispatcher dispatcher, string instance = App.InstanceName) : IDisposable
 {
     readonly AgentTools _tools = new(services.Timers, services.Todos, services.Settings, services.Clock, TimeZoneInfo.Local,
-        new AgentHooks(DeleteTimer: id => services.Undo.DeleteTimer(id), ResetTimer: id => services.Undo.ResetTimer(id)));
+        new AgentHooks(DeleteTimer: id => services.Undo.DeleteTimer(id), ResetTimer: id => services.Undo.ResetTimer(id),
+            DeleteBoss: id => services.Undo.DeleteBoss(id)));
     AgentPipeServer? _server;
 
     public bool IsServing => _server is not null;

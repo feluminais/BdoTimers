@@ -45,13 +45,22 @@ public static class AgentCatalog
                 ("name", Text("The event's name.")),
                 ("at", Text("Date and time as yyyy-MM-dd HH:mm, in the time zone below.")),
                 ("timeZone", Text("A time zone id. Default is this PC's.")))),
+        Write("add_boss",
+            "Adds a world boss, such as an event boss, to the selected region. Its times are in the region's server time.",
+            Schema(["name", "times"],
+                ("name", Text("The boss's name. No other boss of the region may have it.")),
+                ("times", List("Spawn times as HH:mm in server time.", Text("A time like 19:30."))),
+                ("days", List("Days it spawns. Default every day.",
+                    Enum("A day.", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"))),
+                ("from", Text("First day as yyyy-MM-dd. Default no limit.")),
+                ("to", Text("Last day as yyyy-MM-dd. Default no limit.")))),
         Write("set_timer_enabled",
             "Turns a timer, boss included, on or off. Off timers don't alert.",
             Schema(["timer", "enabled"],
                 ("timer", Text("The timer's id or name.")),
                 ("enabled", Bool("True to turn it on.")))),
         Write("delete_timer",
-            "Deletes a timer you made. Built-in timers and presets can't be deleted. The app offers to undo it.",
+            "Deletes a timer or boss you made. Bundled bosses and presets can't be deleted. The app offers to undo it.",
             Schema(["timer"], ("timer", Text("The timer's id or name."))),
             destructive: true),
         Write("set_todo_done",
@@ -89,6 +98,7 @@ public static class AgentCatalog
     static JsonObject Text(string description) => new() { ["type"] = "string", ["description"] = description };
     static JsonObject Int(string description) => new() { ["type"] = "integer", ["description"] = description };
     static JsonObject Bool(string description) => new() { ["type"] = "boolean", ["description"] = description };
+    static JsonObject List(string description, JsonObject items) => new() { ["type"] = "array", ["description"] = description, ["items"] = items };
 
     static JsonObject Enum(string description, params string[] values) =>
         new() { ["type"] = "string", ["description"] = description, ["enum"] = Strings(values) };

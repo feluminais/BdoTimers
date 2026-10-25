@@ -8,7 +8,8 @@ using BdoTimers.Core.Storage;
 namespace BdoTimers.Core.Agent;
 
 /// <summary>What the app does itself where the stores alone would skip it, such as keeping a deletion undoable.</summary>
-public sealed record AgentHooks(Func<Guid, bool>? DeleteTimer = null, Func<Guid, bool>? ResetTimer = null);
+public sealed record AgentHooks(Func<Guid, bool>? DeleteTimer = null, Func<Guid, bool>? ResetTimer = null,
+    Func<Guid, bool>? DeleteBoss = null);
 
 /// <summary>
 /// The tools an agent can call (see <see cref="AgentCatalog"/>). They change state through the same stores as the UI, and
@@ -30,6 +31,7 @@ public sealed class AgentTools(TimerStore timers, TodoStore todos, PersistentSta
         "control_timer" => ControlTimer(args),
         "create_countdown" => CreateCountdown(args),
         "create_event" => CreateEvent(args),
+        "add_boss" => AddBoss(args),
         "set_timer_enabled" => SetTimerEnabled(args),
         "delete_timer" => DeleteTimer(args),
         "set_todo_done" => SetTodoDone(args),
@@ -194,6 +196,25 @@ public sealed class AgentTools(TimerStore timers, TodoStore todos, PersistentSta
         return Fresh(timer.Id, now);
     }
 
+    JsonNode AddBoss(JsonObject args)
+    {
+        var data = timers.Current;
+        var region = BossRegions.Find(data.SelectedBossRegion);
+        var name = Name(Required(args, "name"), MaxNameLength);
+        if (!BossEdits.IsNameFree(data, region.Id, name))
+            throw new AgentToolException($"Another {region.ShortLabel} boss is already named '{name}'.");
+        var times = RequiredList(args, "times").Select(ParseTime).Distinct().Order().ToList();
+        var days = OptionalList(args, "days")?.Select(ParseDay).Distinct().ToList() ?? [.. Enum.GetValues<DayOfWeek>()];
+        var start = OptionalDate(args, "from");
+        var end = OptionalDate(args, "to");
+        try { ScheduleMath.ValidateDateRange(start, end); }
+        catch (ArgumentException ex) { throw new AgentToolException(ex.Message); }
+        var slots = days.OrderBy(d => ((int)d + 6) % 7).SelectMany(d => times.Select(t => new Slot(d, t))).ToList();
+        var boss = BossEdits.Create(data, name, slots, start, end);
+        timers.Upsert(boss);
+        return Fresh(boss.Id, clock.UtcNow);
+    }
+
     JsonNode SetTimerEnabled(JsonObject args)
     {
         var timer = FindTimer(Required(args, "timer"));
@@ -204,9 +225,14 @@ public sealed class AgentTools(TimerStore timers, TodoStore todos, PersistentSta
     JsonNode DeleteTimer(JsonObject args)
     {
         var timer = FindTimer(Required(args, "timer"));
-        if (timer.IsBuiltIn || timer.Preset is not null)
+        if (timer.AddedByUser)
+        {
+            if (hooks?.DeleteBoss is { } deleteBoss) deleteBoss(timer.Id);
+            else timers.Delete(timer.Id);
+        }
+        else if (timer.IsBuiltIn || timer.Preset is not null)
             throw new AgentToolException($"'{timer.Name}' is built in and can't be deleted. Turn it off instead.");
-        if (hooks?.DeleteTimer is { } delete) delete(timer.Id);
+        else if (hooks?.DeleteTimer is { } delete) delete(timer.Id);
         else timers.Delete(timer.Id);
         return new JsonObject { ["deleted"] = new JsonObject { ["id"] = timer.Id.ToString(), ["name"] = timer.Name } };
     }
@@ -306,7 +332,9 @@ public sealed class AgentTools(TimerStore timers, TodoStore todos, PersistentSta
                 break;
             case { Scheduled: { } spec }:
                 if (spec.Off) o["off"] = true;
-                if (!t.IsBuiltIn) o["schedule"] = Schedule(spec);
+                if (!t.IsBuiltIn || t.AddedByUser) o["schedule"] = Schedule(spec);
+                if (spec.StartDate is { } from) o["from"] = Date(from);
+                if (spec.EndDate is { } to) o["to"] = Date(to);
                 break;
             case { OneTime: { } one }:
                 if (one.Finished) o["finished"] = true;
@@ -370,6 +398,8 @@ public sealed class AgentTools(TimerStore timers, TodoStore todos, PersistentSta
 
     string Local(DateTimeOffset at) =>
         TimeZoneInfo.ConvertTime(at, zone).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
+
+    static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     static int Minutes(TimeSpan span) => (int)Math.Floor(span.TotalMinutes);
 
@@ -484,4 +514,34 @@ public sealed class AgentTools(TimerStore timers, TodoStore todos, PersistentSta
 
     static int RequiredInt(JsonObject args, string key, int min, int max) =>
         OptionalInt(args, key, min, max) ?? throw new AgentToolException($"{key} is required.");
+
+    /// <summary>A list of text; a lone text counts as a list of one.</summary>
+    static List<string>? OptionalList(JsonObject args, string key)
+    {
+        if (args[key] is JsonArray array)
+        {
+            var items = array.Select(n => n is JsonValue v && v.TryGetValue<string>(out var s) && !string.IsNullOrWhiteSpace(s)
+                ? s.Trim() : throw new AgentToolException($"{key} must be a list of text.")).ToList();
+            return items.Count > 0 ? items : null;
+        }
+        return Optional(args, key) is { } one ? [one.Trim()] : null;
+    }
+
+    static List<string> RequiredList(JsonObject args, string key) =>
+        OptionalList(args, key) ?? throw new AgentToolException($"{key} is required.");
+
+    static TimeOnly ParseTime(string text) =>
+        TimeOnly.TryParseExact(text, ["HH:mm", "H:mm"], CultureInfo.InvariantCulture, DateTimeStyles.None, out var time)
+            ? time : throw new AgentToolException($"'{text}' isn't a time like 19:30.");
+
+    /// <summary>A day by its English name or first three letters, in any case.</summary>
+    static DayOfWeek ParseDay(string text) =>
+        Enum.GetValues<DayOfWeek>().Cast<DayOfWeek?>().FirstOrDefault(d =>
+            string.Equals(d.ToString(), text, StringComparison.OrdinalIgnoreCase)
+            || string.Equals(d.ToString()![..3], text, StringComparison.OrdinalIgnoreCase))
+        ?? throw new AgentToolException($"'{text}' isn't a day like Monday.");
+
+    static DateOnly? OptionalDate(JsonObject args, string key) => Optional(args, key) is not { } text ? null
+        : DateOnly.TryParseExact(text.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? date : throw new AgentToolException($"{key} must look like 2026-10-22.");
 }
